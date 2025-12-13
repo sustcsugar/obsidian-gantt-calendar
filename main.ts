@@ -7,12 +7,16 @@ interface MyPluginSettings {
 	mySetting: string;
 	yearViewRowGap: number;
 	yearViewColumnGap: number;
+	startOnMonday: boolean;
+	yearLunarFontSize: number;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default',
 	yearViewRowGap: 0,
-	yearViewColumnGap: 0
+	yearViewColumnGap: 0,
+	startOnMonday: true,
+	yearLunarFontSize: 10,
 }
 
 export default class MyPlugin extends Plugin {
@@ -157,9 +161,9 @@ class SampleSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('日期行间距')
-			.setDesc('调整年视图中日期之间的垂直间距（0-10像素）')
+			.setDesc('调整年视图中日期之间的垂直间距（0-30像素）')
 			.addSlider(slider => slider
-				.setLimits(0, 10, 0.5)
+				.setLimits(0, 30, 1)
 				.setValue(this.plugin.settings.yearViewRowGap)
 				.setDynamicTooltip()
 				.onChange(async (value) => {
@@ -170,9 +174,9 @@ class SampleSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('日期列间距')
-			.setDesc('调整年视图中日期之间的水平间距（0-10像素）')
+			.setDesc('调整年视图中日期之间的水平间距（0-30像素）')
 			.addSlider(slider => slider
-				.setLimits(0, 10, 0.5)
+				.setLimits(0, 30, 1)
 				.setValue(this.plugin.settings.yearViewColumnGap)
 				.setDynamicTooltip()
 				.onChange(async (value) => {
@@ -180,5 +184,33 @@ class SampleSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.plugin.refreshCalendarViews();
 				}));
+
+		new Setting(containerEl)
+			.setName('年视图农历字号')
+			.setDesc('调整年视图月卡片内农历文字大小（8-18px）')
+			.addSlider(slider => slider
+				.setLimits(8, 18, 1)
+				.setValue(this.plugin.settings.yearLunarFontSize)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.yearLunarFontSize = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+				}));
+
+		containerEl.createEl('h2', {text: '通用设置'});
+
+		new Setting(containerEl)
+			.setName('一周开始于:')
+			.setDesc('选择一周的起始日')
+			.addDropdown(drop => {
+				drop.addOptions({ 'monday': '周一', 'sunday': '周日' });
+				drop.setValue(this.plugin.settings.startOnMonday ? 'monday' : 'sunday');
+				drop.onChange(async (value) => {
+					this.plugin.settings.startOnMonday = (value === 'monday');
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+				});
+			});
 	}
 }

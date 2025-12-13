@@ -91,8 +91,8 @@ Gantt Calendar Plugin Styles - 甘特日历
 
 .calendar-months-grid {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	grid-template-rows: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(3, 1fr);
 	gap: 6px;
 	width: 100%;
 	flex: 1;
@@ -124,9 +124,11 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 .calendar-weekdays {
-	display: grid;
-	grid-template-columns: repeat(7, 1fr);
-	gap: 0;
+	display: grid !important;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	grid-auto-flow: column;
+	width: 100%;
+	column-gap: var(--year-view-column-gap, 0);
 	margin-bottom: 1px;
 }
 
@@ -141,8 +143,7 @@ Gantt Calendar Plugin Styles - 甘特日历
 .calendar-days-grid {
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
-	row-gap: var(--year-view-row-gap, 0);
-	column-gap: var(--year-view-column-gap, 0);
+	gap: var(--year-view-row-gap, 0) var(--year-view-column-gap, 0) !important;
 	flex: 1;
 }
 
@@ -177,6 +178,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+/* 年视图月卡片中的农历字体大小可调 */
+.calendar-month-card .calendar-lunar-text {
+	font-size: var(--year-lunar-font-size, 10px);
 }
 
 .calendar-lunar-text.festival {
@@ -230,8 +235,9 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 .calendar-month-weekdays {
-	display: grid;
+	display: grid !important;
 	grid-template-columns: 40px repeat(7, 1fr);
+	width: 100%;
 	gap: 8px;
 	margin-bottom: 8px;
 	border-bottom: 2px solid var(--divider-color);
@@ -475,6 +481,7 @@ Gantt Calendar Plugin Styles - 甘特日历
 	margin-top: 0;
 	flex: 1;
 	overflow: hidden;
+	min-height: 0; /* 允许子元素在flex容器内滚动 */
 	position: relative;
 }
 
@@ -552,7 +559,8 @@ Gantt Calendar Plugin Styles - 甘特日历
 	gap: 0;
 	overflow-y: auto;
 	overflow-x: hidden;
-	flex: 1;
+	flex: 1 1 auto; /* 在父flex中占据剩余空间并允许滚动 */
+	min-height: 0; /* 确保在父容器限制高度时可滚动 */
 	position: relative;
 }
 

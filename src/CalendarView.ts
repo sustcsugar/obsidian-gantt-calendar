@@ -35,6 +35,9 @@ export class CalendarView extends ItemView {
 	}
 	
 	public refreshSettings(): void {
+		// 实时应用设置需要重新渲染内容（周起始日、布局等）
+		this.render();
+		// 在渲染完新内容后应用 CSS 变量，避免被容器清空时丢失
 		this.applyYearViewGapSettings();
 	}
 
@@ -51,9 +54,23 @@ export class CalendarView extends ItemView {
 
 		const rowGap = this.plugin.settings.yearViewRowGap || 0;
 		const columnGap = this.plugin.settings.yearViewColumnGap || 0;
+        const lunarFontSize = this.plugin.settings.yearLunarFontSize || 10;
 
-		content.style.setProperty('--year-view-row-gap', `${rowGap}px`);
-		content.style.setProperty('--year-view-column-gap', `${columnGap}px`);
+		// 直接应用到所有 calendar-days-grid 元素确保设置生效
+		const daysGrids = content.querySelectorAll('.calendar-days-grid');
+		daysGrids.forEach((grid: Element) => {
+			(grid as HTMLElement).style.setProperty('--year-view-row-gap', `${rowGap}px`);
+			(grid as HTMLElement).style.setProperty('--year-view-column-gap', `${columnGap}px`);
+		});
+
+		// 同时应用到 calendar-weekdays 确保星期标签与日期竖向对齐
+		const weekdaysGrids = content.querySelectorAll('.calendar-weekdays');
+		weekdaysGrids.forEach((grid: Element) => {
+			(grid as HTMLElement).style.setProperty('--year-view-column-gap', `${columnGap}px`);
+		});
+
+		// 应用农历字体大小到整个容器
+		content.style.setProperty('--year-lunar-font-size', `${lunarFontSize}px`);
 	}
 
 	private setupResizeObserver(): void {
@@ -164,7 +181,7 @@ export class CalendarView extends ItemView {
 		const monthsGrid = yearContainer.createDiv('calendar-months-grid');
 
 		for (let month = 1; month <= 12; month++) {
-			const monthData = generateMonthCalendar(year, month);
+			const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));
 			const monthDiv = monthsGrid.createDiv('calendar-month-card');
 
 			// Month header
@@ -176,7 +193,10 @@ export class CalendarView extends ItemView {
 
 			// Week day labels
 			const weekdaysDiv = monthDiv.createDiv('calendar-weekdays');
-			['日', '一', '二', '三', '四', '五', '六'].forEach((day) => {
+			const startOnMondayYear = !!(this.plugin?.settings?.startOnMonday);
+			const labelsSunFirstY = ['日', '一', '二', '三', '四', '五', '六'];
+			const labelsMonFirstY = ['一', '二', '三', '四', '五', '六', '日'];
+			(startOnMondayYear ? labelsMonFirstY : labelsSunFirstY).forEach((day) => {
 				weekdaysDiv.createEl('div', { text: day, cls: 'calendar-weekday' });
 			});
 
@@ -244,7 +264,12 @@ export class CalendarView extends ItemView {
 
 		// Week day labels
 		const weekdaysDiv = monthContainer.createDiv('calendar-month-weekdays');
-		['周日', '周一', '周二', '周三', '周四', '周五', '周六'].forEach((day) => {
+		// 首列占位与周编号列对齐
+		weekdaysDiv.createEl('div', { text: '', cls: 'calendar-month-weekday' });
+		const startOnMondayMonth = !!(this.plugin?.settings?.startOnMonday);
+		const labelsSunFirstM = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+		const labelsMonFirstM = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+		(startOnMondayMonth ? labelsMonFirstM : labelsSunFirstM).forEach((day) => {
 			weekdaysDiv.createEl('div', { text: day, cls: 'calendar-month-weekday' });
 		});
 
@@ -286,7 +311,7 @@ export class CalendarView extends ItemView {
 	}
 
 	private renderWeekView(container: HTMLElement): void {
-		const weekData = getWeekOfDate(this.currentDate, this.currentDate.getFullYear());
+		const weekData = getWeekOfDate(this.currentDate, this.currentDate.getFullYear(), !!(this.plugin?.settings?.startOnMonday));
 
 		const weekContainer = container.createDiv('calendar-week-view');
 
@@ -298,6 +323,7 @@ export class CalendarView extends ItemView {
 		const timeAxisHeader = headerRow.createDiv('calendar-time-axis-header');
 		timeAxisHeader.setText('全天');
 
+		// 使用数据层已按设置排序后的 weekData.days 顺序
 		weekData.days.forEach((day) => {
 			const dayHeader = headerRow.createDiv('calendar-day-header-cell');
 			const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -515,7 +541,7 @@ export class CalendarView extends ItemView {
 					this.currentDate.getMonth() + 1
 				);
 			case 'week': {
-				const week = getWeekOfDate(this.currentDate);
+				const week = getWeekOfDate(this.currentDate, undefined, !!(this.plugin?.settings?.startOnMonday));
 				const start = formatDate(week.startDate);
 				const end = formatDate(week.endDate);
 				return `Week ${week.weekNumber} (${start} - ${end})`;

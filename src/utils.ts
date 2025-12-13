@@ -12,20 +12,25 @@ export function getFirstDayOfMonth(year: number, month: number): number {
 }
 
 // 获取周数
-export function startOfWeekMonday(date: Date): Date {
+export function startOfWeek(date: Date, startOnMonday: boolean = true): Date {
 	const d = new Date(date);
 	const day = d.getDay(); // 0=Sun
-	const diff = day === 0 ? -6 : 1 - day; // Monday as start
+	let diff = 0;
+	if (startOnMonday) {
+		diff = day === 0 ? -6 : 1 - day; // Monday as start
+	} else {
+		diff = -day; // Sunday as start
+	}
 	d.setDate(d.getDate() + diff);
 	d.setHours(0, 0, 0, 0);
 	return d;
 }
 
 // Week number: Week 1 is the week that contains Jan 1 of the given base year, even if that week starts in the previous year.
-export function getWeekNumber(date: Date, baseYear?: number): number {
+export function getWeekNumber(date: Date, baseYear?: number, startOnMonday: boolean = true): number {
 	const year = baseYear ?? date.getFullYear();
-	const firstWeekStart = startOfWeekMonday(new Date(year, 0, 1));
-	const weekStart = startOfWeekMonday(date);
+	const firstWeekStart = startOfWeek(new Date(year, 0, 1), startOnMonday);
+	const weekStart = startOfWeek(date, startOnMonday);
 
 	const diff = weekStart.getTime() - firstWeekStart.getTime();
 	const weekIndex = Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
@@ -44,7 +49,7 @@ export function isToday(date: Date): boolean {
 }
 
 // 生成月份的日历数据
-export function generateMonthCalendar(year: number, month: number): CalendarMonth {
+export function generateMonthCalendar(year: number, month: number, startOnMonday: boolean = true): CalendarMonth {
 	const daysInMonth = getDaysInMonth(year, month);
 	const firstDay = getFirstDayOfMonth(year, month);
 	const days: CalendarDay[] = [];
@@ -54,7 +59,10 @@ export function generateMonthCalendar(year: number, month: number): CalendarMont
 	const prevYear = month === 1 ? year - 1 : year;
 	const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
 
-	for (let i = firstDay - 1; i >= 0; i--) {
+	// 根据起始日计算需要补齐的上个月天数
+	const leadDays = startOnMonday ? ((firstDay + 6) % 7) : firstDay; // 将周日=0转换为周一起始的偏移
+
+	for (let i = leadDays - 1; i >= 0; i--) {
 		const day = daysInPrevMonth - i;
 		const date = new Date(prevYear, prevMonth - 1, day);
 		const lunarInfo = solarToLunar(date);
@@ -108,7 +116,7 @@ export function generateMonthCalendar(year: number, month: number): CalendarMont
 	for (let i = 0; i < days.length; i += 7) {
 		const weekDays = days.slice(i, i + 7);
 		weeks.push({
-			weekNumber: getWeekNumber(weekDays[0].date, year),
+			weekNumber: getWeekNumber(weekDays[0].date, year, startOnMonday),
 			days: weekDays,
 			startDate: weekDays[0].date,
 			endDate: weekDays[6].date,
@@ -124,8 +132,8 @@ export function generateMonthCalendar(year: number, month: number): CalendarMont
 }
 
 // 获取指定日期所在的周
-export function getWeekOfDate(date: Date, baseYear?: number): CalendarWeek {
-	const startDate = startOfWeekMonday(date);
+export function getWeekOfDate(date: Date, baseYear?: number, startOnMonday: boolean = true): CalendarWeek {
+	const startDate = startOfWeek(date, startOnMonday);
 
 	const days: CalendarDay[] = [];
 	for (let i = 0; i < 7; i++) {
@@ -144,7 +152,7 @@ export function getWeekOfDate(date: Date, baseYear?: number): CalendarWeek {
 	}
 
 	return {
-		weekNumber: getWeekNumber(startDate, baseYear ?? date.getFullYear()),
+		weekNumber: getWeekNumber(startDate, baseYear ?? date.getFullYear(), startOnMonday),
 		days,
 		startDate,
 		endDate: new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000),
