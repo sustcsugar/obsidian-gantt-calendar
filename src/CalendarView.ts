@@ -212,7 +212,7 @@ export class CalendarView extends ItemView {
 				if (day.lunarText) {
 					const lunarEl = dayEl.createEl('div', { text: day.lunarText });
 					lunarEl.addClass('calendar-lunar-text');
-					if (day.festival) {
+					if (day.festival || day.festivalType) {
 						lunarEl.addClass('festival');
 						if (day.festivalType) {
 							lunarEl.addClass(`festival-${day.festivalType}`);
@@ -297,7 +297,7 @@ export class CalendarView extends ItemView {
 				if (day.lunarText) {
 					const lunarEl = dayEl.createEl('div', { text: day.lunarText });
 					lunarEl.addClass('calendar-lunar-text');
-					if (day.festival) {
+					if (day.festival || day.festivalType) {
 						lunarEl.addClass('festival');
 						if (day.festivalType) {
 							lunarEl.addClass(`festival-${day.festivalType}`);
