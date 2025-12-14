@@ -981,10 +981,32 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 .gantt-filter-label {
-	font-size: 12px;
-	font-weight: 500;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-right: 8px;
+	white-space: nowrap;
+}
+
+.gantt-filter-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.gantt-filter-group-label {
+	font-size: 14px;
+	font-weight: 600;
 	color: var(--text-muted);
-	margin-right: 4px;
+	white-space: nowrap;
+	margin: 0 4px;
+}
+
+.gantt-filter-divider {
+	width: 1px;
+	height: 24px;
+	background-color: var(--divider-color);
+	margin: 0 8px;
 }
 
 .gantt-filter-btn {

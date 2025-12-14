@@ -144,8 +144,11 @@ export class CalendarView extends ItemView {
 			const gfText = right.createEl('span', { cls: 'gantt-filter-label' });
 			gfText.setText(`Global Filter: ${this.plugin?.settings?.globalTaskFilter || '（未设置）'}`);
 
-			// 筛选按钮
-			const filterButtons = right.createDiv('gantt-task-filter-buttons');
+			// 状态筛选标签和按钮
+			const statusFilterGroup = right.createDiv('gantt-filter-group');
+			const statusLabel = statusFilterGroup.createEl('span', { text: '状态筛选', cls: 'gantt-filter-group-label' });
+			
+			const filterButtons = statusFilterGroup.createDiv('gantt-task-filter-buttons');
 			const btnAll = filterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
 			const btnUncompleted = filterButtons.createEl('button', { text: '未完成', cls: 'gantt-filter-btn' });
 			const btnCompleted = filterButtons.createEl('button', { text: '已完成', cls: 'gantt-filter-btn' });
@@ -173,8 +176,14 @@ export class CalendarView extends ItemView {
 				this.render();
 			});
 
-			// 日期筛选按钮
-			const dateFilterButtons = right.createDiv('gantt-task-filter-buttons');
+			// 分割线
+			const divider = right.createDiv('gantt-filter-divider');
+
+			// 日期筛选标签和按钮
+			const dateFilterGroup = right.createDiv('gantt-filter-group');
+			const dateLabel = dateFilterGroup.createEl('span', { text: '日期筛选', cls: 'gantt-filter-group-label' });
+			
+			const dateFilterButtons = dateFilterGroup.createDiv('gantt-task-filter-buttons');
 			const btnDateAll = dateFilterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
 			const btnDateToday = dateFilterButtons.createEl('button', { text: '今日', cls: 'gantt-filter-btn' });
 			const btnDateWeek = dateFilterButtons.createEl('button', { text: '本周', cls: 'gantt-filter-btn' });
