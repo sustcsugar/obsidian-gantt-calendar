@@ -807,6 +807,13 @@ Gantt Calendar Plugin Styles - 甘特日历
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Task modal sizing */
+.gantt-task-modal.modal {
+	width: 640px;
+	max-width: 90vw;
+	max-height: 80vh;
+}
+
 /* Task List Modal Styles */
 .gantt-task-empty {
 	padding: 16px;

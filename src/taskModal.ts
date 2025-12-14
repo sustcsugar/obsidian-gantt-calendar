@@ -13,6 +13,7 @@ export class TaskListModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
+		this.modalEl.addClass('gantt-task-modal');
 		contentEl.empty();
 
 		// 标题
