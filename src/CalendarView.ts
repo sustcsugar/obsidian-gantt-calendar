@@ -568,8 +568,10 @@ export class CalendarView extends ItemView {
 		checkbox.disabled = true;
 		checkbox.addClass('gantt-task-checkbox');
 
-		// Task content: only clean description (no attributes)
-		const displayText = this.cleanTaskDescription(task.content);
+		// Task content: clean description; optionally prefix global filter
+		const cleaned = this.cleanTaskDescription(task.content);
+		const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
+		const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
 		taskItem.createEl('span', { text: displayText, cls: 'gantt-task-text' });
 
 		// Priority badge

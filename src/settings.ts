@@ -20,6 +20,7 @@ export interface GanttCalendarSettings {
 	solarTermColor: string;
 	globalTaskFilter: string;
 	enabledTaskFormats: string[];
+	showGlobalFilterInTaskText: boolean; // 是否在任务列表文本中显示 global filter 前缀
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	solarTermColor: '#52c41a',      // 节气 - 绿色
 	globalTaskFilter: '🎯 ',        // 全局任务筛选标记
 	enabledTaskFormats: ['tasks', 'dataview'], // 启用的任务格式
+	showGlobalFilterInTaskText: true, // 默认显示 global filter
 };
 
 export class GanttCalendarSettingTab extends PluginSettingTab {
@@ -126,6 +128,19 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				// 添加选项 "two" 的支持
 				drop.addOptions({ 'both': '两者都支持' });
 			});
+
+		// 任务视图显示设置（放在节日颜色设置之前）
+		containerEl.createEl('h2', { text: '任务视图显示' });
+		new Setting(containerEl)
+			.setName('任务文本显示 Global Filter')
+			.setDesc('在任务列表中文本前显示全局筛选前缀（如 🎯）。关闭则仅显示任务描述')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.showGlobalFilterInTaskText)
+				.onChange(async (value) => {
+					this.plugin.settings.showGlobalFilterInTaskText = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshTaskViews();
+				}));
 
 		containerEl.createEl('h2', { text: '节日颜色设置' });
 		
