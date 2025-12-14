@@ -21,6 +21,7 @@ export interface GanttCalendarSettings {
 	globalTaskFilter: string;
 	enabledTaskFormats: string[];
 	showGlobalFilterInTaskText: boolean; // 是否在任务列表文本中显示 global filter 前缀
+	dateFilterField: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate'; // 日期筛选使用的字段
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -33,6 +34,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	globalTaskFilter: '🎯 ',        // 全局任务筛选标记
 	enabledTaskFormats: ['tasks', 'dataview'], // 启用的任务格式
 	showGlobalFilterInTaskText: true, // 默认显示 global filter
+	dateFilterField: 'dueDate', // 默认使用截止日期作为筛选字段
 };
 
 export class GanttCalendarSettingTab extends PluginSettingTab {
@@ -150,6 +152,26 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showGlobalFilterInTaskText)
 				.onChange(async (value) => {
 					this.plugin.settings.showGlobalFilterInTaskText = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshTaskViews();
+				}));
+
+		// 日期筛选字段
+		new Setting(containerEl)
+			.setName('日期筛选字段')
+			.setDesc('选择在任务筛选器中用于日期范围筛选（今日/本周/本月）的日期字段')
+			.addDropdown(drop => drop
+				.addOptions({
+					'createdDate': '创建日期',
+					'startDate': '开始日期',
+					'scheduledDate': '计划日期',
+					'dueDate': '截止日期',
+					'completionDate': '完成日期',
+					'cancelledDate': '取消日期',
+				})
+				.setValue(this.plugin.settings.dateFilterField)
+				.onChange(async (value) => {
+					this.plugin.settings.dateFilterField = value as 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate';
 					await this.plugin.saveSettings();
 					this.plugin.refreshTaskViews();
 				}));

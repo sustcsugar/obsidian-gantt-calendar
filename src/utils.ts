@@ -48,6 +48,29 @@ export function isToday(date: Date): boolean {
 	);
 }
 
+// 判断是否在本周
+export function isThisWeek(date: Date, startOnMonday: boolean = true): boolean {
+	const today = new Date();
+	const weekStart = startOfWeek(today, startOnMonday);
+	const weekEnd = new Date(weekStart);
+	weekEnd.setDate(weekEnd.getDate() + 7);
+
+	const targetDate = new Date(date);
+	targetDate.setHours(0, 0, 0, 0);
+
+	return targetDate >= weekStart && targetDate < weekEnd;
+}
+
+// 判断是否在本月
+export function isThisMonth(date: Date): boolean {
+	const today = new Date();
+	return (
+		date.getMonth() === today.getMonth() &&
+		date.getFullYear() === today.getFullYear()
+	);
+}
+
+
 // 生成月份的日历数据
 export function generateMonthCalendar(year: number, month: number, startOnMonday: boolean = true): CalendarMonth {
 	const daysInMonth = getDaysInMonth(year, month);

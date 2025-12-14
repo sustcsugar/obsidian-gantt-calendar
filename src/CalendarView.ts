@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, Plugin, setIcon } from 'obsidian';
 import { CalendarViewType } from './types';
-import { generateMonthCalendar, getWeekOfDate, formatDate, formatMonth } from './utils';
+import { generateMonthCalendar, getWeekOfDate, formatDate, formatMonth, isToday, isThisWeek, isThisMonth } from './utils';
 import { searchTasks, GanttTask } from './taskManager';
 
 export const CALENDAR_VIEW_ID = 'gantt-calendar-view';
@@ -13,6 +13,7 @@ export class CalendarView extends ItemView {
 	private yearContainer: HTMLElement | null = null;
 	private plugin: any;
 	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'uncompleted';
+	private dateFilter: 'all' | 'today' | 'week' | 'month' = 'all'; // 日期范围筛选：全部、今日、本周、本月
 
 	constructor(leaf: WorkspaceLeaf, plugin: any) {
 		super(leaf);
@@ -169,6 +170,42 @@ export class CalendarView extends ItemView {
 			btnCompleted.addEventListener('click', () => {
 				this.taskFilter = 'completed';
 				updateActive();
+				this.render();
+			});
+
+			// 日期筛选按钮
+			const dateFilterButtons = right.createDiv('gantt-task-filter-buttons');
+			const btnDateAll = dateFilterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
+			const btnDateToday = dateFilterButtons.createEl('button', { text: '今日', cls: 'gantt-filter-btn' });
+			const btnDateWeek = dateFilterButtons.createEl('button', { text: '本周', cls: 'gantt-filter-btn' });
+			const btnDateMonth = dateFilterButtons.createEl('button', { text: '本月', cls: 'gantt-filter-btn' });
+
+			const updateDateActive = () => {
+				btnDateAll.toggleClass('active', this.dateFilter === 'all');
+				btnDateToday.toggleClass('active', this.dateFilter === 'today');
+				btnDateWeek.toggleClass('active', this.dateFilter === 'week');
+				btnDateMonth.toggleClass('active', this.dateFilter === 'month');
+			};
+			updateDateActive();
+
+			btnDateAll.addEventListener('click', () => {
+				this.dateFilter = 'all';
+				updateDateActive();
+				this.render();
+			});
+			btnDateToday.addEventListener('click', () => {
+				this.dateFilter = 'today';
+				updateDateActive();
+				this.render();
+			});
+			btnDateWeek.addEventListener('click', () => {
+				this.dateFilter = 'week';
+				updateDateActive();
+				this.render();
+			});
+			btnDateMonth.addEventListener('click', () => {
+				this.dateFilter = 'month';
+				updateDateActive();
 				this.render();
 			});
 
@@ -538,6 +575,28 @@ export class CalendarView extends ItemView {
 			} else if (this.taskFilter === 'uncompleted') {
 				tasks = tasks.filter(t => !t.completed);
 			}
+
+			// Apply date range filter
+			const dateField = this.plugin.settings.dateFilterField || 'dueDate';
+			if (this.dateFilter !== 'all') {
+				tasks = tasks.filter(task => {
+					const dateValue = (task as any)[dateField];
+					if (!dateValue) return false; // 如果没有对应日期字段，则过滤掉
+					
+					const taskDate = new Date(dateValue);
+					if (isNaN(taskDate.getTime())) return false; // 日期解析失败
+					
+					if (this.dateFilter === 'today') {
+						return isToday(taskDate);
+					} else if (this.dateFilter === 'week') {
+						return isThisWeek(taskDate, this.plugin.settings.startOnMonday);
+					} else if (this.dateFilter === 'month') {
+						return isThisMonth(taskDate);
+					}
+					return true;
+				});
+			}
+
 			listContainer.empty();
 
 			const completedCount = tasks.filter(t => t.completed).length;
