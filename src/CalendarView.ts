@@ -31,11 +31,14 @@ export class CalendarView extends ItemView {
 	async onOpen(): Promise<void> {
 		this.render();
 		this.setupResizeObserver();
+		this.applyYearLunarFontSize();
 	}
 	
 	public refreshSettings(): void {
 		// 实时应用设置需要重新渲染内容（周起始日、布局等）
 		this.render();
+		// 应用农历字号设置
+		this.applyYearLunarFontSize();
 	}
 
 	async onClose(): Promise<void> {
@@ -43,6 +46,18 @@ export class CalendarView extends ItemView {
 		if (this.resizeObserver) {
 			this.resizeObserver.disconnect();
 		}
+	}
+
+	private applyYearLunarFontSize(): void {
+		const content = this.containerEl.children[1] as HTMLElement;
+		if (!content) return;
+
+		const lunarFontSize = this.plugin.settings.yearLunarFontSize || 10;
+		// 应用农历字体大小到所有农历文本
+		const lunarTexts = content.querySelectorAll('.calendar-lunar-text');
+		lunarTexts.forEach((text: Element) => {
+			(text as HTMLElement).style.fontSize = `${lunarFontSize}px`;
+		});
 	}
 
 	private setupResizeObserver(): void {
