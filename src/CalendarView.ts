@@ -512,32 +512,15 @@ export class CalendarView extends ItemView {
 		const enableDailyNote = this.plugin.settings.enableDailyNote !== false;
 
 		if (enableDailyNote) {
-			// Split-screen layout container
-			const splitContainer = dayContainer.createDiv('calendar-day-split-container');
+			const layout = this.plugin.settings.dayViewLayout || 'horizontal';
 
-			// Tasks section (left)
-			const tasksSection = splitContainer.createDiv('calendar-day-tasks-section');
-			const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-			tasksTitle.addClass('calendar-day-tasks-title');
-			const tasksList = tasksSection.createDiv('calendar-day-tasks-list');
-
-			// Divider (middle)
-			const divider = splitContainer.createDiv('calendar-day-divider');
-
-			// Notes section (right)
-			const notesSection = splitContainer.createDiv('calendar-day-notes-section');
-			const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
-			notesTitle.addClass('calendar-day-notes-title');
-			const notesContent = notesSection.createDiv('calendar-day-notes-content');
-
-			// Setup resizable divider
-			this.setupDayViewDivider(divider, tasksSection, notesSection);
-
-			// Load and display tasks for current view date
-			this.loadDayViewTasks(tasksList, new Date(this.currentDate));
-
-			// Load and display daily note for current view date
-			this.loadDayViewNotes(notesContent, new Date(this.currentDate));
+			if (layout === 'horizontal') {
+				// Horizontal split-screen layout (tasks left, notes right)
+				this.renderDayViewHorizontal(dayContainer);
+			} else {
+				// Vertical split-screen layout (tasks top, notes bottom)
+				this.renderDayViewVertical(dayContainer);
+			}
 		} else {
 			// Display tasks only (full width)
 			const tasksSection = dayContainer.createDiv('calendar-day-tasks-section-full');
@@ -548,6 +531,64 @@ export class CalendarView extends ItemView {
 			// Load and display tasks for current view date
 			this.loadDayViewTasks(tasksList, new Date(this.currentDate));
 		}
+	}
+
+	private renderDayViewHorizontal(dayContainer: HTMLElement): void {
+		// Split-screen layout container
+		const splitContainer = dayContainer.createDiv('calendar-day-split-container');
+
+		// Tasks section (left)
+		const tasksSection = splitContainer.createDiv('calendar-day-tasks-section');
+		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
+		tasksTitle.addClass('calendar-day-tasks-title');
+		const tasksList = tasksSection.createDiv('calendar-day-tasks-list');
+
+		// Divider (middle)
+		const divider = splitContainer.createDiv('calendar-day-divider');
+
+		// Notes section (right)
+		const notesSection = splitContainer.createDiv('calendar-day-notes-section');
+		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
+		notesTitle.addClass('calendar-day-notes-title');
+		const notesContent = notesSection.createDiv('calendar-day-notes-content');
+
+		// Setup resizable divider
+		this.setupDayViewDivider(divider, tasksSection, notesSection);
+
+		// Load and display tasks for current view date
+		this.loadDayViewTasks(tasksList, new Date(this.currentDate));
+
+		// Load and display daily note for current view date
+		this.loadDayViewNotes(notesContent, new Date(this.currentDate));
+	}
+
+	private renderDayViewVertical(dayContainer: HTMLElement): void {
+		// Vertical split-screen layout container
+		const splitContainer = dayContainer.createDiv('calendar-day-split-container-vertical');
+
+		// Tasks section (top)
+		const tasksSection = splitContainer.createDiv('calendar-day-tasks-section-vertical');
+		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
+		tasksTitle.addClass('calendar-day-tasks-title');
+		const tasksList = tasksSection.createDiv('calendar-day-tasks-list');
+
+		// Divider (middle)
+		const divider = splitContainer.createDiv('calendar-day-divider-vertical');
+
+		// Notes section (bottom)
+		const notesSection = splitContainer.createDiv('calendar-day-notes-section-vertical');
+		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
+		notesTitle.addClass('calendar-day-notes-title');
+		const notesContent = notesSection.createDiv('calendar-day-notes-content');
+
+		// Setup resizable divider for vertical
+		this.setupDayViewDividerVertical(divider, tasksSection, notesSection);
+
+		// Load and display tasks for current view date
+		this.loadDayViewTasks(tasksList, new Date(this.currentDate));
+
+		// Load and display daily note for current view date
+		this.loadDayViewNotes(notesContent, new Date(this.currentDate));
 	}
 
 	private async loadDayViewTasks(listContainer: HTMLElement, targetDate: Date): Promise<void> {
@@ -612,6 +653,40 @@ export class CalendarView extends ItemView {
 
 				tasksSection.style.flex = `0 0 ${newTasksWidth}px`;
 				notesSection.style.flex = `0 0 ${newNotesWidth}px`;
+			};
+
+			const mouseUpHandler = () => {
+				isResizing = false;
+				document.removeEventListener('mousemove', mouseMoveHandler);
+				document.removeEventListener('mouseup', mouseUpHandler);
+			};
+
+			document.addEventListener('mousemove', mouseMoveHandler);
+			document.addEventListener('mouseup', mouseUpHandler);
+		});
+	}
+
+	private setupDayViewDividerVertical(divider: HTMLElement, tasksSection: HTMLElement, notesSection: HTMLElement): void {
+		let isResizing = false;
+		const container = divider.parentElement;
+		if (!container) return;
+
+		divider.addEventListener('mousedown', (e: MouseEvent) => {
+			isResizing = true;
+			const startY = e.clientY;
+			const startTasksHeight = tasksSection.offsetHeight;
+			const startNotesHeight = notesSection.offsetHeight;
+			const totalHeight = container.offsetHeight;
+
+			const mouseMoveHandler = (moveEvent: MouseEvent) => {
+				if (!isResizing) return;
+
+				const deltaY = moveEvent.clientY - startY;
+				const newTasksHeight = Math.max(100, startTasksHeight + deltaY);
+				const newNotesHeight = Math.max(100, totalHeight - newTasksHeight - 8); // 8px for divider
+
+				tasksSection.style.flex = `0 0 ${newTasksHeight}px`;
+				notesSection.style.flex = `0 0 ${newNotesHeight}px`;
 			};
 
 			const mouseUpHandler = () => {
