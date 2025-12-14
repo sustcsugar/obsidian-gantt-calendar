@@ -127,7 +127,8 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					// 重新渲染设置面板以显示/隐藏关联的设置
 					this.display();
-					this.plugin.refreshTaskViews();
+					// 刷新日历视图（包括日视图）
+					this.plugin.refreshCalendarViews();
 				}));
 
 		// Daily Note 文件夹路径（仅在启用时显示）
@@ -145,7 +146,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.dayViewLayout = value as 'horizontal' | 'vertical';
 						await this.plugin.saveSettings();
-						this.plugin.refreshTaskViews();
+						this.plugin.refreshCalendarViews();
 					}));
 
 			new Setting(containerEl)
@@ -157,7 +158,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.dailyNotePath = value;
 						await this.plugin.saveSettings();
-						this.plugin.refreshTaskViews();
+						this.plugin.refreshCalendarViews();
 					}));
 
 			// Daily Note 文件名格式（仅在启用时显示）
@@ -170,7 +171,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.dailyNoteNameFormat = value;
 						await this.plugin.saveSettings();
-						this.plugin.refreshTaskViews();
+						this.plugin.refreshCalendarViews();
 					}));
 		}
 
