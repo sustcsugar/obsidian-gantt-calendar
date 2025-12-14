@@ -26,6 +26,7 @@ export interface GanttCalendarSettings {
 	dayViewLayout: 'horizontal' | 'vertical'; // 日视图布局：水平（左右分屏）或垂直（上下分屏）
 	dailyNotePath: string; // Daily note 文件夹路径
 	dailyNoteNameFormat: string; // Daily note 文件名格式 (如 yyyy-MM-dd)
+	monthViewTaskLimit: number; // 月视图每天显示的最大任务数量
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -43,6 +44,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	dayViewLayout: 'horizontal', // 默认水平（左右分屏）布局
 	dailyNotePath: 'DailyNotes', // 默认 daily note 文件夹路径
 	dailyNoteNameFormat: 'yyyy-MM-dd', // 默认文件名格式
+	monthViewTaskLimit: 5, // 默认每天显示5个任务
 };
 
 export class GanttCalendarSettingTab extends PluginSettingTab {
@@ -174,6 +176,23 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 						this.plugin.refreshCalendarViews();
 					}));
 		}
+
+		// ===== 月视图设置 =====
+		containerEl.createEl('h2', { text: '月视图设置' });
+
+		// 月视图每天显示的任务数量
+		new Setting(containerEl)
+			.setName('每天显示的任务数量')
+			.setDesc('设置月视图中每个日期卡片最多显示多少个任务（1-10）')
+			.addSlider(slider => slider
+				.setLimits(1, 10, 1)
+				.setValue(this.plugin.settings.monthViewTaskLimit)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.monthViewTaskLimit = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+				}));
 
 		// ===== 任务视图设置 =====
 		containerEl.createEl('h2', { text: '任务视图设置' });

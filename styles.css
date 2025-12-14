@@ -364,10 +364,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 .calendar-day-cell {
-	min-height: 80px;
+	min-height: 100px;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	align-items: stretch;
 	justify-content: flex-start;
 	padding: 8px;
 	gap: 4px;
@@ -376,17 +376,75 @@ Gantt Calendar Plugin Styles - 甘特日历
 	border-radius: 4px;
 	cursor: pointer;
 	transition: all 0.15s ease;
+	overflow: hidden;
 }
 
 .calendar-day-cell .calendar-day-number {
 	font-size: 16px;
 	font-weight: 600;
 	color: var(--text-normal);
+	align-self: center;
 }
 
 .calendar-day-cell .calendar-lunar-text {
 	font-size: 11px;
 	color: var(--text-muted);
+	align-self: center;
+}
+
+/* Month View Tasks */
+.calendar-month-tasks {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+	margin-top: 4px;
+	flex: 1;
+	overflow: hidden;
+}
+
+.calendar-month-task-item {
+	display: flex;
+	align-items: center;
+	padding: 4px 6px;
+	background-color: var(--background-secondary);
+	border-radius: 3px;
+	border-left: 2px solid var(--color-orange);
+	font-size: 11px;
+	line-height: 1.3;
+	cursor: pointer;
+	transition: all 0.1s ease;
+}
+
+.calendar-month-task-item:hover {
+	background-color: var(--background-modifier-hover);
+	transform: translateX(1px);
+}
+
+.calendar-month-task-item.completed {
+	opacity: 0.5;
+	border-left-color: var(--color-green);
+}
+
+.calendar-month-task-text {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-normal);
+}
+
+.calendar-month-task-item.completed .calendar-month-task-text {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
+.calendar-month-task-more {
+	padding: 2px 6px;
+	font-size: 10px;
+	color: var(--text-muted);
+	text-align: center;
+	font-style: italic;
 }
 
 .calendar-day-cell .calendar-lunar-text.festival {

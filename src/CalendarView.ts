@@ -411,13 +411,23 @@ export class CalendarView extends ItemView {
 					}
 				}
 				
+				// Tasks list for this day
+				const tasksContainer = dayEl.createDiv('calendar-month-tasks');
+				this.loadMonthViewTasks(tasksContainer, day.date);
+				
 				if (!day.isCurrentMonth) {
 					dayEl.addClass('outside-month');
 				}
 				if (day.isToday) {
 					dayEl.addClass('today');
 				}
-				dayEl.onclick = () => this.selectDate(day.date);
+				dayEl.onclick = (e: MouseEvent) => {
+					// Only select date when clicking on the card, not on tasks
+					if ((e.target as HTMLElement).closest('.calendar-month-task-item')) {
+						return;
+					}
+					this.selectDate(day.date);
+				};
 			});
 		});
 	}
@@ -646,6 +656,189 @@ export class CalendarView extends ItemView {
 
 		// Click to open task location
 		taskItem.onclick = async () => {
+			const file = this.app.vault.getAbstractFileByPath(task.filePath);
+			if (file instanceof TFile) {
+				await this.app.workspace.openLinkText(file.path, '', false, { active: true });
+			}
+		};
+	}
+
+	private async loadMonthViewTasks(container: HTMLElement, targetDate: Date): Promise<void> {
+		container.empty();
+
+		try {
+			let tasks = await searchTasks(this.app, this.plugin.settings.globalTaskFilter, this.plugin.settings.enabledTaskFormats);
+
+			// Get the date field to filter by
+			const dateField = this.plugin.settings.dateFilterField || 'dueDate';
+
+			// Normalize target date to compare by Y-M-D
+			const normalizedTarget = new Date(targetDate);
+			normalizedTarget.setHours(0, 0, 0, 0);
+
+			// Filter tasks for the target day
+			const currentDayTasks = tasks.filter(task => {
+				const dateValue = (task as any)[dateField];
+				if (!dateValue) return false;
+				
+				const taskDate = new Date(dateValue);
+				if (isNaN(taskDate.getTime())) return false;
+				taskDate.setHours(0, 0, 0, 0);
+				
+				return taskDate.getTime() === normalizedTarget.getTime();
+			});
+
+			if (currentDayTasks.length === 0) {
+				return; // Don't show anything if no tasks
+			}
+
+			// Get task limit from settings (default 5)
+			const taskLimit = this.plugin.settings.monthViewTaskLimit || 5;
+			
+			// Limit to configured number of tasks to avoid overflow
+			const displayTasks = currentDayTasks.slice(0, taskLimit);
+			displayTasks.forEach(task => this.renderMonthTaskItem(task, container));
+			
+			// Show count if there are more tasks
+			if (currentDayTasks.length > taskLimit) {
+				const moreCount = container.createDiv('calendar-month-task-more');
+				moreCount.setText(`+${currentDayTasks.length - taskLimit} more`);
+			}
+		} catch (error) {
+			console.error('Error loading month view tasks', error);
+		}
+	}
+
+	private renderMonthTaskItem(task: GanttTask, container: HTMLElement): void {
+		const taskItem = container.createDiv('calendar-month-task-item');
+		taskItem.addClass(task.completed ? 'completed' : 'pending');
+
+		// Task content: only clean description
+		const cleaned = this.cleanTaskDescription(task.content);
+		taskItem.createEl('span', { text: cleaned, cls: 'calendar-month-task-text' });
+
+		// Create tooltip for detailed information
+		let tooltip: HTMLElement | null = null;
+		let hideTimeout: number | null = null;
+
+		const showTooltip = (e: MouseEvent) => {
+			e.stopPropagation();
+			
+			if (hideTimeout) {
+				window.clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+
+			if (tooltip) {
+				tooltip.remove();
+			}
+
+			tooltip = document.body.createDiv('calendar-week-task-tooltip');
+			tooltip.style.opacity = '0';
+			
+			const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
+			const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
+			const descDiv = tooltip.createDiv('tooltip-description');
+			descDiv.createEl('strong', { text: displayText });
+
+			if (task.priority) {
+				const priorityDiv = tooltip.createDiv('tooltip-priority');
+				const priorityIcon = this.getPriorityIcon(task.priority);
+				priorityDiv.createEl('span', { text: `${priorityIcon} 优先级: ${task.priority}`, cls: `priority-${task.priority}` });
+			}
+
+			const hasTimeProperties = task.createdDate || task.startDate || task.scheduledDate || 
+			                          task.dueDate || task.cancelledDate || task.completionDate;
+			
+			if (hasTimeProperties) {
+				const timeDiv = tooltip.createDiv('tooltip-time-properties');
+				
+				if (task.createdDate) {
+					timeDiv.createEl('div', { text: `➕ 创建: ${this.formatDateForDisplay(task.createdDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.startDate) {
+					timeDiv.createEl('div', { text: `🛫 开始: ${this.formatDateForDisplay(task.startDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.scheduledDate) {
+					timeDiv.createEl('div', { text: `⏳ 计划: ${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.dueDate) {
+					const dueText = `📅 截止: ${this.formatDateForDisplay(task.dueDate)}`;
+					const dueEl = timeDiv.createEl('div', { text: dueText, cls: 'tooltip-time-item' });
+					if (task.dueDate < new Date() && !task.completed) {
+						dueEl.addClass('tooltip-overdue');
+					}
+				}
+				
+				if (task.cancelledDate) {
+					timeDiv.createEl('div', { text: `❌ 取消: ${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.completionDate) {
+					timeDiv.createEl('div', { text: `✅ 完成: ${this.formatDateForDisplay(task.completionDate)}`, cls: 'tooltip-time-item' });
+				}
+			}
+
+			const fileDiv = tooltip.createDiv('tooltip-file');
+			fileDiv.createEl('span', { text: `📄 ${task.fileName}:${task.lineNumber}`, cls: 'tooltip-file-location' });
+
+			const rect = taskItem.getBoundingClientRect();
+			const tooltipWidth = 300;
+			const tooltipHeight = tooltip.offsetHeight;
+			
+			let left = rect.right + 10;
+			let top = rect.top;
+			
+			if (left + tooltipWidth > window.innerWidth) {
+				left = rect.left - tooltipWidth - 10;
+			}
+			
+			if (left < 0) {
+				left = (window.innerWidth - tooltipWidth) / 2;
+			}
+			
+			if (top + tooltipHeight > window.innerHeight) {
+				top = window.innerHeight - tooltipHeight - 10;
+			}
+			if (top < 0) {
+				top = 10;
+			}
+			
+			tooltip.style.left = `${left}px`;
+			tooltip.style.top = `${top}px`;
+			
+			setTimeout(() => {
+				if (tooltip) {
+					tooltip.style.opacity = '1';
+					tooltip.addClass('tooltip-show');
+				}
+			}, 10);
+		};
+
+		const hideTooltip = () => {
+			hideTimeout = window.setTimeout(() => {
+				if (tooltip) {
+					tooltip.removeClass('tooltip-show');
+					tooltip.style.opacity = '0';
+					
+					setTimeout(() => {
+						if (tooltip) {
+							tooltip.remove();
+							tooltip = null;
+						}
+					}, 200);
+				}
+			}, 100);
+		};
+
+		taskItem.addEventListener('mouseenter', showTooltip);
+		taskItem.addEventListener('mouseleave', hideTooltip);
+
+		taskItem.onclick = async (e: MouseEvent) => {
+			e.stopPropagation();
 			const file = this.app.vault.getAbstractFileByPath(task.filePath);
 			if (file instanceof TFile) {
 				await this.app.workspace.openLinkText(file.path, '', false, { active: true });
