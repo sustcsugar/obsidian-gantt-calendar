@@ -1128,7 +1128,6 @@ Gantt Calendar Plugin Styles - 甘特日历
 	height: 14px;
 	border-radius: 2px;
 	cursor: pointer;
-	border: 1px solid transparent;
 	transition: all 0.2s ease;
 	flex-shrink: 0;
 }

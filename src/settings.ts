@@ -449,11 +449,11 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		swatches.forEach(swatch => {
 			const bgColor = (swatch as HTMLElement).style.backgroundColor;
 			if (bgColor === selectedColor || rgbToHex(bgColor) === selectedColor) {
-				(swatch as HTMLElement).style.borderColor = '#000';
-				(swatch as HTMLElement).style.borderWidth = '3px';
+				(swatch as HTMLElement).style.outline = '2px solid #000';
+				(swatch as HTMLElement).style.outlineOffset = '1px';
 			} else {
-				(swatch as HTMLElement).style.borderColor = 'transparent';
-				(swatch as HTMLElement).style.borderWidth = '1px';
+				(swatch as HTMLElement).style.outline = 'none';
+				(swatch as HTMLElement).style.outlineOffset = '0px';
 			}
 		});
 	}
