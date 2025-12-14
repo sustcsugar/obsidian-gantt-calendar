@@ -511,6 +511,121 @@ export class CalendarView extends ItemView {
 		const cleaned = this.cleanTaskDescription(task.content);
 		taskItem.createEl('span', { text: cleaned, cls: 'calendar-week-task-text' });
 
+		// Create tooltip for detailed information
+		let tooltip: HTMLElement | null = null;
+		let hideTimeout: number | null = null;
+
+		const showTooltip = (e: MouseEvent) => {
+			// Clear any pending hide timeout
+			if (hideTimeout) {
+				window.clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+
+			// Remove existing tooltip if any
+			if (tooltip) {
+				tooltip.remove();
+			}
+
+			// Create tooltip
+			tooltip = document.body.createDiv('calendar-week-task-tooltip');
+			
+			// Task description with global filter
+			const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
+			const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
+			const descDiv = tooltip.createDiv('tooltip-description');
+			descDiv.createEl('strong', { text: displayText });
+
+			// Priority
+			if (task.priority) {
+				const priorityDiv = tooltip.createDiv('tooltip-priority');
+				const priorityIcon = this.getPriorityIcon(task.priority);
+				priorityDiv.createEl('span', { text: `${priorityIcon} 优先级: ${task.priority}`, cls: `priority-${task.priority}` });
+			}
+
+			// Time properties
+			const hasTimeProperties = task.createdDate || task.startDate || task.scheduledDate || 
+			                          task.dueDate || task.cancelledDate || task.completionDate;
+			
+			if (hasTimeProperties) {
+				const timeDiv = tooltip.createDiv('tooltip-time-properties');
+				
+				if (task.createdDate) {
+					timeDiv.createEl('div', { text: `➕ 创建: ${this.formatDateForDisplay(task.createdDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.startDate) {
+					timeDiv.createEl('div', { text: `🛫 开始: ${this.formatDateForDisplay(task.startDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.scheduledDate) {
+					timeDiv.createEl('div', { text: `⏳ 计划: ${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.dueDate) {
+					const dueText = `📅 截止: ${this.formatDateForDisplay(task.dueDate)}`;
+					const dueEl = timeDiv.createEl('div', { text: dueText, cls: 'tooltip-time-item' });
+					if (task.dueDate < new Date() && !task.completed) {
+						dueEl.addClass('tooltip-overdue');
+					}
+				}
+				
+				if (task.cancelledDate) {
+					timeDiv.createEl('div', { text: `❌ 取消: ${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'tooltip-time-item' });
+				}
+				
+				if (task.completionDate) {
+					timeDiv.createEl('div', { text: `✅ 完成: ${this.formatDateForDisplay(task.completionDate)}`, cls: 'tooltip-time-item' });
+				}
+			}
+
+			// File location
+			const fileDiv = tooltip.createDiv('tooltip-file');
+			fileDiv.createEl('span', { text: `📄 ${task.fileName}:${task.lineNumber}`, cls: 'tooltip-file-location' });
+
+			// Position tooltip
+			const rect = taskItem.getBoundingClientRect();
+			const tooltipWidth = 300; // Estimated width
+			const tooltipHeight = tooltip.offsetHeight;
+			
+			// Try to position to the right of the task item
+			let left = rect.right + 10;
+			let top = rect.top;
+			
+			// If tooltip would go off right edge, position to the left
+			if (left + tooltipWidth > window.innerWidth) {
+				left = rect.left - tooltipWidth - 10;
+			}
+			
+			// If tooltip would go off left edge, center it on screen
+			if (left < 0) {
+				left = (window.innerWidth - tooltipWidth) / 2;
+			}
+			
+			// Adjust vertical position if needed
+			if (top + tooltipHeight > window.innerHeight) {
+				top = window.innerHeight - tooltipHeight - 10;
+			}
+			if (top < 0) {
+				top = 10;
+			}
+			
+			tooltip.style.left = `${left}px`;
+			tooltip.style.top = `${top}px`;
+		};
+
+		const hideTooltip = () => {
+			hideTimeout = window.setTimeout(() => {
+				if (tooltip) {
+					tooltip.remove();
+					tooltip = null;
+				}
+			}, 200); // Small delay before hiding
+		};
+
+		taskItem.addEventListener('mouseenter', showTooltip);
+		taskItem.addEventListener('mouseleave', hideTooltip);
+
 		// Click to open task location
 		taskItem.onclick = async () => {
 			const file = this.app.vault.getAbstractFileByPath(task.filePath);

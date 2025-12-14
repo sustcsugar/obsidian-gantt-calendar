@@ -716,6 +716,105 @@ Gantt Calendar Plugin Styles - 甘特日历
 	font-size: 12px;
 }
 
+/* Week View Task Tooltip */
+.calendar-week-task-tooltip {
+	position: fixed;
+	z-index: 1000;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	padding: 12px;
+	max-width: 300px;
+	min-width: 250px;
+	font-size: 13px;
+	line-height: 1.5;
+	pointer-events: none;
+	animation: tooltipFadeIn 0.15s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-5px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.calendar-week-task-tooltip .tooltip-description {
+	margin-bottom: 8px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--divider-color);
+	color: var(--text-normal);
+	word-break: break-word;
+}
+
+.calendar-week-task-tooltip .tooltip-description strong {
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.calendar-week-task-tooltip .tooltip-priority {
+	margin-bottom: 8px;
+	padding: 4px 0;
+	font-weight: 500;
+}
+
+.calendar-week-task-tooltip .priority-highest {
+	color: #d73a49;
+}
+
+.calendar-week-task-tooltip .priority-high {
+	color: #e36209;
+}
+
+.calendar-week-task-tooltip .priority-medium {
+	color: #ffd33d;
+}
+
+.calendar-week-task-tooltip .priority-low {
+	color: #28a745;
+}
+
+.calendar-week-task-tooltip .priority-lowest {
+	color: #0366d6;
+}
+
+.calendar-week-task-tooltip .tooltip-time-properties {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.calendar-week-task-tooltip .tooltip-time-item {
+	font-size: 12px;
+	color: var(--text-muted);
+	padding: 2px 0;
+}
+
+.calendar-week-task-tooltip .tooltip-overdue {
+	color: #d73a49;
+	font-weight: 600;
+}
+
+.calendar-week-task-tooltip .tooltip-file {
+	padding-top: 8px;
+	border-top: 1px solid var(--divider-color);
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.calendar-week-task-tooltip .tooltip-file-location {
+	font-family: var(--font-monospace);
+}
+
 .calendar-time-grid {
 	display: grid;
 	grid-template-columns: 60px repeat(7, 1fr);
