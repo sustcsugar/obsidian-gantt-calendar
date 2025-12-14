@@ -299,6 +299,20 @@ export class CalendarView extends ItemView {
 
 	private renderYearView(container: HTMLElement): void {
 		const year = this.currentDate.getFullYear();
+		// 预计算当年每日任务数量（依据设置的日期筛选字段）
+		const tasks: GanttTask[] = this.plugin.taskCache?.getAllTasks?.() || [];
+		const dateField = this.plugin.settings.dateFilterField || 'dueDate';
+		const countsMap: Map<string, number> = new Map();
+		const startDate = new Date(year, 0, 1);
+		const endDate = new Date(year, 11, 31);
+		for (const t of tasks) {
+			const d = (t as any)[dateField] as Date | undefined;
+			if (!d) continue;
+			if (d < startDate || d > endDate) continue;
+			const key = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+			countsMap.set(key, (countsMap.get(key) || 0) + 1);
+		}
+
 		const yearContainer = container.createDiv('calendar-year-container');
 		this.yearContainer = yearContainer; // 保存引用
 
@@ -329,6 +343,14 @@ export class CalendarView extends ItemView {
 			monthData.days.forEach((day) => {
 				const dayEl = daysDiv.createEl('div');
 				dayEl.addClass('calendar-day');
+				// 热力图：根据当天任务数量设置背景深浅
+				const dayKey = `${day.date.getFullYear()}-${(day.date.getMonth()+1).toString().padStart(2,'0')}-${day.date.getDate().toString().padStart(2,'0')}`;
+				const count = countsMap.get(dayKey) || 0;
+				if (this.plugin.settings.yearHeatmapEnabled && count > 0) {
+					const palette = this.plugin.settings.yearHeatmapPalette || 'blue';
+					const level = count >= 20 ? 5 : count >= 10 ? 4 : count >= 5 ? 3 : count >= 2 ? 2 : 1;
+					dayEl.addClass(`heatmap-${palette}-${level}`);
+				}
 				
 				const dateNum = dayEl.createEl('div', { text: day.day.toString() });
 				dateNum.addClass('calendar-day-number');
@@ -344,6 +366,12 @@ export class CalendarView extends ItemView {
 					}
 				}
 				
+				// 在农历下方显示任务数量（可选）
+				if (this.plugin.settings.yearShowTaskCount && count > 0) {
+					const countEl = dayEl.createEl('div', { text: `${count}` });
+					countEl.addClass('calendar-day-task-count');
+				}
+
 				if (!day.isCurrentMonth) {
 					dayEl.addClass('outside-month');
 				}

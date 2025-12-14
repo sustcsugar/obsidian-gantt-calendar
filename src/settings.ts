@@ -27,6 +27,9 @@ export interface GanttCalendarSettings {
 	dailyNotePath: string; // Daily note 文件夹路径
 	dailyNoteNameFormat: string; // Daily note 文件名格式 (如 yyyy-MM-dd)
 	monthViewTaskLimit: number; // 月视图每天显示的最大任务数量
+	yearShowTaskCount: boolean; // 年视图是否显示每日任务数量
+	yearHeatmapEnabled: boolean; // 年视图是否启用任务热力图
+	yearHeatmapPalette: 'blue' | 'green' | 'red'; // 热力图色卡选择
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -45,6 +48,9 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	dailyNotePath: 'DailyNotes', // 默认 daily note 文件夹路径
 	dailyNoteNameFormat: 'yyyy-MM-dd', // 默认文件名格式
 	monthViewTaskLimit: 5, // 默认每天显示5个任务
+	yearShowTaskCount: true,
+	yearHeatmapEnabled: true,
+	yearHeatmapPalette: 'blue',
 };
 
 export class GanttCalendarSettingTab extends PluginSettingTab {
@@ -193,6 +199,51 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.plugin.refreshCalendarViews();
 				}));
+
+		// ===== 任务视图设置 =====
+		// ===== 年视图设置 =====
+		containerEl.createEl('h2', { text: '年视图设置' });
+
+		// 年视图每日任务数量显示
+		new Setting(containerEl)
+			.setName('显示每日任务数量')
+			.setDesc('在年视图每个日期下方显示当天任务总数（已完成+未完成）')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.yearShowTaskCount)
+				.onChange(async (value) => {
+					this.plugin.settings.yearShowTaskCount = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+				}));
+
+		// 年视图任务热力图开关
+		new Setting(containerEl)
+			.setName('启用任务热力图')
+			.setDesc('根据当天任务数量深浅显示日期背景颜色')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.yearHeatmapEnabled)
+				.onChange(async (value) => {
+					this.plugin.settings.yearHeatmapEnabled = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+				}));
+
+		// 热力图色卡选择（可视化）
+		new Setting(containerEl)
+			.setName('热力图配色方案')
+			.setDesc('选择任务热力图的颜色梯度')
+			.addDropdown(drop => {
+				// 使用色块字符展示色卡（简单可视化）；实际效果在年视图渲染
+				drop.addOption('blue', '▏▎▍▌▋▊▉ 蓝色');
+				drop.addOption('green', '▏▎▍▌▋▊▉ 绿色');
+				drop.addOption('red', '▏▎▍▌▋▊▉ 红色');
+				drop.setValue(this.plugin.settings.yearHeatmapPalette);
+				drop.onChange(async (value) => {
+					this.plugin.settings.yearHeatmapPalette = value as 'blue' | 'green' | 'red';
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+				});
+			});
 
 		// ===== 任务视图设置 =====
 		containerEl.createEl('h2', { text: '任务视图设置' });

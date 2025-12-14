@@ -1,3 +1,27 @@
+.calendar-day-task-count {
+	font-size: 10px;
+	color: var(--text-muted);
+	margin-top: 2px;
+}
+
+/* 热力图色卡：蓝、绿、红（5级） */
+.heatmap-blue-1 { background: rgba(56, 132, 255, 0.12); }
+.heatmap-blue-2 { background: rgba(56, 132, 255, 0.22); }
+.heatmap-blue-3 { background: rgba(56, 132, 255, 0.32); }
+.heatmap-blue-4 { background: rgba(56, 132, 255, 0.44); }
+.heatmap-blue-5 { background: rgba(56, 132, 255, 0.58); }
+
+.heatmap-green-1 { background: rgba(82, 196, 26, 0.12); }
+.heatmap-green-2 { background: rgba(82, 196, 26, 0.22); }
+.heatmap-green-3 { background: rgba(82, 196, 26, 0.32); }
+.heatmap-green-4 { background: rgba(82, 196, 26, 0.44); }
+.heatmap-green-5 { background: rgba(82, 196, 26, 0.58); }
+
+.heatmap-red-1 { background: rgba(231, 76, 60, 0.12); }
+.heatmap-red-2 { background: rgba(231, 76, 60, 0.22); }
+.heatmap-red-3 { background: rgba(231, 76, 60, 0.32); }
+.heatmap-red-4 { background: rgba(231, 76, 60, 0.44); }
+.heatmap-red-5 { background: rgba(231, 76, 60, 0.58); }
 /*
 Gantt Calendar Plugin Styles - 甘特日历
 */
