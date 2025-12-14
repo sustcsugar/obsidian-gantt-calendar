@@ -106,7 +106,7 @@ export class CalendarView extends ItemView {
 	private createToolbar(toolbar: HTMLElement): void {
 		const isTaskView = this.viewType === 'task';
 
-		// Left region: primary view toggle (Tasks / Calendar)
+		// Left region: 视图选择（Tasks / Calendar）
 		const left = toolbar.createDiv('calendar-toolbar-left');
 		const toggleGroup = left.createDiv('calendar-toggle-group');
 		const taskToggle = toggleGroup.createEl('button', { text: 'Tasks' });
@@ -122,33 +122,61 @@ export class CalendarView extends ItemView {
 			this.switchView(target);
 		};
 
-		// Center region: title/date display
+		// Center region: 显示区（日期范围或标题，日视图附加农历/节日）
 		const center = toolbar.createDiv('calendar-toolbar-center');
 		const dateDisplay = center.createEl('span');
 		dateDisplay.addClass('calendar-date-display');
-		
-		// Add lunar info if in day view
 		if (this.viewType === 'day') {
 			const lunar = this.getLunarInfo(this.currentDate);
 			let displayText = this.getDateRangeText();
-			
-			// Append lunar info to the same line
-			if (lunar.lunarText) {
-				displayText += ` • ${lunar.lunarText}`;
-			}
-			if (lunar.festival) {
-				displayText += ` • ${lunar.festival}`;
-			}
-			
+			if (lunar.lunarText) displayText += ` • ${lunar.lunarText}`;
+			if (lunar.festival) displayText += ` • ${lunar.festival}`;
 			dateDisplay.setText(displayText);
 		} else {
 			dateDisplay.setText(this.getDateRangeText());
 		}
 
-		// View type selector
-		// Right region: navigation + sub-view selector (only for calendar)
+		// Right region: 功能区（随视图变化）
 		const right = toolbar.createDiv('calendar-toolbar-right');
-		if (!isTaskView) {
+		if (isTaskView) {
+			// Global Filter 状态
+			const gfText = right.createEl('span', { cls: 'gantt-filter-label' });
+			gfText.setText(`Global Filter: ${this.plugin?.settings?.globalTaskFilter || '（未设置）'}`);
+
+			// 筛选按钮
+			const filterButtons = right.createDiv('gantt-task-filter-buttons');
+			const btnAll = filterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
+			const btnUncompleted = filterButtons.createEl('button', { text: '未完成', cls: 'gantt-filter-btn' });
+			const btnCompleted = filterButtons.createEl('button', { text: '已完成', cls: 'gantt-filter-btn' });
+
+			const updateActive = () => {
+				btnAll.toggleClass('active', this.taskFilter === 'all');
+				btnUncompleted.toggleClass('active', this.taskFilter === 'uncompleted');
+				btnCompleted.toggleClass('active', this.taskFilter === 'completed');
+			};
+			updateActive();
+
+			btnAll.addEventListener('click', () => {
+				this.taskFilter = 'all';
+				updateActive();
+				this.render();
+			});
+			btnUncompleted.addEventListener('click', () => {
+				this.taskFilter = 'uncompleted';
+				updateActive();
+				this.render();
+			});
+			btnCompleted.addEventListener('click', () => {
+				this.taskFilter = 'completed';
+				updateActive();
+				this.render();
+			});
+
+			// 刷新按钮
+			const refreshBtn = right.createEl('button', { text: '刷新任务', cls: 'calendar-view-btn' });
+			refreshBtn.addEventListener('click', () => this.render());
+		} else {
+			// 日历视图功能区：上一期/今天/下一期 + 子视图选择
 			const navButtons = right.createDiv('calendar-nav-buttons');
 			const prevBtn = navButtons.createEl('button', { text: '◀ 上一个' });
 			prevBtn.addClass('calendar-nav-btn');
@@ -171,13 +199,9 @@ export class CalendarView extends ItemView {
 			};
 
 			['day', 'week', 'month', 'year'].forEach((type) => {
-				const btn = viewContainer.createEl('button', {
-					text: viewTypes[type],
-				});
+				const btn = viewContainer.createEl('button', { text: viewTypes[type] });
 				btn.addClass('calendar-view-btn');
-				if (type === this.viewType) {
-					btn.addClass('active');
-				}
+				if (type === this.viewType) btn.addClass('active');
 				btn.onclick = () => this.switchView(type as CalendarViewType);
 			});
 		}
@@ -492,51 +516,10 @@ export class CalendarView extends ItemView {
 	private renderTaskView(container: HTMLElement): void {
 		container.addClass('gantt-task-view');
 
-		const header = container.createDiv('gantt-task-view-header');
-		header.createEl('h2', { text: '任务视图' });
-
-		const actions = header.createDiv('gantt-task-view-actions');
-		const refreshBtn = actions.createEl('button', { text: '刷新任务' });
-		refreshBtn.addEventListener('click', () => {
-			this.loadTaskList(statsContainer, listContainer);
-		});
-
-		const filterInfo = container.createDiv('gantt-task-filter-info');
-		filterInfo.setText(`当前筛选标记: "${this.plugin.settings.globalTaskFilter || '（未设置）'}"`);
-
-		// Filter buttons: 全部 / 未完成 / 已完成
-		const filterButtons = container.createDiv('gantt-task-filter-buttons');
-		filterButtons.createEl('span', { text: '显示:', cls: 'gantt-filter-label' });
-		const btnAll = filterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
-		const btnUncompleted = filterButtons.createEl('button', { text: '未完成', cls: 'gantt-filter-btn' });
-		const btnCompleted = filterButtons.createEl('button', { text: '已完成', cls: 'gantt-filter-btn' });
-
-		const updateActive = () => {
-			btnAll.toggleClass('active', this.taskFilter === 'all');
-			btnUncompleted.toggleClass('active', this.taskFilter === 'uncompleted');
-			btnCompleted.toggleClass('active', this.taskFilter === 'completed');
-		};
-
-		btnAll.addEventListener('click', () => {
-			this.taskFilter = 'all';
-			updateActive();
-			this.loadTaskList(statsContainer, listContainer);
-		});
-		btnUncompleted.addEventListener('click', () => {
-			this.taskFilter = 'uncompleted';
-			updateActive();
-			this.loadTaskList(statsContainer, listContainer);
-		});
-		btnCompleted.addEventListener('click', () => {
-			this.taskFilter = 'completed';
-			updateActive();
-			this.loadTaskList(statsContainer, listContainer);
-		});
-
+		// 主体仅包含统计与列表；筛选与刷新已移动到工具栏右侧
 		const statsContainer = container.createDiv('gantt-task-stats');
 		const listContainer = container.createDiv('gantt-task-list');
 
-		updateActive();
 		this.loadTaskList(statsContainer, listContainer);
 	}
 
