@@ -80,7 +80,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			});
 
 		// 节日颜色设置
-		containerEl.createEl('h3', { text: '节日颜色设置' });
+		containerEl.createEl('h4', { text: '节日颜色设置' });
 		
 		this.createColorSetting(
 			containerEl,
