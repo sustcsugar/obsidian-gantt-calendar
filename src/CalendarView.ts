@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Plugin } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Plugin, setIcon } from 'obsidian';
 import { CalendarViewType } from './types';
 import { generateMonthCalendar, getWeekOfDate, formatDate, formatMonth } from './utils';
 import { searchTasks, GanttTask } from './taskManager';
@@ -172,8 +172,9 @@ export class CalendarView extends ItemView {
 				this.render();
 			});
 
-			// 刷新按钮
-			const refreshBtn = right.createEl('button', { text: '刷新任务', cls: 'calendar-view-btn' });
+			// 刷新按钮（图标模式 + 悬浮提示）
+			const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
+			setIcon(refreshBtn, 'rotate-ccw');
 			refreshBtn.addEventListener('click', () => this.render());
 		} else {
 			// 日历视图功能区：上一期/今天/下一期 + 子视图选择

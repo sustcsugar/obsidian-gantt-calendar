@@ -67,6 +67,21 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 .calendar-toggle-btn.active {
+
+/* Icon-only button variant */
+.calendar-view-btn.icon-btn {
+	padding: 6px;
+	width: 32px;
+	height: 32px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.calendar-view-btn.icon-btn svg {
+	width: 18px;
+	height: 18px;
+}
 	background-color: var(--interactive-accent);
 	border-color: var(--interactive-accent);
 	color: white;
