@@ -585,26 +585,12 @@ Gantt Calendar Plugin Styles - 甘特日历
 
 .calendar-week-header-row {
 	display: grid;
-	grid-template-columns: 60px repeat(7, 1fr);
+	grid-template-columns: repeat(7, 1fr);
 	gap: 0;
 	flex-shrink: 0;
 	z-index: 15;
 	position: sticky;
 	top: 0;
-}
-
-.calendar-time-axis-header {
-	padding: 12px 8px;
-	text-align: center;
-	font-size: 12px;
-	font-weight: 600;
-	color: var(--text-muted);
-	border-right: 1px solid var(--background-modifier-border);
-	border-bottom: 2px solid var(--background-modifier-border);
-	background-color: var(--background-primary);
-	position: sticky;
-	top: 0;
-	z-index: 10;
 }
 
 .calendar-day-header-cell {
@@ -649,6 +635,85 @@ Gantt Calendar Plugin Styles - 甘特日历
 
 .calendar-day-header-cell.today .day-number {
 	color: #ff6b6b;
+}
+
+/* Week View Tasks Grid */
+.calendar-week-tasks-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	flex: 1 1 auto;
+	min-height: 0;
+	position: relative;
+}
+
+.calendar-week-tasks-column {
+	border-right: 1px solid var(--background-modifier-border);
+	padding: 8px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	background-color: var(--background-primary);
+}
+
+.calendar-week-tasks-column:last-child {
+	border-right: none;
+}
+
+.calendar-week-tasks-column.today {
+	background-color: rgba(255, 107, 107, 0.03);
+}
+
+.calendar-week-task-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+	border-left: 3px solid var(--color-orange);
+	transition: all 0.15s ease;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.calendar-week-task-item:hover {
+	transform: translateX(2px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-week-task-item.completed {
+	opacity: 0.6;
+	border-left-color: var(--color-green);
+}
+
+.calendar-week-task-checkbox {
+	flex-shrink: 0;
+	margin-top: 2px;
+	cursor: pointer;
+}
+
+.calendar-week-task-text {
+	flex: 1;
+	word-break: break-word;
+	line-height: 1.4;
+	color: var(--text-normal);
+}
+
+.calendar-week-task-item.completed .calendar-week-task-text {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
+.calendar-week-task-empty {
+	padding: 16px 8px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: 12px;
 }
 
 .calendar-time-grid {

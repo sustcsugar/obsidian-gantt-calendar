@@ -427,13 +427,11 @@ export class CalendarView extends ItemView {
 
 		const weekContainer = container.createDiv('calendar-week-view');
 
-		// Week grid with time axis
+		// Week grid with header and tasks
 		const weekGrid = weekContainer.createDiv('calendar-week-grid');
 
 		// Header row with day names
 		const headerRow = weekGrid.createDiv('calendar-week-header-row');
-		const timeAxisHeader = headerRow.createDiv('calendar-time-axis-header');
-		timeAxisHeader.setText('全天');
 
 		// 使用数据层已按设置排序后的 weekData.days 顺序
 		weekData.days.forEach((day) => {
@@ -449,69 +447,77 @@ export class CalendarView extends ItemView {
 			}
 		});
 
-		// Time grid
-		const timeGrid = weekGrid.createDiv('calendar-time-grid');
-
-		// Time axis column
-		const timeAxis = timeGrid.createDiv('calendar-time-axis');
-		for (let hour = 0; hour < 24; hour++) {
-			const timeSlot = timeAxis.createDiv('calendar-time-slot');
-			timeSlot.setText(`${String(hour).padStart(2, '0')}:00`);
-		}
-
-		// Day columns
-		const daysGrid = timeGrid.createDiv('calendar-days-grid');
-		weekData.days.forEach((day, index) => {
-			const dayColumn = daysGrid.createDiv('calendar-day-column-time');
+		// Tasks grid - seven columns for seven days
+		const tasksGrid = weekGrid.createDiv('calendar-week-tasks-grid');
+		weekData.days.forEach((day) => {
+			const dayTasksColumn = tasksGrid.createDiv('calendar-week-tasks-column');
 			if (day.isToday) {
-				dayColumn.addClass('today');
+				dayTasksColumn.addClass('today');
 			}
 
-			// Create 24 hour slots
-			for (let hour = 0; hour < 24; hour++) {
-				const hourSlot = dayColumn.createDiv('calendar-hour-slot');
-				if (hour % 2 === 0) {
-					hourSlot.addClass('even-hour');
-				}
-			}
-
-			dayColumn.onclick = () => this.selectDate(day.date);
+			// Load and display tasks for this day
+			this.loadWeekViewTasks(dayTasksColumn, day.date);
 		});
-
-		// Add current time indicator if today is in the week
-		this.addCurrentTimeIndicator(timeGrid, weekData);
 	}
 
-	private addCurrentTimeIndicator(timeGrid: HTMLElement, weekData: any): void {
-		const now = new Date();
-		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	private async loadWeekViewTasks(columnContainer: HTMLElement, targetDate: Date): Promise<void> {
+		columnContainer.empty();
 
-		// Check if today is in this week
-		const isInWeek = weekData.days.some((day: any) => {
-			const dayDate = new Date(day.date.getFullYear(), day.date.getMonth(), day.date.getDate());
-			return dayDate.getTime() === today.getTime();
-		});
+		try {
+			let tasks = await searchTasks(this.app, this.plugin.settings.globalTaskFilter, this.plugin.settings.enabledTaskFormats);
 
-		if (!isInWeek) return;
+			// Get the date field to filter by
+			const dateField = this.plugin.settings.dateFilterField || 'dueDate';
 
-		const hours = now.getHours();
-		const minutes = now.getMinutes();
-		const percentFromTop = (hours * 60 + minutes) / (24 * 60) * 100;
+			// Normalize target date to compare by Y-M-D
+			const normalizedTarget = new Date(targetDate);
+			normalizedTarget.setHours(0, 0, 0, 0);
 
-		const indicator = timeGrid.createDiv('calendar-current-time-indicator');
-		indicator.style.top = `${percentFromTop}%`;
+			// Filter tasks for the target day
+			const currentDayTasks = tasks.filter(task => {
+				const dateValue = (task as any)[dateField];
+				if (!dateValue) return false;
+				
+				const taskDate = new Date(dateValue);
+				if (isNaN(taskDate.getTime())) return false;
+				taskDate.setHours(0, 0, 0, 0);
+				
+				return taskDate.getTime() === normalizedTarget.getTime();
+			});
 
-		// Update indicator position every minute
-		const updateInterval = window.setInterval(() => {
-			const now = new Date();
-			const hours = now.getHours();
-			const minutes = now.getMinutes();
-			const percentFromTop = (hours * 60 + minutes) / (24 * 60) * 100;
-			indicator.style.top = `${percentFromTop}%`;
-		}, 60000); // Update every minute
+			if (currentDayTasks.length === 0) {
+				columnContainer.createEl('div', { text: '暂无任务', cls: 'calendar-week-task-empty' });
+				return;
+			}
 
-		// Clean up interval on view close
-		this.registerInterval(updateInterval);
+			currentDayTasks.forEach(task => this.renderWeekTaskItem(task, columnContainer));
+		} catch (error) {
+			console.error('Error loading week view tasks', error);
+			columnContainer.createEl('div', { text: '加载出错', cls: 'calendar-week-task-empty' });
+		}
+	}
+
+	private renderWeekTaskItem(task: GanttTask, container: HTMLElement): void {
+		const taskItem = container.createDiv('calendar-week-task-item');
+		taskItem.addClass(task.completed ? 'completed' : 'pending');
+
+		// Checkbox
+		const checkbox = taskItem.createEl('input', { type: 'checkbox' }) as HTMLInputElement;
+		checkbox.checked = task.completed;
+		checkbox.disabled = true;
+		checkbox.addClass('calendar-week-task-checkbox');
+
+		// Task content: only clean description, no global filter, priority, or time properties
+		const cleaned = this.cleanTaskDescription(task.content);
+		taskItem.createEl('span', { text: cleaned, cls: 'calendar-week-task-text' });
+
+		// Click to open task location
+		taskItem.onclick = async () => {
+			const file = this.app.vault.getAbstractFileByPath(task.filePath);
+			if (file instanceof TFile) {
+				await this.app.workspace.openLinkText(file.path, '', false, { active: true });
+			}
+		};
 	}
 
 	private renderDayView(container: HTMLElement): void {
