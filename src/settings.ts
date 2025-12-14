@@ -29,7 +29,7 @@ export interface GanttCalendarSettings {
 	monthViewTaskLimit: number; // 月视图每天显示的最大任务数量
 	yearShowTaskCount: boolean; // 年视图是否显示每日任务数量
 	yearHeatmapEnabled: boolean; // 年视图是否启用任务热力图
-	yearHeatmapPalette: 'blue' | 'green' | 'red'; // 热力图色卡选择
+	yearHeatmapPalette: 'blue' | 'green' | 'red' | 'purple' | 'orange' | 'cyan' | 'pink' | 'yellow'; // 热力图色卡选择
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -314,7 +314,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		labelDiv.createEl('div', { text: '热力图配色方案', cls: 'heatmap-palette-name' });
 		labelDiv.createEl('div', { text: '选择任务热力图的颜色梯度', cls: 'heatmap-palette-desc' });
 
-		const palettes: Array<{ key: 'blue'|'green'|'red'; colors: string[]; label: string }> = [
+		const palettes: Array<{ key: 'blue'|'green'|'red'|'purple'|'orange'|'cyan'|'pink'|'yellow'; colors: string[]; label: string }> = [
 			{ key: 'blue', label: '蓝色', colors: [
 				'rgba(56, 132, 255, 0.12)',
 				'rgba(56, 132, 255, 0.22)',
@@ -335,6 +335,41 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				'rgba(231, 76, 60, 0.32)',
 				'rgba(231, 76, 60, 0.44)',
 				'rgba(231, 76, 60, 0.58)'
+			] },
+			{ key: 'purple', label: '紫色', colors: [
+				'rgba(142, 68, 173, 0.12)',
+				'rgba(142, 68, 173, 0.22)',
+				'rgba(142, 68, 173, 0.32)',
+				'rgba(142, 68, 173, 0.44)',
+				'rgba(142, 68, 173, 0.58)'
+			] },
+			{ key: 'orange', label: '橙色', colors: [
+				'rgba(245, 124, 0, 0.12)',
+				'rgba(245, 124, 0, 0.22)',
+				'rgba(245, 124, 0, 0.32)',
+				'rgba(245, 124, 0, 0.44)',
+				'rgba(245, 124, 0, 0.58)'
+			] },
+			{ key: 'cyan', label: '青色', colors: [
+				'rgba(0, 188, 212, 0.12)',
+				'rgba(0, 188, 212, 0.22)',
+				'rgba(0, 188, 212, 0.32)',
+				'rgba(0, 188, 212, 0.44)',
+				'rgba(0, 188, 212, 0.58)'
+			] },
+			{ key: 'pink', label: '粉色', colors: [
+				'rgba(233, 30, 99, 0.12)',
+				'rgba(233, 30, 99, 0.22)',
+				'rgba(233, 30, 99, 0.32)',
+				'rgba(233, 30, 99, 0.44)',
+				'rgba(233, 30, 99, 0.58)'
+			] },
+			{ key: 'yellow', label: '黄色', colors: [
+				'rgba(255, 193, 7, 0.12)',
+				'rgba(255, 193, 7, 0.22)',
+				'rgba(255, 193, 7, 0.32)',
+				'rgba(255, 193, 7, 0.44)',
+				'rgba(255, 193, 7, 0.58)'
 			] },
 		];
 

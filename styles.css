@@ -23,6 +23,36 @@
 .calendar-day.heatmap-red-3 { background-image: none; background-color: rgba(231, 76, 60, 0.32) !important; }
 .calendar-day.heatmap-red-4 { background-image: none; background-color: rgba(231, 76, 60, 0.44) !important; }
 .calendar-day.heatmap-red-5 { background-image: none; background-color: rgba(231, 76, 60, 0.58) !important; }
+
+.calendar-day.heatmap-purple-1 { background-image: none; background-color: rgba(142, 68, 173, 0.12) !important; }
+.calendar-day.heatmap-purple-2 { background-image: none; background-color: rgba(142, 68, 173, 0.22) !important; }
+.calendar-day.heatmap-purple-3 { background-image: none; background-color: rgba(142, 68, 173, 0.32) !important; }
+.calendar-day.heatmap-purple-4 { background-image: none; background-color: rgba(142, 68, 173, 0.44) !important; }
+.calendar-day.heatmap-purple-5 { background-image: none; background-color: rgba(142, 68, 173, 0.58) !important; }
+
+.calendar-day.heatmap-orange-1 { background-image: none; background-color: rgba(245, 124, 0, 0.12) !important; }
+.calendar-day.heatmap-orange-2 { background-image: none; background-color: rgba(245, 124, 0, 0.22) !important; }
+.calendar-day.heatmap-orange-3 { background-image: none; background-color: rgba(245, 124, 0, 0.32) !important; }
+.calendar-day.heatmap-orange-4 { background-image: none; background-color: rgba(245, 124, 0, 0.44) !important; }
+.calendar-day.heatmap-orange-5 { background-image: none; background-color: rgba(245, 124, 0, 0.58) !important; }
+
+.calendar-day.heatmap-cyan-1 { background-image: none; background-color: rgba(0, 188, 212, 0.12) !important; }
+.calendar-day.heatmap-cyan-2 { background-image: none; background-color: rgba(0, 188, 212, 0.22) !important; }
+.calendar-day.heatmap-cyan-3 { background-image: none; background-color: rgba(0, 188, 212, 0.32) !important; }
+.calendar-day.heatmap-cyan-4 { background-image: none; background-color: rgba(0, 188, 212, 0.44) !important; }
+.calendar-day.heatmap-cyan-5 { background-image: none; background-color: rgba(0, 188, 212, 0.58) !important; }
+
+.calendar-day.heatmap-pink-1 { background-image: none; background-color: rgba(233, 30, 99, 0.12) !important; }
+.calendar-day.heatmap-pink-2 { background-image: none; background-color: rgba(233, 30, 99, 0.22) !important; }
+.calendar-day.heatmap-pink-3 { background-image: none; background-color: rgba(233, 30, 99, 0.32) !important; }
+.calendar-day.heatmap-pink-4 { background-image: none; background-color: rgba(233, 30, 99, 0.44) !important; }
+.calendar-day.heatmap-pink-5 { background-image: none; background-color: rgba(233, 30, 99, 0.58) !important; }
+
+.calendar-day.heatmap-yellow-1 { background-image: none; background-color: rgba(255, 193, 7, 0.12) !important; }
+.calendar-day.heatmap-yellow-2 { background-image: none; background-color: rgba(255, 193, 7, 0.22) !important; }
+.calendar-day.heatmap-yellow-3 { background-image: none; background-color: rgba(255, 193, 7, 0.32) !important; }
+.calendar-day.heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44) !important; }
+.calendar-day.heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58) !important; }
 /*
 Gantt Calendar Plugin Styles - 甘特日历
 */
@@ -1593,10 +1623,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 .heatmap-palette-list {
-	display: flex;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
 	gap: 12px;
 	padding: 8px 10px;
-	flex-wrap: wrap;
 }
 
 .heatmap-palette-option {
