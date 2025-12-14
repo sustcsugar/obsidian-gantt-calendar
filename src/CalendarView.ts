@@ -33,6 +33,10 @@ export class CalendarView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
+		// 等待任务缓存准备完成，避免首屏任务为空
+		if (this.plugin?.taskCache?.whenReady) {
+			await this.plugin.taskCache.whenReady();
+		}
 		this.render();
 		this.setupResizeObserver();
 		this.applyYearLunarFontSize();
@@ -220,7 +224,14 @@ export class CalendarView extends ItemView {
 
 			const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
 			setIcon(refreshBtn, 'rotate-ccw');
-			refreshBtn.addEventListener('click', () => this.render());
+			refreshBtn.addEventListener('click', async () => {
+			// 重新扫描库并更新缓存
+			await this.plugin.taskCache.initialize(
+				this.plugin.settings.globalTaskFilter,
+				this.plugin.settings.enabledTaskFormats
+			);
+			this.render();
+		});
 			right.appendChild(refreshBtn);
 		} else {
 			// 日历视图功能区：上一期/今天/下一期 + 子视图选择
@@ -255,7 +266,14 @@ export class CalendarView extends ItemView {
 			// 刷新按钮（图标模式 + 悬浮提示）
 			const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
 			setIcon(refreshBtn, 'rotate-ccw');
-			refreshBtn.addEventListener('click', () => this.render());
+			refreshBtn.addEventListener('click', async () => {
+				// 重新扫描库并更新缓存
+				await this.plugin.taskCache.initialize(
+					this.plugin.settings.globalTaskFilter,
+					this.plugin.settings.enabledTaskFormats
+				);
+				this.render();
+			});
 		}
 	}
 

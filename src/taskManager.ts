@@ -200,21 +200,29 @@ export class TaskCacheManager {
 	/**
 	 * 初始化缓存 - 扫描整个笔记库
 	 */
-	async initialize(globalTaskFilter: string, enabledFormats?: string[]): Promise<void> {
+	async initialize(globalTaskFilter: string, enabledFormats?: string[], retryCount: number = 0): Promise<void> {
 		if (this.isInitializing) {
 			console.log('[TaskCache] Already initializing, skipping...');
 			return;
 		}
 
 		this.isInitializing = true;
-		this.globalTaskFilter = globalTaskFilter;
+		this.globalTaskFilter = (globalTaskFilter || '').trim();
 		this.enabledFormats = enabledFormats || ['tasks', 'dataview'];
 
 		console.time('[TaskCache] Initial scan');
 		console.log('[TaskCache] Starting initial scan...');
 
 		this.cache.clear();
-		const markdownFiles = this.app.vault.getMarkdownFiles();
+		let markdownFiles = this.app.vault.getMarkdownFiles();
+		
+		// 如果首次扫描找不到文件，可能 vault 尚未初始化，等待后重试
+		if (markdownFiles.length === 0 && retryCount < 3) {
+			console.log(`[TaskCache] Vault not ready (${markdownFiles.length} files found), retrying in 500ms...`);
+			this.isInitializing = false;
+			await new Promise(resolve => setTimeout(resolve, 500));
+			return this.initialize(globalTaskFilter, enabledFormats, retryCount + 1);
+		}
 		
 		// 批量处理文件，避免阻塞UI
 		const batchSize = 50;
@@ -333,13 +341,14 @@ export class TaskCacheManager {
 	 * 更新配置并重新初始化
 	 */
 	async updateSettings(globalTaskFilter: string, enabledFormats?: string[]): Promise<void> {
+		const trimmedFilter = (globalTaskFilter || '').trim();
 		const needsReinit = 
-			this.globalTaskFilter !== globalTaskFilter ||
+			this.globalTaskFilter !== trimmedFilter ||
 			JSON.stringify(this.enabledFormats) !== JSON.stringify(enabledFormats);
 
 		if (needsReinit) {
 			console.log('[TaskCache] Settings changed, reinitializing cache...');
-			await this.initialize(globalTaskFilter, enabledFormats);
+			await this.initialize(trimmedFilter, enabledFormats);
 		}
 	}
 
