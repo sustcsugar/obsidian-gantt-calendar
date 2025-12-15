@@ -571,7 +571,7 @@ export class CalendarView extends ItemView {
 
 	private renderWeekTaskItem(task: GanttTask, container: HTMLElement): void {
 		const taskItem = container.createDiv('calendar-week-task-item');
-		taskItem.addClass(task.completed ? 'completed' : 'pending');
+		taskItem.addClass(task.completed ? 'completed' : 'pending'); // Updated task item class based on completion status
 
 		// Checkbox
 		const checkbox = taskItem.createEl('input', { type: 'checkbox' }) as HTMLInputElement;
@@ -771,7 +771,7 @@ export class CalendarView extends ItemView {
 
 	private renderMonthTaskItem(task: GanttTask, container: HTMLElement): void {
 		const taskItem = container.createDiv('calendar-month-task-item');
-		taskItem.addClass(task.completed ? 'completed' : 'pending');
+		taskItem.addClass(task.completed ? 'completed' : 'pending'); // Updated task item class based on completion status
 
 		// Task content: only clean description
 		const cleaned = this.cleanTaskDescription(task.content);

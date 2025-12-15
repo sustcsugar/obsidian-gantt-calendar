@@ -6,6 +6,8 @@ export interface GanttTask {
 	lineNumber: number;
 	content: string;
 	completed: boolean;
+	// 源格式：'tasks' | 'dataview'（用于写回时选择字段样式）
+	format?: 'tasks' | 'dataview';
 	priority?: string; // highest, high, medium, low, lowest
 	createdDate?: Date;
 	startDate?: Date;
@@ -127,6 +129,11 @@ function parseTasksFormat(content: string, task: GanttTask): void {
 				break;
 		}
 	}
+
+	// 如果匹配到 Tasks 风格的日期或优先级，标记为 tasks 格式
+	if (/([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}/.test(content) || /[🔺⏫🔼🔽⏬]/.test(content)) {
+		task.format = 'tasks';
+	}
 }
 
 /**
@@ -167,6 +174,11 @@ function parseDataviewFormat(content: string, task: GanttTask): void {
 				else if (field === 'completion') task.completionDate = date;
 				break;
 		}
+	}
+
+	// 如果匹配到 Dataview 风格字段，标记为 dataview 格式
+	if (/\[(priority|created|start|scheduled|due|cancelled|completion)::\s*[^\]]+\]/.test(content)) {
+		task.format = 'dataview';
 	}
 }
 
@@ -444,26 +456,37 @@ export async function updateTaskCompletion(
 
 	// 处理完成日期
 	const today = formatDate(new Date(), 'YYYY-MM-DD');
-	
+    
+	// 选择写回格式：优先使用任务本身的格式；否则根据当前行判断；再否则使用设置
+	let formatToUse: 'dataview' | 'tasks' | undefined = task.format;
+	if (!formatToUse) {
+		if (/\[(priority|created|start|scheduled|due|cancelled|completion)::\s*[^\]]+\]/.test(taskLine)) {
+			formatToUse = 'dataview';
+		} else if (/([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}/.test(taskLine)) {
+			formatToUse = 'tasks';
+		} else if (enabledFormats.includes('dataview') && enabledFormats.includes('tasks')) {
+			// 两者都支持时：如果行中已有方括号则 dataview，否则 tasks
+			formatToUse = taskLine.includes('[') ? 'dataview' : 'tasks';
+		} else if (enabledFormats.includes('dataview')) {
+			formatToUse = 'dataview';
+		} else {
+			formatToUse = 'tasks';
+		}
+	}
+
 	if (completed) {
 		// 添加完成日期
-		if (enabledFormats.includes('dataview') && taskLine.includes('[')) {
-			// Dataview 格式：移除旧的完成日期，添加新的
+		if (formatToUse === 'dataview') {
 			taskLine = taskLine.replace(/\[completion::\s*[^\]]+\]/g, '');
 			taskLine = taskLine.trimEnd() + ` [completion:: ${today}]`;
-		} else if (enabledFormats.includes('tasks')) {
-			// Tasks 格式：移除旧的完成日期，添加新的
+		} else {
 			taskLine = taskLine.replace(/✅\s*\d{4}-\d{2}-\d{2}/g, '');
 			taskLine = taskLine.trimEnd() + ` ✅ ${today}`;
 		}
 	} else {
 		// 移除完成日期
-		if (enabledFormats.includes('dataview')) {
-			taskLine = taskLine.replace(/\[completion::\s*[^\]]+\]\s*/g, '');
-		}
-		if (enabledFormats.includes('tasks')) {
-			taskLine = taskLine.replace(/✅\s*\d{4}-\d{2}-\d{2}\s*/g, '');
-		}
+		taskLine = taskLine.replace(/\[completion::\s*[^\]]+\]\s*/g, '');
+		taskLine = taskLine.replace(/✅\s*\d{4}-\d{2}-\d{2}\s*/g, '');
 	}
 
 	// 更新内容
