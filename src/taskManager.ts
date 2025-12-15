@@ -177,6 +177,8 @@ function escapeRegExp(string: string): string {
 	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+export type TaskCacheUpdateListener = () => void;
+
 /**
  * 任务缓存管理器 - 全局单例，用于提升性能
  * 
@@ -184,6 +186,7 @@ function escapeRegExp(string: string): string {
  * 1. 初始化时扫描整个笔记库，缓存所有任务
  * 2. 监听文件变化，增量更新受影响文件的任务
  * 3. 提供快速的任务查询接口，避免重复扫描
+ * 4. 当任务缓存更新时，通知所有订阅的监听器
  */
 export class TaskCacheManager {
 	private app: App;
@@ -192,6 +195,7 @@ export class TaskCacheManager {
 	private enabledFormats: string[] = ['tasks', 'dataview'];
 	private isInitialized: boolean = false;
 	private isInitializing: boolean = false;
+	private updateListeners: Set<TaskCacheUpdateListener> = new Set();
 
 	constructor(app: App) {
 		this.app = app;
@@ -259,6 +263,9 @@ export class TaskCacheManager {
 			} else {
 				this.cache.delete(file.path);
 			}
+
+			// 通知所有监听器，缓存已更新
+			this.notifyListeners();
 		} catch (error) {
 			console.error(`[TaskCache] Error updating cache for ${file.path}:`, error);
 			this.cache.delete(file.path);
@@ -373,5 +380,32 @@ export class TaskCacheManager {
 		this.cache.clear();
 		this.isInitialized = false;
 		console.log('[TaskCache] Cache cleared');
+	}
+
+	/**
+	 * 订阅缓存更新事件
+	 */
+	onUpdate(listener: TaskCacheUpdateListener): void {
+		this.updateListeners.add(listener);
+	}
+
+	/**
+	 * 取消订阅缓存更新事件
+	 */
+	offUpdate(listener: TaskCacheUpdateListener): void {
+		this.updateListeners.delete(listener);
+	}
+
+	/**
+	 * 通知所有监听器，缓存已更新
+	 */
+	private notifyListeners(): void {
+		this.updateListeners.forEach(listener => {
+			try {
+				listener();
+			} catch (error) {
+				console.error('[TaskCache] Error in update listener:', error);
+			}
+		});
 	}
 }

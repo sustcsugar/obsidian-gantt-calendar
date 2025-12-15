@@ -14,6 +14,7 @@ export class CalendarView extends ItemView {
 	private plugin: any;
 	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'all'; // 默认显示全部任务（包括已完成和未完成）
 	private dateFilter: 'all' | 'today' | 'week' | 'month' = 'today'; // 默认显示当日任务
+	private cacheUpdateListener: (() => void) | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: any) {
 		super(leaf);
@@ -40,6 +41,14 @@ export class CalendarView extends ItemView {
 		this.render();
 		this.setupResizeObserver();
 		this.applyYearLunarFontSize();
+
+		// 订阅缓存更新事件
+		this.cacheUpdateListener = () => {
+			if (this.containerEl.isConnected) {
+				this.render();
+			}
+		};
+		this.plugin?.taskCache?.onUpdate(this.cacheUpdateListener);
 	}
 	
 	public refreshSettings(): void {
@@ -50,6 +59,12 @@ export class CalendarView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
+		// Unsubscribe from cache updates
+		if (this.cacheUpdateListener) {
+			this.plugin?.taskCache?.offUpdate(this.cacheUpdateListener);
+			this.cacheUpdateListener = null;
+		}
+
 		// Cleanup
 		if (this.resizeObserver) {
 			this.resizeObserver.disconnect();

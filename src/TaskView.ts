@@ -9,6 +9,7 @@ export class TaskView extends ItemView {
 	private plugin: GanttCalendarPlugin;
 	private listContainer: HTMLElement | null = null;
 	private statsContainer: HTMLElement | null = null;
+	private cacheUpdateListener: (() => void) | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: GanttCalendarPlugin) {
 		super(leaf);
@@ -29,10 +30,22 @@ export class TaskView extends ItemView {
 
 	async onOpen(): Promise<void> {
 		this.render();
+
+		// 订阅缓存更新事件
+		this.cacheUpdateListener = () => {
+			if (this.containerEl.isConnected) {
+				this.renderTasks();
+			}
+		};
+		this.plugin.taskCache.onUpdate(this.cacheUpdateListener);
 	}
 
 	async onClose(): Promise<void> {
-		// Nothing to clean up for now
+		// 取消订阅
+		if (this.cacheUpdateListener) {
+			this.plugin.taskCache.offUpdate(this.cacheUpdateListener);
+			this.cacheUpdateListener = null;
+		}
 	}
 
 	public async render(): Promise<void> {
