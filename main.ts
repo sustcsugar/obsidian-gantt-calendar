@@ -111,6 +111,20 @@ export default class GanttCalendarPlugin extends Plugin {
             }
         });
 
+        // Open calendar view (default month view)
+        this.addCommand({
+            id: 'gantt-calendar-open-calendar-view',
+            name: '打开日历视图',
+            callback: async () => {
+                await this.activateView();
+                const leaf = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_ID)[0];
+                const view = leaf?.view as unknown as CalendarView;
+                if (view?.switchView) {
+                    view.switchView('month');
+                }
+            }
+        });
+
         // Open dedicated task view
         this.addCommand({
             id: 'gantt-calendar-open-task-view',
