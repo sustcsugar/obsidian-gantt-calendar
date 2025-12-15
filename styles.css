@@ -1325,11 +1325,22 @@ Gantt Calendar Plugin Styles - 甘特日历
 	border-left-color: #f5a623;
 }
 
+.gantt-task-content {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
 .gantt-task-checkbox {
 	flex-shrink: 0;
-	cursor: not-allowed;
+	cursor: pointer;
 	width: 18px;
 	height: 18px;
+	pointer-events: auto;
+	margin: 0;
+	z-index: 10;
 }
 
 .gantt-task-text {

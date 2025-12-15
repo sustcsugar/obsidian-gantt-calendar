@@ -409,3 +409,80 @@ export class TaskCacheManager {
 		});
 	}
 }
+
+/**
+ * 更新任务的完成状态
+ * @param app Obsidian App 实例
+ * @param task 要更新的任务
+ * @param completed 是否完成
+ * @param enabledFormats 启用的任务格式
+ */
+export async function updateTaskCompletion(
+	app: App,
+	task: GanttTask,
+	completed: boolean,
+	enabledFormats: string[]
+): Promise<void> {
+	const file = app.vault.getAbstractFileByPath(task.filePath);
+	if (!(file instanceof TFile)) {
+		throw new Error(`File not found: ${task.filePath}`);
+	}
+
+	const content = await app.vault.read(file);
+	const lines = content.split('\n');
+	
+	// 获取任务行的索引（lineNumber 是 1-based）
+	const taskLineIndex = task.lineNumber - 1;
+	if (taskLineIndex < 0 || taskLineIndex >= lines.length) {
+		throw new Error(`Invalid line number: ${task.lineNumber}`);
+	}
+
+	let taskLine = lines[taskLineIndex];
+	
+	// 更新复选框状态
+	taskLine = taskLine.replace(/\[([ xX])\]/, completed ? '[x]' : '[ ]');
+
+	// 处理完成日期
+	const today = formatDate(new Date(), 'YYYY-MM-DD');
+	
+	if (completed) {
+		// 添加完成日期
+		if (enabledFormats.includes('dataview') && taskLine.includes('[')) {
+			// Dataview 格式：移除旧的完成日期，添加新的
+			taskLine = taskLine.replace(/\[completion::\s*[^\]]+\]/g, '');
+			taskLine = taskLine.trimEnd() + ` [completion:: ${today}]`;
+		} else if (enabledFormats.includes('tasks')) {
+			// Tasks 格式：移除旧的完成日期，添加新的
+			taskLine = taskLine.replace(/✅\s*\d{4}-\d{2}-\d{2}/g, '');
+			taskLine = taskLine.trimEnd() + ` ✅ ${today}`;
+		}
+	} else {
+		// 移除完成日期
+		if (enabledFormats.includes('dataview')) {
+			taskLine = taskLine.replace(/\[completion::\s*[^\]]+\]\s*/g, '');
+		}
+		if (enabledFormats.includes('tasks')) {
+			taskLine = taskLine.replace(/✅\s*\d{4}-\d{2}-\d{2}\s*/g, '');
+		}
+	}
+
+	// 更新内容
+	lines[taskLineIndex] = taskLine;
+	const newContent = lines.join('\n');
+
+	// 写入文件
+	await app.vault.modify(file, newContent);
+}
+
+/**
+ * 格式化日期为 YYYY-MM-DD
+ */
+function formatDate(date: Date, format: string): string {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	
+	return format.replace('YYYY', String(year))
+		.replace('MM', month)
+		.replace('DD', day);
+}

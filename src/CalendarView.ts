@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Plugin, setIcon, TFile, MarkdownRenderer } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Plugin, setIcon, TFile, MarkdownRenderer, Notice } from 'obsidian';
 import { CalendarViewType } from './types';
 import { generateMonthCalendar, getWeekOfDate, formatDate, formatMonth, isToday, isThisWeek, isThisMonth, openFileInExistingLeaf } from './utils';
 import { searchTasks, GanttTask } from './taskManager';
@@ -1221,8 +1221,38 @@ export class CalendarView extends ItemView {
 		// Checkbox
 		const checkbox = taskItem.createEl('input', { type: 'checkbox' }) as HTMLInputElement;
 		checkbox.checked = task.completed;
-		checkbox.disabled = true;
+		checkbox.disabled = false; // 启用复选框
 		checkbox.addClass('gantt-task-checkbox');
+
+		// 复选框变更事件
+		checkbox.addEventListener('change', async (e) => {
+			console.log('[CalendarView] Checkbox change event triggered', e);
+			e.stopPropagation(); // 防止事件冒泡
+			const isNowCompleted = checkbox.checked;
+			try {
+				const { updateTaskCompletion } = await import('./taskManager');
+				await updateTaskCompletion(
+					this.app,
+					task,
+					isNowCompleted,
+					this.plugin.settings.enabledTaskFormats
+				);
+				// 更新 UI 状态（视图会自动刷新）
+				taskItem.toggleClass('completed', isNowCompleted);
+				taskItem.toggleClass('pending', !isNowCompleted);
+			} catch (error) {
+				console.error('Error updating task:', error);
+				new Notice('更新任务失败');
+				// 恢复复选框状态
+				checkbox.checked = task.completed;
+			}
+		});
+
+		// 添加 click 事件监听用于调试
+		checkbox.addEventListener('click', (e) => {
+			console.log('[CalendarView] Checkbox click event triggered', e);
+			e.stopPropagation();
+		});
 
 		// Task content: clean description; optionally prefix global filter
 		const cleaned = this.cleanTaskDescription(task.content);
