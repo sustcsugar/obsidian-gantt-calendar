@@ -1,5 +1,6 @@
-import { Modal, App, MarkdownView } from 'obsidian';
+import { Modal, App } from 'obsidian';
 import type { GanttTask } from './taskManager';
+import { openFileInExistingLeaf } from './utils';
 
 export class TaskListModal extends Modal {
 	tasks: GanttTask[];
@@ -63,19 +64,7 @@ export class TaskListModal extends Modal {
 
 			// 点击打开文件
 			taskItem.addEventListener('click', async () => {
-				const file = this.app.vault.getAbstractFileByPath(task.filePath);
-				if (file) {
-					const leaf = this.app.workspace.getLeaf();
-					if (leaf) {
-						await leaf.openFile(file as any);
-						
-						// 如果可能，跳转到对应行
-						const editor = this.app.workspace.activeEditor?.editor;
-						if (editor) {
-							editor.setCursor(task.lineNumber - 1, 0);
-						}
-					}
-				}
+				await openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 				this.close();
 			});
 		});

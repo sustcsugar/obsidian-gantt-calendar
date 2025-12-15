@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, Plugin, setIcon, TFile, MarkdownRenderer } from 'obsidian';
 import { CalendarViewType } from './types';
-import { generateMonthCalendar, getWeekOfDate, formatDate, formatMonth, isToday, isThisWeek, isThisMonth } from './utils';
+import { generateMonthCalendar, getWeekOfDate, formatDate, formatMonth, isToday, isThisWeek, isThisMonth, openFileInExistingLeaf } from './utils';
 import { searchTasks, GanttTask } from './taskManager';
 
 export const CALENDAR_VIEW_ID = 'gantt-calendar-view';
@@ -703,10 +703,7 @@ export class CalendarView extends ItemView {
 
 		// Click to open task location
 		taskItem.onclick = async () => {
-			const file = this.app.vault.getAbstractFileByPath(task.filePath);
-			if (file instanceof TFile) {
-				await this.app.workspace.openLinkText(file.path, '', false, { active: true });
-			}
+			await openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 		};
 	}
 
@@ -887,10 +884,7 @@ export class CalendarView extends ItemView {
 
 		taskItem.onclick = async (e: MouseEvent) => {
 			e.stopPropagation();
-			const file = this.app.vault.getAbstractFileByPath(task.filePath);
-			if (file instanceof TFile) {
-				await this.app.workspace.openLinkText(file.path, '', false, { active: true });
-			}
+			await openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 		};
 	}
 
@@ -1263,17 +1257,7 @@ export class CalendarView extends ItemView {
 		taskItem.createEl('span', { text: `${task.fileName}:${task.lineNumber}`, cls: 'gantt-task-file' });
 
 		taskItem.addEventListener('click', async () => {
-			const file = this.app.vault.getAbstractFileByPath(task.filePath);
-			if (file) {
-				const leaf = this.app.workspace.getLeaf();
-				if (leaf) {
-					await leaf.openFile(file as any);
-					const editor = this.app.workspace.activeEditor?.editor;
-					if (editor) {
-						editor.setCursor(task.lineNumber - 1, 0);
-					}
-				}
-			}
+			await openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 		});
 	}
 

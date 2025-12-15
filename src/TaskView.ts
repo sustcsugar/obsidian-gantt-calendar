@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import type GanttCalendarPlugin from '../main';
 import { searchTasks, GanttTask } from './taskManager';
+import { openFileInExistingLeaf } from './utils';
 
 export const TASK_VIEW_ID = 'gantt-task-view';
 
@@ -103,17 +104,7 @@ export class TaskView extends ItemView {
 		infoDiv.createEl('span', { text: `${task.fileName} : 第 ${task.lineNumber} 行`, cls: 'gantt-task-file' });
 
 		taskItem.addEventListener('click', async () => {
-			const file = this.app.vault.getAbstractFileByPath(task.filePath);
-			if (file) {
-				const leaf = this.app.workspace.getLeaf();
-				if (leaf) {
-					await leaf.openFile(file as any);
-					const editor = this.app.workspace.activeEditor?.editor;
-					if (editor) {
-						editor.setCursor(task.lineNumber - 1, 0);
-					}
-				}
-			}
+			await openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 		});
 	}
 }
