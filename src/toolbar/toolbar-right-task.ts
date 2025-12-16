@@ -85,7 +85,8 @@ export class ToolbarRightTask {
 				// 清除按钮选中态
 				Array.from(dateFilterGroup.getElementsByClassName('toolbar-right-task-date-mode-btn')).forEach(el => el.classList.remove('active'));
 			} else {
-				// 无输入时，恢复为全部（不设置具体日期）
+				// 无输入时，恢复为全部并清空特定日期
+				taskRenderer.setSpecificDate(null);
 				taskRenderer.setDateRangeMode('all');
 			}
 			onFilterChange();
@@ -111,6 +112,8 @@ export class ToolbarRightTask {
 				if (m.key !== 'all') {
 					// 以当天为参考
 					taskRenderer.setSpecificDate(new Date());
+				} else {
+					taskRenderer.setSpecificDate(null);
 				}
 				// active 切换
 				Array.from(dateFilterGroup.getElementsByClassName('toolbar-right-task-date-mode-btn')).forEach(el => el.classList.remove('active'));

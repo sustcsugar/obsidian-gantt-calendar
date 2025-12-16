@@ -40,7 +40,7 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 		return this.timeValueFilter;
 	}
 
-	public setSpecificDate(date: Date): void {
+	public setSpecificDate(date: Date | null): void {
 		this.timeValueFilter = date;
 	}
     
@@ -100,23 +100,7 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 				tasks = tasks.filter(t => !t.completed);
 			}
 
-		// 应用时间字段筛选（如果选择了日期）
-		if (this.timeValueFilter) {
-				tasks = tasks.filter(task => {
-					const dateValue = (task as any)[this.timeFieldFilter];
-					if (!dateValue) return false;
-
-					const taskDate = new Date(dateValue);
-					if (isNaN(taskDate.getTime())) return false;
-
-					// 按天比较（忽略时间部分）
-					const filterDate = new Date(this.timeValueFilter!);
-					taskDate.setHours(0, 0, 0, 0);
-					filterDate.setHours(0, 0, 0, 0);
-
-					return taskDate.getTime() === filterDate.getTime();
-				});
-			}
+		// 旧的单日精确筛选已被统一的日期范围模式取代
         
 		// 日期范围筛选
 		const mode = this.getDateRangeMode();
