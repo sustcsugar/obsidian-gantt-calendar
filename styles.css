@@ -84,7 +84,7 @@ Gantt Calendar Plugin Styles - 甘特日历
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: 12px;
 	padding: 12px 16px;
 	background-color: var(--background-primary);
@@ -105,7 +105,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 
 .calendar-toolbar-center {
 	flex: 1 1 auto;
+	display: flex;
+	align-items: center;
 	justify-content: center;
+	min-width: 0;
 }
 
 .calendar-toolbar-right {
@@ -147,18 +150,59 @@ Gantt Calendar Plugin Styles - 甘特日历
 }
 
 /* Icon-only button variant */
-.calendar-view-btn.icon-btn {
+.toolbar-right-task-refresh-btn {
 	padding: 6px;
 	width: 32px;
 	height: 32px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
 }
 
-.calendar-view-btn.icon-btn svg {
+.toolbar-right-task-refresh-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.toolbar-right-task-refresh-btn svg {
 	width: 18px;
 	height: 18px;
+}
+
+/* 任务视图功能区专用样式 */
+.toolbar-right-task {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 0 1 auto;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+}
+
+.toolbar-right-task-time-field-select {
+	padding: 4px 8px;
+	border: 1px solid var(--input-border-color);
+	border-radius: 4px;
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.toolbar-right-task-time-field-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.toolbar-right-task-time-field-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-rgb, rgba(138, 109, 255, 0.1));
 }
 
 .calendar-nav-buttons {
@@ -208,8 +252,8 @@ Gantt Calendar Plugin Styles - 甘特日历
 .calendar-date-display {
 	font-weight: 600;
 	color: var(--text-normal);
-	flex: 1;
 	text-align: center;
+	white-space: nowrap;
 }
 
 .calendar-view-selector {
@@ -1274,7 +1318,7 @@ Gantt Calendar Plugin Styles - 甘特日历
 	margin: 0;
 }
 
-.gantt-filter-label {
+.toolbar-right-task-global-filter {
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-normal);
@@ -1287,15 +1331,15 @@ Gantt Calendar Plugin Styles - 甘特日历
 	gap: 8px;
 }
 
-.gantt-filter-group-label {
+.toolbar-right-task-time-filter-label {
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-muted);
 	white-space: nowrap;
-	margin: 0 0px;
+	margin: 0 8px;
 }
 
-.gantt-filter-divider {
+.toolbar-right-task-divider {
 	width: 1px;
 	height: 24px;
 	background-color: var(--divider-color);

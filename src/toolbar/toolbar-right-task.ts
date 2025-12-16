@@ -23,28 +23,28 @@ export class ToolbarRightTask {
 		onRefresh: () => Promise<void>
 	): void {
 		container.empty();
-		container.addClass('calendar-toolbar-right');
+		container.addClass('toolbar-right-task');
 
 		// Global Filter 状态
-		const gfText = container.createEl('span', { cls: 'gantt-filter-label' });
+		const gfText = container.createEl('span', { cls: 'toolbar-right-task-global-filter' });
 		gfText.setText(`Global Filter: ${globalFilterText || '（未设置）'}`);
 
 		// 状态筛选 - 由 TaskViewRenderer 创建
 		taskRenderer.createStatusFilterGroup(container, onFilterChange);
 
 		// 分割线
-		const divider = container.createDiv('gantt-filter-divider');
+		const divider = container.createDiv('toolbar-right-task-divider');
 
 		// 时间筛选组
-		const timeFilterGroup = container.createDiv('gantt-time-filter-group');
+		const timeFilterGroup = container.createDiv('toolbar-right-task-time-filter-group');
 		const timeLabel = timeFilterGroup.createEl('span', { 
 			text: '时间筛选', 
-			cls: 'gantt-filter-group-label' 
+			cls: 'toolbar-right-task-time-filter-label' 
 		});
 		
 		// 时间字段选择
 		const fieldSelect = timeFilterGroup.createEl('select', { 
-			cls: 'gantt-filter-select gantt-time-field-select' 
+			cls: 'toolbar-right-task-time-field-select' 
 		});
 		fieldSelect.innerHTML = `
 			<option value="createdDate">创建时间</option>
@@ -64,7 +64,7 @@ export class ToolbarRightTask {
 
 		// 刷新按钮
 		const refreshBtn = container.createEl('button', { 
-			cls: 'calendar-view-btn icon-btn', 
+			cls: 'toolbar-right-task-refresh-btn', 
 			attr: { title: '刷新任务' } 
 		});
 		setIcon(refreshBtn, 'rotate-ccw');
