@@ -16,6 +16,7 @@ export class CalendarView extends ItemView {
 	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'all'; // 默认显示全部任务（包括已完成和未完成）
 	private dateFilter: 'all' | 'today' | 'week' | 'month' = 'today'; // 默认显示当日任务
 	private cacheUpdateListener: (() => void) | null = null;
+	private domCleanups: Array<() => void> = [];
 
 	constructor(leaf: WorkspaceLeaf, plugin: any) {
 		super(leaf);
@@ -112,6 +113,10 @@ export class CalendarView extends ItemView {
 	}
 
 	private render(): void {
+		// 先执行上一次渲染注册的清理逻辑（用于 tooltip、定时器等）
+		this.runDomCleanups();
+		// 清理可能残留的悬浮提示（周/月视图的任务 tooltip 在元素被移除时不会自动清理）
+		this.clearTaskTooltips();
 		const container = this.containerEl.children[1];
 		container.empty();
 
@@ -585,6 +590,8 @@ export class CalendarView extends ItemView {
 		checkbox.addEventListener('change', async (e) => {
 			console.log('[CalendarView][Week] Checkbox change event triggered', e);
 			e.stopPropagation();
+			// 任何状态更新前先清理残留 tooltip，避免卡屏
+			this.clearTaskTooltips();
 			const isNowCompleted = checkbox.checked;
 			try {
 				await updateTaskCompletion(
@@ -742,6 +749,18 @@ export class CalendarView extends ItemView {
 				}
 			}, 100); // Small delay before starting hide
 		};
+
+		// 缓存更新或视图重渲染时主动清理 tooltip，避免悬浮窗遗留
+		this.registerDomCleanup(() => {
+			if (tooltip) {
+				tooltip.remove();
+				tooltip = null;
+			}
+			if (hideTimeout) {
+				window.clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+		});
 
 		taskItem.addEventListener('mouseenter', showTooltip);
 		taskItem.addEventListener('mouseleave', hideTooltip);
@@ -931,6 +950,18 @@ export class CalendarView extends ItemView {
 			e.stopPropagation();
 			await openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 		};
+
+		// 缓存更新或视图重渲染时主动清理 tooltip，避免悬浮窗遗留
+		this.registerDomCleanup(() => {
+			if (tooltip) {
+				tooltip.remove();
+				tooltip = null;
+			}
+			if (hideTimeout) {
+				window.clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+		});
 	}
 
 	private renderDayView(container: HTMLElement): void {
@@ -1258,6 +1289,7 @@ export class CalendarView extends ItemView {
 		checkbox.addEventListener('change', async (e) => {
 			console.log('[CalendarView] Checkbox change event triggered', e);
 			e.stopPropagation(); // 防止事件冒泡
+			this.clearTaskTooltips();
 			const isNowCompleted = checkbox.checked;
 			try {
 				await updateTaskCompletion(
@@ -1475,5 +1507,29 @@ export class CalendarView extends ItemView {
 			case 'task':
 				return '任务视图';
 		}
+	}
+
+	// 注册在下一次 render/onClose 时清理的回调
+	private registerDomCleanup(fn: () => void): void {
+		this.domCleanups.push(fn);
+	}
+
+	// 执行并清空所有挂起的清理回调
+	private runDomCleanups(): void {
+		if (this.domCleanups.length === 0) return;
+		for (const fn of this.domCleanups) {
+			try {
+				fn();
+			} catch (err) {
+				console.error('[CalendarView] Error during DOM cleanup', err);
+			}
+		}
+		this.domCleanups = [];
+	}
+
+	// 移除悬浮提示（周/月视图 tooltip）以防遗留
+	private clearTaskTooltips(): void {
+		const tooltips = document.querySelectorAll('.calendar-week-task-tooltip');
+		tooltips.forEach(t => t.remove());
 	}
 }

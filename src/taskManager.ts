@@ -208,7 +208,7 @@ export class TaskCacheManager {
 		for (let i = 0; i < markdownFiles.length; i += batchSize) {
 			const batch = markdownFiles.slice(i, i + batchSize);
 			const batchResults = await Promise.all(batch.map(async (file) => {
-				const info = await this.updateFileCache(file, true);
+				const info = await this.updateFileCache(file, true, true);
 				return info;
 			}));
 			batchResults.forEach(info => {
@@ -226,6 +226,9 @@ export class TaskCacheManager {
 
 		this.isInitialized = true;
 		this.isInitializing = false;
+
+		// 完成批量扫描后统一通知，避免在初始化阶段触发大量视图重渲染
+		this.notifyListeners();
 		
 		const cachedTasks = Array.from(this.cache.values()).reduce((sum, tasks) => sum + tasks.length, 0);
 		console.timeEnd(timerLabel);
@@ -241,7 +244,7 @@ export class TaskCacheManager {
 	/**
 	 * 更新单个文件的缓存
 	 */
-	async updateFileCache(file: TFile, silent?: boolean): Promise<{ taskCount: number } | null> {
+	async updateFileCache(file: TFile, silent?: boolean, suppressNotify?: boolean): Promise<{ taskCount: number } | null> {
 		try {
 			const fileCache = this.app.metadataCache.getFileCache(file);
 			const listItems = fileCache?.listItems;
@@ -250,7 +253,9 @@ export class TaskCacheManager {
 			if (!listItems || listItems.length === 0) {
 				if (this.cache.has(file.path)) {
 					this.cache.delete(file.path);
-					this.notifyListeners();
+					if (!suppressNotify) {
+						this.notifyListeners();
+					}
 				}
 				return { taskCount: 0 };
 			}
@@ -274,7 +279,9 @@ export class TaskCacheManager {
 			if (!silent) {
 				console.log('[TaskCache] Updated file', file.path, { taskCount: tasks.length });
 			}
-			this.notifyListeners();
+			if (!suppressNotify) {
+				this.notifyListeners();
+			}
 			return { taskCount: tasks.length };
 		} catch (error) {
 			console.error(`[TaskCache] Error updating cache for ${file.path}:`, error);
