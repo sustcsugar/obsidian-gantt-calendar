@@ -173,139 +173,291 @@ export class CalendarView extends ItemView {
 		// Right region: 功能区（随视图变化）
 		const right = toolbar.createDiv('calendar-toolbar-right');
 		if (isTaskView) {
-			// Global Filter 状态
-			const gfText = right.createEl('span', { cls: 'gantt-filter-label' });
-			gfText.setText(`Global Filter: ${this.plugin?.settings?.globalTaskFilter || '（未设置）'}`);
-
-			// 状态筛选标签和按钮
-			const statusFilterGroup = right.createDiv('gantt-filter-group');
-			const statusLabel = statusFilterGroup.createEl('span', { text: '状态筛选', cls: 'gantt-filter-group-label' });
-			
-			const filterButtons = statusFilterGroup.createDiv('gantt-task-filter-buttons');
-			const btnAll = filterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
-			const btnUncompleted = filterButtons.createEl('button', { text: '未完成', cls: 'gantt-filter-btn' });
-			const btnCompleted = filterButtons.createEl('button', { text: '已完成', cls: 'gantt-filter-btn' });
-
-			const updateActive = () => {
-				const filter = this.taskRenderer.getTaskFilter();
-				btnAll.toggleClass('active', filter === 'all');
-				btnUncompleted.toggleClass('active', filter === 'uncompleted');
-				btnCompleted.toggleClass('active', filter === 'completed');
-			};
-			updateActive();
-
-			btnAll.addEventListener('click', () => {
-				this.taskRenderer.setTaskFilter('all');
-				updateActive();
-				this.render();
-			});
-			btnUncompleted.addEventListener('click', () => {
-				this.taskRenderer.setTaskFilter('uncompleted');
-				updateActive();
-				this.render();
-			});
-			btnCompleted.addEventListener('click', () => {
-				this.taskRenderer.setTaskFilter('completed');
-				updateActive();
-				this.render();
-			});
-
-			// 分割线
-			const divider = right.createDiv('gantt-filter-divider');
-
-			// 日期筛选标签和按钮
-			const dateFilterGroup = right.createDiv('gantt-filter-group');
-			const dateLabel = dateFilterGroup.createEl('span', { text: '日期筛选', cls: 'gantt-filter-group-label' });
-			
-			const dateFilterButtons = dateFilterGroup.createDiv('gantt-task-filter-buttons');
-			const btnDateAll = dateFilterButtons.createEl('button', { text: '全部', cls: 'gantt-filter-btn' });
-			const btnDateToday = dateFilterButtons.createEl('button', { text: '今日', cls: 'gantt-filter-btn' });
-			const btnDateWeek = dateFilterButtons.createEl('button', { text: '本周', cls: 'gantt-filter-btn' });
-			const btnDateMonth = dateFilterButtons.createEl('button', { text: '本月', cls: 'gantt-filter-btn' });
-
-			const updateDateActive = () => {
-				const filter = this.taskRenderer.getDateFilter();
-				btnDateAll.toggleClass('active', filter === 'all');
-				btnDateToday.toggleClass('active', filter === 'today');
-				btnDateWeek.toggleClass('active', filter === 'week');
-				btnDateMonth.toggleClass('active', filter === 'month');
-			};
-			updateDateActive();
-
-			btnDateAll.addEventListener('click', () => {
-				this.taskRenderer.setDateFilter('all');
-				updateDateActive();
-				this.render();
-			});
-			btnDateToday.addEventListener('click', () => {
-				this.taskRenderer.setDateFilter('today');
-				updateDateActive();
-				this.render();
-			});
-			btnDateWeek.addEventListener('click', () => {
-				this.taskRenderer.setDateFilter('week');
-				updateDateActive();
-				this.render();
-			});
-			btnDateMonth.addEventListener('click', () => {
-				this.taskRenderer.setDateFilter('month');
-				updateDateActive();
-				this.render();
-			});
-
-			const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
-			setIcon(refreshBtn, 'rotate-ccw');
-			refreshBtn.addEventListener('click', async () => {
-				// 重新扫描库并更新缓存
-				await this.plugin.taskCache.initialize(
-					this.plugin.settings.globalTaskFilter,
-					this.plugin.settings.enabledTaskFormats
-				);
-				this.render();
-			});
-			right.appendChild(refreshBtn);
+			this.createTaskViewToolbar(right);
 		} else {
-			// 日历视图功能区：上一期/今天/下一期 + 子视图选择
-			const navButtons = right.createDiv('calendar-nav-buttons');
-			const prevBtn = navButtons.createEl('button', { text: '◀ 上一个' });
-			prevBtn.addClass('calendar-nav-btn');
-			prevBtn.onclick = () => this.previousPeriod();
-
-			const nextBtn = navButtons.createEl('button', { text: '下一个 ▶' });
-			nextBtn.addClass('calendar-nav-btn');
-			nextBtn.onclick = () => this.nextPeriod();
-
-			const todayBtn = navButtons.createEl('button', { text: '今天' });
-			todayBtn.addClass('calendar-nav-btn');
-			todayBtn.onclick = () => this.goToToday();
-
-			const viewContainer = right.createDiv('calendar-view-selector');
-			const viewTypes: { [key: string]: string } = {
-				'day': '日',
-				'week': '周',
-				'month': '月',
-				'year': '年',
-			};
-
-			['day', 'week', 'month', 'year'].forEach((type) => {
-				const btn = viewContainer.createEl('button', { text: viewTypes[type] });
-				btn.addClass('calendar-view-btn');
-				if (type === this.viewType) btn.addClass('active');
-				btn.onclick = () => this.switchView(type as CalendarViewType);
-			});
-
-			// 刷新按钮（图标模式 + 悬浮提示）
-			const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
-			setIcon(refreshBtn, 'rotate-ccw');
-			refreshBtn.addEventListener('click', async () => {
-				// 重新扫描库并更新缓存
-				await this.plugin.taskCache.initialize(
-					this.plugin.settings.globalTaskFilter,
-					this.plugin.settings.enabledTaskFormats
-				);
-				this.render();
-			});
+			this.createCalendarViewToolbar(right);
 		}
+	}
+
+	/**
+	 * 创建任务视图工具栏
+	 */
+	private createTaskViewToolbar(right: HTMLElement): void {
+		// Global Filter 状态
+		const gfText = right.createEl('span', { cls: 'gantt-filter-label' });
+		gfText.setText(`Global Filter: ${this.plugin?.settings?.globalTaskFilter || '（未设置）'}`);
+
+		// ===== 状态筛选 - 单个下拉选择 =====
+		const statusFilterGroup = right.createDiv('gantt-filter-group');
+		const statusLabel = statusFilterGroup.createEl('span', { text: '状态', cls: 'gantt-filter-group-label' });
+		
+		const statusSelect = statusFilterGroup.createEl('select', { cls: 'gantt-filter-select' });
+		statusSelect.innerHTML = `
+			<option value="all">全部</option>
+			<option value="uncompleted">未完成</option>
+			<option value="completed">已完成</option>
+		`;
+		statusSelect.value = this.taskRenderer.getTaskFilter();
+		statusSelect.addEventListener('change', (e) => {
+			const value = (e.target as HTMLSelectElement).value as 'all' | 'completed' | 'uncompleted';
+			this.taskRenderer.setTaskFilter(value);
+			this.render();
+		});
+
+		// ===== 分割线 =====
+		const divider = right.createDiv('gantt-filter-divider');
+
+		// ===== 时间筛选 - 下拉选择 + 时间输入 + 日期选择器 =====
+		const timeFilterGroup = right.createDiv('gantt-time-filter-group');
+		const timeLabel = timeFilterGroup.createEl('span', { text: '时间筛选', cls: 'gantt-filter-group-label' });
+		
+		// 时间字段选择
+		const fieldSelect = timeFilterGroup.createEl('select', { cls: 'gantt-filter-select gantt-time-field-select' });
+		fieldSelect.innerHTML = `
+			<option value="all">全部时间</option>
+			<option value="createdDate">创建时间</option>
+			<option value="startDate">开始时间</option>
+			<option value="scheduledDate">规划时间</option>
+			<option value="dueDate">截止时间</option>
+			<option value="completionDate">完成时间</option>
+			<option value="cancelledDate">取消时间</option>
+		`;
+		fieldSelect.value = this.taskRenderer.getTimeFilterField();
+		fieldSelect.addEventListener('change', (e) => {
+			const value = (e.target as HTMLSelectElement).value as any;
+			this.taskRenderer.setTimeFilterField(value);
+			this.render();
+		});
+
+		// 时间输入框 + 日期选择器
+		const dateInputGroup = timeFilterGroup.createDiv('gantt-date-input-group');
+		
+		const dateInput = dateInputGroup.createEl('input', { 
+			type: 'text',
+			cls: 'gantt-date-input',
+			attr: { 
+				placeholder: 'YYYY-MM-DD',
+				readonly: 'readonly'
+			}
+		});
+		const currentDate = this.taskRenderer.getSpecificDate();
+		if (currentDate) {
+			dateInput.value = formatDate(currentDate, 'YYYY-MM-DD');
+		}
+
+		// 日历 Emoji 图标 - 点击弹出日期选择器
+		const calendarIcon = dateInputGroup.createEl('button', { 
+			text: '📅',
+			cls: 'gantt-calendar-icon'
+		});
+
+		calendarIcon.addEventListener('click', () => {
+			this.showDatePickerPopover(calendarIcon, dateInput);
+		});
+
+		dateInput.addEventListener('click', () => {
+			this.showDatePickerPopover(calendarIcon, dateInput);
+		});
+
+		// 刷新按钮
+		const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
+		setIcon(refreshBtn, 'rotate-ccw');
+		refreshBtn.addEventListener('click', async () => {
+			await this.plugin.taskCache.initialize(
+				this.plugin.settings.globalTaskFilter,
+				this.plugin.settings.enabledTaskFormats
+			);
+			this.render();
+		});
+	}
+
+	/**
+	 * 创建日历视图工具栏
+	 */
+	private createCalendarViewToolbar(right: HTMLElement): void {
+		// 日历视图功能区：上一期/今天/下一期 + 子视图选择
+		const navButtons = right.createDiv('calendar-nav-buttons');
+		const prevBtn = navButtons.createEl('button', { text: '◀ 上一个' });
+		prevBtn.addClass('calendar-nav-btn');
+		prevBtn.onclick = () => this.previousPeriod();
+
+		const nextBtn = navButtons.createEl('button', { text: '下一个 ▶' });
+		nextBtn.addClass('calendar-nav-btn');
+		nextBtn.onclick = () => this.nextPeriod();
+
+		const todayBtn = navButtons.createEl('button', { text: '今天' });
+		todayBtn.addClass('calendar-nav-btn');
+		todayBtn.onclick = () => this.goToToday();
+
+		const viewContainer = right.createDiv('calendar-view-selector');
+		const viewTypes: { [key: string]: string } = {
+			'day': '日',
+			'week': '周',
+			'month': '月',
+			'year': '年',
+		};
+
+		['day', 'week', 'month', 'year'].forEach((type) => {
+			const btn = viewContainer.createEl('button', { text: viewTypes[type] });
+			btn.addClass('calendar-view-btn');
+			if (type === this.viewType) btn.addClass('active');
+			btn.onclick = () => this.switchView(type as CalendarViewType);
+		});
+
+		// 刷新按钮（图标模式 + 悬浮提示）
+		const refreshBtn = right.createEl('button', { cls: 'calendar-view-btn icon-btn', attr: { title: '刷新任务' } });
+		setIcon(refreshBtn, 'rotate-ccw');
+		refreshBtn.addEventListener('click', async () => {
+			// 重新扫描库并更新缓存
+			await this.plugin.taskCache.initialize(
+				this.plugin.settings.globalTaskFilter,
+				this.plugin.settings.enabledTaskFormats
+			);
+			this.render();
+		});
+	}
+
+	/**
+	 * 显示日期选择器弹窗
+	 */
+	private showDatePickerPopover(triggerElement: HTMLElement, dateInput: HTMLInputElement): void {
+		// 创建弹出菜单容器
+		const popover = document.body.createDiv('gantt-date-picker-popover');
+		
+		// 获取当前选中日期（如果有）
+		let selectedDate = this.taskRenderer.getSpecificDate();
+		if (!selectedDate) {
+			selectedDate = new Date();
+		}
+
+		// 显示当前年月
+		let currentYear = selectedDate.getFullYear();
+		let currentMonth = selectedDate.getMonth();
+
+		const renderCalendar = () => {
+			popover.empty();
+			
+			// 头部：年月导航
+			const header = popover.createDiv('date-picker-header');
+			
+			const prevMonthBtn = header.createEl('button', { text: '◀' });
+			prevMonthBtn.addEventListener('click', () => {
+				currentMonth--;
+				if (currentMonth < 0) {
+					currentMonth = 11;
+					currentYear--;
+				}
+				renderCalendar();
+			});
+
+			const monthDisplay = header.createEl('span', { cls: 'date-picker-month-display' });
+			monthDisplay.setText(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`);
+
+			const nextMonthBtn = header.createEl('button', { text: '▶' });
+			nextMonthBtn.addEventListener('click', () => {
+				currentMonth++;
+				if (currentMonth > 11) {
+					currentMonth = 0;
+					currentYear++;
+				}
+				renderCalendar();
+			});
+
+			// 日期网格
+			const daysGrid = popover.createDiv('date-picker-days');
+			
+			// 周日至周六标签
+			const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+			weekDays.forEach(day => {
+				const dayLabel = daysGrid.createEl('div', { text: day, cls: 'date-picker-weekday' });
+			});
+
+			// 获取该月的日期
+			const firstDay = new Date(currentYear, currentMonth, 1);
+			const lastDay = new Date(currentYear, currentMonth + 1, 0);
+			const daysInMonth = lastDay.getDate();
+			const startingDayOfWeek = firstDay.getDay();
+
+			// 填充前一月的日期
+			const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+			for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+				const day = daysInPrevMonth - i;
+				const dayEl = daysGrid.createEl('div', { text: String(day), cls: 'date-picker-day date-picker-other-month' });
+			}
+
+			// 填充本月的日期
+			for (let day = 1; day <= daysInMonth; day++) {
+				const dayEl = daysGrid.createEl('div', { text: String(day), cls: 'date-picker-day' });
+				
+				const dateObj = new Date(currentYear, currentMonth, day);
+				
+				// 标记今天
+				if (this.isToday(dateObj)) {
+					dayEl.addClass('date-picker-today');
+				}
+
+				// 标记已选择的日期
+				if (selectedDate && 
+					dateObj.getFullYear() === selectedDate.getFullYear() &&
+					dateObj.getMonth() === selectedDate.getMonth() &&
+					dateObj.getDate() === selectedDate.getDate()) {
+					dayEl.addClass('date-picker-selected');
+				}
+
+				dayEl.addEventListener('click', () => {
+					this.taskRenderer.setSpecificDate(dateObj);
+					dateInput.value = formatDate(dateObj, 'YYYY-MM-DD');
+					selectedDate = dateObj;
+					popover.remove();
+					this.render();
+				});
+			}
+
+			// 填充下一月的日期
+			const remainingDays = 42 - (startingDayOfWeek + daysInMonth);
+			for (let day = 1; day <= remainingDays; day++) {
+				const dayEl = daysGrid.createEl('div', { text: String(day), cls: 'date-picker-day date-picker-other-month' });
+			}
+		};
+
+		renderCalendar();
+
+		// 定位弹出菜单
+		const rect = triggerElement.getBoundingClientRect();
+		popover.style.position = 'fixed';
+		popover.style.left = rect.left + 'px';
+		popover.style.top = (rect.bottom + 5) + 'px';
+		popover.style.zIndex = '1000';
+
+		// 点击外部关闭
+		const closePopover = () => {
+			if (popover && popover.parentElement) {
+				popover.remove();
+			}
+			document.removeEventListener('click', handleOutsideClick);
+		};
+
+		const handleOutsideClick = (e: MouseEvent) => {
+			if (!popover.contains(e.target as Node) && triggerElement !== e.target) {
+				closePopover();
+			}
+		};
+
+		setTimeout(() => {
+			document.addEventListener('click', handleOutsideClick);
+		}, 0);
+	}
+
+	/**
+	 * 检查是否是今天
+	 */
+	private isToday(date: Date): boolean {
+		const today = new Date();
+		return (
+			date.getDate() === today.getDate() &&
+			date.getMonth() === today.getMonth() &&
+			date.getFullYear() === today.getFullYear()
+		);
 	}
 
 	private renderCalendarContent(content: HTMLElement): void {

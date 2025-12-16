@@ -8,7 +8,38 @@ import type { GanttTask } from '../types';
 export class TaskViewRenderer extends BaseCalendarRenderer {
 	// 任务筛选状态
 	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'all';
-	private dateFilter: 'all' | 'today' | 'week' | 'month' = 'today';
+	
+	// 时间字段筛选
+	private timeFieldFilter: 'all' | 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' = 'all';
+	
+	// 时间值筛选
+	private timeValueFilter: Date | null = null;
+
+	// ===== Getter/Setter 方法 =====
+
+	public getTaskFilter(): 'all' | 'completed' | 'uncompleted' {
+		return this.taskFilter;
+	}
+
+	public setTaskFilter(value: 'all' | 'completed' | 'uncompleted'): void {
+		this.taskFilter = value;
+	}
+
+	public getTimeFilterField(): 'all' | 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' {
+		return this.timeFieldFilter;
+	}
+
+	public setTimeFilterField(value: any): void {
+		this.timeFieldFilter = value;
+	}
+
+	public getSpecificDate(): Date | null {
+		return this.timeValueFilter;
+	}
+
+	public setSpecificDate(date: Date): void {
+		this.timeValueFilter = date;
+	}
 
 	render(container: HTMLElement, currentDate: Date): void {
 		container.addClass('gantt-task-view');
@@ -37,24 +68,21 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 				tasks = tasks.filter(t => !t.completed);
 			}
 
-			// 应用日期范围筛选
-			const dateField = this.plugin.settings.dateFilterField || 'dueDate';
-			if (this.dateFilter !== 'all') {
+			// 应用时间字段筛选（如果选择了特定字段和日期）
+			if (this.timeFieldFilter !== 'all' && this.timeValueFilter) {
 				tasks = tasks.filter(task => {
-					const dateValue = (task as any)[dateField];
+					const dateValue = (task as any)[this.timeFieldFilter];
 					if (!dateValue) return false;
 
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;
 
-					if (this.dateFilter === 'today') {
-						return isToday(taskDate);
-					} else if (this.dateFilter === 'week') {
-						return isThisWeek(taskDate, this.plugin.settings.startOnMonday);
-					} else if (this.dateFilter === 'month') {
-						return isThisMonth(taskDate);
-					}
-					return true;
+					// 按天比较（忽略时间部分）
+					const filterDate = new Date(this.timeValueFilter!);
+					taskDate.setHours(0, 0, 0, 0);
+					filterDate.setHours(0, 0, 0, 0);
+
+					return taskDate.getTime() === filterDate.getTime();
 				});
 			}
 
@@ -148,33 +176,5 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 		taskItem.addEventListener('click', async () => {
 			await this.openTaskFile(task);
 		});
-	}
-
-	/**
-	 * 设置任务筛选状态
-	 */
-	public setTaskFilter(filter: 'all' | 'completed' | 'uncompleted'): void {
-		this.taskFilter = filter;
-	}
-
-	/**
-	 * 设置日期筛选状态
-	 */
-	public setDateFilter(filter: 'all' | 'today' | 'week' | 'month'): void {
-		this.dateFilter = filter;
-	}
-
-	/**
-	 * 获取当前任务筛选状态
-	 */
-	public getTaskFilter(): 'all' | 'completed' | 'uncompleted' {
-		return this.taskFilter;
-	}
-
-	/**
-	 * 获取当前日期筛选状态
-	 */
-	public getDateFilter(): 'all' | 'today' | 'week' | 'month' {
-		return this.dateFilter;
 	}
 }

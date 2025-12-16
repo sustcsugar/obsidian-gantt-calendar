@@ -1,0 +1,240 @@
+/* 任务视图工具栏增强样式 */
+
+/* 工具栏容器 */
+.calendar-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 全局筛选标签 */
+.gantt-filter-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 筛选组 */
+.gantt-filter-group,
+.gantt-time-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gantt-filter-group-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+  white-space: nowrap;
+}
+
+/* 下拉选择 */
+.gantt-filter-select,
+.gantt-time-field-select {
+  padding: 4px 8px;
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gantt-filter-select:hover,
+.gantt-time-field-select:hover {
+  border-color: var(--interactive-accent);
+}
+
+.gantt-filter-select:focus,
+.gantt-time-field-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-rgb, rgba(138, 109, 255, 0.1));
+}
+
+/* 分割线 */
+.gantt-filter-divider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--divider-color);
+}
+
+/* 时间筛选组 */
+.gantt-time-filter-group {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 日期输入组 */
+.gantt-date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gantt-date-input {
+  padding: 4px 8px;
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  min-width: 110px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gantt-date-input:hover,
+.gantt-date-input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+/* 日历图标按钮 */
+.gantt-calendar-icon {
+  padding: 4px 8px;
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.gantt-calendar-icon:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.gantt-calendar-icon:active {
+  background-color: var(--background-modifier-active);
+}
+
+/* 日期选择器弹窗 */
+.gantt-date-picker-popover {
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  width: 280px;
+  font-size: 12px;
+}
+
+/* 日期选择器头部 */
+.date-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+
+.date-picker-header button {
+  padding: 4px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.date-picker-header button:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.date-picker-month-display {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+/* 日期网格 */
+.date-picker-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.date-picker-weekday {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 2px;
+  font-size: 11px;
+}
+
+.date-picker-day {
+  text-align: center;
+  padding: 6px 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  transition: all 0.15s ease;
+  font-size: 11px;
+}
+
+.date-picker-day:hover:not(.date-picker-other-month) {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.date-picker-day.date-picker-other-month {
+  color: var(--text-muted);
+  background-color: transparent;
+  cursor: default;
+}
+
+.date-picker-day.date-picker-other-month:hover {
+  background-color: transparent;
+}
+
+/* 今天标记 */
+.date-picker-today {
+  border: 2px solid var(--interactive-accent);
+  font-weight: 600;
+}
+
+/* 已选择的日期 */
+.date-picker-selected {
+  background-color: var(--interactive-accent);
+  color: white;
+  font-weight: 600;
+}
+
+.date-picker-selected:hover {
+  background-color: var(--interactive-accent);
+  opacity: 0.9;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .calendar-toolbar-right {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .gantt-filter-group,
+  .gantt-time-filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .gantt-filter-select,
+  .gantt-time-field-select,
+  .gantt-date-input {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .gantt-date-picker-popover {
+    width: 100vw;
+    max-width: 300px;
+  }
+}
