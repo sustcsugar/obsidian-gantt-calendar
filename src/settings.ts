@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, TFolder } from 'obsidian';
 import type GanttCalendarPlugin from '../main';
 
 // RGB to Hex converter
@@ -236,14 +236,40 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName('Daily Note 文件夹路径')
 				.setDesc('指定存放 Daily Note 文件的文件夹路径（相对于库根目录）')
-				.addText(text => text
-					.setPlaceholder('DailyNotes')
-					.setValue(this.plugin.settings.dailyNotePath)
-					.onChange(async (value) => {
-						this.plugin.settings.dailyNotePath = value;
-						await this.plugin.saveSettings();
-						this.plugin.refreshCalendarViews();
-					}));
+				.addText(text => {
+					text
+						.setPlaceholder('DailyNotes')
+						.setValue(this.plugin.settings.dailyNotePath)
+						.onChange(async (value) => {
+							this.plugin.settings.dailyNotePath = value;
+							await this.plugin.saveSettings();
+							this.plugin.refreshCalendarViews();
+						});
+
+					// 路径预测：使用 datalist 提供文件夹候选
+					const inputEl = text.inputEl;
+					const datalistId = `gantt-dailynote-folder-suggest-${Date.now()}`;
+					inputEl.setAttr('list', datalistId);
+					const datalist = inputEl.parentElement?.createEl('datalist');
+					if (datalist) datalist.id = datalistId;
+
+					const folders = this.app.vault.getAllLoadedFiles().filter((f): f is TFolder => f instanceof TFolder);
+					const updateSuggestions = (query: string) => {
+						if (!datalist) return;
+						datalist.innerHTML = '';
+						const lower = query.toLowerCase();
+						folders
+							.filter(f => f.path.toLowerCase().includes(lower))
+							.slice(0, 50)
+							.forEach(f => {
+								const opt = datalist.createEl('option');
+								opt.value = f.path;
+							});
+					};
+
+					inputEl.addEventListener('focus', () => updateSuggestions(inputEl.value || ''));
+					inputEl.addEventListener('input', () => updateSuggestions(inputEl.value || ''));
+				});
 
 			// Daily Note 文件名格式（仅在启用时显示）
 			new Setting(containerEl)
