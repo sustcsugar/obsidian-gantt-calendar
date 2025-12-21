@@ -1,6 +1,7 @@
 import { BaseCalendarRenderer } from './BaseCalendarRenderer';
-import type { GanttTask } from '../types';
+import type { GanttTask, GanttTimeGranularity } from '../types';
 import { formatDate } from '../utils';
+import { getTodayDate } from '../utils/today';
 
 /**
  * 甘特图视图渲染器
@@ -9,6 +10,16 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
   private startField: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' = 'startDate';
   private endField: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' = 'dueDate';
   private statusFilter: 'all' | 'completed' | 'uncompleted' = 'all';
+  private timeGranularity: GanttTimeGranularity = 'day'; // 默认时间颗粒度为日
+  private readonly VISIBLE_UNITS = 30; // 可见时间单位数量（固定显示30个格子）
+
+  // 滚动与刻度同步所需引用
+  private timelineScrollEl: HTMLElement | null = null;
+  private bodyScrollEl: HTMLElement | null = null;
+  private timelineStart: Date | null = null;
+  private totalUnits = 0;
+  private todayLineEl: HTMLElement | null = null;
+  private todayOffsetUnits: number | null = null;
 
   public getStartField() { return this.startField; }
   public setStartField(v: any) { this.startField = v; }
@@ -16,12 +27,150 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
   public setEndField(v: any) { this.endField = v; }
   public getStatusFilter() { return this.statusFilter; }
   public setStatusFilter(v: 'all' | 'completed' | 'uncompleted') { this.statusFilter = v; }
+  public getTimeGranularity() { return this.timeGranularity; }
+  public setTimeGranularity(v: GanttTimeGranularity) { this.timeGranularity = v; }
+
+  /** 跳转到今天（横向滚动并更新今天线） */
+  public jumpToToday(): void {
+    if (!this.timelineStart || !this.timelineScrollEl || !this.bodyScrollEl) return;
+    const offsetUnits = this.todayOffsetUnits;
+    if (offsetUnits === null) return;
+
+    const unitWidth = this.getUnitWidth();
+    const targetLeft = offsetUnits * unitWidth - this.timelineScrollEl.clientWidth / 2;
+    const scrollLeft = Math.max(0, targetLeft);
+
+    this.timelineScrollEl.scrollLeft = scrollLeft;
+    this.bodyScrollEl.scrollLeft = scrollLeft;
+    this.setTodayLinePosition(offsetUnits, scrollLeft);
+  }
 
   render(container: HTMLElement, currentDate: Date): void {
     // 根容器
     const root = container.createDiv('calendar-gantt-view');
     // 加载并渲染
     this.loadAndRenderGantt(root);
+  }
+
+  /**
+   * 根据时间颗粒度计算时间单位数量
+   */
+  private calculateTimeUnits(startDate: Date, endDate: Date): number {
+    const diffMs = endDate.getTime() - startDate.getTime();
+    
+    switch (this.timeGranularity) {
+      case 'day':
+        return Math.ceil(diffMs / (24 * 60 * 60 * 1000)) + 1;
+      case 'week':
+        return Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1;
+      case 'month':
+        const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                      (endDate.getMonth() - startDate.getMonth()) + 1;
+        return Math.max(1, months);
+      default:
+        return 30;
+    }
+  }
+
+  /**
+   * 格式化时间单位标签
+   */
+  private formatTimeUnitLabel(date: Date, index: number): string {
+    switch (this.timeGranularity) {
+      case 'day':
+        return formatDate(date, 'YYYY-MM-DD');
+      case 'week':
+        const weekEnd = new Date(date);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        return `${formatDate(date, 'MM-DD')} ~ ${formatDate(weekEnd, 'MM-DD')}`;
+      case 'month':
+        return formatDate(date, 'YYYY-MM');
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * 获取下一个时间单位的日期
+   */
+  private getNextTimeUnit(date: Date): Date {
+    const next = new Date(date);
+    switch (this.timeGranularity) {
+      case 'day':
+        next.setDate(next.getDate() + 1);
+        break;
+      case 'week':
+        next.setDate(next.getDate() + 7);
+        break;
+      case 'month':
+        next.setMonth(next.getMonth() + 1);
+        break;
+    }
+    return next;
+  }
+
+  /**
+   * 计算任务在时间轴上的偏移和宽度（单位数量）
+   */
+  private calculateTaskPosition(
+    taskStart: Date,
+    taskEnd: Date,
+    timelineStart: Date,
+    totalUnits: number
+  ): { startOffset: number; duration: number } {
+    const msPerUnit = this.getMillisecondsPerUnit();
+    const startOffsetMs = taskStart.getTime() - timelineStart.getTime();
+    const durationMs = taskEnd.getTime() - taskStart.getTime();
+    
+    const startOffset = Math.max(0, startOffsetMs / msPerUnit);
+    const duration = Math.max(0.5, durationMs / msPerUnit + 1);
+    
+    return { startOffset, duration };
+  }
+
+  /**
+   * 获取每个时间单位的毫秒数
+   */
+  private getMillisecondsPerUnit(): number {
+    switch (this.timeGranularity) {
+      case 'day':
+        return 24 * 60 * 60 * 1000;
+      case 'week':
+        return 7 * 24 * 60 * 60 * 1000;
+      case 'month':
+        return 30 * 24 * 60 * 60 * 1000; // 近似值
+      default:
+        return 24 * 60 * 60 * 1000;
+    }
+  }
+
+  private getUnitWidth(): number {
+    if (this.timelineScrollEl) {
+      const cell = this.timelineScrollEl.querySelector('.gantt-date-cell') as HTMLElement;
+      if (cell) return cell.getBoundingClientRect().width || 100;
+    }
+    return 100;
+  }
+
+  private setTodayLinePosition(offsetUnits: number | null, scrollLeft?: number): void {
+    if (!this.todayLineEl) return;
+    if (offsetUnits === null || offsetUnits < 0 || offsetUnits > this.totalUnits) {
+      this.todayLineEl.style.display = 'none';
+      return;
+    }
+    const unitWidth = this.getUnitWidth();
+    const leftPx = offsetUnits * unitWidth - (scrollLeft ?? this.timelineScrollEl?.scrollLeft ?? 0);
+    this.todayLineEl.style.display = 'block';
+    this.todayLineEl.style.left = `${leftPx}px`;
+  }
+
+
+  private syncHorizontalScroll(source: HTMLElement, target: HTMLElement): void {
+    source.addEventListener('scroll', () => {
+      if (target.scrollLeft !== source.scrollLeft) {
+        target.scrollLeft = source.scrollLeft;
+      }
+    });
   }
 
   private async loadAndRenderGantt(root: HTMLElement): Promise<void> {
@@ -45,29 +194,42 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
       return;
     }
 
-    // 时间范围
+    // 计算时间范围
     const minStart = new Date(Math.min(...withRange.map(x => x.start.getTime())));
+    minStart.setHours(0, 0, 0, 0);
     const maxEnd = new Date(Math.max(...withRange.map(x => x.end.getTime())));
-    const days = Math.max(1, Math.ceil((maxEnd.getTime() - minStart.getTime()) / 86400000) + 1);
+    maxEnd.setHours(0, 0, 0, 0);
+    
+    // 计算总的时间单位数量
+    const totalUnits = this.calculateTimeUnits(minStart, maxEnd);
+    this.totalUnits = totalUnits;
+    this.timelineStart = minStart;
 
-    // 头部日期刻度
-    const header = root.createDiv('calendar-gantt-header');
-    header.createDiv('gantt-task-header'); // 左侧占位
-    const scale = header.createDiv('gantt-timeline-header');
-    for (let i = 0; i < days; i++) {
-      const d = new Date(minStart);
-      d.setDate(d.getDate() + i);
-      const cell = scale.createDiv('gantt-date-cell');
-      cell.setText(formatDate(d, 'YYYY-MM-DD'));
+    // 时间刻度区域（横向滚动，纵向固定）
+    const timeline = root.createDiv('gantt-view-timeline');
+    const timelineScroll = timeline.createDiv('gantt-timeline-scroll');
+    this.timelineScrollEl = timelineScroll;
+    timelineScroll.style.setProperty('--gantt-total-units', String(totalUnits));
+    timelineScroll.style.setProperty('--gantt-visible-units', String(this.VISIBLE_UNITS));
+    const timelineRow = timelineScroll.createDiv('gantt-timeline-row');
+
+    let currentDate = new Date(minStart);
+    for (let i = 0; i < totalUnits; i++) {
+      const cell = timelineRow.createDiv('gantt-date-cell');
+      cell.setText(this.formatTimeUnitLabel(currentDate, i));
+      currentDate = this.getNextTimeUnit(currentDate);
     }
 
-    // 行：每个任务一条泳道
-    const body = root.createDiv('calendar-gantt-body');
+    // 任务主体区域（左右分栏，可独立滚动）
+    const body = root.createDiv('gantt-view-body');
+    const bodyScroll = body.createDiv('gantt-body-scroll');
+    this.bodyScrollEl = bodyScroll;
+    bodyScroll.style.setProperty('--gantt-total-units', String(totalUnits));
+    bodyScroll.style.setProperty('--gantt-visible-units', String(this.VISIBLE_UNITS));
 
     for (const item of withRange) {
-      const row = body.createDiv('calendar-gantt-row');
       // 左侧任务列
-      const taskCell = row.createDiv('gantt-task-cell');
+      const taskCell = bodyScroll.createDiv('gantt-body-task-cell');
       const cleaned = this.cleanTaskDescription(item.task.content);
       const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
       if (this.plugin?.settings?.showGlobalFilterInTaskText && gf) {
@@ -75,20 +237,23 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
       }
       this.renderTaskDescriptionWithLinks(taskCell, cleaned);
 
-      // 点击打开文件
       taskCell.addEventListener('click', async () => {
         await this.openTaskFile(item.task);
       });
 
-      // 右侧时间轴
-      const lane = row.createDiv('gantt-timeline-cell');
-      lane.style.setProperty('--gantt-days', String(days));
+      // 右侧泳道
+      const laneCell = bodyScroll.createDiv('gantt-body-lane-cell');
+      const lane = laneCell.createDiv('gantt-body-lane');
 
-      // 计算位置
-      const startOffsetDays = Math.max(0, Math.floor((item.start.getTime() - minStart.getTime()) / 86400000));
-      const durationDays = Math.max(1, Math.floor((item.end.getTime() - item.start.getTime()) / 86400000) + 1);
-      const leftPct = (startOffsetDays / days) * 100;
-      const widthPct = (durationDays / days) * 100;
+      const { startOffset, duration } = this.calculateTaskPosition(
+        item.start,
+        item.end,
+        minStart,
+        totalUnits
+      );
+
+      const leftPct = (startOffset / totalUnits) * 100;
+      const widthPct = (duration / totalUnits) * 100;
 
       const bar = lane.createDiv('gantt-bar');
       bar.style.left = leftPct + '%';
@@ -96,5 +261,28 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
       bar.setAttr('title', `${formatDate(item.start, 'YYYY-MM-DD')} → ${formatDate(item.end, 'YYYY-MM-DD')}`);
       if (item.task.completed) bar.addClass('completed');
     }
+
+    // 同步时间刻度与泳道的横向滚动
+    this.syncHorizontalScroll(timelineScroll, bodyScroll);
+    this.syncHorizontalScroll(bodyScroll, timelineScroll);
+
+    // 今天线：放置在根节点覆盖 timeline + body
+    const overlay = root.createDiv('gantt-today-overlay');
+    const todayLine = overlay.createDiv('gantt-today-line');
+    this.todayLineEl = todayLine;
+
+    // 计算并记录今天的偏移
+    const today = getTodayDate();
+    const offsetUnits = (today.getTime() - minStart.getTime()) / this.getMillisecondsPerUnit();
+    this.todayOffsetUnits = offsetUnits;
+    this.setTodayLinePosition(offsetUnits);
+
+    // 滚动时更新今天线位置
+    this.timelineScrollEl?.addEventListener('scroll', () => {
+      this.setTodayLinePosition(this.todayOffsetUnits, this.timelineScrollEl?.scrollLeft);
+    });
+    this.bodyScrollEl?.addEventListener('scroll', () => {
+      this.setTodayLinePosition(this.todayOffsetUnits, this.bodyScrollEl?.scrollLeft);
+    });
   }
 }

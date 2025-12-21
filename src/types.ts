@@ -2,6 +2,9 @@
 
 export type CalendarViewType = 'year' | 'month' | 'week' | 'day' | 'task' | 'gantt';
 
+// 甘特图时间颗粒度类型
+export type GanttTimeGranularity = 'day' | 'week' | 'month';
+
 export interface CalendarDate {
 	year: number;
 	month: number; // 1-12

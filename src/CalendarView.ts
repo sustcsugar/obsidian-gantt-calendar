@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, setIcon, Notice } from 'obsidian';
 import { CalendarViewType } from './types';
 import { getWeekOfDate, formatDate, formatMonth } from './utils';
+import { getTodayDate } from './utils/today';
 import { solarToLunar, getShortLunarText } from './lunar';
 import { YearViewRenderer } from './views/YearView';
 import { MonthViewRenderer } from './views/MonthView';
@@ -131,6 +132,7 @@ export class CalendarView extends ItemView {
 
 		const container = this.containerEl.children[1];
 		container.empty();
+		container.removeClass('gantt-root');
 
 		// Create toolbar
 		const toolbarContainer = container.createDiv('calendar-toolbar');
@@ -158,6 +160,13 @@ export class CalendarView extends ItemView {
 
 		// Create calendar content
 		const content = container.createDiv('calendar-content');
+		// 甘特图模式下限定滚动区域在内容容器内，并让根容器禁用外部滚动
+		if (this.viewType === 'gantt') {
+			content.addClass('gantt-mode');
+			container.addClass('gantt-root');
+		} else {
+			content.removeClass('gantt-mode');
+		}
 		this.renderCalendarContent(content);
 
 		// 年视图应用农历字号
@@ -200,7 +209,8 @@ export class CalendarView extends ItemView {
 	}
 
 	public switchView(type: CalendarViewType): void {
-		if (type !== 'task') {
+		// 只有真正的日历视图才更新 lastCalendarViewType
+		if (type !== 'task' && type !== 'gantt') {
 			this.lastCalendarViewType = type;
 		}
 		this.viewType = type;
@@ -259,7 +269,7 @@ export class CalendarView extends ItemView {
 
 	private goToToday(): void {
 		if (this.viewType === 'task' || this.viewType === 'gantt') return;
-		this.currentDate = new Date();
+		this.currentDate = getTodayDate();
 		this.render();
 	}
 

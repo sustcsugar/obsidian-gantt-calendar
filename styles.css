@@ -124,6 +124,13 @@ Gantt Calendar Plugin Styles - 甘特日历
 	justify-content: flex-end;
 }
 
+/* 甘特视图根容器，禁用外层滚动，限定一屏高度 */
+.view-content.gantt-root {
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
 .calendar-nav {
 	display: flex;
 	align-items: center;
@@ -425,6 +432,14 @@ Gantt Calendar Plugin Styles - 甘特日历
 	flex-direction: column;
 	overflow-y: auto;
 	overflow-x: hidden;
+}
+
+.calendar-content.gantt-mode {
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
 }
 
 /* Year View */
@@ -1490,33 +1505,38 @@ Gantt Calendar Plugin Styles - 甘特日历
 /* ========================================
 	 Gantt View
 	 ======================================== */
+
 .calendar-gantt-view {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
 	width: 100%;
+	height: 100%;
+	min-height: 0;
+	position: relative;
 }
 
-.calendar-gantt-header {
-	display: grid;
-	grid-template-columns: 300px 1fr;
-	gap: 8px;
-	align-items: center;
-}
-
-.gantt-task-header {
+/* 时间刻度：横向滚动，纵向固定 */
+.gantt-view-timeline {
+	flex: 0 0 auto;
+	position: sticky;
+	top: 0;
 	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	padding: 8px;
-	font-weight: 600;
-	color: var(--text-muted);
+	z-index: 10;
+	padding-bottom: 4px;
 }
 
-.gantt-timeline-header {
+.gantt-timeline-scroll {
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding-right: 12px;
+}
+
+.gantt-timeline-row {
 	display: grid;
-	grid-template-columns: repeat(var(--gantt-days, 30), minmax(40px, 1fr));
+	grid-template-columns: repeat(var(--gantt-total-units, 30), minmax(100px, 1fr));
 	gap: 2px;
+	min-width: fit-content;
 }
 
 .gantt-date-cell {
@@ -1527,35 +1547,72 @@ Gantt Calendar Plugin Styles - 甘特日历
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 3px;
+	white-space: nowrap;
+	min-width: 100px;
 }
 
-.calendar-gantt-body {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+/* 任务主体：左右分栏，内部可滚动 */
+.gantt-view-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
 }
 
-.calendar-gantt-row {
+.gantt-body-scroll {
 	display: grid;
 	grid-template-columns: 300px 1fr;
-	gap: 8px;
-	align-items: center;
+	grid-auto-rows: minmax(40px, auto);
+	column-gap: 8px;
+	row-gap: 6px;
+	overflow: auto;
+	height: 100%;
+	min-height: 0;
+	padding-right: 12px;
+	position: relative;
 }
 
-.gantt-task-cell {
+.gantt-body-task-cell {
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
 	padding: 8px;
 	cursor: pointer;
+	position: sticky;
+	left: 0;
+	z-index: 5;
 }
 
-.gantt-timeline-cell {
+.gantt-body-lane-cell {
+	position: relative;
+}
+
+.gantt-body-lane {
 	position: relative;
 	background-color: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
 	min-height: 28px;
+	width: 100%;
+	min-width: calc(var(--gantt-total-units, 30) * 100px);
+}
+
+.gantt-today-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	pointer-events: none;
+	z-index: 20;
+}
+
+.gantt-today-line {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background: #e74c3c;
+	box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.35);
 }
 
 .gantt-bar {
@@ -1577,6 +1634,55 @@ Gantt Calendar Plugin Styles - 甘特日历
 	align-items: center;
 	gap: 8px;
 	flex-wrap: wrap;
+}
+
+/* 时间颗粒度按钮组 */
+.toolbar-time-granularity-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 2px;
+	background-color: var(--background-secondary);
+}
+
+.time-today-btn {
+	padding: 4px 10px;
+	border: none;
+	border-radius: 4px;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.time-today-btn:hover {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.time-granularity-btn {
+	padding: 4px 12px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.time-granularity-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.time-granularity-btn.active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 600;
 }
 
 .toolbar-gantt-field-group {

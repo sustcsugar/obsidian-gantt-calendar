@@ -1,6 +1,7 @@
 import type { GanttViewRenderer } from '../views/GanttView';
 import { renderStatusFilter } from './status-filter';
 import { renderRefreshButton } from './refresh-button';
+import { renderTimeGranularity } from './time-granularity';
 
 /**
  * 工具栏右侧区域 - 甘特视图功能区
@@ -13,6 +14,21 @@ export class ToolbarRightGantt {
   ): void {
     container.empty();
     container.addClass('toolbar-right-gantt');
+
+    // 时间颗粒度选择按钮
+    renderTimeGranularity(
+      container,
+      {
+        current: ganttRenderer.getTimeGranularity(),
+        onChange: (granularity) => {
+          ganttRenderer.setTimeGranularity(granularity);
+          onRefresh(); // 切换颗粒度后刷新视图
+        },
+      },
+      () => {
+        ganttRenderer.jumpToToday();
+      }
+    );
 
     // 时间字段选择
     const fields: Array<{ key: any; label: string }> = [
@@ -54,8 +70,9 @@ export class ToolbarRightGantt {
     });
 
     // 状态筛选（复用模块）
-    renderStatusFilter(container, ganttRenderer.getStatusFilter(), (v) => {
+    renderStatusFilter(container, ganttRenderer.getStatusFilter(), async (v) => {
       ganttRenderer.setStatusFilter(v);
+      await onRefresh();
     });
 
     // 刷新按钮（共享）
