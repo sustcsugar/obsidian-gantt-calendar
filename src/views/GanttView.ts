@@ -194,6 +194,51 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     });
   }
 
+  /**
+   * 初始化分割线拖动功能
+   */
+  private initResizer(resizer: HTMLElement, tasksSection: HTMLElement): void {
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = tasksSection.offsetWidth;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const delta = e.clientX - startX;
+      const newWidth = startWidth + delta;
+      
+      // 限制最小和最大宽度
+      const minWidth = 200;
+      const maxWidth = 600;
+      const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+      
+      tasksSection.style.flexBasis = `${clampedWidth}px`;
+      tasksSection.style.width = `${clampedWidth}px`;
+    };
+
+    const onMouseUp = () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    resizer.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
   private async loadAndRenderGantt(root: HTMLElement): Promise<void> {
     root.empty();
     const tasksAll: GanttTask[] = this.plugin.taskCache.getAllTasks();
@@ -239,6 +284,10 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     // 任务卡片列表容器（grid布局）
     const taskList = tasksSection.createDiv('gantt-view-task-list');
 
+    // 分割线：可拖动调整宽度
+    const resizer = body.createDiv('gantt-view-resizer');
+    this.initResizer(resizer, tasksSection);
+
     // 右侧：时间轴区域（可横向滚动）
     const timeSection = body.createDiv('gantt-view-time');
     
@@ -274,9 +323,18 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
       const taskCard = taskList.createDiv('gantt-task-card');
       const cleaned = this.cleanTaskDescription(item.task.content);
       const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
+      
+      // 构建完整的任务描述用于tooltip
+      let fullDescription = '';
       if (this.plugin?.settings?.showGlobalFilterInTaskText && gf) {
+        fullDescription = gf + ' ';
         taskCard.appendText(gf + ' ');
       }
+      fullDescription += cleaned;
+      
+      // 设置title属性，鼠标悬浮时显示完整描述
+      taskCard.setAttr('title', fullDescription);
+      
       this.renderTaskDescriptionWithLinks(taskCard, cleaned);
 
       taskCard.addEventListener('click', async () => {

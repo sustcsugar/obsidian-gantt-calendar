@@ -1521,7 +1521,7 @@ Gantt Calendar Plugin Styles - 甘特日历
 	flex: 1 1 auto;
 	min-height: 0;
 	display: flex;
-	gap: 8px;
+	gap: 0;
 	overflow: hidden;
 }
 
@@ -1532,6 +1532,28 @@ Gantt Calendar Plugin Styles - 甘特日历
 	flex-direction: column;
 	min-height: 0;
 	overflow: hidden;
+}
+
+/* 分割线：可拖动调整宽度 */
+.gantt-view-resizer {
+	flex: 0 0 4px;
+	cursor: col-resize;
+	background-color: var(--background-modifier-border);
+	position: relative;
+	transition: background-color 0.15s ease;
+}
+
+.gantt-view-resizer:hover {
+	background-color: var(--interactive-accent);
+}
+
+.gantt-view-resizer::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: -2px;
+	right: -2px;
 }
 
 .gantt-view-tasks-header {
