@@ -215,7 +215,7 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     const tasksHeader = tasksSection.createDiv('gantt-view-tasks-header');
     tasksHeader.setText('任务卡片');
     
-    // 任务卡片列表容器
+    // 任务卡片列表容器（grid布局）
     const taskList = tasksSection.createDiv('gantt-view-task-list');
 
     // 右侧：时间轴区域（可横向滚动）
@@ -244,6 +244,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     // 设置与时间刻度相同的CSS变量
     ganttBarsScroll.style.setProperty('--gantt-total-units', String(totalUnits));
     ganttBarsScroll.style.setProperty('--gantt-visible-units', String(this.VISIBLE_UNITS));
+    
+    // 创建grid容器用于行对齐
+    const ganttBarsGrid = ganttBarsScroll.createDiv('gantt-bars-grid');
 
     for (const item of withRange) {
       // 左侧：任务卡片
@@ -260,7 +263,7 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
       });
 
       // 右侧：甘特条行（使用与时间刻度相同的grid布局）
-      const barRow = ganttBarsScroll.createDiv('gantt-bar-row');
+      const barRow = ganttBarsGrid.createDiv('gantt-bar-row');
 
       const { startOffset, duration } = this.calculateTaskPosition(
         item.start,
@@ -281,7 +284,7 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     this.syncHorizontalScroll(timelineScroll, ganttBarsScroll);
     this.syncHorizontalScroll(ganttBarsScroll, timelineScroll);
 
-    // 同步任务列表和甘特条的垂直滚动
+    // 同步任务列表和甘特条容器的垂直滚动
     taskList.addEventListener('scroll', () => {
       if (ganttBarsWrapper.scrollTop !== taskList.scrollTop) {
         ganttBarsWrapper.scrollTop = taskList.scrollTop;
