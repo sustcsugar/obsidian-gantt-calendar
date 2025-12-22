@@ -9,9 +9,9 @@ import { getTodayDate } from '../utils/today';
 export class GanttViewRenderer extends BaseCalendarRenderer {
   private startField: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' = 'startDate';
   private endField: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' = 'dueDate';
-  private statusFilter: 'all' | 'completed' | 'uncompleted' = 'all';
+  private statusFilter: 'all' | 'completed' | 'uncompleted' = 'uncompleted';
   private timeGranularity: GanttTimeGranularity = 'day'; // 默认时间颗粒度为日
-  private readonly VISIBLE_UNITS = 30; // 可见时间单位数量（固定显示30个格子）
+  private readonly VISIBLE_UNITS = 50; // 可见时间单位数量（固定显示30个格子）
 
   // 滚动与刻度同步所需引用
   private timelineScrollEl: HTMLElement | null = null;
