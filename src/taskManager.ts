@@ -1,6 +1,6 @@
 import { App, TFile } from 'obsidian';
 import { GanttTask } from './types';
-import { parseTasksFormat, parseDataviewFormat, escapeRegExp, parseTasksFromListItems } from './tasks/parser';
+import { parseTasksFormat, parseDataviewFormat, escapeRegExp, parseTasksFromListItems } from './tasks/taskParser';
 import { areTasksEqual, dateValue } from './tasks/taskUtils';
 
 // 任务解析与搜索相关功能已迁移至 src/tasks/ 目录
@@ -242,9 +242,6 @@ export class TaskCacheManager {
 	}
 }
 
-	// dateValue 已迁移至 tasks/utils.ts
-
-	// parseTasksFromListItems 已迁移至 tasks/parser.ts
 
 /**
  * 更新任务的完成状态

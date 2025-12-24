@@ -9,12 +9,12 @@
  * 实现方式：
  *   - 遍历所有 Markdown 文件，利用 metadataCache 获取列表项。
  *   - 仅对包含任务列表的文件进行内容读取和解析。
- *   - 解析逻辑委托给 parseTasksFromListItems（见 parser.ts）。
+ *   - 解析逻辑委托给 parseTasksFromListItems（见 taskParser.ts）。
  *   - 支持通过 enabledFormats 参数灵活切换解析格式。
  */
 import { App } from 'obsidian';
 import { GanttTask } from '../types';
-import { parseTasksFromListItems } from './parser';
+import { parseTasksFromListItems } from './taskParser';
 
 /**
  * 从笔记库中搜索所有符合全局筛选条件的任务
