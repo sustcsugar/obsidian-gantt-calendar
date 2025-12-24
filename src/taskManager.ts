@@ -322,6 +322,69 @@ export async function updateTaskCompletion(
 }
 
 /**
+ * 在任务行中修改单个日期字段（辅助函数）
+ * @param taskLine 原始任务行
+ * @param dateFieldName 日期字段名 (dueDate, startDate 等)
+ * @param newDate 新日期值 (null 表示移除该字段)
+ * @param format 格式 ('dataview' | 'tasks')
+ * @returns 修改后的任务行
+ */
+function modifyDateInLine(
+	taskLine: string,
+	dateFieldName: string,
+	newDate: Date | null,
+	format: 'dataview' | 'tasks'
+): string {
+	const fieldMap: Record<string, string> = {
+		dueDate: 'due',
+		startDate: 'start',
+		scheduledDate: 'scheduled',
+		createdDate: 'created',
+		cancelledDate: 'cancelled',
+		completionDate: 'completion',
+	};
+	const emojiMap: Record<string, string> = {
+		dueDate: '📅',
+		startDate: '🛫',
+		scheduledDate: '⏳',
+		createdDate: '➕',
+		cancelledDate: '❌',
+		completionDate: '✅',
+	};
+
+	if (format === 'dataview') {
+		const fieldKey = fieldMap[dateFieldName];
+		if (!fieldKey) return taskLine;
+
+		// 移除旧值
+		const re = new RegExp(`\\[${fieldKey}::\\s*[^\\]]+\\]`, 'g');
+		taskLine = taskLine.replace(re, '');
+
+		// 添加新值（非 null）
+		if (newDate !== null) {
+			const dateStr = formatDate(newDate, 'YYYY-MM-DD');
+			taskLine = taskLine.trimEnd() + ` [${fieldKey}:: ${dateStr}]`;
+		}
+	} else {
+		// Tasks 格式
+		const emoji = emojiMap[dateFieldName];
+		if (!emoji) return taskLine;
+
+		// 移除旧值
+		const re = new RegExp(`${emoji}\\s*\\d{4}-\\d{2}-\\d{2}`, 'g');
+		taskLine = taskLine.replace(re, '');
+
+		// 添加新值（非 null）
+		if (newDate !== null) {
+			const dateStr = formatDate(newDate, 'YYYY-MM-DD');
+			taskLine = taskLine.trimEnd() + ` ${emoji} ${dateStr}`;
+		}
+	}
+
+	return taskLine;
+}
+
+/**
  * 更新任务的日期字段（由日期筛选字段指定）
  * @param app Obsidian App
  * @param task 任务对象
@@ -351,7 +414,6 @@ export async function updateTaskDateField(
 	}
 
 	let taskLine = lines[taskLineIndex];
-	const dateStr = formatDate(newDate, 'YYYY-MM-DD');
 
 	// 选择写回格式：优先使用任务本身的格式；否则根据当前行判断；再否则使用设置
 	let formatToUse: 'dataview' | 'tasks' | undefined = task.format;
@@ -370,39 +432,8 @@ export async function updateTaskDateField(
 		}
 	}
 
-	// 根据字段名和格式更新日期
-	if (formatToUse === 'dataview') {
-		const fieldMap: { [key: string]: string } = {
-			dueDate: 'due',
-			startDate: 'start',
-			scheduledDate: 'scheduled',
-			createdDate: 'created',
-			cancelledDate: 'cancelled',
-			completionDate: 'completion',
-		};
-		const fieldKey = fieldMap[dateFieldName] || dateFieldName;
-
-		// 移除旧值，添加新值
-		taskLine = taskLine.replace(new RegExp(`\\[${fieldKey}::\\s*[^\\]]+\\]`), '');
-		taskLine = taskLine.trimEnd() + ` [${fieldKey}:: ${dateStr}]`;
-	} else {
-		// Tasks 格式
-		const emojiMap: { [key: string]: string } = {
-			dueDate: '📅',
-			startDate: '🛫',
-			scheduledDate: '⏳',
-			createdDate: '➕',
-			cancelledDate: '❌',
-			completionDate: '✅',
-		};
-		const emoji = emojiMap[dateFieldName];
-
-		if (emoji) {
-			// 移除旧值，添加新值
-			taskLine = taskLine.replace(new RegExp(`${emoji}\\s*\\d{4}-\\d{2}-\\d{2}`, 'g'), '');
-			taskLine = taskLine.trimEnd() + ` ${emoji} ${dateStr}`;
-		}
-	}
+	// 使用辅助函数修改日期字段
+	taskLine = modifyDateInLine(taskLine, dateFieldName, newDate, formatToUse);
 
 	// 更新内容
 	lines[taskLineIndex] = taskLine;
@@ -449,9 +480,10 @@ export async function updateTaskProperties(
 	let taskLine = lines[taskLineIndex];
 
 	// 支持修改任务描述（content 字段）
-	// 注意：修改描述时，所有元数据（优先级、日期等）会在后续循环中重新添加，
+	// 注意：修改描述时，所有元数据（优先级、日期等）会在后续循环中重新添加
 	// 因此这里只需更新描述文本，移除所有元数据标记即可
-	if (typeof updates.content === 'string' && updates.content.trim() !== '' && updates.content !== task.content) {
+	const contentModified = typeof updates.content === 'string' && updates.content.trim() !== '' && updates.content !== task.content;
+	if (contentModified) {
 		// 匹配任务行前缀（- [ ]/x + 可能的全局筛选）
 		const m = taskLine.match(/^(\s*[-*]\s*\[[ xX]\]\s*)(.*)$/);
 		if (m) {
@@ -477,7 +509,32 @@ export async function updateTaskProperties(
 
 			// 重新拼接任务行，使用新的描述内容
 			// 元数据（优先级、日期等）会在后续处理循环中重新添加
-			taskLine = prefix + gfPrefix + updates.content.trim();
+			taskLine = prefix + gfPrefix + (updates.content || '').trim();
+		}
+	}
+
+	// 当修改了任务描述时，需要保留原始任务的所有日期字段
+	// 将原始任务的日期值填充到 updates 中（如果该字段未被明确更新）
+	if (contentModified) {
+		const dateFields = ['createdDate', 'startDate', 'scheduledDate', 'dueDate', 'cancelledDate', 'completionDate'];
+		for (const field of dateFields) {
+			if ((updates as any)[field] === undefined && (task as any)[field] !== undefined) {
+				(updates as any)[field] = (task as any)[field];
+			}
+		}
+		// 同样保留原始优先级（如果未被明确更新）
+		if (updates.priority === undefined && task.priority !== undefined) {
+			// task.priority 是字符串类型，需要转换为对应的枚举值
+			const priorityMap: Record<string, 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal'> = {
+				'🔺': 'highest',
+				'⏫': 'high',
+				'🔼': 'medium',
+				'🔽': 'low',
+				'⏬': 'lowest',
+				'none': 'normal',
+				'normal': 'normal',
+			};
+			updates.priority = priorityMap[task.priority] || 'normal';
 		}
 	}
 
@@ -531,54 +588,18 @@ export async function updateTaskProperties(
 	}
 
 	// 日期字段映射
-	const fieldMap: Record<string, string> = {
-		dueDate: 'due',
-		startDate: 'start',
-		scheduledDate: 'scheduled',
-		createdDate: 'created',
-		cancelledDate: 'cancelled',
-		completionDate: 'completion',
-	};
-	const emojiMap: Record<string, string> = {
-		dueDate: '📅',
-		startDate: '🛫',
-		scheduledDate: '⏳',
-		createdDate: '➕',
-		cancelledDate: '❌',
-		completionDate: '✅',
-	};
+	const dateFields = ['dueDate', 'startDate', 'scheduledDate', 'createdDate', 'cancelledDate', 'completionDate'];
 
-	// 针对每一个可能的日期字段进行处理
-	for (const key of Object.keys(fieldMap)) {
-		let updateValue = (updates as any)[key];
-		// 如果未传入该字段，则保留原有值
+	// 只处理 updates 中明确提供的日期字段
+	for (const key of dateFields) {
+		const updateValue = (updates as any)[key];
+		// 跳过未在 updates 中提供的字段
 		if (updateValue === undefined) {
-			updateValue = (task as any)[key];
+			continue;
 		}
 
-		if (formatToUse === 'dataview') {
-			const fieldKey = fieldMap[key];
-			// 移除旧值
-			const re = new RegExp(`\[${fieldKey}::\s*[^\]]+\]`, 'g');
-			taskLine = taskLine.replace(re, '');
-			// 添加新值（非 null）
-			if (updateValue !== null && updateValue !== undefined) {
-				const dateStr = formatDate(updateValue as Date, 'YYYY-MM-DD');
-				taskLine = taskLine.trimEnd() + ` [${fieldKey}:: ${dateStr}]`;
-			}
-		} else {
-			const emoji = emojiMap[key];
-			if (emoji) {
-				// 移除旧值
-				const re = new RegExp(`${emoji}\s*\d{4}-\d{2}-\d{2}`, 'g');
-				taskLine = taskLine.replace(re, '');
-				// 添加新值（非 null）
-				if (updateValue !== null && updateValue !== undefined) {
-					const dateStr = formatDate(updateValue as Date, 'YYYY-MM-DD');
-					taskLine = taskLine.trimEnd() + ` ${emoji} ${dateStr}`;
-				}
-			}
-		}
+		// 使用辅助函数修改日期字段
+		taskLine = modifyDateInLine(taskLine, key, updateValue, formatToUse);
 	}
 
 	// 写回

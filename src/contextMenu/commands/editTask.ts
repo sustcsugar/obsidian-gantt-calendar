@@ -77,17 +77,17 @@ class EditTaskModal extends Modal {
         });
     }
 
-// 提取纯任务描述（不带 wiki 链接）
-// 注意：task.description 已经包含了移除元数据标记后的文本
-function extractPureTaskDescription(task: GanttTask): string {
-  // 使用已解析的 description，只需额外处理 wiki 链接
-  let text = task.description || '';
-  // 移除 wiki 链接 [[note]] 或 [[note|alias]]
-  text = text.replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, ' ');
-  // 清理多余空格
-  text = text.replace(/\s{2,}/g, ' ').trim();
-  return text;
-}
+    // 提取纯任务描述（不带 wiki 链接）
+    // 注意：task.description 已经包含了移除元数据标记后的文本
+    function extractPureTaskDescription(task: GanttTask): string {
+    // 使用已解析的 description，只需额外处理 wiki 链接
+    let text = task.description || '';
+    // 移除 wiki 链接 [[note]] 或 [[note|alias]]
+    text = text.replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, ' ');
+    // 清理多余空格
+    text = text.replace(/\s{2,}/g, ' ').trim();
+    return text;
+    }
 
     // 完成状态
     new Setting(contentEl)
