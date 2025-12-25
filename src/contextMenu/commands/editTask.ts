@@ -125,7 +125,9 @@ class EditTaskModal extends Modal {
       onChange: (d: Date | null) => void
     ) => {
       const s = new Setting(contentEl).setName(name);
+      let textControl: any;
       const input = s.addText(t => {
+        textControl = t;
         const initStr = current ? formatDate(current, 'yyyy-MM-dd') : '';
         t.setPlaceholder('yyyy-MM-dd').setValue(initStr);
         t.inputEl.type = 'date';
@@ -139,7 +141,10 @@ class EditTaskModal extends Modal {
       s.addExtraButton(btn => btn
         .setIcon('x')
         .setTooltip('清除日期')
-        .onClick(() => onChange(null))
+        .onClick(() => {
+          textControl.inputEl.value = '';
+          onChange(null);
+        })
       );
       return input;
     };
