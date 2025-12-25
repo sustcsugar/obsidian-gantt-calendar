@@ -3,7 +3,8 @@ import type { GanttTask } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { openFileInExistingLeaf } from '../utils/fileOpener';
 import { updateTaskCompletion } from '../tasks/taskUpdater';
-import { getStatusColor, DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
+import { getStatusColor, DEFAULT_TASK_STATUSES, getStatusByKey } from '../tasks/taskStatus';
+import type { TaskStatus, CheckboxIconStyle } from '../tasks/taskStatus';
 
 /**
  * 日历渲染器基类
@@ -123,6 +124,9 @@ export abstract class BaseCalendarRenderer {
 		checkbox.disabled = false;
 		checkbox.addClass('gantt-task-checkbox');
 
+		// 应用复选框样式
+		this.applyCheckboxStyle(task, checkbox);
+
 		checkbox.addEventListener('change', async (e) => {
 			e.stopPropagation();
 			this.clearTaskTooltips();
@@ -148,6 +152,43 @@ export abstract class BaseCalendarRenderer {
 		});
 
 		return checkbox;
+	}
+
+	/**
+	 * 应用复选框样式（颜色和图标样式）
+	 */
+	protected applyCheckboxStyle(task: GanttTask, checkbox: HTMLInputElement): void {
+		const taskStatuses = this.plugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
+		const statusKey = task.status || 'todo';
+		const status = getStatusByKey(statusKey, taskStatuses);
+
+		if (status) {
+			// 设置复选框颜色
+			checkbox.style.setProperty('--checkbox-color', status.checkboxColor);
+			checkbox.addClass(`checkbox-${status.checkboxIcon}`);
+
+			// 根据图标样式添加对应的类
+			checkbox.addClass(`checkbox-style-${status.checkboxIcon}`);
+		}
+	}
+
+	/**
+	 * 获取复选框样式的圆角值
+	 */
+	protected getCheckboxBorderRadius(style: CheckboxIconStyle): string {
+		switch (style) {
+			case 'circle':
+				return '50%';
+			case 'rounded':
+				return '6px';
+			case 'minimal':
+				return '0px';
+			case 'filled':
+				return '4px';
+			case 'square':
+			default:
+				return '2px';
+		}
 	}
 
 	/**

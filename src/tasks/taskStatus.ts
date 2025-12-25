@@ -28,6 +28,16 @@ export type DefaultTaskStatusType =
 export type TaskStatusType = DefaultTaskStatusType | string;
 
 /**
+ * 复选框样式类型
+ */
+export type CheckboxIconStyle =
+    | 'square'        // 方形复选框（默认）
+    | 'circle'        // 圆形复选框
+    | 'rounded'       // 圆角方形
+    | 'minimal'       // 极简样式（无背景）
+    | 'filled';       // 填充样式
+
+/**
  * 任务状态配置接口
  */
 export interface TaskStatus {
@@ -49,6 +59,12 @@ export interface TaskStatus {
     /** 文字颜色 (hex) */
     textColor: string;
 
+    /** 复选框颜色 (hex) */
+    checkboxColor: string;
+
+    /** 复选框图标样式 */
+    checkboxIcon: CheckboxIconStyle;
+
     /** 是否为默认状态 */
     isDefault: boolean;
 }
@@ -69,6 +85,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '待办任务',
         backgroundColor: '#FFFFFF',
         textColor: '#333333',
+        checkboxColor: '#999999',
+        checkboxIcon: 'square',
         isDefault: true,
     },
     {
@@ -78,6 +96,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '已完成任务',
         backgroundColor: '#52c41a',
         textColor: '#FFFFFF',
+        checkboxColor: '#52c41a',
+        checkboxIcon: 'filled',
         isDefault: true,
     },
     {
@@ -87,6 +107,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '重要任务',
         backgroundColor: '#ff4d4f',
         textColor: '#FFFFFF',
+        checkboxColor: '#ff4d4f',
+        checkboxIcon: 'rounded',
         isDefault: true,
     },
     {
@@ -96,6 +118,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '已取消任务',
         backgroundColor: '#d9d9d9',
         textColor: '#666666',
+        checkboxColor: '#d9d9d9',
+        checkboxIcon: 'minimal',
         isDefault: true,
     },
     {
@@ -105,6 +129,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '进行中任务',
         backgroundColor: '#faad14',
         textColor: '#FFFFFF',
+        checkboxColor: '#faad14',
+        checkboxIcon: 'circle',
         isDefault: true,
     },
     {
@@ -114,6 +140,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '有疑问任务',
         backgroundColor: '#ffc069',
         textColor: '#333333',
+        checkboxColor: '#ffc069',
+        checkboxIcon: 'rounded',
         isDefault: true,
     },
     {
@@ -123,6 +151,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         description: '已开始任务',
         backgroundColor: '#40a9ff',
         textColor: '#FFFFFF',
+        checkboxColor: '#40a9ff',
+        checkboxIcon: 'square',
         isDefault: true,
     },
 ];

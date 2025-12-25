@@ -2409,3 +2409,144 @@ Gantt Calendar Plugin Styles - 甘特日历
 .gantt-bar.task-with-status.completed {
 	opacity: 0.8;
 }
+
+/* ========================================
+   复选框样式 - 根据任务状态动态应用
+   ======================================== */
+
+/* 复选框基础样式 */
+.gantt-task-checkbox {
+	--checkbox-color: #999999;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	width: 18px;
+	height: 18px;
+	border: 2px solid var(--checkbox-color, var(--text-faint));
+	background-color: transparent;
+	cursor: pointer;
+	position: relative;
+	flex-shrink: 0;
+	transition: all 0.2s ease;
+}
+
+/* 复选框悬停效果 */
+.gantt-task-checkbox:hover {
+	border-color: var(--checkbox-color, var(--interactive-accent));
+	opacity: 0.8;
+}
+
+/* 复选框选中状态 */
+.gantt-task-checkbox:checked {
+	background-color: var(--checkbox-color, var(--interactive-accent));
+	border-color: var(--checkbox-color, var(--interactive-accent));
+}
+
+/* 选中标记（勾号） */
+.gantt-task-checkbox:checked::after {
+	content: '';
+	position: absolute;
+	left: 4px;
+	top: 1px;
+	width: 5px;
+	height: 10px;
+	border: solid white;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+/* 方形样式 (默认) */
+.gantt-task-checkbox.checkbox-square,
+.gantt-task-checkbox.checkbox-style-square {
+	border-radius: 2px;
+}
+
+/* 圆形样式 */
+.gantt-task-checkbox.checkbox-circle,
+.gantt-task-checkbox.checkbox-style-circle {
+	border-radius: 50%;
+}
+
+.gantt-task-checkbox.checkbox-circle:checked::after,
+.gantt-task-checkbox.checkbox-style-circle:checked::after {
+	left: 5px;
+	top: 1px;
+	width: 4px;
+	height: 9px;
+}
+
+/* 圆角样式 */
+.gantt-task-checkbox.checkbox-rounded,
+.gantt-task-checkbox.checkbox-style-rounded {
+	border-radius: 6px;
+}
+
+/* 极简样式 - 细边框 */
+.gantt-task-checkbox.checkbox-minimal,
+.gantt-task-checkbox.checkbox-style-minimal {
+	border-width: 1px;
+	border-radius: 0;
+}
+
+.gantt-task-checkbox.checkbox-minimal:checked::after,
+.gantt-task-checkbox.checkbox-style-minimal:checked::after {
+	left: 5px;
+	top: 0px;
+	width: 4px;
+	height: 10px;
+	border-width: 0 1px 1px 0;
+}
+
+/* 填充样式 - 完全填充 */
+.gantt-task-checkbox.checkbox-filled,
+.gantt-task-checkbox.checkbox-style-filled {
+	border-radius: 4px;
+	border-width: 0;
+	background-color: var(--checkbox-color, var(--interactive-accent));
+}
+
+.gantt-task-checkbox.checkbox-filled::after,
+.gantt-task-checkbox.checkbox-style-filled::after {
+	content: '';
+	position: absolute;
+	left: 5px;
+	top: 1px;
+	width: 4px;
+	height: 9px;
+	border: solid white;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+
+.gantt-task-checkbox.checkbox-filled:checked::after,
+.gantt-task-checkbox.checkbox-style-filled:checked::after {
+	opacity: 1;
+}
+
+/* 未选中时的填充样式显示为浅色背景 */
+.gantt-task-checkbox.checkbox-filled:not(:checked) {
+	background-color: var(--checkbox-color);
+	opacity: 0.2;
+}
+
+.gantt-task-checkbox.checkbox-filled:not(:checked):hover {
+	opacity: 0.3;
+}
+
+/* 复选框禁用状态 */
+.gantt-task-checkbox:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* 各视图任务项中的复选框对齐 */
+.calendar-day-task-item .gantt-task-checkbox,
+.calendar-week-task-item .gantt-task-checkbox,
+.calendar-month-task-item .gantt-task-checkbox,
+.gantt-task-item .gantt-task-checkbox {
+	margin-right: 8px;
+	align-self: flex-start;
+	margin-top: 2px;
+}

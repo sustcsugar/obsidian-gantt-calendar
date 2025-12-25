@@ -76,8 +76,14 @@ export async function updateTaskCompletion(
 	// 标记为完成时添加完成日期，取消完成时移除完成日期
 	if (completed) {
 		updates.completionDate = new Date();
+		// 同步更新状态为 done
+		updates.status = 'done';
 	} else {
 		updates.completionDate = null;
+		// 取消完成时，如果当前状态是 done，则改为 todo；其他状态保持不变
+		if (task.status === 'done') {
+			updates.status = 'todo';
+		}
 	}
 
 	await updateTaskProperties(app, task, updates, enabledFormats);

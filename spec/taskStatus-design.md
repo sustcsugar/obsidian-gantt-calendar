@@ -488,3 +488,115 @@ class SettingModal extends Modal {
 - [ ] 标签提取功能正常
 
 ---
+
+## 2024-12-26 复选框功能增强 ✅
+
+### Bug 修复：复选框点击切换完成状态失效
+
+#### 问题描述
+添加任务状态系统后，点击任务卡片复选框切换完成状态失效。
+
+#### 根本原因
+`updateTaskCompletion()` 函数只更新了 `completed` 属性，但没有同步更新 `status` 属性。在 `serializeTask()` 中，复选框符号优先使用 `status` 对应的值，导致即使 `completed = true`，复选框符号仍显示为待办状态。
+
+#### 修复方案
+修改 `src/tasks/taskUpdater.ts` 中的 `updateTaskCompletion()` 函数：
+
+```typescript
+export async function updateTaskCompletion(
+    app: App,
+    task: GanttTask,
+    completed: boolean,
+    enabledFormats: string[]
+): Promise<void> {
+    const updates: TaskUpdates = { completed };
+
+    if (completed) {
+        updates.completionDate = new Date();
+        // 同步更新状态为 done
+        updates.status = 'done';
+    } else {
+        updates.completionDate = null;
+        // 取消完成时，如果当前状态是 done，则改为 todo
+        if (task.status === 'done') {
+            updates.status = 'todo';
+        }
+    }
+
+    await updateTaskProperties(app, task, updates, enabledFormats);
+}
+```
+
+---
+
+### 功能增强：复选框样式配置
+
+#### 新增功能
+为每个任务状态添加复选框样式配置，支持自定义复选框颜色和图标样式。
+
+#### 复选框样式类型
+
+| 样式 | 效果 | 圆角 |
+|------|------|------|
+| **square** | 方形复选框 | 2px |
+| **circle** | 圆形复选框 | 50% |
+| **rounded** | 圆角方形 | 6px |
+| **minimal** | 极简样式（细边框） | 0px |
+| **filled** | 填充样式（无选中勾号） | 4px |
+
+#### 修改详情
+
+| 文件 | 修改内容 |
+|------|----------|
+| `src/tasks/taskStatus.ts` | - 新增 `CheckboxIconStyle` 类型<br>- `TaskStatus` 接口添加 `checkboxColor` 和 `checkboxIcon` 属性<br>- 7 种默认状态配置复选框颜色和图标样式 |
+| `src/settings.ts` | - 导入 `CheckboxIconStyle`<br>- `createSingleStatusSetting()` 添加复选框颜色选择器和图标样式下拉框<br>- `getBorderRadiusForIconStyle()` 辅助方法<br>- `SettingModal` 添加复选框颜色和图标样式输入 |
+| `src/views/BaseCalendarRenderer.ts` | - 导入 `getStatusByKey` 和 `CheckboxIconStyle`<br>- `createTaskCheckbox()` 调用 `applyCheckboxStyle()`<br>- 新增 `applyCheckboxStyle()` 方法<br>- 新增 `getCheckboxBorderRadius()` 方法 |
+| `styles.css` | - 新增约 140 行复选框样式 CSS<br>- 支持 5 种复选框样式<br>- 使用 CSS 变量 `--checkbox-color` 动态应用颜色 |
+
+#### 默认状态复选框配置
+
+| 状态 | 复选框颜色 | 图标样式 |
+|------|-----------|----------|
+| TODO | #999999 | square |
+| DONE | #52c41a | filled |
+| IMPORTANT | #ff4d4f | rounded |
+| CANCELED | #d9d9d9 | minimal |
+| IN_PROGRESS | #faad14 | circle |
+| QUESTION | #ffc069 | rounded |
+| START | #40a9ff | square |
+
+#### 复选框 CSS 样式示例
+
+```css
+/* 复选框基础样式 */
+.gantt-task-checkbox {
+    --checkbox-color: #999999;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--checkbox-color, var(--text-faint));
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+}
+
+/* 圆形样式 */
+.gantt-task-checkbox.checkbox-circle {
+    border-radius: 50%;
+}
+
+/* 填充样式 */
+.gantt-task-checkbox.checkbox-filled {
+    border-radius: 4px;
+    border-width: 0;
+    background-color: var(--checkbox-color);
+}
+```
+
+#### 构建验证
+```bash
+npm run build
+# ✅ 编译成功，无错误
+```
+
+---

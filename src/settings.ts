@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, TFolder, Modal } from 'obsidian';
 import type GanttCalendarPlugin from '../main';
-import { TaskStatus, DEFAULT_TASK_STATUSES, MACARON_COLORS, validateStatusSymbol } from './tasks/taskStatus';
+import { TaskStatus, DEFAULT_TASK_STATUSES, MACARON_COLORS, validateStatusSymbol, CheckboxIconStyle } from './tasks/taskStatus';
 
 // RGB to Hex converter
 function rgbToHex(rgb: string): string {
@@ -574,6 +574,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		const statusDiv = containerEl.createDiv();
 		statusDiv.addClass('task-status-setting-item');
 		statusDiv.style.display = 'flex';
+		statusDiv.style.flexWrap = 'wrap';
 		statusDiv.style.alignItems = 'center';
 		statusDiv.style.gap = '12px';
 		statusDiv.style.padding = '12px';
@@ -588,10 +589,10 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		iconDiv.style.justifyContent = 'center';
 		iconDiv.style.width = '40px';
 		iconDiv.style.height = '28px';
-		iconDiv.style.border = '1px solid var(--background-modifier-border)';
-		iconDiv.style.borderRadius = '4px';
-		iconDiv.style.background = status.backgroundColor;
-		iconDiv.style.color = status.textColor;
+		iconDiv.style.border = `2px solid ${status.checkboxColor}`;
+		iconDiv.style.borderRadius = this.getBorderRadiusForIconStyle(status.checkboxIcon);
+		iconDiv.style.background = status.checkboxIcon === 'filled' ? status.checkboxColor : status.backgroundColor;
+		iconDiv.style.color = status.checkboxIcon === 'filled' ? '#FFFFFF' : status.textColor;
 		iconDiv.style.fontSize = '10px';
 		iconDiv.style.fontWeight = 'bold';
 		iconDiv.textContent = `[${status.symbol}]`;
@@ -599,6 +600,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		// 状态信息
 		const infoDiv = statusDiv.createEl('div');
 		infoDiv.style.flex = '1';
+		infoDiv.style.minWidth = '120px';
 		infoDiv.createEl('div', {
 			text: `${status.name} (${status.key})`,
 			cls: 'task-status-name'
@@ -608,20 +610,22 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			cls: 'setting-item-description'
 		}).style.fontSize = '12px';
 
-		// 颜色选择区域
-		const colorDiv = statusDiv.createEl('div');
-		colorDiv.style.display = 'flex';
-		colorDiv.style.alignItems = 'center';
-		colorDiv.style.gap = '8px';
+		// 卡片颜色选择区域
+		const cardColorDiv = statusDiv.createEl('div');
+		cardColorDiv.style.display = 'flex';
+		cardColorDiv.style.alignItems = 'center';
+		cardColorDiv.style.gap = '8px';
+		cardColorDiv.style.paddingRight = '12px';
+		cardColorDiv.style.borderRight = '1px solid var(--background-modifier-border)';
 
 		// 背景色选择
-		const bgLabel = colorDiv.createEl('span', {
+		const bgLabel = cardColorDiv.createEl('span', {
 			text: '背景',
 			cls: 'setting-item-description'
 		});
 		bgLabel.style.fontSize = '11px';
 
-		const bgColorPicker = colorDiv.createEl('input', {
+		const bgColorPicker = cardColorDiv.createEl('input', {
 			type: 'color',
 			cls: 'task-status-color-input'
 		}) as HTMLInputElement;
@@ -641,7 +645,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		});
 
 		// 马卡龙配色背景色
-		const bgMacaronDiv = colorDiv.createEl('div');
+		const bgMacaronDiv = cardColorDiv.createEl('div');
 		bgMacaronDiv.style.display = 'flex';
 		bgMacaronDiv.style.gap = '4px';
 		MACARON_COLORS.slice(0, 10).forEach(color => {
@@ -659,21 +663,20 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					this.plugin.settings.taskStatuses[statusIndex].backgroundColor = color;
 					await this.plugin.saveSettings();
 					this.plugin.refreshCalendarViews();
-					// 刷新界面
 					this.display();
 				}
 			});
 		});
 
 		// 文字色选择
-		const textLabel = colorDiv.createEl('span', {
+		const textLabel = cardColorDiv.createEl('span', {
 			text: '文字',
 			cls: 'setting-item-description'
 		});
 		textLabel.style.fontSize = '11px';
 		textLabel.style.marginLeft = '8px';
 
-		const textColorPicker = colorDiv.createEl('input', {
+		const textColorPicker = cardColorDiv.createEl('input', {
 			type: 'color',
 			cls: 'task-status-color-input'
 		}) as HTMLInputElement;
@@ -689,6 +692,75 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				this.plugin.settings.taskStatuses[statusIndex].textColor = textColorPicker.value;
 				await this.plugin.saveSettings();
 				this.plugin.refreshCalendarViews();
+			}
+		});
+
+		// 复选框样式配置区域
+		const checkboxStyleDiv = statusDiv.createEl('div');
+		checkboxStyleDiv.style.display = 'flex';
+		checkboxStyleDiv.style.alignItems = 'center';
+		checkboxStyleDiv.style.gap = '8px';
+
+		// 复选框颜色
+		const checkboxColorLabel = checkboxStyleDiv.createEl('span', {
+			text: '复选框',
+			cls: 'setting-item-description'
+		});
+		checkboxColorLabel.style.fontSize = '11px';
+
+		const checkboxColorPicker = checkboxStyleDiv.createEl('input', {
+			type: 'color',
+			cls: 'task-status-color-input'
+		}) as HTMLInputElement;
+		checkboxColorPicker.value = status.checkboxColor;
+		checkboxColorPicker.style.width = '32px';
+		checkboxColorPicker.style.height = '28px';
+		checkboxColorPicker.style.border = 'none';
+		checkboxColorPicker.style.padding = '0';
+		checkboxColorPicker.style.cursor = 'pointer';
+		checkboxColorPicker.addEventListener('change', async () => {
+			const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
+			if (statusIndex !== -1) {
+				this.plugin.settings.taskStatuses[statusIndex].checkboxColor = checkboxColorPicker.value;
+				await this.plugin.saveSettings();
+				this.plugin.refreshCalendarViews();
+				this.display();
+			}
+		});
+
+		// 复选框图标样式选择
+		const iconStyleSelect = checkboxStyleDiv.createEl('select') as HTMLSelectElement;
+		iconStyleSelect.style.padding = '4px 8px';
+		iconStyleSelect.style.borderRadius = '4px';
+		iconStyleSelect.style.border = '1px solid var(--background-modifier-border)';
+		iconStyleSelect.style.background = 'var(--background-primary)';
+		iconStyleSelect.style.color = 'var(--text-normal)';
+		iconStyleSelect.style.cursor = 'pointer';
+
+		const iconOptions: { value: CheckboxIconStyle; label: string }[] = [
+			{ value: 'square', label: '方形' },
+			{ value: 'circle', label: '圆形' },
+			{ value: 'rounded', label: '圆角' },
+			{ value: 'minimal', label: '极简' },
+			{ value: 'filled', label: '填充' },
+		];
+
+		iconOptions.forEach(option => {
+			const optEl = iconStyleSelect.createEl('option');
+			optEl.value = option.value;
+			optEl.textContent = option.label;
+			if (option.value === status.checkboxIcon) {
+				optEl.selected = true;
+			}
+		});
+
+		iconStyleSelect.addEventListener('change', async () => {
+			const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
+			if (statusIndex !== -1) {
+				this.plugin.settings.taskStatuses[statusIndex].checkboxIcon = iconStyleSelect.value as CheckboxIconStyle;
+				await this.plugin.saveSettings();
+				this.plugin.refreshCalendarViews();
+				this.display();
 			}
 		});
 
@@ -723,6 +795,25 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 	}
 
 	/**
+	 * 根据图标样式获取对应的圆角值
+	 */
+	private getBorderRadiusForIconStyle(style: CheckboxIconStyle): string {
+		switch (style) {
+			case 'circle':
+				return '50%';
+			case 'rounded':
+				return '6px';
+			case 'minimal':
+				return '0px';
+			case 'filled':
+				return '4px';
+			case 'square':
+			default:
+				return '2px';
+		}
+	}
+
+	/**
 	 * 显示添加自定义状态模态框
 	 */
 	private showAddCustomStatusModal(containerEl: HTMLElement): void {
@@ -742,6 +833,8 @@ class SettingModal extends Modal {
 	private descInput: HTMLTextAreaElement;
 	private bgColorInput: HTMLInputElement;
 	private textColorInput: HTMLInputElement;
+	private checkboxColorInput: HTMLInputElement;
+	private checkboxIconSelect: HTMLSelectElement;
 	private nameError: HTMLElement;
 	private symbolError: HTMLElement;
 
@@ -823,7 +916,7 @@ class SettingModal extends Modal {
 		this.descInput.style.border = '1px solid var(--background-modifier-border)';
 		this.descInput.rows = 2;
 
-		// 颜色选择
+		// 卡片颜色选择
 		const colorContainer = contentEl.createDiv();
 		colorContainer.style.marginBottom = '16px';
 		colorContainer.style.display = 'flex';
@@ -831,7 +924,7 @@ class SettingModal extends Modal {
 
 		// 背景色
 		const bgColorDiv = colorContainer.createDiv();
-		bgColorDiv.createEl('label', { text: '背景颜色:' });
+		bgColorDiv.createEl('label', { text: '卡片背景颜色:' });
 		this.bgColorInput = bgColorDiv.createEl('input', { type: 'color', value: '#FFFFFF' });
 		this.bgColorInput.style.width = '60px';
 		this.bgColorInput.style.height = '36px';
@@ -841,7 +934,7 @@ class SettingModal extends Modal {
 
 		// 文字颜色
 		const textColorDiv = colorContainer.createDiv();
-		textColorDiv.createEl('label', { text: '文字颜色:' });
+		textColorDiv.createEl('label', { text: '卡片文字颜色:' });
 		this.textColorInput = textColorDiv.createEl('input', { type: 'color', value: '#333333' });
 		this.textColorInput.style.width = '60px';
 		this.textColorInput.style.height = '36px';
@@ -852,7 +945,7 @@ class SettingModal extends Modal {
 		// 马卡龙配色
 		const macaronContainer = contentEl.createDiv();
 		macaronContainer.style.marginBottom = '16px';
-		macaronContainer.createEl('label', { text: '快速选择背景颜色:' });
+		macaronContainer.createEl('label', { text: '快速选择卡片背景颜色:' });
 		const macaronGrid = macaronContainer.createDiv();
 		macaronGrid.style.display = 'grid';
 		macaronGrid.style.gridTemplateColumns = 'repeat(10, 1fr)';
@@ -869,6 +962,49 @@ class SettingModal extends Modal {
 			swatch.addEventListener('click', () => {
 				this.bgColorInput.value = color;
 			});
+		});
+
+		// 复选框样式配置
+		const checkboxStyleContainer = contentEl.createDiv();
+		checkboxStyleContainer.style.marginBottom = '16px';
+		checkboxStyleContainer.style.display = 'flex';
+		checkboxStyleContainer.style.gap = '24px';
+
+		// 复选框颜色
+		const checkboxColorDiv = checkboxStyleContainer.createDiv();
+		checkboxColorDiv.createEl('label', { text: '复选框颜色:' });
+		this.checkboxColorInput = checkboxColorDiv.createEl('input', { type: 'color', value: '#999999' });
+		this.checkboxColorInput.style.width = '60px';
+		this.checkboxColorInput.style.height = '36px';
+		this.checkboxColorInput.style.border = 'none';
+		this.checkboxColorInput.style.padding = '0';
+		this.checkboxColorInput.style.cursor = 'pointer';
+
+		// 复选框图标样式
+		const checkboxIconDiv = checkboxStyleContainer.createDiv();
+		checkboxIconDiv.createEl('label', { text: '复选框样式:' });
+		this.checkboxIconSelect = checkboxIconDiv.createEl('select') as HTMLSelectElement;
+		this.checkboxIconSelect.style.width = '120px';
+		this.checkboxIconSelect.style.height = '36px';
+		this.checkboxIconSelect.style.padding = '4px 8px';
+		this.checkboxIconSelect.style.borderRadius = '4px';
+		this.checkboxIconSelect.style.border = '1px solid var(--background-modifier-border)';
+		this.checkboxIconSelect.style.background = 'var(--background-primary)';
+		this.checkboxIconSelect.style.color = 'var(--text-normal)';
+		this.checkboxIconSelect.style.cursor = 'pointer';
+
+		const iconOptions: { value: CheckboxIconStyle; label: string }[] = [
+			{ value: 'square', label: '方形' },
+			{ value: 'circle', label: '圆形' },
+			{ value: 'rounded', label: '圆角' },
+			{ value: 'minimal', label: '极简' },
+			{ value: 'filled', label: '填充' },
+		];
+
+		iconOptions.forEach(option => {
+			const optEl = this.checkboxIconSelect.createEl('option');
+			optEl.value = option.value;
+			optEl.textContent = option.label;
 		});
 
 		// 按钮容器
@@ -905,6 +1041,8 @@ class SettingModal extends Modal {
 		const description = this.descInput.value.trim();
 		const backgroundColor = this.bgColorInput.value;
 		const textColor = this.textColorInput.value;
+		const checkboxColor = this.checkboxColorInput.value;
+		const checkboxIcon = this.checkboxIconSelect.value as CheckboxIconStyle;
 
 		// 验证
 		if (!name) {
@@ -960,6 +1098,8 @@ class SettingModal extends Modal {
 			description: description || '自定义状态',
 			backgroundColor,
 			textColor,
+			checkboxColor,
+			checkboxIcon,
 			isDefault: false
 		};
 
