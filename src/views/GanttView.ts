@@ -320,6 +320,10 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     for (const item of withRange) {
       // 左侧：任务卡片
       const taskCard = taskList.createDiv('gantt-task-card');
+
+      // 应用状态颜色
+      this.applyStatusColors(item.task, taskCard);
+
       const cleaned = item.task.description;
       const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
       
@@ -356,6 +360,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
       bar.style.gridColumnEnd = String(Math.floor(startOffset + duration) + 1);
       bar.setAttr('title', `${formatDate(item.start, 'yyyy-MM-dd')} → ${formatDate(item.end, 'yyyy-MM-dd')}`);
       if (item.task.completed) bar.addClass('completed');
+
+      // 应用状态颜色到甘特条
+      this.applyStatusColors(item.task, bar);
     }
 
     // 同步时间刻度和甘特条的横向滚动

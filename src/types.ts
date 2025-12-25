@@ -1,4 +1,5 @@
 // 日历视图类型定义
+import { TaskStatusType } from './tasks/taskStatus';
 
 export type CalendarViewType = 'year' | 'month' | 'week' | 'day' | 'task' | 'gantt';
 
@@ -98,9 +99,11 @@ export interface GanttTask {
 	content: string;               // 原始任务内容（保留完整格式用于写回）
 	description: string;           // 清理后的任务描述（移除元数据标记，用于显示）
 	completed: boolean;            // 任务是否已完成
-	cancelled?: boolean;           // 任务是否已取消（使用 [/] 复选框）
+	cancelled?: boolean;           // 任务是否已取消（使用 [-] 复选框）
+	status?: TaskStatusType;       // 任务状态类型
 	format?: 'tasks' | 'dataview'; // 源格式：用于写回时选择正确的字段样式
 	priority?: string;             // 优先级：highest, high, medium, low, lowest
+	tags?: string[];               // 任务标签列表
 	createdDate?: Date;            // 创建日期
 	startDate?: Date;              // 开始日期
 	scheduledDate?: Date;          // 计划日期

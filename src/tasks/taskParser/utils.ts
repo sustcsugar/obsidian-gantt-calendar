@@ -285,3 +285,67 @@ export function hasValidPriority(priority?: string): boolean {
  * 解析后的日期类型
  */
 type ParsedDates = Partial<Record<'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'cancelledDate' | 'completionDate', Date>>;
+
+// ==================== 标签提取 ====================
+
+/**
+ * 标签提取正则
+ * 匹配 #tag 格式的标签
+ */
+const TAG_REGEX = /#([a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9_\u4e00-\u9fa5]*)/g;
+
+/**
+ * 提取任务标签
+ *
+ * 从任务描述中提取所有 #tag 格式的标签。
+ * 标签规则：
+ * - 以 # 开头
+ * - 后续字符可以是字母、数字、下划线、中文
+ * - 第一个字符不能是数字（可选限制）
+ *
+ * @param description - 任务描述
+ * @returns 标签数组（不含 # 符号）
+ *
+ * @example
+ * ```ts
+ * extractTags("完成项目 #work #urgent")
+ * // 返回: ['work', 'urgent']
+ *
+ * extractTags("普通任务描述")
+ * // 返回: []
+ *
+ * extractTags("任务 #前端 #vue3 开发")
+ * // 返回: ['前端', 'vue3']
+ * ```
+ */
+export function extractTags(description: string): string[] {
+    const tags: string[] = [];
+    let match: RegExpExecArray | null;
+
+    // 重置正则索引
+    TAG_REGEX.lastIndex = 0;
+
+    while ((match = TAG_REGEX.exec(description)) !== null) {
+        tags.push(match[1]);
+    }
+
+    return tags;
+}
+
+/**
+ * 从任务描述中移除标签
+ *
+ * 移除所有 #tag 格式的标签，返回清理后的文本。
+ *
+ * @param description - 任务描述
+ * @returns 移除标签后的描述
+ *
+ * @example
+ * ```ts
+ * removeTags("完成项目 #work #urgent")
+ * // 返回: "完成项目"
+ * ```
+ */
+export function removeTags(description: string): string {
+    return description.replace(TAG_REGEX, '').replace(/\s+/g, ' ').trim();
+}

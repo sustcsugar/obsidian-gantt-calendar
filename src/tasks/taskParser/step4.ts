@@ -16,6 +16,7 @@ import {
     parsePriorityFromEmoji,
     parsePriorityFromDataview,
 } from '../taskSerializerSymbols';
+import { TaskStatusType, parseStatusFromCheckbox } from '../taskStatus';
 
 // ==================== 类型定义 ====================
 
@@ -28,6 +29,9 @@ export interface CheckboxStatus {
 
     /** 是否已取消 */
     cancelled: boolean;
+
+    /** 任务状态类型 */
+    status: TaskStatusType;
 
     /** 原始状态字符 */
     originalStatus: string;
@@ -61,15 +65,24 @@ export interface ParsedTaskAttributes {
  *
  * 根据复选框内的字符判断任务的完成状态。
  *
- * @param status - 复选框状态字符（空格、x、X、/ 等）
+ * 支持的状态：
+ * - `[ ]` (空格) → TODO → completed=false, cancelled=false
+ * - `[x]` (x/X) → DONE → completed=true, cancelled=false
+ * - `[!]` (!) → IMPORTANT → completed=false, cancelled=false
+ * - `[-]` (-) → CANCELED → completed=false, cancelled=true
+ * - `[/]` (/) → IN_PROGRESS → completed=false, cancelled=false
+ * - `[?]` (?) → QUESTION → completed=false, cancelled=false
+ * - `[n]` (n) → START → completed=false, cancelled=false
+ *
+ * @param status - 复选框状态字符
  * @returns 复选框状态对象
  *
  * @example
  * ```ts
- * parseCheckboxStatus(' ')  // { completed: false, cancelled: false, originalStatus: ' ' }
- * parseCheckboxStatus('x')  // { completed: true, cancelled: false, originalStatus: 'x' }
- * parseCheckboxStatus('X')  // { completed: true, cancelled: false, originalStatus: 'X' }
- * parseCheckboxStatus('/')  // { completed: false, cancelled: true, originalStatus: '/' }
+ * parseCheckboxStatus(' ')  // { completed: false, cancelled: false, status: 'todo', originalStatus: ' ' }
+ * parseCheckboxStatus('x')  // { completed: true, cancelled: false, status: 'done', originalStatus: 'x' }
+ * parseCheckboxStatus('-')  // { completed: false, cancelled: true, status: 'canceled', originalStatus: '-' }
+ * parseCheckboxStatus('/')  // { completed: false, cancelled: false, status: 'in_progress', originalStatus: '/' }
  * ```
  */
 export function parseCheckboxStatus(status: string): CheckboxStatus {
@@ -78,13 +91,20 @@ export function parseCheckboxStatus(status: string): CheckboxStatus {
     let completed = false;
     let cancelled = false;
 
-    if (normalized === RegularExpressions.Checkbox.COMPLETED.toLowerCase()) {
+    // 使用 taskStatus 中的状态映射
+    const taskStatus = parseStatusFromCheckbox(status);
+
+    // 判断完成状态
+    if (normalized === 'x' || taskStatus === 'done') {
         completed = true;
-    } else if (normalized === RegularExpressions.Checkbox.CANCELLED) {
+    }
+
+    // 判断取消状态（注意：是 [-] 不是 [/]）
+    if (normalized === '-' || taskStatus === 'canceled') {
         cancelled = true;
     }
 
-    return { completed, cancelled, originalStatus: status };
+    return { completed, cancelled, status: taskStatus, originalStatus: status };
 }
 
 /**
@@ -125,18 +145,22 @@ export function isCompleted(status: string): boolean {
 /**
  * 判断复选框是否为取消状态
  *
+ * 注意：取消状态是 [-] 不是 [/]
+ * [/] 是进行中状态 (IN_PROGRESS)
+ *
  * @param status - 复选框状态字符
  * @returns 是否为取消状态
  *
  * @example
  * ```ts
- * isCancelled('/')  // true
+ * isCancelled('-')  // true
  * isCancelled(' ')  // false
  * isCancelled('x')  // false
+ * isCancelled('/')  // false (这是进行中状态，不是取消)
  * ```
  */
 export function isCancelled(status: string): boolean {
-    return RegularExpressions.Checkbox.cancelledRegex.test(`[${status}]`);
+    return status === '-';
 }
 
 // ==================== Tasks 格式解析 ====================

@@ -128,6 +128,9 @@ export class MonthViewRenderer extends BaseCalendarRenderer {
 		const taskItem = container.createDiv('calendar-month-task-item');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
+		// 应用状态颜色
+		this.applyStatusColors(task, taskItem);
+
 		const cleaned = task.description;
 
 		// 使用富文本渲染支持链接

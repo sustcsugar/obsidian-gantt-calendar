@@ -3,6 +3,7 @@ import type { GanttTask } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { openFileInExistingLeaf } from '../utils/fileOpener';
 import { updateTaskCompletion } from '../tasks/taskUpdater';
+import { getStatusColor, DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
 
 /**
  * 日历渲染器基类
@@ -50,6 +51,29 @@ export abstract class BaseCalendarRenderer {
 			case 'low': return '🔽';
 			case 'lowest': return '⏬';
 			default: return '';
+		}
+	}
+
+	/**
+	 * 获取任务状态颜色配置
+	 * 从插件设置中读取状态颜色，如果未配置则使用默认值
+	 */
+	protected getStatusColors(task: GanttTask): { bg: string; text: string } | null {
+		if (!task.status) return null;
+
+		const taskStatuses = this.plugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
+		return getStatusColor(task.status, taskStatuses) || null;
+	}
+
+	/**
+	 * 应用状态颜色到任务元素
+	 */
+	protected applyStatusColors(task: GanttTask, element: HTMLElement): void {
+		const colors = this.getStatusColors(task);
+		if (colors) {
+			element.style.setProperty('--task-bg-color', colors.bg);
+			element.style.setProperty('--task-text-color', colors.text);
+			element.addClass('task-with-status');
 		}
 	}
 

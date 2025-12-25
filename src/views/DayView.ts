@@ -136,6 +136,9 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 		const taskItem = listContainer.createDiv('calendar-day-task-item');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
+		// 应用状态颜色
+		this.applyStatusColors(task, taskItem);
+
 		// 复选框
 		this.createTaskCheckbox(task, taskItem);
 

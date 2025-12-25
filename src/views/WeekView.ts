@@ -145,6 +145,9 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 		const taskItem = container.createDiv('calendar-week-task-item');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
+		// 应用状态颜色
+		this.applyStatusColors(task, taskItem);
+
 		// 设置可拖拽
 		taskItem.draggable = true;
 		taskItem.setAttribute('data-task-id', `${task.filePath}:${task.lineNumber}`);

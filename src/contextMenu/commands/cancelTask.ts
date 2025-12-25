@@ -4,7 +4,8 @@ import { updateTaskProperties } from '../../tasks/taskUpdater';
 
 /**
  * 取消任务
- * 将任务的复选框设置为 [/]，并添加取消日期
+ * 将任务的复选框设置为 [-]，并添加取消日期
+ * 注意：[-] 是取消状态，[/] 是进行中状态
  * @param app Obsidian App 实例
  * @param task 要取消的任务
  * @param enabledFormats 启用的任务格式
@@ -18,7 +19,7 @@ export async function cancelTask(
 ): Promise<void> {
 	try {
 		// 如果任务已经是取消状态，则不处理
-		if (task.cancelled) {
+		if (task.status === 'canceled' || task.cancelled) {
 			new Notice('任务已经是取消状态');
 			return;
 		}
@@ -30,7 +31,9 @@ export async function cancelTask(
 		}
 
 		// 更新任务状态：设置为取消，并添加取消日期
+		// 使用 status: 'canceled' 会自动将复选框设置为 [-]
 		await updateTaskProperties(app, task, {
+			status: 'canceled',
 			cancelled: true,
 			cancelledDate: new Date()
 		}, enabledFormats);

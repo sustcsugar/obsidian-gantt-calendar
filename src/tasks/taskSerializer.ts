@@ -1,13 +1,15 @@
 import { App } from 'obsidian';
 import { GanttTask } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
+import { TaskStatusType, getStatusBySymbol, DEFAULT_TASK_STATUSES } from './taskStatus';
 
 /**
  * 任务更新参数
  */
 export interface TaskUpdates {
 	completed?: boolean;
-	cancelled?: boolean;  // 取消状态，使用 [/] 复选框
+	cancelled?: boolean;  // 取消状态，使用 [-] 复选框
+	status?: TaskStatusType;  // 任务状态类型
 	priority?: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal';
 	createdDate?: Date | null;
 	startDate?: Date | null;
@@ -24,6 +26,7 @@ export interface TaskUpdates {
 interface MergedTask {
 	completed: boolean;
 	cancelled?: boolean;  // 取消状态
+	status?: TaskStatusType;  // 任务状态类型
 	priority?: string;
 	description: string;
 	createdDate?: Date;
@@ -103,6 +106,7 @@ export function serializeTask(
 	const merged: MergedTask = {
 		completed: updates.completed !== undefined ? updates.completed : task.completed,
 		cancelled: updates.cancelled !== undefined ? updates.cancelled : task.cancelled,
+		status: updates.status !== undefined ? updates.status : task.status,
 		// 修复：统一将 priority 转换为 emoji，避免"不更改"时输出文本值
 		priority: updates.priority !== undefined
 			? getPriorityEmoji(updates.priority)
@@ -120,18 +124,29 @@ export function serializeTask(
 	// 2. 从插件设置中获取全局过滤器（唯一信源）
 	const plugin = (app as any).plugins?.plugins['obsidian-gantt-calendar'];
 	const globalFilter = plugin?.settings?.globalTaskFilter || '';
+	const taskStatuses = plugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
 
 	// 3. 构建任务行的各个部分
 	const parts: string[] = [];
 
-	// 复选框：支持 [x] 完成、[/] 取消、[ ] 未完成
-	if (merged.cancelled) {
-		parts.push('[/]');
-	} else if (merged.completed) {
-		parts.push('[x]');
+	// 复选框：根据 status 确定符号
+	// 如果有 status，使用对应的符号；否则使用传统的 completed/cancelled 判断
+	let checkboxSymbol = ' '; // 默认待办
+	if (merged.status) {
+		// 根据状态查找对应的符号
+		const statusConfig = taskStatuses.find((s: { key: TaskStatusType; symbol: string }) => s.key === merged.status);
+		if (statusConfig) {
+			checkboxSymbol = statusConfig.symbol;
+		}
 	} else {
-		parts.push('[ ]');
+		// 兼容旧逻辑：取消状态是 [-] 不是 [/]
+		if (merged.cancelled) {
+			checkboxSymbol = '-';
+		} else if (merged.completed) {
+			checkboxSymbol = 'x';
+		}
 	}
+	parts.push(`[${checkboxSymbol}]`);
 
 	// 全局过滤器（从插件设置中获取）
 	if (globalFilter) {

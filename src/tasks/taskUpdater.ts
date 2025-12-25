@@ -127,8 +127,8 @@ export async function updateTaskProperties(
 	const formatToUse = determineTaskFormat(task, taskLine, enabledFormats);
 
 	// 提取列表标记和缩进（保留 "- " 或 "* " 等列表前缀）
-	// 支持 [ ] 未完成、[x] 完成、[/] 取消 三种复选框状态
-	const listMatch = taskLine.match(/^(\s*)([-*])\s+\[[ xX/]\]\s*/);
+	// 支持多种复选框状态：[ ] [x] [!] [-] [/] [?] [n] 及自定义单字符状态
+	const listMatch = taskLine.match(/^(\s*)([-*])\s+\[.\]\s*/);
 	if (!listMatch) {
 		throw new Error('Invalid task format: cannot find list marker');
 	}

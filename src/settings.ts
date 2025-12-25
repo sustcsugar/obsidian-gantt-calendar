@@ -1,5 +1,6 @@
-import { App, PluginSettingTab, Setting, TFolder } from 'obsidian';
+import { App, PluginSettingTab, Setting, TFolder, Modal } from 'obsidian';
 import type GanttCalendarPlugin from '../main';
+import { TaskStatus, DEFAULT_TASK_STATUSES, MACARON_COLORS, validateStatusSymbol } from './tasks/taskStatus';
 
 // RGB to Hex converter
 function rgbToHex(rgb: string): string {
@@ -31,6 +32,7 @@ export interface GanttCalendarSettings {
 	yearHeatmapEnabled: boolean; // 年视图是否启用任务热力图
 	yearHeatmapPalette: 'blue' | 'green' | 'red' | 'purple' | 'orange' | 'cyan' | 'pink' | 'yellow'; // 热力图色卡选择
 	taskNotePath: string; // 任务笔记默认文件夹路径
+	taskStatuses: TaskStatus[]; // 任务状态配置（包含颜色）
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -53,6 +55,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	yearHeatmapEnabled: true,
 	yearHeatmapPalette: 'blue',
 	taskNotePath: 'Tasks', // 默认任务笔记文件夹路径
+	taskStatuses: DEFAULT_TASK_STATUSES, // 默认任务状态配置
 };
 
 export class GanttCalendarSettingTab extends PluginSettingTab {
@@ -350,6 +353,9 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			this.createHeatmapPaletteSetting(containerEl);
 		}
 
+		// ===== 任务状态设置 =====
+		containerEl.createEl('h2', { text: '任务状态设置' });
+		this.createTaskStatusSettings(containerEl);
 
 	}
 
@@ -501,5 +507,474 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				(swatch as HTMLElement).style.outlineOffset = '0px';
 			}
 		});
+	}
+
+	/**
+	 * 创建任务状态设置界面
+	 */
+	private createTaskStatusSettings(containerEl: HTMLElement): void {
+		const desc = containerEl.createEl('div', {
+			cls: 'setting-item-description',
+			text: '配置任务状态的颜色和样式。支持 7 种默认状态和自定义状态。'
+		});
+		desc.style.marginBottom = '16px';
+
+		// 默认状态列表
+		const defaultStatusesDiv = containerEl.createDiv();
+		defaultStatusesDiv.createEl('h3', { text: '默认状态', cls: 'setting-item-heading' });
+
+		DEFAULT_TASK_STATUSES.forEach((status) => {
+			this.createSingleStatusSetting(defaultStatusesDiv, status);
+		});
+
+		// 自定义状态部分
+		const customStatusesDiv = containerEl.createDiv();
+		customStatusesDiv.createEl('h3', { text: '自定义状态', cls: 'setting-item-heading' });
+
+		// 获取自定义状态数量
+		const customStatuses = this.plugin.settings.taskStatuses.filter(s => !s.isDefault);
+		const customCount = customStatuses.length;
+		const maxCustom = 3;
+
+		// 显示自定义状态数量提示
+		const countInfo = customStatusesDiv.createEl('div', {
+			cls: 'setting-item-description',
+			text: `已添加 ${customCount}/${maxCustom} 个自定义状态`
+		});
+		countInfo.style.marginBottom = '12px';
+
+		// 渲染现有自定义状态
+		customStatuses.forEach((status) => {
+			this.createSingleStatusSetting(customStatusesDiv, status, true);
+		});
+
+		// 添加自定义状态按钮
+		if (customCount < maxCustom) {
+			const addButton = new Setting(customStatusesDiv)
+				.setName('添加自定义状态')
+				.setDesc('创建一个新的任务状态')
+				.addButton(button => button
+					.setButtonText('添加')
+					.setCta()
+					.onClick(() => {
+						this.showAddCustomStatusModal(containerEl);
+					}));
+			addButton.settingEl.style.marginTop = '16px';
+		}
+	}
+
+	/**
+	 * 创建单个状态设置项
+	 */
+	private createSingleStatusSetting(
+		containerEl: HTMLElement,
+		status: TaskStatus,
+		isCustom: boolean = false
+	): void {
+		const statusDiv = containerEl.createDiv();
+		statusDiv.addClass('task-status-setting-item');
+		statusDiv.style.display = 'flex';
+		statusDiv.style.alignItems = 'center';
+		statusDiv.style.gap = '12px';
+		statusDiv.style.padding = '12px';
+		statusDiv.style.marginBottom = '8px';
+		statusDiv.style.background = 'var(--background-secondary)';
+		statusDiv.style.borderRadius = '6px';
+
+		// 状态图标（复选框示例）
+		const iconDiv = statusDiv.createEl('div');
+		iconDiv.style.display = 'flex';
+		iconDiv.style.alignItems = 'center';
+		iconDiv.style.justifyContent = 'center';
+		iconDiv.style.width = '40px';
+		iconDiv.style.height = '28px';
+		iconDiv.style.border = '1px solid var(--background-modifier-border)';
+		iconDiv.style.borderRadius = '4px';
+		iconDiv.style.background = status.backgroundColor;
+		iconDiv.style.color = status.textColor;
+		iconDiv.style.fontSize = '10px';
+		iconDiv.style.fontWeight = 'bold';
+		iconDiv.textContent = `[${status.symbol}]`;
+
+		// 状态信息
+		const infoDiv = statusDiv.createEl('div');
+		infoDiv.style.flex = '1';
+		infoDiv.createEl('div', {
+			text: `${status.name} (${status.key})`,
+			cls: 'task-status-name'
+		});
+		infoDiv.createEl('div', {
+			text: status.description,
+			cls: 'setting-item-description'
+		}).style.fontSize = '12px';
+
+		// 颜色选择区域
+		const colorDiv = statusDiv.createEl('div');
+		colorDiv.style.display = 'flex';
+		colorDiv.style.alignItems = 'center';
+		colorDiv.style.gap = '8px';
+
+		// 背景色选择
+		const bgLabel = colorDiv.createEl('span', {
+			text: '背景',
+			cls: 'setting-item-description'
+		});
+		bgLabel.style.fontSize = '11px';
+
+		const bgColorPicker = colorDiv.createEl('input', {
+			type: 'color',
+			cls: 'task-status-color-input'
+		}) as HTMLInputElement;
+		bgColorPicker.value = status.backgroundColor;
+		bgColorPicker.style.width = '32px';
+		bgColorPicker.style.height = '28px';
+		bgColorPicker.style.border = 'none';
+		bgColorPicker.style.padding = '0';
+		bgColorPicker.style.cursor = 'pointer';
+		bgColorPicker.addEventListener('change', async () => {
+			const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
+			if (statusIndex !== -1) {
+				this.plugin.settings.taskStatuses[statusIndex].backgroundColor = bgColorPicker.value;
+				await this.plugin.saveSettings();
+				this.plugin.refreshCalendarViews();
+			}
+		});
+
+		// 马卡龙配色背景色
+		const bgMacaronDiv = colorDiv.createEl('div');
+		bgMacaronDiv.style.display = 'flex';
+		bgMacaronDiv.style.gap = '4px';
+		MACARON_COLORS.slice(0, 10).forEach(color => {
+			const swatch = bgMacaronDiv.createEl('div');
+			swatch.style.width = '16px';
+			swatch.style.height = '16px';
+			swatch.style.borderRadius = '2px';
+			swatch.style.cursor = 'pointer';
+			swatch.style.backgroundColor = color;
+			swatch.style.border = color === status.backgroundColor ? '2px solid #000' : '1px solid var(--background-modifier-border)';
+			swatch.addEventListener('click', async () => {
+				bgColorPicker.value = swatch.style.backgroundColor || color;
+				const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
+				if (statusIndex !== -1) {
+					this.plugin.settings.taskStatuses[statusIndex].backgroundColor = color;
+					await this.plugin.saveSettings();
+					this.plugin.refreshCalendarViews();
+					// 刷新界面
+					this.display();
+				}
+			});
+		});
+
+		// 文字色选择
+		const textLabel = colorDiv.createEl('span', {
+			text: '文字',
+			cls: 'setting-item-description'
+		});
+		textLabel.style.fontSize = '11px';
+		textLabel.style.marginLeft = '8px';
+
+		const textColorPicker = colorDiv.createEl('input', {
+			type: 'color',
+			cls: 'task-status-color-input'
+		}) as HTMLInputElement;
+		textColorPicker.value = status.textColor;
+		textColorPicker.style.width = '32px';
+		textColorPicker.style.height = '28px';
+		textColorPicker.style.border = 'none';
+		textColorPicker.style.padding = '0';
+		textColorPicker.style.cursor = 'pointer';
+		textColorPicker.addEventListener('change', async () => {
+			const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
+			if (statusIndex !== -1) {
+				this.plugin.settings.taskStatuses[statusIndex].textColor = textColorPicker.value;
+				await this.plugin.saveSettings();
+				this.plugin.refreshCalendarViews();
+			}
+		});
+
+		// 删除按钮（仅自定义状态）
+		if (isCustom) {
+			const deleteButton = statusDiv.createEl('button');
+			deleteButton.textContent = '删除';
+			deleteButton.style.marginLeft = 'auto';
+			deleteButton.style.padding = '4px 12px';
+			deleteButton.style.fontSize = '12px';
+			deleteButton.style.borderRadius = '4px';
+			deleteButton.style.border = '1px solid var(--background-modifier-border)';
+			deleteButton.style.background = 'transparent';
+			deleteButton.style.color = 'var(--text-muted)';
+			deleteButton.style.cursor = 'pointer';
+			deleteButton.addEventListener('click', async () => {
+				// 删除自定义状态
+				this.plugin.settings.taskStatuses = this.plugin.settings.taskStatuses.filter(s => s.key !== status.key);
+				await this.plugin.saveSettings();
+				this.plugin.refreshCalendarViews();
+				this.display();
+			});
+			deleteButton.addEventListener('mouseenter', () => {
+				deleteButton.style.background = 'var(--interactive-accent)';
+				deleteButton.style.color = 'var(--text-on-accent)';
+			});
+			deleteButton.addEventListener('mouseleave', () => {
+				deleteButton.style.background = 'transparent';
+				deleteButton.style.color = 'var(--text-muted)';
+			});
+		}
+	}
+
+	/**
+	 * 显示添加自定义状态模态框
+	 */
+	private showAddCustomStatusModal(containerEl: HTMLElement): void {
+		const modal = new SettingModal(this.app, this.plugin);
+		modal.open();
+	}
+}
+
+/**
+ * 添加自定义状态模态框
+ */
+class SettingModal extends Modal {
+	private plugin: GanttCalendarPlugin;
+	private nameInput: HTMLInputElement;
+	private keyInput: HTMLInputElement;
+	private symbolInput: HTMLInputElement;
+	private descInput: HTMLTextAreaElement;
+	private bgColorInput: HTMLInputElement;
+	private textColorInput: HTMLInputElement;
+	private nameError: HTMLElement;
+	private symbolError: HTMLElement;
+
+	constructor(app: App, plugin: GanttCalendarPlugin) {
+		super(app);
+		this.plugin = plugin;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.empty();
+		contentEl.addClass('gantt-status-modal');
+
+		contentEl.createEl('h2', { text: '添加自定义状态' });
+
+		// 状态名称
+		const nameContainer = contentEl.createDiv();
+		nameContainer.style.marginBottom = '16px';
+		nameContainer.createEl('label', { text: '状态名称:' });
+		this.nameInput = nameContainer.createEl('input', {
+			type: 'text',
+			placeholder: '例如：等待审核'
+		});
+		this.nameInput.style.width = '100%';
+		this.nameInput.style.marginTop = '8px';
+		this.nameInput.style.padding = '8px';
+		this.nameInput.style.borderRadius = '4px';
+		this.nameInput.style.border = '1px solid var(--background-modifier-border)';
+
+		// 状态 Key
+		const keyContainer = contentEl.createDiv();
+		keyContainer.style.marginBottom = '16px';
+		keyContainer.createEl('label', { text: '状态标识 (英文):' });
+		this.keyInput = keyContainer.createEl('input', {
+			type: 'text',
+			placeholder: '例如：pending_review'
+		});
+		this.keyInput.style.width = '100%';
+		this.keyInput.style.marginTop = '8px';
+		this.keyInput.style.padding = '8px';
+		this.keyInput.style.borderRadius = '4px';
+		this.keyInput.style.border = '1px solid var(--background-modifier-border)';
+
+		// 状态符号
+		const symbolContainer = contentEl.createDiv();
+		symbolContainer.style.marginBottom = '16px';
+		symbolContainer.createEl('label', { text: '复选框符号 (单个字符):' });
+		symbolContainer.createEl('div', {
+			text: '只能使用字母或数字，不能使用默认状态的符号 (空格, x, !, -, /, ?, n)',
+			cls: 'setting-item-description'
+		}).style.fontSize = '11px';
+		this.symbolInput = symbolContainer.createEl('input', {
+			type: 'text',
+			placeholder: '例如：p'
+		});
+		this.symbolInput.style.width = '100%';
+		this.symbolInput.style.marginTop = '8px';
+		this.symbolInput.style.padding = '8px';
+		this.symbolInput.style.borderRadius = '4px';
+		this.symbolInput.style.border = '1px solid var(--background-modifier-border)';
+		this.symbolInput.maxLength = 1;
+		this.symbolError = symbolContainer.createEl('div', {
+			cls: 'setting-item-description'
+		});
+		this.symbolError.style.color = 'var(--text-error)';
+		this.symbolError.style.marginTop = '4px';
+
+		// 状态描述
+		const descContainer = contentEl.createDiv();
+		descContainer.style.marginBottom = '16px';
+		descContainer.createEl('label', { text: '状态描述:' });
+		this.descInput = descContainer.createEl('textarea', {
+			placeholder: '描述此状态的用途'
+		});
+		this.descInput.style.width = '100%';
+		this.descInput.style.marginTop = '8px';
+		this.descInput.style.padding = '8px';
+		this.descInput.style.borderRadius = '4px';
+		this.descInput.style.border = '1px solid var(--background-modifier-border)';
+		this.descInput.rows = 2;
+
+		// 颜色选择
+		const colorContainer = contentEl.createDiv();
+		colorContainer.style.marginBottom = '16px';
+		colorContainer.style.display = 'flex';
+		colorContainer.style.gap = '24px';
+
+		// 背景色
+		const bgColorDiv = colorContainer.createDiv();
+		bgColorDiv.createEl('label', { text: '背景颜色:' });
+		this.bgColorInput = bgColorDiv.createEl('input', { type: 'color', value: '#FFFFFF' });
+		this.bgColorInput.style.width = '60px';
+		this.bgColorInput.style.height = '36px';
+		this.bgColorInput.style.border = 'none';
+		this.bgColorInput.style.padding = '0';
+		this.bgColorInput.style.cursor = 'pointer';
+
+		// 文字颜色
+		const textColorDiv = colorContainer.createDiv();
+		textColorDiv.createEl('label', { text: '文字颜色:' });
+		this.textColorInput = textColorDiv.createEl('input', { type: 'color', value: '#333333' });
+		this.textColorInput.style.width = '60px';
+		this.textColorInput.style.height = '36px';
+		this.textColorInput.style.border = 'none';
+		this.textColorInput.style.padding = '0';
+		this.textColorInput.style.cursor = 'pointer';
+
+		// 马卡龙配色
+		const macaronContainer = contentEl.createDiv();
+		macaronContainer.style.marginBottom = '16px';
+		macaronContainer.createEl('label', { text: '快速选择背景颜色:' });
+		const macaronGrid = macaronContainer.createDiv();
+		macaronGrid.style.display = 'grid';
+		macaronGrid.style.gridTemplateColumns = 'repeat(10, 1fr)';
+		macaronGrid.style.gap = '6px';
+		macaronGrid.style.marginTop = '8px';
+		MACARON_COLORS.forEach(color => {
+			const swatch = macaronGrid.createEl('div');
+			swatch.style.width = '24px';
+			swatch.style.height = '24px';
+			swatch.style.borderRadius = '4px';
+			swatch.style.cursor = 'pointer';
+			swatch.style.backgroundColor = color;
+			swatch.style.border = '1px solid var(--background-modifier-border)';
+			swatch.addEventListener('click', () => {
+				this.bgColorInput.value = color;
+			});
+		});
+
+		// 按钮容器
+		const buttonContainer = contentEl.createDiv();
+		buttonContainer.style.display = 'flex';
+		buttonContainer.style.justifyContent = 'flex-end';
+		buttonContainer.style.gap = '12px';
+		buttonContainer.style.marginTop = '24px';
+
+		// 取消按钮
+		const cancelButton = buttonContainer.createEl('button', { text: '取消' });
+		cancelButton.style.padding = '8px 20px';
+		cancelButton.style.borderRadius = '6px';
+		cancelButton.style.border = '1px solid var(--background-modifier-border)';
+		cancelButton.style.background = 'transparent';
+		cancelButton.style.cursor = 'pointer';
+		cancelButton.addEventListener('click', () => this.close());
+
+		// 添加按钮
+		const addButton = buttonContainer.createEl('button', { text: '添加' });
+		addButton.style.padding = '8px 20px';
+		addButton.style.borderRadius = '6px';
+		addButton.style.border = 'none';
+		addButton.style.background = 'var(--interactive-accent)';
+		addButton.style.color = 'var(--text-on-accent)';
+		addButton.style.cursor = 'pointer';
+		addButton.addEventListener('click', () => this.addCustomStatus());
+	}
+
+	private addCustomStatus() {
+		const name = this.nameInput.value.trim();
+		const key = this.keyInput.value.trim();
+		const symbol = this.symbolInput.value.trim();
+		const description = this.descInput.value.trim();
+		const backgroundColor = this.bgColorInput.value;
+		const textColor = this.textColorInput.value;
+
+		// 验证
+		if (!name) {
+			this.nameError?.remove();
+			if (this.nameInput.parentElement) {
+				const error = this.nameInput.parentElement.createEl('div', {
+					text: '请输入状态名称',
+					cls: 'setting-item-description'
+				});
+				if (error.style) {
+					error.style.color = 'var(--text-error)';
+					error.style.marginTop = '4px';
+				}
+			}
+			return;
+		}
+
+		if (!key) {
+			return;
+		}
+
+		if (!symbol) {
+			this.symbolError.textContent = '请输入复选框符号';
+			return;
+		}
+
+		// 验证符号
+		const validation = validateStatusSymbol(symbol, true);
+		if (!validation.valid) {
+			this.symbolError.textContent = validation.error || '符号无效';
+			return;
+		}
+
+		// 检查 key 是否重复
+		if (this.plugin.settings.taskStatuses.some(s => s.key === key)) {
+			if (this.keyInput.parentElement) {
+				const keyError = this.keyInput.parentElement.createEl('div', {
+					text: '状态标识已存在',
+					cls: 'setting-item-description'
+				});
+				if (keyError.style) {
+					keyError.style.color = 'var(--text-error)';
+				}
+			}
+			return;
+		}
+
+		// 添加新状态
+		const newStatus: TaskStatus = {
+			key,
+			symbol,
+			name,
+			description: description || '自定义状态',
+			backgroundColor,
+			textColor,
+			isDefault: false
+		};
+
+		this.plugin.settings.taskStatuses.push(newStatus);
+		this.plugin.saveSettings();
+		this.plugin.refreshCalendarViews();
+		this.close();
+
+		// 刷新设置界面 - 重新调用 display
+		// 由于 Modal 和 SettingTab 在不同的上下文中，这里直接关闭即可
+		// 用户可以手动刷新设置页面查看新状态
+	}
+
+	onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
 	}
 }

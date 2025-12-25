@@ -17,7 +17,7 @@ import { parseTaskLine } from './step1';
 import { passesGlobalFilter, removeGlobalFilter } from './step2';
 import { detectFormat } from './step3';
 import { parseCheckboxStatus, parseTaskAttributes } from './step4';
-import { extractTaskDescription } from './utils';
+import { extractTaskDescription, extractTags } from './utils';
 
 // ==================== 主解析函数 ====================
 
@@ -75,8 +75,8 @@ export function parseTasksFromListItems(
 
         const contentWithoutFilter = removeGlobalFilter(rawContent, globalTaskFilter);
 
-        // 解析复选框状态
-        const { completed, cancelled } = parseCheckboxStatus(checkboxStatus);
+        // 解析复选框状态（包括 status）
+        const { completed, cancelled, status } = parseCheckboxStatus(checkboxStatus);
 
         // ==================== 第三步：判断格式 ====================
         const detectedFormat = detectFormat(contentWithoutFilter, enabledFormats);
@@ -92,7 +92,14 @@ export function parseTasksFromListItems(
             description: extractTaskDescription(contentWithoutFilter),
             completed,
             cancelled,
+            status,
         };
+
+        // 解析标签
+        const tags = extractTags(contentWithoutFilter);
+        if (tags.length > 0) {
+            task.tags = tags;
+        }
 
         // 如果检测到有效格式，解析任务属性
         if (format && enabledFormats.includes(format)) {
@@ -258,7 +265,7 @@ export function parseSingleTaskLine(
     }
 
     const contentWithoutFilter = removeGlobalFilter(rawContent, globalTaskFilter);
-    const { completed, cancelled } = parseCheckboxStatus(checkboxStatus);
+    const { completed, cancelled, status } = parseCheckboxStatus(checkboxStatus);
 
     const detectedFormat = detectFormat(contentWithoutFilter, enabledFormats);
     const format = detectedFormat === 'mixed' ? 'tasks' : detectedFormat;
@@ -271,7 +278,14 @@ export function parseSingleTaskLine(
         description: extractTaskDescription(contentWithoutFilter),
         completed,
         cancelled,
+        status,
     };
+
+    // 解析标签
+    const tags = extractTags(contentWithoutFilter);
+    if (tags.length > 0) {
+        task.tags = tags;
+    }
 
     if (format && enabledFormats.includes(format)) {
         const { priority, dates, hasCancelledDate } = parseTaskAttributes(
