@@ -733,6 +733,13 @@ Author: sugar
 	font-size: 13px;
 }
 
+.calendar-task-card--task {
+	padding: 10px;
+	gap: 8px;
+	flex-wrap: wrap;
+	font-size: 13px;
+}
+
 .calendar-task-card--week {
 	padding: 8px;
 	gap: 8px;
@@ -2091,12 +2098,12 @@ Author: sugar
 }
 
 /* Task View 容器 */
-.task-view-list .calendar-task-card--day.completed {
+.task-view-list .calendar-task-card--task.completed {
 	opacity: 0.65;
 	border-left-color: var(--task-completed-color);
 }
 
-.task-view-list .calendar-task-card--day.pending {
+.task-view-list .calendar-task-card--task.pending {
 	border-left-color: var(--task-pending-color);
 }
 
@@ -2318,7 +2325,7 @@ Author: sugar
 .calendar-day-tasks-list .calendar-task-card--day.completed .calendar-task-card-text,
 .calendar-week-tasks-grid .calendar-task-card--week.completed .calendar-task-card-text,
 .calendar-month-tasks .calendar-task-card--month.completed .calendar-task-card-text,
-.task-view-list .calendar-task-card--day.completed .calendar-task-card-text,
+.task-view-list .calendar-task-card--task.completed .calendar-task-card-text,
 .gantt-view-task-list .calendar-task-card--gantt.completed .calendar-task-card-text {
 	text-decoration: line-through;
 	color: var(--text-muted);
