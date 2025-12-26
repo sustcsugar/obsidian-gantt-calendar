@@ -142,7 +142,8 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 	 * 渲染周视图任务项
 	 */
 	private renderWeekTaskItem(task: GanttTask, container: HTMLElement, dayDate?: Date): void {
-		const taskItem = container.createDiv('calendar-week-task-item');
+		const taskItem = container.createDiv('calendar-task-card');
+		taskItem.addClass('calendar-task-card--week');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
 		// 应用状态颜色

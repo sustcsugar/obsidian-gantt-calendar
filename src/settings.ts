@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, TFolder, Modal } from 'obsidian';
 import type GanttCalendarPlugin from '../main';
-import { TaskStatus, DEFAULT_TASK_STATUSES, MACARON_COLORS, validateStatusSymbol, CheckboxIconStyle } from './tasks/taskStatus';
+import { TaskStatus, DEFAULT_TASK_STATUSES, MACARON_COLORS, validateStatusSymbol } from './tasks/taskStatus';
 
 // RGB to Hex converter
 function rgbToHex(rgb: string): string {
@@ -133,6 +133,10 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 					this.plugin.settings.taskNotePath = value;
 					await this.plugin.saveSettings();
 				}));
+		// ===== 任务状态设置 =====
+		containerEl.createEl('h2', { text: '任务状态设置' });
+		this.createTaskStatusSettings(containerEl);
+
 
 
 
@@ -353,10 +357,6 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			this.createHeatmapPaletteSetting(containerEl);
 		}
 
-		// ===== 任务状态设置 =====
-		containerEl.createEl('h2', { text: '任务状态设置' });
-		this.createTaskStatusSettings(containerEl);
-
 	}
 
 	private createHeatmapPaletteSetting(containerEl: HTMLElement): void {
@@ -510,6 +510,28 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 	}
 
 	/**
+	 * 更新任务状态马卡龙色卡的选中状态
+	 * @param macaronDiv - 包含所有马卡龙色卡的容器
+	 * @param selectedColor - 当前选中的颜色值
+	 */
+	private updateMacaronSwatchDisplay(macaronDiv: HTMLElement, selectedColor: string): void {
+		const swatches = macaronDiv.querySelectorAll('.task-macaron-swatch');
+		swatches.forEach(swatch => {
+			const bgColor = (swatch as HTMLElement).style.backgroundColor;
+			// 使用 rgbToHex 处理浏览器可能返回的 RGB 格式
+			const isSelected = bgColor === selectedColor || rgbToHex(bgColor) === selectedColor;
+
+			if (isSelected) {
+				(swatch as HTMLElement).style.border = '2px solid #000';
+				(swatch as HTMLElement).style.outline = 'none';
+			} else {
+				(swatch as HTMLElement).style.border = '1px solid var(--background-modifier-border)';
+				(swatch as HTMLElement).style.outline = 'none';
+			}
+		});
+	}
+
+	/**
 	 * 创建任务状态设置界面
 	 */
 	private createTaskStatusSettings(containerEl: HTMLElement): void {
@@ -523,7 +545,9 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		const defaultStatusesDiv = containerEl.createDiv();
 		defaultStatusesDiv.createEl('h3', { text: '默认状态', cls: 'setting-item-heading' });
 
-		DEFAULT_TASK_STATUSES.forEach((status) => {
+		// 从设置中获取默认状态（而不是从 DEFAULT_TASK_STATUSES）
+		const defaultStatuses = this.plugin.settings.taskStatuses.filter(s => s.isDefault);
+		defaultStatuses.forEach((status) => {
 			this.createSingleStatusSetting(defaultStatusesDiv, status);
 		});
 
@@ -589,10 +613,10 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		iconDiv.style.justifyContent = 'center';
 		iconDiv.style.width = '40px';
 		iconDiv.style.height = '28px';
-		iconDiv.style.border = `2px solid ${status.checkboxColor}`;
-		iconDiv.style.borderRadius = this.getBorderRadiusForIconStyle(status.checkboxIcon);
-		iconDiv.style.background = status.checkboxIcon === 'filled' ? status.checkboxColor : status.backgroundColor;
-		iconDiv.style.color = status.checkboxIcon === 'filled' ? '#FFFFFF' : status.textColor;
+		iconDiv.style.border = '2px solid var(--background-modifier-border)';
+		iconDiv.style.borderRadius = '4px';
+		iconDiv.style.background = status.backgroundColor;
+		iconDiv.style.color = status.textColor;
 		iconDiv.style.fontSize = '10px';
 		iconDiv.style.fontWeight = 'bold';
 		iconDiv.textContent = `[${status.symbol}]`;
@@ -641,6 +665,8 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				this.plugin.settings.taskStatuses[statusIndex].backgroundColor = bgColorPicker.value;
 				await this.plugin.saveSettings();
 				this.plugin.refreshCalendarViews();
+				// 更新马卡龙色卡的选中状态
+				this.updateMacaronSwatchDisplay(bgMacaronDiv, bgColorPicker.value);
 			}
 		});
 
@@ -649,7 +675,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 		bgMacaronDiv.style.display = 'flex';
 		bgMacaronDiv.style.gap = '4px';
 		MACARON_COLORS.slice(0, 10).forEach(color => {
-			const swatch = bgMacaronDiv.createEl('div');
+			const swatch = bgMacaronDiv.createEl('div', { cls: 'task-macaron-swatch' });
 			swatch.style.width = '16px';
 			swatch.style.height = '16px';
 			swatch.style.borderRadius = '2px';
@@ -657,13 +683,17 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			swatch.style.backgroundColor = color;
 			swatch.style.border = color === status.backgroundColor ? '2px solid #000' : '1px solid var(--background-modifier-border)';
 			swatch.addEventListener('click', async () => {
-				bgColorPicker.value = swatch.style.backgroundColor || color;
 				const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
 				if (statusIndex !== -1) {
 					this.plugin.settings.taskStatuses[statusIndex].backgroundColor = color;
 					await this.plugin.saveSettings();
 					this.plugin.refreshCalendarViews();
-					this.display();
+
+					// 同步颜色选择器的值
+					bgColorPicker.value = rgbToHex(swatch.style.backgroundColor) || color;
+
+					// 更新马卡龙色卡的选中状态（替代 this.display()）
+					this.updateMacaronSwatchDisplay(bgMacaronDiv, color);
 				}
 			});
 		});
@@ -695,75 +725,6 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			}
 		});
 
-		// 复选框样式配置区域
-		const checkboxStyleDiv = statusDiv.createEl('div');
-		checkboxStyleDiv.style.display = 'flex';
-		checkboxStyleDiv.style.alignItems = 'center';
-		checkboxStyleDiv.style.gap = '8px';
-
-		// 复选框颜色
-		const checkboxColorLabel = checkboxStyleDiv.createEl('span', {
-			text: '复选框',
-			cls: 'setting-item-description'
-		});
-		checkboxColorLabel.style.fontSize = '11px';
-
-		const checkboxColorPicker = checkboxStyleDiv.createEl('input', {
-			type: 'color',
-			cls: 'task-status-color-input'
-		}) as HTMLInputElement;
-		checkboxColorPicker.value = status.checkboxColor;
-		checkboxColorPicker.style.width = '32px';
-		checkboxColorPicker.style.height = '28px';
-		checkboxColorPicker.style.border = 'none';
-		checkboxColorPicker.style.padding = '0';
-		checkboxColorPicker.style.cursor = 'pointer';
-		checkboxColorPicker.addEventListener('change', async () => {
-			const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
-			if (statusIndex !== -1) {
-				this.plugin.settings.taskStatuses[statusIndex].checkboxColor = checkboxColorPicker.value;
-				await this.plugin.saveSettings();
-				this.plugin.refreshCalendarViews();
-				this.display();
-			}
-		});
-
-		// 复选框图标样式选择
-		const iconStyleSelect = checkboxStyleDiv.createEl('select') as HTMLSelectElement;
-		iconStyleSelect.style.padding = '4px 8px';
-		iconStyleSelect.style.borderRadius = '4px';
-		iconStyleSelect.style.border = '1px solid var(--background-modifier-border)';
-		iconStyleSelect.style.background = 'var(--background-primary)';
-		iconStyleSelect.style.color = 'var(--text-normal)';
-		iconStyleSelect.style.cursor = 'pointer';
-
-		const iconOptions: { value: CheckboxIconStyle; label: string }[] = [
-			{ value: 'square', label: '方形' },
-			{ value: 'circle', label: '圆形' },
-			{ value: 'rounded', label: '圆角' },
-			{ value: 'minimal', label: '极简' },
-			{ value: 'filled', label: '填充' },
-		];
-
-		iconOptions.forEach(option => {
-			const optEl = iconStyleSelect.createEl('option');
-			optEl.value = option.value;
-			optEl.textContent = option.label;
-			if (option.value === status.checkboxIcon) {
-				optEl.selected = true;
-			}
-		});
-
-		iconStyleSelect.addEventListener('change', async () => {
-			const statusIndex = this.plugin.settings.taskStatuses.findIndex(s => s.key === status.key);
-			if (statusIndex !== -1) {
-				this.plugin.settings.taskStatuses[statusIndex].checkboxIcon = iconStyleSelect.value as CheckboxIconStyle;
-				await this.plugin.saveSettings();
-				this.plugin.refreshCalendarViews();
-				this.display();
-			}
-		});
-
 		// 删除按钮（仅自定义状态）
 		if (isCustom) {
 			const deleteButton = statusDiv.createEl('button');
@@ -792,25 +753,9 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 				deleteButton.style.color = 'var(--text-muted)';
 			});
 		}
-	}
 
-	/**
-	 * 根据图标样式获取对应的圆角值
-	 */
-	private getBorderRadiusForIconStyle(style: CheckboxIconStyle): string {
-		switch (style) {
-			case 'circle':
-				return '50%';
-			case 'rounded':
-				return '6px';
-			case 'minimal':
-				return '0px';
-			case 'filled':
-				return '4px';
-			case 'square':
-			default:
-				return '2px';
-		}
+		// 初始化时更新马卡龙色卡的选中状态
+		this.updateMacaronSwatchDisplay(bgMacaronDiv, status.backgroundColor);
 	}
 
 	/**
@@ -833,8 +778,6 @@ class SettingModal extends Modal {
 	private descInput: HTMLTextAreaElement;
 	private bgColorInput: HTMLInputElement;
 	private textColorInput: HTMLInputElement;
-	private checkboxColorInput: HTMLInputElement;
-	private checkboxIconSelect: HTMLSelectElement;
 	private nameError: HTMLElement;
 	private symbolError: HTMLElement;
 
@@ -964,49 +907,6 @@ class SettingModal extends Modal {
 			});
 		});
 
-		// 复选框样式配置
-		const checkboxStyleContainer = contentEl.createDiv();
-		checkboxStyleContainer.style.marginBottom = '16px';
-		checkboxStyleContainer.style.display = 'flex';
-		checkboxStyleContainer.style.gap = '24px';
-
-		// 复选框颜色
-		const checkboxColorDiv = checkboxStyleContainer.createDiv();
-		checkboxColorDiv.createEl('label', { text: '复选框颜色:' });
-		this.checkboxColorInput = checkboxColorDiv.createEl('input', { type: 'color', value: '#999999' });
-		this.checkboxColorInput.style.width = '60px';
-		this.checkboxColorInput.style.height = '36px';
-		this.checkboxColorInput.style.border = 'none';
-		this.checkboxColorInput.style.padding = '0';
-		this.checkboxColorInput.style.cursor = 'pointer';
-
-		// 复选框图标样式
-		const checkboxIconDiv = checkboxStyleContainer.createDiv();
-		checkboxIconDiv.createEl('label', { text: '复选框样式:' });
-		this.checkboxIconSelect = checkboxIconDiv.createEl('select') as HTMLSelectElement;
-		this.checkboxIconSelect.style.width = '120px';
-		this.checkboxIconSelect.style.height = '36px';
-		this.checkboxIconSelect.style.padding = '4px 8px';
-		this.checkboxIconSelect.style.borderRadius = '4px';
-		this.checkboxIconSelect.style.border = '1px solid var(--background-modifier-border)';
-		this.checkboxIconSelect.style.background = 'var(--background-primary)';
-		this.checkboxIconSelect.style.color = 'var(--text-normal)';
-		this.checkboxIconSelect.style.cursor = 'pointer';
-
-		const iconOptions: { value: CheckboxIconStyle; label: string }[] = [
-			{ value: 'square', label: '方形' },
-			{ value: 'circle', label: '圆形' },
-			{ value: 'rounded', label: '圆角' },
-			{ value: 'minimal', label: '极简' },
-			{ value: 'filled', label: '填充' },
-		];
-
-		iconOptions.forEach(option => {
-			const optEl = this.checkboxIconSelect.createEl('option');
-			optEl.value = option.value;
-			optEl.textContent = option.label;
-		});
-
 		// 按钮容器
 		const buttonContainer = contentEl.createDiv();
 		buttonContainer.style.display = 'flex';
@@ -1041,8 +941,6 @@ class SettingModal extends Modal {
 		const description = this.descInput.value.trim();
 		const backgroundColor = this.bgColorInput.value;
 		const textColor = this.textColorInput.value;
-		const checkboxColor = this.checkboxColorInput.value;
-		const checkboxIcon = this.checkboxIconSelect.value as CheckboxIconStyle;
 
 		// 验证
 		if (!name) {
@@ -1098,8 +996,6 @@ class SettingModal extends Modal {
 			description: description || '自定义状态',
 			backgroundColor,
 			textColor,
-			checkboxColor,
-			checkboxIcon,
 			isDefault: false
 		};
 

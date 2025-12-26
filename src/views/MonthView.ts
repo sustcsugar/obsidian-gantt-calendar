@@ -125,7 +125,8 @@ export class MonthViewRenderer extends BaseCalendarRenderer {
 	 * 渲染月视图任务项
 	 */
 	private renderMonthTaskItem(task: GanttTask, container: HTMLElement): void {
-		const taskItem = container.createDiv('calendar-month-task-item');
+		const taskItem = container.createDiv('calendar-task-card');
+		taskItem.addClass('calendar-task-card--month');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
 		// 应用状态颜色
@@ -134,7 +135,7 @@ export class MonthViewRenderer extends BaseCalendarRenderer {
 		const cleaned = task.description;
 
 		// 使用富文本渲染支持链接
-		const taskTextEl = taskItem.createDiv('calendar-month-task-text');
+		const taskTextEl = taskItem.createDiv('calendar-task-card-text');
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
 		// 创建悬浮提示

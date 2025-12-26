@@ -319,7 +319,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
 
     for (const item of withRange) {
       // 左侧：任务卡片
-      const taskCard = taskList.createDiv('gantt-task-card');
+      const taskCard = taskList.createDiv('calendar-task-card');
+      taskCard.addClass('calendar-task-card--gantt');
+      taskCard.addClass(item.task.completed ? 'completed' : 'pending');
 
       // 应用状态颜色
       this.applyStatusColors(item.task, taskCard);

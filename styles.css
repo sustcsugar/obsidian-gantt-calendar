@@ -693,6 +693,107 @@ Gantt Calendar Plugin Styles - 甘特日历
 	overflow: hidden;
 }
 
+/* ========================================
+   统一任务卡片样式 (v2.0重构)
+   ======================================== */
+
+/* 任务状态颜色变量 */
+:root {
+	--task-completed-color: #52c41a;
+	--task-pending-color: #ff7a45;
+}
+
+/* 基础样式 */
+.calendar-task-card {
+	display: flex;
+	align-items: center;
+	padding: 8px;
+	border-left: 3px solid transparent;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.calendar-task-card:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* 任务卡片文本（通用） */
+.calendar-task-card-text {
+	flex: 1;
+	word-break: break-word;
+	line-height: 1.4;
+	color: var(--text-normal);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ========================================
+   视图特定样式
+   ======================================== */
+
+/* Day/Task View */
+.calendar-task-card--day {
+	padding: 10px;
+	gap: 8px;
+	flex-wrap: wrap;
+	font-size: 13px;
+}
+
+.calendar-task-card--day:hover {
+	transform: translateX(4px);
+}
+
+/* Week View */
+.calendar-task-card--week {
+	padding: 8px;
+	gap: 8px;
+	font-size: 13px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-task-card--week:hover {
+	transform: translateX(2px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Month View */
+.calendar-task-card--month {
+	padding: 4px 6px;
+	font-size: 11px;
+	line-height: 1.3;
+	border-left-width: 2px;
+	border-radius: 3px;
+}
+
+.calendar-task-card--month:hover {
+	transform: translateX(1px);
+}
+
+/* Gantt View */
+.calendar-task-card--gantt {
+	padding: 8px 12px;
+	border-left: 3px solid var(--interactive-accent);
+	border-top: 1px solid var(--background-modifier-border);
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.calendar-task-card--gantt:hover {
+	transform: translateX(2px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   兼容旧类名（向后兼容）
+   ======================================== */
+
 .calendar-month-task-item {
 	display: flex;
 	align-items: center;
@@ -714,6 +815,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 .calendar-month-task-item.completed {
 	opacity: 0.5;
 	border-left-color: var(--color-green);
+}
+
+.calendar-month-tasks .calendar-month-task-item.pending {
+	border-left-color: #ff7a45;
 }
 
 .calendar-month-task-text {
@@ -1039,6 +1144,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 .calendar-week-task-item.completed {
 	opacity: 0.6;
 	border-left-color: var(--color-green);
+}
+
+.calendar-week-tasks-grid .calendar-week-task-item.pending {
+	border-left-color: #ff7a45;
 }
 
 .calendar-week-task-checkbox {
@@ -1593,7 +1702,10 @@ Gantt Calendar Plugin Styles - 甘特日历
 
 .gantt-task-card {
 	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
+	border-left: 3px solid var(--interactive-accent);
+	border-top: 1px solid var(--background-modifier-border);
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
 	padding: 8px 12px;
 	cursor: pointer;
@@ -1610,6 +1722,15 @@ Gantt Calendar Plugin Styles - 甘特日历
 .gantt-task-card:hover {
 	transform: translateX(2px);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gantt-view-task-list .gantt-task-card.completed {
+	border-left-color: #52c41a;
+	opacity: 0.7;
+}
+
+.gantt-view-task-list .gantt-task-card.pending {
+	border-left-color: #ff7a45;
 }
 
 /* 右侧：时间轴区域（可横向滚动） */
@@ -2087,6 +2208,72 @@ Gantt Calendar Plugin Styles - 甘特日历
 .calendar-day-tasks-list .calendar-day-task-item.pending {
 	border-left-color: #ff7a45;
 }
+
+/* ========================================
+   统一任务卡片状态样式 (v2.0重构)
+   高特指性选择器，确保不被task-with-status覆盖
+   ======================================== */
+
+/* Day/Task View */
+/* Day View 容器 */
+.calendar-day-tasks-list .calendar-task-card--day.completed {
+	opacity: 0.65;
+	border-left-color: var(--task-completed-color);
+}
+
+.calendar-day-tasks-list .calendar-task-card--day.pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Task View 容器 */
+.task-view-list .calendar-task-card--day.completed {
+	opacity: 0.65;
+	border-left-color: var(--task-completed-color);
+}
+
+.task-view-list .calendar-task-card--day.pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Week View */
+.calendar-week-tasks-grid .calendar-task-card--week.completed {
+	opacity: 0.6;
+	border-left-color: var(--task-completed-color);
+}
+
+.calendar-week-tasks-grid .calendar-task-card--week.pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Month View */
+.calendar-month-tasks .calendar-task-card--month.completed {
+	opacity: 0.5;
+	border-left-color: var(--task-completed-color);
+}
+
+.calendar-month-tasks .calendar-task-card--month.pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Gantt View */
+.gantt-view-task-list .calendar-task-card--gantt.completed {
+	opacity: 0.7;
+	border-left-color: var(--task-completed-color);
+}
+
+.gantt-view-task-list .calendar-task-card--gantt.pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* 文本装饰（已完成任务） */
+.calendar-day-tasks-list .calendar-task-card--day.completed .gantt-task-text,
+.calendar-week-tasks-grid .calendar-task-card--week.completed .calendar-week-task-text,
+.calendar-month-tasks .calendar-task-card--month.completed .calendar-task-card-text,
+.gantt-view-task-list .calendar-task-card--gantt.completed {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
 /* Day View Split Screen Layout */
 .calendar-day-split-container {
 	display: flex;
@@ -2374,22 +2561,39 @@ Gantt Calendar Plugin Styles - 甘特日历
    ======================================== */
 
 /* 状态颜色变量 - 从插件设置中读取 */
+/* 旧类名兼容 */
 .calendar-day-task-item.task-with-status,
 .calendar-week-task-item.task-with-status,
 .calendar-month-task-item.task-with-status,
 .gantt-task-item.task-with-status,
 .gantt-task-card.task-with-status,
+/* 新统一类名 */
+.calendar-task-card.task-with-status,
 .gantt-bar.task-with-status {
 	background-color: var(--task-bg-color, var(--background-secondary));
 	color: var(--task-text-color, var(--text-normal));
 }
 
-/* 状态颜色应用到边框 */
-.calendar-day-task-item.task-with-status,
-.calendar-week-task-item.task-with-status,
-.calendar-month-task-item.task-with-status,
-.gantt-task-item.task-with-status,
-.gantt-task-card.task-with-status {
+/* 状态文字颜色应用到任务文本元素 */
+.calendar-day-task-item.task-with-status .gantt-task-text,
+.calendar-week-task-item.task-with-status .gantt-task-text,
+.calendar-month-task-item.task-with-status .calendar-month-task-text,
+.gantt-task-item.task-with-status .gantt-task-text,
+/* 新统一类名 */
+.calendar-task-card.task-with-status .gantt-task-text,
+.calendar-task-card.task-with-status .calendar-week-task-text,
+.calendar-task-card.task-with-status .calendar-task-card-text {
+	color: var(--task-text-color, var(--text-normal));
+}
+
+/* 状态颜色应用到边框 - 只在没有completed/pending状态时应用 */
+.calendar-day-task-item.task-with-status:not(.completed):not(.pending),
+.calendar-week-task-item.task-with-status:not(.completed):not(.pending),
+.calendar-month-task-item.task-with-status:not(.completed):not(.pending),
+.gantt-task-item.task-with-status:not(.completed):not(.pending),
+.gantt-task-card.task-with-status:not(.completed):not(.pending),
+/* 新统一类名 */
+.calendar-task-card.task-with-status:not(.completed):not(.pending) {
 	border-left-color: var(--task-bg-color, var(--interactive-accent));
 }
 
@@ -2397,7 +2601,9 @@ Gantt Calendar Plugin Styles - 甘特日历
 .calendar-day-task-item.task-with-status.completed,
 .calendar-week-task-item.task-with-status.completed,
 .calendar-month-task-item.task-with-status.completed,
-.gantt-task-item.task-with-status.completed {
+.gantt-task-item.task-with-status.completed,
+/* 新统一类名 */
+.calendar-task-card.task-with-status.completed {
 	opacity: 0.7;
 }
 
@@ -2408,145 +2614,4 @@ Gantt Calendar Plugin Styles - 甘特日历
 
 .gantt-bar.task-with-status.completed {
 	opacity: 0.8;
-}
-
-/* ========================================
-   复选框样式 - 根据任务状态动态应用
-   ======================================== */
-
-/* 复选框基础样式 */
-.gantt-task-checkbox {
-	--checkbox-color: #999999;
-	appearance: none;
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	width: 18px;
-	height: 18px;
-	border: 2px solid var(--checkbox-color, var(--text-faint));
-	background-color: transparent;
-	cursor: pointer;
-	position: relative;
-	flex-shrink: 0;
-	transition: all 0.2s ease;
-}
-
-/* 复选框悬停效果 */
-.gantt-task-checkbox:hover {
-	border-color: var(--checkbox-color, var(--interactive-accent));
-	opacity: 0.8;
-}
-
-/* 复选框选中状态 */
-.gantt-task-checkbox:checked {
-	background-color: var(--checkbox-color, var(--interactive-accent));
-	border-color: var(--checkbox-color, var(--interactive-accent));
-}
-
-/* 选中标记（勾号） */
-.gantt-task-checkbox:checked::after {
-	content: '';
-	position: absolute;
-	left: 4px;
-	top: 1px;
-	width: 5px;
-	height: 10px;
-	border: solid white;
-	border-width: 0 2px 2px 0;
-	transform: rotate(45deg);
-}
-
-/* 方形样式 (默认) */
-.gantt-task-checkbox.checkbox-square,
-.gantt-task-checkbox.checkbox-style-square {
-	border-radius: 2px;
-}
-
-/* 圆形样式 */
-.gantt-task-checkbox.checkbox-circle,
-.gantt-task-checkbox.checkbox-style-circle {
-	border-radius: 50%;
-}
-
-.gantt-task-checkbox.checkbox-circle:checked::after,
-.gantt-task-checkbox.checkbox-style-circle:checked::after {
-	left: 5px;
-	top: 1px;
-	width: 4px;
-	height: 9px;
-}
-
-/* 圆角样式 */
-.gantt-task-checkbox.checkbox-rounded,
-.gantt-task-checkbox.checkbox-style-rounded {
-	border-radius: 6px;
-}
-
-/* 极简样式 - 细边框 */
-.gantt-task-checkbox.checkbox-minimal,
-.gantt-task-checkbox.checkbox-style-minimal {
-	border-width: 1px;
-	border-radius: 0;
-}
-
-.gantt-task-checkbox.checkbox-minimal:checked::after,
-.gantt-task-checkbox.checkbox-style-minimal:checked::after {
-	left: 5px;
-	top: 0px;
-	width: 4px;
-	height: 10px;
-	border-width: 0 1px 1px 0;
-}
-
-/* 填充样式 - 完全填充 */
-.gantt-task-checkbox.checkbox-filled,
-.gantt-task-checkbox.checkbox-style-filled {
-	border-radius: 4px;
-	border-width: 0;
-	background-color: var(--checkbox-color, var(--interactive-accent));
-}
-
-.gantt-task-checkbox.checkbox-filled::after,
-.gantt-task-checkbox.checkbox-style-filled::after {
-	content: '';
-	position: absolute;
-	left: 5px;
-	top: 1px;
-	width: 4px;
-	height: 9px;
-	border: solid white;
-	border-width: 0 2px 2px 0;
-	transform: rotate(45deg);
-	opacity: 0;
-	transition: opacity 0.2s ease;
-}
-
-.gantt-task-checkbox.checkbox-filled:checked::after,
-.gantt-task-checkbox.checkbox-style-filled:checked::after {
-	opacity: 1;
-}
-
-/* 未选中时的填充样式显示为浅色背景 */
-.gantt-task-checkbox.checkbox-filled:not(:checked) {
-	background-color: var(--checkbox-color);
-	opacity: 0.2;
-}
-
-.gantt-task-checkbox.checkbox-filled:not(:checked):hover {
-	opacity: 0.3;
-}
-
-/* 复选框禁用状态 */
-.gantt-task-checkbox:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-/* 各视图任务项中的复选框对齐 */
-.calendar-day-task-item .gantt-task-checkbox,
-.calendar-week-task-item .gantt-task-checkbox,
-.calendar-month-task-item .gantt-task-checkbox,
-.gantt-task-item .gantt-task-checkbox {
-	margin-right: 8px;
-	align-self: flex-start;
-	margin-top: 2px;
 }

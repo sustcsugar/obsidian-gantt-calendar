@@ -154,7 +154,8 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 	 * 渲染任务项
 	 */
 	private renderTaskItem(task: GanttTask, listContainer: HTMLElement): void {
-		const taskItem = listContainer.createDiv('calendar-day-task-item');
+		const taskItem = listContainer.createDiv('calendar-task-card');
+		taskItem.addClass('calendar-task-card--day');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
 		// 应用状态颜色

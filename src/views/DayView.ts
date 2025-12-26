@@ -133,7 +133,8 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 	 * 渲染日视图任务项
 	 */
 	private renderDayTaskItem(task: GanttTask, listContainer: HTMLElement, targetDate: Date): void {
-		const taskItem = listContainer.createDiv('calendar-day-task-item');
+		const taskItem = listContainer.createDiv('calendar-task-card');
+		taskItem.addClass('calendar-task-card--day');
 		taskItem.addClass(task.completed ? 'completed' : 'pending');
 
 		// 应用状态颜色
