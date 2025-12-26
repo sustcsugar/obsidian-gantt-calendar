@@ -2266,6 +2266,7 @@ Author: sugar
 /* 7.2 Interactive States (hover, active) */
 .calendar-task-card--day:hover {
 	transform: translateX(4px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-task-card--week:hover {
@@ -2275,11 +2276,17 @@ Author: sugar
 
 .calendar-task-card--month:hover {
 	transform: translateX(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-task-card--gantt:hover {
 	transform: translateX(2px);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-task-card--task:hover {
+	transform: translateX(4px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-day:hover {

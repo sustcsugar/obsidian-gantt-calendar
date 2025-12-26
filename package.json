@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-gantt-calendar",
-	"version": "1.1.6",
+	"version": "1.1.7",
 	"description": "This is a plugin for the Obsidian note-taking application that adds a calendar view for the Gantt calendar system.",
 	"main": "main.js",
 	"scripts": {
