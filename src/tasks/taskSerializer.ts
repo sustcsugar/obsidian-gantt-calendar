@@ -29,6 +29,7 @@ interface MergedTask {
 	status?: TaskStatusType;  // 任务状态类型
 	priority?: string;
 	description: string;
+	tags?: string[];  // 任务标签
 	createdDate?: Date;
 	startDate?: Date;
 	scheduledDate?: Date;
@@ -86,8 +87,8 @@ function getPriorityEmoji(priority: 'highest' | 'high' | 'medium' | 'low' | 'low
  * 序列化任务为文本行
  *
  * 按照固定顺序构建任务行：
- * Tasks 格式: [复选框] [全局过滤] [描述] [优先级] [创建] [开始] [计划] [截止] [取消] [完成]
- * Dataview 格式: [复选框] [全局过滤] [描述] [priority] [created] [start] [scheduled] [due] [cancelled] [completion]
+ * Tasks 格式: [复选框] [全局过滤] [标签] [描述] [优先级] [创建] [开始] [计划] [截止] [取消] [完成]
+ * Dataview 格式: [复选框] [全局过滤] [标签] [描述] [priority] [created] [start] [scheduled] [due] [cancelled] [completion]
  *
  * @param app Obsidian App 实例（用于访问插件设置）
  * @param task 原始任务对象
@@ -112,6 +113,8 @@ export function serializeTask(
 			? getPriorityEmoji(updates.priority)
 			: getPriorityEmoji(task.priority as any),
 		description: updates.content !== undefined ? updates.content : task.description,
+		// 保留标签
+		tags: task.tags,
 		// 处理日期字段：undefined 使用原始值，null 转为 undefined（表示清除）
 		createdDate: updates.createdDate !== undefined ? (updates.createdDate || undefined) : task.createdDate,
 		startDate: updates.startDate !== undefined ? (updates.startDate || undefined) : task.startDate,
@@ -151,6 +154,12 @@ export function serializeTask(
 	// 全局过滤器（从插件设置中获取）
 	if (globalFilter) {
 		parts.push(globalFilter);
+	}
+
+	// 标签（复选框之后，任务描述之前）
+	if (merged.tags && merged.tags.length > 0) {
+		const tagsStr = merged.tags.map(tag => `#${tag}`).join(' ');
+		parts.push(tagsStr);
 	}
 
 	// 任务描述
