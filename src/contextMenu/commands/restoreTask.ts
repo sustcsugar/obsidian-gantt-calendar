@@ -31,6 +31,7 @@ export async function restoreTask(
 
 		// 更新任务状态：取消取消状态，并清除取消日期
 		await updateTaskProperties(app, task, {
+			status: 'todo',
 			cancelled: false,
 			cancelledDate: null
 		}, enabledFormats);
