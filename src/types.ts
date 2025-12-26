@@ -112,3 +112,36 @@ export interface GanttTask {
 	completionDate?: Date;         // 完成日期
 	warning?: string;              // 警告信息：显示任务格式问题或缺失的关键属性
 }
+
+/**
+ * 任务排序字段类型
+ */
+export type SortField =
+	| 'priority'
+	| 'description'
+	| 'createdDate'
+	| 'startDate'
+	| 'scheduledDate'
+	| 'dueDate'
+	| 'completionDate';
+
+/**
+ * 排序顺序类型
+ */
+export type SortOrder = 'asc' | 'desc';
+
+/**
+ * 任务排序状态
+ */
+export interface SortState {
+	field: SortField;
+	order: SortOrder;
+}
+
+/**
+ * 默认排序状态
+ */
+export const DEFAULT_SORT_STATE: SortState = {
+	field: 'dueDate',
+	order: 'asc'
+};

@@ -1,7 +1,9 @@
 import { BaseCalendarRenderer } from './BaseCalendarRenderer';
 import { isToday, isThisWeek, isThisMonth } from '../dateUtils/dateUtilsIndex';
-import type { GanttTask } from '../types';
+import type { GanttTask, SortState } from '../types';
 import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
+import { sortTasks } from '../tasks/taskSorter';
+import { DEFAULT_SORT_STATE } from '../types';
 
 /**
  * 任务视图渲染器
@@ -18,6 +20,9 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
     
 	// 日期范围模式：全部/当天/当周/当月/自定义日期
 	private dateRangeMode: 'all' | 'day' | 'week' | 'month' | 'custom' = 'week';
+
+	// 排序状态
+	private sortState: SortState = DEFAULT_SORT_STATE;
 
 	// ===== Getter/Setter 方法 =====
 
@@ -51,6 +56,14 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
     
 	public setDateRangeMode(mode: 'all' | 'day' | 'week' | 'month' | 'custom'): void {
 		this.dateRangeMode = mode;
+	}
+
+	public getSortState(): SortState {
+		return this.sortState;
+	}
+
+	public setSortState(state: SortState): void {
+		this.sortState = state;
 	}
 
 	/**
@@ -112,7 +125,7 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 			const endOfWeek = (d: Date) => { const s = startOfWeek(d); const e = new Date(s); e.setDate(s.getDate() + 6); e.setHours(23,59,59,999); return e; };
 			const startOfMonth = (d: Date) => { const x = startOfDay(d); x.setDate(1); return x; };
 			const endOfMonth = (d: Date) => { const x = startOfDay(d); x.setMonth(x.getMonth()+1, 0); x.setHours(23,59,59,999); return x; };
-            
+
 			let rangeStart: Date;
 			let rangeEnd: Date;
 			if (mode === 'day' || mode === 'custom') {
@@ -125,7 +138,7 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 				rangeStart = startOfMonth(ref);
 				rangeEnd = endOfMonth(ref);
 			}
-            
+
 			tasks = tasks.filter(task => {
 				const dateValue = (task as any)[this.timeFieldFilter];
 				if (!dateValue) return false;
@@ -135,14 +148,17 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 			});
 		}
 
-			listContainer.empty();
+		// 应用排序
+		tasks = sortTasks(tasks, this.sortState);
 
-			if (tasks.length === 0) {
-				listContainer.createEl('div', { text: '未找到符合条件的任务', cls: 'gantt-task-empty' });
-				return;
-			}
+		listContainer.empty();
 
-			tasks.forEach(task => this.renderTaskItem(task, listContainer));
+		if (tasks.length === 0) {
+			listContainer.createEl('div', { text: '未找到符合条件的任务', cls: 'gantt-task-empty' });
+			return;
+		}
+
+		tasks.forEach(task => this.renderTaskItem(task, listContainer));
 		} catch (error) {
 			console.error('Error rendering task view', error);
 			listContainer.empty();

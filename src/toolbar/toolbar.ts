@@ -1,6 +1,8 @@
 import type { CalendarViewType } from '../types';
 import type { TaskViewRenderer } from '../views/TaskView';
 import type { GanttViewRenderer } from '../views/GanttView';
+import type { DayViewRenderer } from '../views/DayView';
+import type { WeekViewRenderer } from '../views/WeekView';
 import { ToolbarLeft } from './toolbar-left';
 import { ToolbarCenter } from './toolbar-center';
 import { ToolbarRightCalendar } from './toolbar-right-calendar';
@@ -24,6 +26,13 @@ export class Toolbar {
 		this.rightCalendarSection = new ToolbarRightCalendar();
 		this.rightTaskSection = new ToolbarRightTask();
         this.rightGanttSection = new ToolbarRightGantt();
+	}
+
+	/**
+	 * 设置日历视图渲染器引用（用于排序功能）
+	 */
+	setCalendarRenderers(dayRenderer: DayViewRenderer, weekRenderer: WeekViewRenderer): void {
+		this.rightCalendarSection.setRenderers(dayRenderer, weekRenderer);
 	}
 
 	/**
@@ -94,12 +103,14 @@ export interface ToolbarConfig {
 	lastCalendarViewType: CalendarViewType;
 	currentDate: Date;
 	dateRangeText: string;
-	
+
 	// 任务视图相关
 	globalFilterText?: string;
 	taskRenderer: TaskViewRenderer;
     ganttRenderer: GanttViewRenderer;
-	
+	dayRenderer?: DayViewRenderer;
+	weekRenderer?: WeekViewRenderer;
+
 	// 回调函数
 	onViewSwitch: (type: CalendarViewType) => void;
 	onPrevious: () => void;

@@ -1,12 +1,24 @@
 import { TFile, MarkdownRenderer } from 'obsidian';
 import { BaseCalendarRenderer } from './BaseCalendarRenderer';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
-import type { GanttTask } from '../types';
+import type { GanttTask, SortState } from '../types';
+import { sortTasks } from '../tasks/taskSorter';
+import { DEFAULT_SORT_STATE } from '../types';
 
 /**
  * 日视图渲染器
  */
 export class DayViewRenderer extends BaseCalendarRenderer {
+	// 排序状态
+	private sortState: SortState = DEFAULT_SORT_STATE;
+
+	public getSortState(): SortState {
+		return this.sortState;
+	}
+
+	public setSortState(state: SortState): void {
+		this.sortState = state;
+	}
 
 	render(container: HTMLElement, currentDate: Date): void {
 		const dayContainer = container.createDiv('calendar-day-view');
@@ -96,14 +108,14 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 		listContainer.createEl('div', { text: '加载中...', cls: 'gantt-task-empty' });
 
 		try {
-			const tasks: GanttTask[] = this.plugin.taskCache.getAllTasks();
+			let tasks: GanttTask[] = this.plugin.taskCache.getAllTasks();
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';
 
 			const normalizedTarget = new Date(targetDate);
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			// 筛选当天任务
-			const currentDayTasks = tasks.filter(task => {
+			let currentDayTasks = tasks.filter(task => {
 				const dateValue = (task as any)[dateField];
 				if (!dateValue) return false;
 
@@ -113,6 +125,9 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 
 				return taskDate.getTime() === normalizedTarget.getTime();
 			});
+
+			// 应用排序
+			currentDayTasks = sortTasks(currentDayTasks, this.sortState);
 
 			listContainer.empty();
 

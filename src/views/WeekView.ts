@@ -2,12 +2,24 @@ import { Notice } from 'obsidian';
 import { BaseCalendarRenderer } from './BaseCalendarRenderer';
 import { getWeekOfDate } from '../dateUtils/dateUtilsIndex';
 import { updateTaskDateField } from '../tasks/taskUpdater';
-import type { GanttTask } from '../types';
+import type { GanttTask, SortState } from '../types';
+import { sortTasks } from '../tasks/taskSorter';
+import { DEFAULT_SORT_STATE } from '../types';
 
 /**
  * 周视图渲染器
  */
 export class WeekViewRenderer extends BaseCalendarRenderer {
+	// 排序状态
+	private sortState: SortState = DEFAULT_SORT_STATE;
+
+	public getSortState(): SortState {
+		return this.sortState;
+	}
+
+	public setSortState(state: SortState): void {
+		this.sortState = state;
+	}
 
 	render(container: HTMLElement, currentDate: Date): void {
 		const weekData = getWeekOfDate(currentDate, currentDate.getFullYear(), !!(this.plugin?.settings?.startOnMonday));
@@ -115,7 +127,7 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			// 筛选当天任务
-			const currentDayTasks = tasks.filter(task => {
+			let currentDayTasks = tasks.filter(task => {
 				const dateValue = (task as any)[dateField];
 				if (!dateValue) return false;
 
@@ -125,6 +137,9 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 
 				return taskDate.getTime() === normalizedTarget.getTime();
 			});
+
+			// 应用排序
+			currentDayTasks = sortTasks(currentDayTasks, this.sortState);
 
 			if (currentDayTasks.length === 0) {
 				columnContainer.createEl('div', { text: '暂无任务', cls: 'calendar-week-task-empty' });

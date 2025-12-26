@@ -1,6 +1,7 @@
 import { BaseCalendarRenderer } from './BaseCalendarRenderer';
-import type { GanttTask, GanttTimeGranularity } from '../types';
+import type { GanttTask, GanttTimeGranularity, SortState } from '../types';
 import { formatDate, getTodayDate } from '../dateUtils/dateUtilsIndex';
+import { sortTasks } from '../tasks/taskSorter';
 
 /**
  * 甘特图视图渲染器
@@ -11,6 +12,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
   private statusFilter: 'all' | 'completed' | 'uncompleted' = 'uncompleted';
   private timeGranularity: GanttTimeGranularity = 'day'; // 默认时间颗粒度为日
   private readonly VISIBLE_UNITS = 50; // 可见时间单位数量（固定显示30个格子）
+
+  // 排序状态（甘特图默认按开始时间排序）
+  private sortState: SortState = { field: 'startDate', order: 'asc' };
 
   // 滚动与刻度同步所需引用
   private timelineScrollEl: HTMLElement | null = null;
@@ -30,6 +34,14 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
   public setStatusFilter(v: 'all' | 'completed' | 'uncompleted') { this.statusFilter = v; }
   public getTimeGranularity() { return this.timeGranularity; }
   public setTimeGranularity(v: GanttTimeGranularity) { this.timeGranularity = v; }
+
+  public getSortState(): SortState {
+    return this.sortState;
+  }
+
+  public setSortState(state: SortState): void {
+    this.sortState = state;
+  }
 
   /** 跳转到今天（横向滚动并更新今天线） */
   public jumpToToday(): void {
@@ -246,6 +258,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     let tasks = tasksAll;
     if (this.statusFilter === 'completed') tasks = tasks.filter(t => t.completed);
     if (this.statusFilter === 'uncompleted') tasks = tasks.filter(t => !t.completed);
+
+    // 应用排序
+    tasks = sortTasks(tasks, this.sortState);
 
     // 过滤出具备时间范围的任务
     const withRange = tasks

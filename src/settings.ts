@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting, TFolder, Modal } from 'obsidian';
 import type GanttCalendarPlugin from '../main';
 import { TaskStatus, DEFAULT_TASK_STATUSES, MACARON_COLORS, validateStatusSymbol } from './tasks/taskStatus';
+import type { SortField, SortOrder } from './types';
 
 // RGB to Hex converter
 function rgbToHex(rgb: string): string {
@@ -33,6 +34,8 @@ export interface GanttCalendarSettings {
 	yearHeatmapPalette: 'blue' | 'green' | 'red' | 'purple' | 'orange' | 'cyan' | 'pink' | 'yellow'; // 热力图色卡选择
 	taskNotePath: string; // 任务笔记默认文件夹路径
 	taskStatuses: TaskStatus[]; // 任务状态配置（包含颜色）
+	taskSortField: SortField; // 任务排序字段
+	taskSortOrder: SortOrder; // 任务排序顺序
 }
 
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
@@ -56,6 +59,8 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	yearHeatmapPalette: 'blue',
 	taskNotePath: 'Tasks', // 默认任务笔记文件夹路径
 	taskStatuses: DEFAULT_TASK_STATUSES, // 默认任务状态配置
+	taskSortField: 'dueDate', // 默认排序字段：截止日期
+	taskSortOrder: 'asc', // 默认排序顺序：升序
 };
 
 export class GanttCalendarSettingTab extends PluginSettingTab {

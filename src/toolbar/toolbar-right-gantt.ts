@@ -2,6 +2,7 @@ import type { GanttViewRenderer } from '../views/GanttView';
 import { renderStatusFilter } from './status-filter';
 import { renderRefreshButton } from './refresh-button';
 import { renderTimeGranularity } from './time-granularity';
+import { renderSortButton } from './sort-button';
 
 /**
  * 工具栏右侧区域 - 甘特视图功能区
@@ -73,6 +74,15 @@ export class ToolbarRightGantt {
     renderStatusFilter(container, ganttRenderer.getStatusFilter(), async (v) => {
       ganttRenderer.setStatusFilter(v);
       await onRefresh();
+    });
+
+    // 排序按钮
+    renderSortButton(container, {
+      getCurrentState: () => ganttRenderer.getSortState(),
+      onSortChange: async (newState) => {
+        ganttRenderer.setSortState(newState);
+        await onRefresh();
+      }
     });
 
     // 刷新按钮（共享）

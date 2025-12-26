@@ -3,6 +3,7 @@ import { formatDate } from '../dateUtils/dateUtilsIndex';
 import type { TaskViewRenderer } from '../views/TaskView';
 import { renderStatusFilter } from './status-filter';
 import { renderRefreshButton } from './refresh-button';
+import { renderSortButton } from './sort-button';
 
 /**
  * 工具栏右侧区域 - 任务视图功能区
@@ -29,10 +30,6 @@ export class ToolbarRightTask {
 	): void {
 		container.empty();
 		container.addClass('toolbar-right-task');
-
-		// Global Filter 状态
-		const gfText = container.createEl('span', { cls: 'toolbar-right-task-global-filter' });
-		gfText.setText(`Global Filter: ${globalFilterText || '（未设置）'}`);
 
 		// 状态筛选 - 使用共享模块
 		renderStatusFilter(container, taskRenderer.getTaskFilter(), (value) => {
@@ -145,6 +142,15 @@ export class ToolbarRightTask {
 				onFilterChange();
 			});
 		}
+
+		// 排序按钮
+		renderSortButton(container, {
+			getCurrentState: () => taskRenderer.getSortState(),
+			onSortChange: (newState) => {
+				taskRenderer.setSortState(newState);
+				onFilterChange();
+			}
+		});
 
 		// 刷新按钮（共享）
 		renderRefreshButton(container, onRefresh, '刷新任务');

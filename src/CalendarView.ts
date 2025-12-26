@@ -66,6 +66,8 @@ export class CalendarView extends ItemView {
 		if (this.plugin?.taskCache?.whenReady) {
 			await this.plugin.taskCache.whenReady();
 		}
+		// 设置日历视图渲染器引用（用于排序功能）
+		this.toolbar.setCalendarRenderers(this.dayRenderer, this.weekRenderer);
 		this.render();
 		this.setupResizeObserver();
 
@@ -143,6 +145,8 @@ export class CalendarView extends ItemView {
 			globalFilterText: this.plugin?.settings?.globalTaskFilter,
 			taskRenderer: this.taskRenderer,
             ganttRenderer: this.ganttRenderer,
+			dayRenderer: this.dayRenderer,
+			weekRenderer: this.weekRenderer,
 			onViewSwitch: (type) => this.switchView(type),
 			onPrevious: () => this.previousPeriod(),
 			onToday: () => this.goToToday(),
