@@ -62,17 +62,40 @@ class EditTaskModal extends Modal {
     if (this.allowEditContent) {
       // 保留原始描述，包括 wiki 链接和超链接等
       const originalContent = this.task.description || '';
-      new Setting(contentEl)
+      const descSetting = new Setting(contentEl)
         .setName('任务描述')
-        .setDesc('修改任务的描述内容')
+        .setDesc('修改任务的描述内容（不支持换行，Enter 键将转为空格）')
         .addTextArea(text => {
           text.setValue(originalContent);
-          text.inputEl.rows = 2;
+          // 强制设置样式，覆盖 Obsidian 默认样式
+          text.inputEl.style.minHeight = 'auto';
+          text.inputEl.style.height = '60px';
           text.inputEl.style.width = '100%';
+          text.inputEl.style.maxWidth = '400px';
+          text.inputEl.style.resize = 'none'; // 禁止拖动调整大小
+          text.inputEl.style.overflow = 'auto'; // 内容过多时显示滚动条
+
+          // 阻止换行：Enter 键转为空格
+          text.inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const start = text.inputEl.selectionStart;
+              const end = text.inputEl.selectionEnd;
+              const value = text.inputEl.value;
+              text.inputEl.value = value.slice(0, start) + ' ' + value.slice(end);
+              text.inputEl.selectionStart = text.inputEl.selectionEnd = start + 1;
+              this.content = text.inputEl.value;
+            }
+          });
+
           text.onChange((v) => {
-            this.content = v;
+            // 兜底：将任何换行符替换为空格
+            this.content = v.replace(/[\r\n]+/g, ' ');
           });
         });
+      // 修复描述文本区域样式
+      descSetting.controlEl.style.width = '100%';
+      descSetting.controlEl.style.maxWidth = '400px';
     }
 
 
