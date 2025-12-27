@@ -1,6 +1,7 @@
 import { BaseCalendarRenderer } from './BaseCalendarRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GanttTask } from '../types';
+import { TaskCardClasses } from '../utils/bem';
 
 /**
  * 月视图渲染器
@@ -127,17 +128,17 @@ export class MonthViewRenderer extends BaseCalendarRenderer {
 	 * 渲染月视图任务项
 	 */
 	private renderMonthTaskItem(task: GanttTask, container: HTMLElement): void {
-		const taskItem = container.createDiv('calendar-task-card');
-		taskItem.addClass('calendar-task-card--month');
-		taskItem.addClass(task.completed ? 'completed' : 'pending');
+		const taskItem = container.createDiv(TaskCardClasses.block);
+		taskItem.addClass(TaskCardClasses.modifiers.monthView);
+		taskItem.addClass(task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
 
 		// 应用状态颜色
 		this.applyStatusColors(task, taskItem);
 
 		const cleaned = task.description;
 
-		// 使用富文本渲染支持链接（统一文本类名）
-		const taskTextEl = taskItem.createDiv('gc-task-card__text');
+		// 使用富文本渲染支持链接
+		const taskTextEl = taskItem.createDiv(TaskCardClasses.elements.text);
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
 		// 渲染标签

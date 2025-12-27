@@ -61,6 +61,20 @@ export abstract class BaseCalendarRenderer {
 	}
 
 	/**
+	 * 获取优先级CSS类名
+	 */
+	protected getPriorityClass(priority?: string): string {
+		switch (priority) {
+			case 'highest': return 'priority-highest';
+			case 'high': return 'priority-high';
+			case 'medium': return 'priority-medium';
+			case 'low': return 'priority-low';
+			case 'lowest': return 'priority-lowest';
+			default: return '';
+		}
+	}
+
+	/**
 	 * 获取任务状态颜色配置
 	 * 从插件设置中读取状态颜色，如果未配置则使用默认值
 	 */

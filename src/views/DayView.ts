@@ -4,6 +4,7 @@ import { formatDate } from '../dateUtils/dateUtilsIndex';
 import type { GanttTask, SortState } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
+import { TaskCardClasses, DayViewClasses, withModifiers } from '../utils/bem';
 
 /**
  * 日视图渲染器
@@ -36,10 +37,10 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 			}
 		} else {
 			// 仅显示任务（全宽）
-			const tasksSection = dayContainer.createDiv('gc-day-view gc-day-view--tasks-only');
+			const tasksSection = dayContainer.createDiv(withModifiers(DayViewClasses.block, DayViewClasses.modifiers.tasksOnly));
 			const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-			tasksTitle.addClass('gc-day-view__title');
-			const tasksList = tasksSection.createDiv('gc-day-view__task-list');
+			tasksTitle.addClass(DayViewClasses.elements.title);
+			const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
 			this.loadDayViewTasks(tasksList, new Date(currentDate));
 		}
@@ -49,22 +50,22 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 	 * 渲染水平分屏布局
 	 */
 	private renderDayViewHorizontal(dayContainer: HTMLElement, currentDate: Date): void {
-		const splitContainer = dayContainer.createDiv('gc-day-view--horizontal');
+		const splitContainer = dayContainer.createDiv(DayViewClasses.modifiers.horizontal);
 
 		// 任务区（左）
-		const tasksSection = splitContainer.createDiv('gc-day-view__section--tasks');
+		const tasksSection = splitContainer.createDiv(DayViewClasses.elements.sectionTasks);
 		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-		tasksTitle.addClass('gc-day-view__title');
-		const tasksList = tasksSection.createDiv('gc-day-view__task-list');
+		tasksTitle.addClass(DayViewClasses.elements.title);
+		const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
 		// 分割线（中）
-		const divider = splitContainer.createDiv('gc-day-view__divider');
+		const divider = splitContainer.createDiv(DayViewClasses.elements.divider);
 
 		// 笔记区（右）
-		const notesSection = splitContainer.createDiv('gc-day-view__section--notes');
+		const notesSection = splitContainer.createDiv(DayViewClasses.elements.sectionNotes);
 		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
-		notesTitle.addClass('gc-day-view__title');
-		const notesContent = notesSection.createDiv('gc-day-view__notes-content');
+		notesTitle.addClass(DayViewClasses.elements.title);
+		const notesContent = notesSection.createDiv(DayViewClasses.elements.notesContent);
 
 		// 设置可调整大小的分割线
 		this.setupDayViewDivider(divider, tasksSection, notesSection);
@@ -77,22 +78,22 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 	 * 渲染垂直分屏布局
 	 */
 	private renderDayViewVertical(dayContainer: HTMLElement, currentDate: Date): void {
-		const splitContainer = dayContainer.createDiv('gc-day-view--vertical');
+		const splitContainer = dayContainer.createDiv(DayViewClasses.modifiers.vertical);
 
 		// 任务区（上）
-		const tasksSection = splitContainer.createDiv('gc-day-view__section--tasks');
+		const tasksSection = splitContainer.createDiv(DayViewClasses.elements.sectionTasks);
 		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-		tasksTitle.addClass('gc-day-view__title');
-		const tasksList = tasksSection.createDiv('gc-day-view__task-list');
+		tasksTitle.addClass(DayViewClasses.elements.title);
+		const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
 		// 分割线（中）
-		const divider = splitContainer.createDiv('gc-day-view__divider--vertical');
+		const divider = splitContainer.createDiv(DayViewClasses.elements.dividerVertical);
 
 		// 笔记区（下）
-		const notesSection = splitContainer.createDiv('gc-day-view__section--notes');
+		const notesSection = splitContainer.createDiv(DayViewClasses.elements.sectionNotes);
 		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
-		notesTitle.addClass('gc-day-view__title');
-		const notesContent = notesSection.createDiv('gc-day-view__notes-content');
+		notesTitle.addClass(DayViewClasses.elements.title);
+		const notesContent = notesSection.createDiv(DayViewClasses.elements.notesContent);
 
 		this.setupDayViewDividerVertical(divider, tasksSection, notesSection);
 
@@ -148,11 +149,12 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 
 	/**
 	 * 渲染日视图任务项
+	 * 日视图任务卡片仅显示：复选框、任务描述、标签、优先级
 	 */
 	private renderDayTaskItem(task: GanttTask, listContainer: HTMLElement, targetDate: Date): void {
-		const taskItem = listContainer.createDiv('calendar-task-card');
-		taskItem.addClass('calendar-task-card--day');
-		taskItem.addClass(task.completed ? 'completed' : 'pending');
+		const taskItem = listContainer.createDiv(TaskCardClasses.block);
+		taskItem.addClass(TaskCardClasses.modifiers.dayView);
+		taskItem.addClass(task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
 
 		// 应用状态颜色
 		this.applyStatusColors(task, taskItem);
@@ -163,61 +165,30 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 		// 任务内容
 		const cleaned = task.description;
 		const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
-		const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
-		
+
 		// 使用富文本渲染支持链接
-		const taskTextEl = taskItem.createDiv('gantt-task-text');
+		const taskTextEl = taskItem.createDiv(TaskCardClasses.elements.text);
 		if (this.plugin?.settings?.showGlobalFilterInTaskText && gf) {
 			taskTextEl.appendText(gf + ' ');
 		}
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
+		// 渲染标签
+		this.renderTaskTags(task, taskItem);
+
 		// 优先级标记
 		if (task.priority) {
 			const priorityIcon = this.getPriorityIcon(task.priority);
-			const priorityEl = taskItem.createDiv('gantt-task-priority-inline');
-			priorityEl.createEl('span', { text: priorityIcon, cls: `gantt-priority-badge priority-${task.priority}` });
+			const priorityEl = taskItem.createDiv(TaskCardClasses.elements.priority);
+			const priorityClass = this.getPriorityClass(task.priority);
+			priorityEl.createEl('span', { text: priorityIcon, cls: `${TaskCardClasses.elements.priorityBadge} ${priorityClass}` });
 		}
-
-		// 时间属性
-		const timePropertiesEl = taskItem.createDiv('gantt-task-time-properties-inline');
-
-		if (task.createdDate) {
-			timePropertiesEl.createEl('span', { text: `创建:${this.formatDateForDisplay(task.createdDate)}`, cls: 'gantt-time-badge gantt-time-created' });
-		}
-
-		if (task.startDate) {
-			timePropertiesEl.createEl('span', { text: `开始:${this.formatDateForDisplay(task.startDate)}`, cls: 'gantt-time-badge gantt-time-start' });
-		}
-
-		if (task.scheduledDate) {
-			timePropertiesEl.createEl('span', { text: `计划:${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'gantt-time-badge gantt-time-scheduled' });
-		}
-
-		if (task.dueDate) {
-			const dueEl = taskItem.createEl('span', { text: `截止:${this.formatDateForDisplay(task.dueDate)}`, cls: 'gantt-time-badge gantt-time-due' });
-			if (task.dueDate < new Date() && !task.completed) {
-				dueEl.addClass('gantt-overdue');
-			}
-			timePropertiesEl.appendChild(dueEl);
-		}
-
-		if (task.cancelledDate) {
-			timePropertiesEl.createEl('span', { text: `取消:${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'gantt-time-badge gantt-time-cancelled' });
-		}
-
-		if (task.completionDate) {
-			timePropertiesEl.createEl('span', { text: `完成:${this.formatDateForDisplay(task.completionDate)}`, cls: 'gantt-time-badge gantt-time-completion' });
-		}
-
-		// 文件位置
-		taskItem.createEl('span', { text: `${task.fileName}:${task.lineNumber}`, cls: 'gantt-task-file' });
 
 		// 警告图标
 		if (task.warning) {
 			taskItem.createEl('span', {
 				text: '⚠️',
-				cls: 'gantt-task-warning-icon',
+				cls: TaskCardClasses.elements.warning,
 				attr: { title: task.warning }
 			});
 		}
@@ -349,7 +320,7 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 			}
 
 			// 渲染 Markdown 内容
-			const noteContent = contentContainer.createDiv('calendar-day-notes-markdown');
+			const noteContent = contentContainer.createDiv(DayViewClasses.elements.notesBody);
 			await MarkdownRenderer.render(this.app, content, noteContent, file.path, this.plugin.calendarView);
 		} catch (error) {
 			console.error('Error loading daily note', error);

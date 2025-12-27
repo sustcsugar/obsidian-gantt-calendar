@@ -49,11 +49,13 @@ export const TaskCardClasses = {
 
 	/** Modifiers */
 	modifiers: {
-		month: bem('task-card', undefined, 'month'),
-		week: bem('task-card', undefined, 'week'),
-		day: bem('task-card', undefined, 'day'),
-		task: bem('task-card', undefined, 'task'),
-		gantt: bem('task-card', undefined, 'gantt'),
+		// 视图相关修饰符（添加 view 后缀区分）
+		monthView: bem('task-card', undefined, 'month'),
+		weekView: bem('task-card', undefined, 'week'),
+		dayView: bem('task-card', undefined, 'day'),
+		taskView: bem('task-card', undefined, 'task'),
+		ganttView: bem('task-card', undefined, 'gantt'),
+		// 状态修饰符
 		completed: bem('task-card', undefined, 'completed'),
 		pending: bem('task-card', undefined, 'pending'),
 	}

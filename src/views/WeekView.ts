@@ -5,6 +5,7 @@ import { updateTaskDateField } from '../tasks/taskUpdater';
 import type { GanttTask, SortState } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
+import { TaskCardClasses } from '../utils/bem';
 
 /**
  * 周视图渲染器
@@ -159,9 +160,9 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 	 * 渲染周视图任务项
 	 */
 	private renderWeekTaskItem(task: GanttTask, container: HTMLElement, dayDate?: Date): void {
-		const taskItem = container.createDiv('calendar-task-card');
-		taskItem.addClass('calendar-task-card--week');
-		taskItem.addClass(task.completed ? 'completed' : 'pending');
+		const taskItem = container.createDiv(TaskCardClasses.block);
+		taskItem.addClass(TaskCardClasses.modifiers.weekView);
+		taskItem.addClass(task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
 
 		// 应用状态颜色
 		this.applyStatusColors(task, taskItem);
@@ -173,7 +174,7 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 			taskItem.setAttribute('data-target-date', dayDate.toISOString().split('T')[0]);
 		}
 
-		// 复选框（移除周视图特殊类名，统一使用基础类）
+		// 复选框
 		const checkbox = this.createTaskCheckbox(task, taskItem);
 
 		// 拖拽事件
@@ -192,8 +193,8 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 		// 任务内容
 		const cleaned = task.description;
 
-		// 使用富文本渲染支持链接（统一文本类名）
-		const taskTextEl = taskItem.createDiv('gc-task-card__text');
+		// 使用富文本渲染支持链接
+		const taskTextEl = taskItem.createDiv(TaskCardClasses.elements.text);
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
 		// 渲染标签

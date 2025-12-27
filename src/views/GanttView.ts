@@ -2,6 +2,7 @@ import { BaseCalendarRenderer } from './BaseCalendarRenderer';
 import type { GanttTask, GanttTimeGranularity, SortState } from '../types';
 import { formatDate, getTodayDate } from '../dateUtils/dateUtilsIndex';
 import { sortTasks } from '../tasks/taskSorter';
+import { TaskCardClasses } from '../utils/bem';
 
 /**
  * 甘特图视图渲染器
@@ -336,9 +337,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
 
     for (const item of withRange) {
       // 左侧：任务卡片
-      const taskCard = taskList.createDiv('calendar-task-card');
-      taskCard.addClass('calendar-task-card--gantt');
-      taskCard.addClass(item.task.completed ? 'completed' : 'pending');
+      const taskCard = taskList.createDiv(TaskCardClasses.block);
+      taskCard.addClass(TaskCardClasses.modifiers.ganttView);
+      taskCard.addClass(item.task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
 
       // 应用状态颜色
       this.applyStatusColors(item.task, taskCard);

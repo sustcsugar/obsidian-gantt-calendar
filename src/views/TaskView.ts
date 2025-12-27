@@ -4,6 +4,7 @@ import type { GanttTask, SortState } from '../types';
 import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
+import { TaskCardClasses, TimeBadgeClasses, ViewClasses, withModifiers } from '../utils/bem';
 
 /**
  * 任务视图渲染器
@@ -89,7 +90,7 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 
 	render(container: HTMLElement, currentDate: Date): void {
 		// 创建任务视图容器
-		const taskRoot = container.createDiv('gc-view gc-view--task');
+		const taskRoot = container.createDiv(withModifiers(ViewClasses.block, ViewClasses.modifiers.task));
 
 		this.loadTaskList(taskRoot);
 	}
@@ -171,9 +172,9 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 	 * 渲染任务项
 	 */
 	private renderTaskItem(task: GanttTask, listContainer: HTMLElement): void {
-		const taskItem = listContainer.createDiv('gc-task-card');
-		taskItem.addClass('gc-task-card--task');
-		taskItem.addClass(task.completed ? 'gc-task-card--completed' : 'gc-task-card--pending');
+		const taskItem = listContainer.createDiv(TaskCardClasses.block);
+		taskItem.addClass(TaskCardClasses.modifiers.taskView);
+		taskItem.addClass(task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
 
 		// 应用状态颜色
 		this.applyStatusColors(task, taskItem);
@@ -184,64 +185,64 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 		// 任务内容
 		const cleaned = task.description;
 		const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
-		const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
-		
-		// 使用富文本渲染支持链接（统一文本类名）
-		const taskTextEl = taskItem.createDiv('gc-task-card__text');
+
+		// 使用富文本渲染支持链接
+		const taskTextEl = taskItem.createDiv(TaskCardClasses.elements.text);
 		if (this.plugin?.settings?.showGlobalFilterInTaskText && gf) {
 			taskTextEl.appendText(gf + ' ');
 		}
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
-		// 渲染标签（在描述之后、优先级之前）
+		// 渲染标签
 		this.renderTaskTags(task, taskItem);
 
-		// 优先级标记（统一优先级类名）
+		// 优先级标记
 		if (task.priority) {
 			const priorityIcon = this.getPriorityIcon(task.priority);
-			const priorityEl = taskItem.createDiv('gc-task-card__priority');
-			priorityEl.createEl('span', { text: priorityIcon, cls: `gc-task-card__priority-badge priority-${task.priority}` });
+			const priorityEl = taskItem.createDiv(TaskCardClasses.elements.priority);
+			const priorityClass = this.getPriorityClass(task.priority);
+			priorityEl.createEl('span', { text: priorityIcon, cls: `${TaskCardClasses.elements.priorityBadge} ${priorityClass}` });
 		}
 
-		// 时间属性（统一类名）
-		const timePropertiesEl = taskItem.createDiv('gc-task-card__times');
+		// 时间属性
+		const timePropertiesEl = taskItem.createDiv(TaskCardClasses.elements.times);
 
 		if (task.createdDate) {
-			timePropertiesEl.createEl('span', { text: `创建:${this.formatDateForDisplay(task.createdDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--created' });
+			timePropertiesEl.createEl('span', { text: `创建:${this.formatDateForDisplay(task.createdDate)}`, cls: `${TaskCardClasses.elements.timeBadge} ${TimeBadgeClasses.created}` });
 		}
 
 		if (task.startDate) {
-			timePropertiesEl.createEl('span', { text: `开始:${this.formatDateForDisplay(task.startDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--start' });
+			timePropertiesEl.createEl('span', { text: `开始:${this.formatDateForDisplay(task.startDate)}`, cls: `${TaskCardClasses.elements.timeBadge} ${TimeBadgeClasses.start}` });
 		}
 
 		if (task.scheduledDate) {
-			timePropertiesEl.createEl('span', { text: `计划:${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--scheduled' });
+			timePropertiesEl.createEl('span', { text: `计划:${this.formatDateForDisplay(task.scheduledDate)}`, cls: `${TaskCardClasses.elements.timeBadge} ${TimeBadgeClasses.scheduled}` });
 		}
 
 		if (task.dueDate) {
-			const dueEl = taskItem.createEl('span', { text: `截止:${this.formatDateForDisplay(task.dueDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--due' });
+			const dueEl = taskItem.createEl('span', { text: `截止:${this.formatDateForDisplay(task.dueDate)}`, cls: `${TaskCardClasses.elements.timeBadge} ${TimeBadgeClasses.due}` });
 			if (task.dueDate < new Date() && !task.completed) {
-				dueEl.addClass('gc-task-card__time-badge--overdue');
+				dueEl.addClass(TimeBadgeClasses.overdue);
 			}
 			timePropertiesEl.appendChild(dueEl);
 		}
 
 		if (task.cancelledDate) {
-			timePropertiesEl.createEl('span', { text: `取消:${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--cancelled' });
+			timePropertiesEl.createEl('span', { text: `取消:${this.formatDateForDisplay(task.cancelledDate)}`, cls: `${TaskCardClasses.elements.timeBadge} ${TimeBadgeClasses.cancelled}` });
 		}
 
 		if (task.completionDate) {
-			timePropertiesEl.createEl('span', { text: `完成:${this.formatDateForDisplay(task.completionDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--completion' });
+			timePropertiesEl.createEl('span', { text: `完成:${this.formatDateForDisplay(task.completionDate)}`, cls: `${TaskCardClasses.elements.timeBadge} ${TimeBadgeClasses.completion}` });
 		}
 
-		// 文件位置（统一类名）
-		taskItem.createEl('span', { text: `${task.fileName}:${task.lineNumber}`, cls: 'gc-task-card__file' });
+		// 文件位置
+		taskItem.createEl('span', { text: `${task.fileName}:${task.lineNumber}`, cls: TaskCardClasses.elements.file });
 
-		// 警告图标（统一类名）
+		// 警告图标
 		if (task.warning) {
 			taskItem.createEl('span', {
 				text: '⚠️',
-				cls: 'gc-task-card__warning',
+				cls: TaskCardClasses.elements.warning,
 				attr: { title: task.warning }
 			});
 		}
