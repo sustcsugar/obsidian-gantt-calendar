@@ -173,9 +173,8 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 			taskItem.setAttribute('data-target-date', dayDate.toISOString().split('T')[0]);
 		}
 
-		// 复选框
+		// 复选框（移除周视图特殊类名，统一使用基础类）
 		const checkbox = this.createTaskCheckbox(task, taskItem);
-		checkbox.addClass('calendar-week-task-checkbox');
 
 		// 拖拽事件
 		taskItem.addEventListener('dragstart', (e: DragEvent) => {
@@ -193,8 +192,8 @@ export class WeekViewRenderer extends BaseCalendarRenderer {
 		// 任务内容
 		const cleaned = task.description;
 
-		// 使用富文本渲染支持链接
-		const taskTextEl = taskItem.createDiv('calendar-week-task-text');
+		// 使用富文本渲染支持链接（统一文本类名）
+		const taskTextEl = taskItem.createDiv('gc-task-card__text');
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
 		// 渲染标签

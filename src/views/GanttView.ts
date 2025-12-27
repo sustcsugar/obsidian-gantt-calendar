@@ -67,8 +67,8 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
   }
 
   render(container: HTMLElement, currentDate: Date): void {
-    // 根容器
-    const root = container.createDiv('calendar-gantt-view');
+    // 根容器（统一视图类名）
+    const root = container.createDiv('gc-view gc-view--gantt');
     // 加载并渲染
     this.loadAndRenderGantt(root);
   }
@@ -288,46 +288,45 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
     this.totalUnits = totalUnits;
     this.timelineStart = minStart;
 
-    // 主体区域：左右分栏布局
-    const body = root.createDiv('gantt-view-body');
+    // 主体区域：左右分栏布局（统一类名）
+    const body = root.createDiv('gc-gantt-view__body');
 
     // 左侧：任务列表区域
-    const tasksSection = body.createDiv('gantt-view-tasks');
-    
+    const tasksSection = body.createDiv('gc-gantt-view__tasks');
+
     // 任务列表标题
-    const tasksHeader = tasksSection.createDiv('gantt-view-tasks-header');
+    const tasksHeader = tasksSection.createDiv('gc-gantt-view__tasks-header');
     tasksHeader.setText('任务卡片');
-    
+
     // 任务卡片列表容器（grid布局）
-    const taskList = tasksSection.createDiv('gantt-view-task-list');
+    const taskList = tasksSection.createDiv('gc-gantt-view__task-list');
 
     // 分割线：可拖动调整宽度
-    const resizer = body.createDiv('gantt-view-resizer');
+    const resizer = body.createDiv('gc-gantt-view__resizer');
     this.initResizer(resizer, tasksSection);
 
     // 右侧：时间轴区域（可横向滚动）
-    const timeSection = body.createDiv('gantt-view-time');
-    
+    const timeSection = body.createDiv('gc-gantt-view__timeline');
+
     // 时间刻度行
-    const timeline = timeSection.createDiv('gantt-view-timeline');
-    const timelineScroll = timeline.createDiv('gantt-timeline-scroll');
-    this.timelineScrollEl = timelineScroll;
-    timelineScroll.style.setProperty('--gantt-total-units', String(totalUnits));
-    timelineScroll.style.setProperty('--gantt-visible-units', String(this.VISIBLE_UNITS));
-    const timelineRow = timelineScroll.createDiv('gantt-timeline-row');
+    const timeline = timeSection.createDiv('gc-gantt-view__timeline-scroll');
+    this.timelineScrollEl = timeline;
+    timeline.style.setProperty('--gantt-total-units', String(totalUnits));
+    timeline.style.setProperty('--gantt-visible-units', String(this.VISIBLE_UNITS));
+    const timelineRow = timeline.createDiv('gc-gantt-view__timeline-row');
 
     let currentDate = new Date(minStart);
     for (let i = 0; i < totalUnits; i++) {
-      const cell = timelineRow.createDiv('gantt-date-cell');
+      const cell = timelineRow.createDiv('gc-gantt-view__date-cell');
       cell.setText(this.formatTimeUnitLabel(currentDate, i));
       currentDate = this.getNextTimeUnit(currentDate);
     }
 
     // 甘特条容器（横向滚动）
-    const ganttBarsWrapper = timeSection.createDiv('gantt-view-bars');
-    const ganttBarsScroll = ganttBarsWrapper.createDiv('gantt-bars-scroll');
+    const ganttBarsWrapper = timeSection.createDiv('gc-gantt-view__bars');
+    const ganttBarsScroll = ganttBarsWrapper.createDiv('gc-gantt-view__bars-scroll');
     this.bodyScrollEl = ganttBarsScroll; // 用于横向滚动同步
-    
+
     // 设置与时间刻度相同的CSS变量
     ganttBarsScroll.style.setProperty('--gantt-total-units', String(totalUnits));
     ganttBarsScroll.style.setProperty('--gantt-visible-units', String(this.VISIBLE_UNITS));

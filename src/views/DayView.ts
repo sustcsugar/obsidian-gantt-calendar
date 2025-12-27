@@ -21,7 +21,7 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {
-		const dayContainer = container.createDiv('calendar-day-view');
+		const dayContainer = container.createDiv('gc-view gc-view--day');
 
 		// 检查是否显示 Daily Note
 		const enableDailyNote = this.plugin.settings.enableDailyNote !== false;
@@ -36,10 +36,10 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 			}
 		} else {
 			// 仅显示任务（全宽）
-			const tasksSection = dayContainer.createDiv('calendar-day-tasks-section-full');
+			const tasksSection = dayContainer.createDiv('gc-day-view gc-day-view--tasks-only');
 			const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-			tasksTitle.addClass('calendar-day-tasks-title');
-			const tasksList = tasksSection.createDiv('calendar-day-tasks-list');
+			tasksTitle.addClass('gc-day-view__title');
+			const tasksList = tasksSection.createDiv('gc-day-view__task-list');
 
 			this.loadDayViewTasks(tasksList, new Date(currentDate));
 		}
@@ -49,22 +49,22 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 	 * 渲染水平分屏布局
 	 */
 	private renderDayViewHorizontal(dayContainer: HTMLElement, currentDate: Date): void {
-		const splitContainer = dayContainer.createDiv('calendar-day-split-container');
+		const splitContainer = dayContainer.createDiv('gc-day-view--horizontal');
 
 		// 任务区（左）
-		const tasksSection = splitContainer.createDiv('calendar-day-tasks-section');
+		const tasksSection = splitContainer.createDiv('gc-day-view__section--tasks');
 		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-		tasksTitle.addClass('calendar-day-tasks-title');
-		const tasksList = tasksSection.createDiv('calendar-day-tasks-list');
+		tasksTitle.addClass('gc-day-view__title');
+		const tasksList = tasksSection.createDiv('gc-day-view__task-list');
 
 		// 分割线（中）
-		const divider = splitContainer.createDiv('calendar-day-divider');
+		const divider = splitContainer.createDiv('gc-day-view__divider');
 
 		// 笔记区（右）
-		const notesSection = splitContainer.createDiv('calendar-day-notes-section');
+		const notesSection = splitContainer.createDiv('gc-day-view__section--notes');
 		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
-		notesTitle.addClass('calendar-day-notes-title');
-		const notesContent = notesSection.createDiv('calendar-day-notes-content');
+		notesTitle.addClass('gc-day-view__title');
+		const notesContent = notesSection.createDiv('gc-day-view__notes-content');
 
 		// 设置可调整大小的分割线
 		this.setupDayViewDivider(divider, tasksSection, notesSection);
@@ -77,22 +77,22 @@ export class DayViewRenderer extends BaseCalendarRenderer {
 	 * 渲染垂直分屏布局
 	 */
 	private renderDayViewVertical(dayContainer: HTMLElement, currentDate: Date): void {
-		const splitContainer = dayContainer.createDiv('calendar-day-split-container-vertical');
+		const splitContainer = dayContainer.createDiv('gc-day-view--vertical');
 
 		// 任务区（上）
-		const tasksSection = splitContainer.createDiv('calendar-day-tasks-section-vertical');
+		const tasksSection = splitContainer.createDiv('gc-day-view__section--tasks');
 		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
-		tasksTitle.addClass('calendar-day-tasks-title');
-		const tasksList = tasksSection.createDiv('calendar-day-tasks-list');
+		tasksTitle.addClass('gc-day-view__title');
+		const tasksList = tasksSection.createDiv('gc-day-view__task-list');
 
 		// 分割线（中）
-		const divider = splitContainer.createDiv('calendar-day-divider-vertical');
+		const divider = splitContainer.createDiv('gc-day-view__divider--vertical');
 
 		// 笔记区（下）
-		const notesSection = splitContainer.createDiv('calendar-day-notes-section-vertical');
+		const notesSection = splitContainer.createDiv('gc-day-view__section--notes');
 		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
-		notesTitle.addClass('calendar-day-notes-title');
-		const notesContent = notesSection.createDiv('calendar-day-notes-content');
+		notesTitle.addClass('gc-day-view__title');
+		const notesContent = notesSection.createDiv('gc-day-view__notes-content');
 
 		this.setupDayViewDividerVertical(divider, tasksSection, notesSection);
 

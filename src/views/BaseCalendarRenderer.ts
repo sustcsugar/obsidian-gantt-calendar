@@ -163,7 +163,7 @@ export abstract class BaseCalendarRenderer {
 	 * 清理悬浮提示
 	 */
 	protected clearTaskTooltips(): void {
-		const tooltips = document.querySelectorAll('.calendar-week-task-tooltip');
+		const tooltips = document.querySelectorAll('.calendar-week-task-tooltip, .gc-task-tooltip');
 		tooltips.forEach(t => t.remove());
 	}
 
@@ -174,7 +174,7 @@ export abstract class BaseCalendarRenderer {
 		const checkbox = taskItem.createEl('input', { type: 'checkbox' }) as HTMLInputElement;
 		checkbox.checked = task.completed;
 		checkbox.disabled = false;
-		checkbox.addClass('gantt-task-checkbox');
+		checkbox.addClass('gc-task-card__checkbox');
 
 		checkbox.addEventListener('change', async (e) => {
 			e.stopPropagation();
@@ -224,18 +224,18 @@ export abstract class BaseCalendarRenderer {
 				tooltip.remove();
 			}
 
-			tooltip = document.body.createDiv('calendar-week-task-tooltip');
+			tooltip = document.body.createDiv('gc-task-tooltip');
 			tooltip.style.opacity = '0';
 
 			// 任务描述
 			const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
 			const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
-			const descDiv = tooltip.createDiv('tooltip-description');
+			const descDiv = tooltip.createDiv('gc-task-tooltip__description');
 			descDiv.createEl('strong', { text: displayText });
 
 			// 优先级
 			if (task.priority) {
-				const priorityDiv = tooltip.createDiv('tooltip-priority');
+				const priorityDiv = tooltip.createDiv('gc-task-tooltip__priority');
 				const priorityIcon = this.getPriorityIcon(task.priority);
 				priorityDiv.createEl('span', { text: `${priorityIcon} 优先级: ${task.priority}`, cls: `priority-${task.priority}` });
 			}
@@ -245,55 +245,55 @@ export abstract class BaseCalendarRenderer {
 				task.dueDate || task.cancelledDate || task.completionDate;
 
 			if (hasTimeProperties) {
-				const timeDiv = tooltip.createDiv('tooltip-time-properties');
+				const timeDiv = tooltip.createDiv('gc-task-tooltip__times');
 
 				if (task.createdDate) {
-					timeDiv.createEl('div', { text: `➕ 创建: ${this.formatDateForDisplay(task.createdDate)}`, cls: 'tooltip-time-item' });
+					timeDiv.createEl('div', { text: `➕ 创建: ${this.formatDateForDisplay(task.createdDate)}`, cls: 'gc-task-tooltip__time-item' });
 				}
 
 				if (task.startDate) {
-					timeDiv.createEl('div', { text: `🛫 开始: ${this.formatDateForDisplay(task.startDate)}`, cls: 'tooltip-time-item' });
+					timeDiv.createEl('div', { text: `🛫 开始: ${this.formatDateForDisplay(task.startDate)}`, cls: 'gc-task-tooltip__time-item' });
 				}
 
 				if (task.scheduledDate) {
-					timeDiv.createEl('div', { text: `⏳ 计划: ${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'tooltip-time-item' });
+					timeDiv.createEl('div', { text: `⏳ 计划: ${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'gc-task-tooltip__time-item' });
 				}
 
 				if (task.dueDate) {
 					const dueText = `📅 截止: ${this.formatDateForDisplay(task.dueDate)}`;
-					const dueEl = timeDiv.createEl('div', { text: dueText, cls: 'tooltip-time-item' });
+					const dueEl = timeDiv.createEl('div', { text: dueText, cls: 'gc-task-tooltip__time-item' });
 					if (task.dueDate < new Date() && !task.completed) {
-						dueEl.addClass('tooltip-overdue');
+						dueEl.addClass('gc-task-tooltip__time-item--overdue');
 					}
 				}
 
 				if (task.cancelledDate) {
-					timeDiv.createEl('div', { text: `❌ 取消: ${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'tooltip-time-item' });
+					timeDiv.createEl('div', { text: `❌ 取消: ${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'gc-task-tooltip__time-item' });
 				}
 
 				if (task.completionDate) {
-					timeDiv.createEl('div', { text: `✅ 完成: ${this.formatDateForDisplay(task.completionDate)}`, cls: 'tooltip-time-item' });
+					timeDiv.createEl('div', { text: `✅ 完成: ${this.formatDateForDisplay(task.completionDate)}`, cls: 'gc-task-tooltip__time-item' });
 				}
 			}
 
 			// 标签
 			if (task.tags && task.tags.length > 0) {
-				const tagsDiv = tooltip.createDiv('tooltip-tags');
+				const tagsDiv = tooltip.createDiv('gc-task-tooltip__tags');
 				const tagsLabel = tagsDiv.createEl('span', {
 					text: '标签：',
-					cls: 'tooltip-label'
+					cls: 'gc-task-tooltip__label'
 				});
 				task.tags.forEach(tag => {
 					tagsDiv.createEl('span', {
 						text: `#${tag}`,
-						cls: 'tooltip-tag-badge'
+						cls: 'gc-tag gc-tag--tooltip'
 					});
 				});
 			}
 
 			// 文件位置
-			const fileDiv = tooltip.createDiv('tooltip-file');
-			fileDiv.createEl('span', { text: `📄 ${task.fileName}:${task.lineNumber}`, cls: 'tooltip-file-location' });
+			const fileDiv = tooltip.createDiv('gc-task-tooltip__file');
+			fileDiv.createEl('span', { text: `📄 ${task.fileName}:${task.lineNumber}`, cls: 'gc-task-tooltip__file-location' });
 
 			// 定位悬浮提示
 			const rect = taskItem.getBoundingClientRect();
@@ -324,7 +324,7 @@ export abstract class BaseCalendarRenderer {
 			setTimeout(() => {
 				if (tooltip) {
 					tooltip.style.opacity = '1';
-					tooltip.addClass('tooltip-show');
+					tooltip.addClass('gc-task-tooltip--visible');
 				}
 			}, 10);
 		};
@@ -332,7 +332,7 @@ export abstract class BaseCalendarRenderer {
 		const hideTooltip = () => {
 			hideTimeout = window.setTimeout(() => {
 				if (tooltip) {
-					tooltip.removeClass('tooltip-show');
+					tooltip.removeClass('gc-task-tooltip--visible');
 					tooltip.style.opacity = '0';
 
 					setTimeout(() => {
@@ -426,7 +426,7 @@ export abstract class BaseCalendarRenderer {
 			if (m.type === 'obsidian') {
 				const notePath = m.groups[1]; // [[note]] 中的 note
 				const displayText = m.groups[2] || notePath; // 优先使用别名
-				const link = container.createEl('a', { text: displayText, cls: 'gantt-task-link obsidian-link' });
+				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--obsidian' });
 				link.setAttr('data-href', notePath);
 				link.setAttr('title', `打开：${notePath}`);
 				link.href = 'javascript:void(0)';
@@ -443,7 +443,7 @@ export abstract class BaseCalendarRenderer {
 			} else if (m.type === 'markdown') {
 				const displayText = m.groups[1]; // [text]
 				const url = m.groups[2]; // (url)
-				const link = container.createEl('a', { text: displayText, cls: 'gantt-task-link markdown-link' });
+				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--markdown' });
 				link.href = url;
 				link.setAttr('target', '_blank');
 				link.setAttr('rel', 'noopener noreferrer');
@@ -453,7 +453,7 @@ export abstract class BaseCalendarRenderer {
 				});
 			} else if (m.type === 'url') {
 				const url = m.groups[1]; // 完整URL
-				const link = container.createEl('a', { text: url, cls: 'gantt-task-link url-link' });
+				const link = container.createEl('a', { text: url, cls: 'gc-link gc-link--url' });
 				link.href = url;
 				link.setAttr('target', '_blank');
 				link.setAttr('rel', 'noopener noreferrer');
@@ -483,17 +483,17 @@ export abstract class BaseCalendarRenderer {
 			return;
 		}
 
-		const tagsContainer = container.createDiv('gantt-task-tags-inline');
+		const tagsContainer = container.createDiv('gc-task-card__tags');
 
 		task.tags.forEach(tag => {
 			const tagEl = tagsContainer.createEl('span', {
 				text: `#${tag}`,
-				cls: 'gantt-tag-badge'
+				cls: 'gc-tag'
 			});
 
 			// 为不同标签分配不同颜色（基于hash）
 			const colorIndex = this.getStringHashCode(tag) % 6;
-			tagEl.addClass(`tag-color-${colorIndex}`);
+			tagEl.addClass(`gc-tag--color-${colorIndex}`);
 		});
 	}
 

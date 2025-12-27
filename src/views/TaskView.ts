@@ -89,9 +89,9 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 
 	render(container: HTMLElement, currentDate: Date): void {
 		// 在 calendar-content 内创建子容器作为任务视图根节点
-		const taskRoot = container.createDiv('calendar-task-view');
+		const taskRoot = container.createDiv('gc-view gc-view--list');
 
-		const listContainer = taskRoot.createDiv('task-view-list');
+		const listContainer = taskRoot.createDiv('gc-view--list .gc-list-view__list');
 
 		this.loadTaskList(listContainer);
 	}
@@ -188,8 +188,8 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 		const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
 		const displayText = this.plugin?.settings?.showGlobalFilterInTaskText && gf ? `${gf} ${cleaned}` : cleaned;
 		
-		// 使用富文本渲染支持链接
-		const taskTextEl = taskItem.createDiv('gantt-task-text');
+		// 使用富文本渲染支持链接（统一文本类名）
+		const taskTextEl = taskItem.createDiv('gc-task-card__text');
 		if (this.plugin?.settings?.showGlobalFilterInTaskText && gf) {
 			taskTextEl.appendText(gf + ' ');
 		}
@@ -198,52 +198,52 @@ export class TaskViewRenderer extends BaseCalendarRenderer {
 		// 渲染标签（在描述之后、优先级之前）
 		this.renderTaskTags(task, taskItem);
 
-		// 优先级标记
+		// 优先级标记（统一优先级类名）
 		if (task.priority) {
 			const priorityIcon = this.getPriorityIcon(task.priority);
-			const priorityEl = taskItem.createDiv('gantt-task-priority-inline');
-			priorityEl.createEl('span', { text: priorityIcon, cls: `gantt-priority-badge priority-${task.priority}` });
+			const priorityEl = taskItem.createDiv('gc-task-card__priority');
+			priorityEl.createEl('span', { text: priorityIcon, cls: `gc-task-card__priority-badge priority-${task.priority}` });
 		}
 
-		// 时间属性
-		const timePropertiesEl = taskItem.createDiv('gantt-task-time-properties-inline');
+		// 时间属性（统一类名）
+		const timePropertiesEl = taskItem.createDiv('gc-task-card__times');
 
 		if (task.createdDate) {
-			timePropertiesEl.createEl('span', { text: `创建:${this.formatDateForDisplay(task.createdDate)}`, cls: 'gantt-time-badge gantt-time-created' });
+			timePropertiesEl.createEl('span', { text: `创建:${this.formatDateForDisplay(task.createdDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--created' });
 		}
 
 		if (task.startDate) {
-			timePropertiesEl.createEl('span', { text: `开始:${this.formatDateForDisplay(task.startDate)}`, cls: 'gantt-time-badge gantt-time-start' });
+			timePropertiesEl.createEl('span', { text: `开始:${this.formatDateForDisplay(task.startDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--start' });
 		}
 
 		if (task.scheduledDate) {
-			timePropertiesEl.createEl('span', { text: `计划:${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'gantt-time-badge gantt-time-scheduled' });
+			timePropertiesEl.createEl('span', { text: `计划:${this.formatDateForDisplay(task.scheduledDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--scheduled' });
 		}
 
 		if (task.dueDate) {
-			const dueEl = taskItem.createEl('span', { text: `截止:${this.formatDateForDisplay(task.dueDate)}`, cls: 'gantt-time-badge gantt-time-due' });
+			const dueEl = taskItem.createEl('span', { text: `截止:${this.formatDateForDisplay(task.dueDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--due' });
 			if (task.dueDate < new Date() && !task.completed) {
-				dueEl.addClass('gantt-overdue');
+				dueEl.addClass('gc-task-card__time-badge--overdue');
 			}
 			timePropertiesEl.appendChild(dueEl);
 		}
 
 		if (task.cancelledDate) {
-			timePropertiesEl.createEl('span', { text: `取消:${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'gantt-time-badge gantt-time-cancelled' });
+			timePropertiesEl.createEl('span', { text: `取消:${this.formatDateForDisplay(task.cancelledDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--cancelled' });
 		}
 
 		if (task.completionDate) {
-			timePropertiesEl.createEl('span', { text: `完成:${this.formatDateForDisplay(task.completionDate)}`, cls: 'gantt-time-badge gantt-time-completion' });
+			timePropertiesEl.createEl('span', { text: `完成:${this.formatDateForDisplay(task.completionDate)}`, cls: 'gc-task-card__time-badge gc-task-card__time-badge--completion' });
 		}
 
-		// 文件位置
-		taskItem.createEl('span', { text: `${task.fileName}:${task.lineNumber}`, cls: 'gantt-task-file' });
+		// 文件位置（统一类名）
+		taskItem.createEl('span', { text: `${task.fileName}:${task.lineNumber}`, cls: 'gc-task-card__file' });
 
-		// 警告图标
+		// 警告图标（统一类名）
 		if (task.warning) {
 			taskItem.createEl('span', {
 				text: '⚠️',
-				cls: 'gantt-task-warning-icon',
+				cls: 'gc-task-card__warning',
 				attr: { title: task.warning }
 			});
 		}

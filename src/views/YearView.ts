@@ -28,10 +28,10 @@ export class YearViewRenderer extends BaseCalendarRenderer {
 			countsMap.set(key, (countsMap.get(key) || 0) + 1);
 		}
 
-		const yearContainer = container.createDiv('calendar-year-container');
+		const yearContainer = container.createDiv('gc-view gc-view--year');
 		this.yearContainer = yearContainer;
 
-		const monthsGrid = yearContainer.createDiv('calendar-months-grid');
+		const monthsGrid = yearContainer.createDiv('gc-year-view__months');
 
 		for (let month = 1; month <= 12; month++) {
 			const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));

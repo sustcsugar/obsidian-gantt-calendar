@@ -12,7 +12,7 @@ export class MonthViewRenderer extends BaseCalendarRenderer {
 		const month = currentDate.getMonth() + 1;
 		const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));
 
-		const monthContainer = container.createDiv('calendar-month-view');
+		const monthContainer = container.createDiv('gc-view gc-view--month');
 
 		// 星期标签
 		const weekdaysDiv = monthContainer.createDiv('calendar-month-weekdays');
@@ -136,8 +136,8 @@ export class MonthViewRenderer extends BaseCalendarRenderer {
 
 		const cleaned = task.description;
 
-		// 使用富文本渲染支持链接
-		const taskTextEl = taskItem.createDiv('calendar-task-card-text');
+		// 使用富文本渲染支持链接（统一文本类名）
+		const taskTextEl = taskItem.createDiv('gc-task-card__text');
 		this.renderTaskDescriptionWithLinks(taskTextEl, cleaned);
 
 		// 渲染标签
