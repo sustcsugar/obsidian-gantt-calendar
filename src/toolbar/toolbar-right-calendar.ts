@@ -9,8 +9,10 @@ import type { WeekViewRenderer } from '../views/WeekView';
 
 /**
  * 工具栏右侧区域 - 日历视图功能区
- * 负责渲染导航按钮（上一期/今天/下一期）、视图切换（日/周/月/年）和刷新按钮
- * 日视图和周视图额外显示排序按钮
+ *
+ * 按钮布局顺序：
+ * 日视图/周视图：[排序] | [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [日/周/月/年] | [刷新]
+ * 年视图/月视图：[标签筛选] | [◀ 上一期] [今天] [下一期▶] | [日/周/月/年] | [刷新]
  */
 export class ToolbarRightCalendar {
 	private dayRenderer?: DayViewRenderer;
@@ -49,24 +51,9 @@ export class ToolbarRightCalendar {
 		container.empty();
 		container.addClass('calendar-toolbar-right');
 
-		// 导航按钮组 - 使用新组件
-		renderNavButtons(container, {
-			onPrevious,
-			onToday,
-			onNext,
-			containerClass: 'calendar-nav-buttons',
-			buttonClass: 'calendar-nav-compact-btn'
-		});
+		// ===== 左侧：筛选和排序按钮 =====
 
-		// 视图选择器（日/周/月/年） - 使用新组件
-		this.viewSwitcherInstance = renderCalendarViewSwitcher(container, {
-			currentView: currentViewType as 'year' | 'month' | 'week' | 'day',
-			onViewChange: (view) => onViewSwitch(view as CalendarViewType),
-			containerClass: 'calendar-view-selector',
-			buttonClass: 'calendar-view-compact-btn'
-		});
-
-		// 日视图和周视图显示排序按钮
+		// 排序按钮（仅在日视图和周视图显示）
 		if ((currentViewType === 'day' || currentViewType === 'week') && onRefresh) {
 			const getRenderer = () => currentViewType === 'day' ? this.dayRenderer : this.weekRenderer;
 			if (getRenderer()) {
@@ -80,10 +67,7 @@ export class ToolbarRightCalendar {
 			}
 		}
 
-		// 刷新按钮（共享）
-		renderRefreshButton(container, onRefresh, '刷新任务');
-
-		// 标签筛选按钮
+		// 标签筛选按钮（所有视图共有）
 		if (plugin?.taskCache) {
 			const getRenderer = () => {
 				if (currentViewType === 'day') return this.dayRenderer;
@@ -101,6 +85,30 @@ export class ToolbarRightCalendar {
 				getAllTasks: () => plugin.taskCache.getAllTasks()
 			});
 		}
+
+		// ===== 中间：导航和视图切换 =====
+
+		// 导航按钮组（日历视图）
+		renderNavButtons(container, {
+			onPrevious,
+			onToday,
+			onNext,
+			containerClass: 'calendar-nav-buttons',
+			buttonClass: 'calendar-nav-compact-btn'
+		});
+
+		// 视图选择器（日/周/月/年）
+		this.viewSwitcherInstance = renderCalendarViewSwitcher(container, {
+			currentView: currentViewType as 'year' | 'month' | 'week' | 'day',
+			onViewChange: (view) => onViewSwitch(view as CalendarViewType),
+			containerClass: 'calendar-view-selector',
+			buttonClass: 'calendar-view-compact-btn'
+		});
+
+		// ===== 右侧：刷新按钮 =====
+
+		// 刷新按钮（所有视图共有，始终在最右边）
+		renderRefreshButton(container, onRefresh, '刷新任务');
 	}
 
 	/**

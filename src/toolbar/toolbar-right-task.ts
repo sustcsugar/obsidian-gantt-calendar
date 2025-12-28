@@ -10,7 +10,12 @@ import type { DateFieldType } from './components/field-selector';
 
 /**
  * 工具栏右侧区域 - 任务视图功能区
- * 负责渲染全局筛选状态、状态筛选、时间筛选和刷新按钮
+ *
+ * 按钮布局顺序：
+ * 左侧（私有）：[状态筛选] | [字段筛选] | [日期范围]
+ * 右侧（共有）：[排序] | [标签筛选] | [刷新]
+ *
+ * 这样设计确保切换视图时共有按钮位置不变，避免跳动
  */
 export class ToolbarRightTask {
 	// 记录前一个按钮状态，用于清除日期输入后恢复
@@ -38,13 +43,15 @@ export class ToolbarRightTask {
 		container.empty();
 		container.addClass('toolbar-right-task');
 
-		// 状态筛选 - 使用共享模块
+		// ===== 左侧：任务视图私有按钮 =====
+
+		// 状态筛选
 		renderStatusFilter(container, taskRenderer.getTaskFilter(), (value) => {
 			taskRenderer.setTaskFilter(value);
 			onFilterChange();
 		});
 
-		// 字段筛选 - 使用新组件
+		// 字段筛选
 		this.fieldSelectorInstance = renderFieldSelector(container, {
 			currentField: taskRenderer.getTimeFilterField(),
 			onFieldChange: (field) => {
@@ -57,7 +64,7 @@ export class ToolbarRightTask {
 			selectClass: 'toolbar-right-task-field-select'
 		});
 
-		// 日期筛选组 - 使用新组件
+		// 日期筛选组
 		this.dateRangeFilterInstance = renderDateRangeFilter(container, {
 			currentState: {
 				type: taskRenderer.getDateRangeMode(),
@@ -80,6 +87,8 @@ export class ToolbarRightTask {
 			labelText: '日期'
 		});
 
+		// ===== 右侧：共有按钮（统一顺序） =====
+
 		// 排序按钮
 		renderSortButton(container, {
 			getCurrentState: () => taskRenderer.getSortState(),
@@ -101,7 +110,7 @@ export class ToolbarRightTask {
 			});
 		}
 
-		// 刷新按钮（共享）
+		// 刷新按钮（所有视图共有，始终在最右边）
 		renderRefreshButton(container, onRefresh, '刷新任务');
 	}
 

@@ -8,6 +8,12 @@ import { renderDualFieldSelector, type DateFieldType } from './components/field-
 
 /**
  * 工具栏右侧区域 - 甘特视图功能区
+ *
+ * 按钮布局顺序：
+ * 左侧（私有）：[时间颗粒度] | [开始时间字段] | [结束时间字段] | [状态筛选]
+ * 右侧（共有）：[排序] | [标签筛选] | [刷新]
+ *
+ * 这样设计确保切换视图时共有按钮位置不变，避免跳动
  */
 export class ToolbarRightGantt {
 	private dualFieldSelectorInstance?: {
@@ -25,6 +31,8 @@ export class ToolbarRightGantt {
 		container.empty();
 		container.addClass('toolbar-right-gantt');
 
+		// ===== 左侧：甘特图视图私有按钮 =====
+
 		// 时间颗粒度选择按钮
 		renderTimeGranularity(
 			container,
@@ -32,7 +40,7 @@ export class ToolbarRightGantt {
 				current: ganttRenderer.getTimeGranularity(),
 				onChange: (granularity) => {
 					ganttRenderer.setTimeGranularity(granularity);
-					onRefresh(); // 切换颗粒度后刷新视图
+					onRefresh();
 				},
 			},
 			() => {
@@ -40,7 +48,7 @@ export class ToolbarRightGantt {
 			}
 		);
 
-		// 时间字段选择 - 使用新组件（双字段选择器）
+		// 时间字段选择（开始/结束）
 		this.dualFieldSelectorInstance = renderDualFieldSelector(container, {
 			startField: ganttRenderer.getStartField() as DateFieldType,
 			endField: ganttRenderer.getEndField() as DateFieldType,
@@ -52,11 +60,13 @@ export class ToolbarRightGantt {
 			}
 		});
 
-		// 状态筛选（复用模块）
+		// 状态筛选
 		renderStatusFilter(container, ganttRenderer.getStatusFilter(), async (v) => {
 			ganttRenderer.setStatusFilter(v);
 			await onRefresh();
 		});
+
+		// ===== 右侧：共有按钮（统一顺序） =====
 
 		// 排序按钮
 		renderSortButton(container, {
@@ -66,9 +76,6 @@ export class ToolbarRightGantt {
 				await onRefresh();
 			}
 		});
-
-		// 刷新按钮（共享）
-		renderRefreshButton(container, onRefresh, '刷新甘特图');
 
 		// 标签筛选按钮
 		if (plugin?.taskCache) {
@@ -81,6 +88,9 @@ export class ToolbarRightGantt {
 				getAllTasks: () => plugin.taskCache.getAllTasks()
 			});
 		}
+
+		// 刷新按钮（所有视图共有，始终在最右边）
+		renderRefreshButton(container, onRefresh, '刷新甘特图');
 	}
 
 	/**
