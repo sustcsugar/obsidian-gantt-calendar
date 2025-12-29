@@ -2971,3 +2971,244 @@ Author: sugar
 		padding: 1px 3px;
 	}
 }
+
+/* ============================================
+   Frappe Gantt 集成样式
+   ============================================ */
+
+/* 甘特图容器 */
+.gantt-chart-container {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.frappe-gantt-root {
+	flex: 1 1 auto;
+	min-height: 400px;
+	position: relative;
+	overflow: auto;
+	background-color: var(--background-primary);
+	border-radius: 8px;
+	padding: 16px;
+}
+
+/* Frappe Gantt 基础样式覆盖 */
+.frappe-gantt-container {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.frappe-gantt-svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* 甘特图网格 */
+.gantt-grid line {
+	stroke: var(--background-modifier-border);
+	stroke-width: 1;
+}
+
+/* 甘特图任务条 */
+.gantt-bar-group rect {
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+
+.gantt-bar-group:hover rect {
+	opacity: 1;
+	filter: brightness(1.1);
+}
+
+/* 任务状态颜色 */
+.gantt-bar-group .task-completed {
+	fill: var(--task-completed-color, #52c41a);
+}
+
+.gantt-bar-group .task-cancelled {
+	fill: var(--text-muted, #999);
+	opacity: 0.5;
+}
+
+/* 优先级颜色 */
+.gantt-bar-group .priority-highest {
+	fill: var(--priority-highest-color, #ef4444);
+}
+
+.gantt-bar-group .priority-high {
+	fill: var(--priority-high-color, #f97316);
+}
+
+.gantt-bar-group .priority-medium {
+	fill: var(--priority-medium-color, #eab308);
+}
+
+.gantt-bar-group .priority-low {
+	fill: var(--priority-low-color, #22c55e);
+}
+
+.gantt-bar-group .priority-lowest {
+	fill: var(--priority-lowest-color, #3b82f6);
+}
+
+/* 任务标签文字 */
+.gantt-bar-group text {
+	font-family: var(--font-ui-medium);
+	-webkit-user-select: none;
+	user-select: none;
+	pointer-events: none;
+}
+
+/* 空状态 */
+.gantt-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	text-align: center;
+	color: var(--text-muted);
+}
+
+.gantt-empty-icon {
+	font-size: 48px;
+	margin-bottom: 16px;
+	opacity: 0.5;
+}
+
+.gantt-empty-title {
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 8px;
+}
+
+.gantt-empty-reason {
+	font-size: 14px;
+	color: var(--text-muted);
+	margin-bottom: 4px;
+}
+
+.gantt-empty-hint {
+	font-size: 12px;
+	color: var(--text-faint);
+}
+
+/* 错误状态 */
+.gantt-error {
+	padding: 16px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--text-error);
+	border-radius: 8px;
+	color: var(--text-error);
+	text-align: center;
+}
+
+/* 控制面板 */
+.gantt-control-panel {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 16px;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+	margin-bottom: 12px;
+}
+
+.gantt-stats {
+	display: flex;
+	gap: 16px;
+	align-items: center;
+}
+
+.gantt-stat-item {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.gantt-stat-item strong {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+/* 自定义弹窗 */
+.gantt-popup {
+	min-width: 200px;
+	max-width: 300px;
+	padding: 12px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.gc-tag--popup {
+	display: inline-block;
+	padding: 2px 6px;
+	margin-right: 4px;
+	margin-bottom: 4px;
+	background-color: var(--tag-background);
+	color: var(--tag-color);
+	border-radius: 4px;
+	font-size: 11px;
+}
+
+/* 日期头部样式 */
+.gantt-date-header {
+	font-size: 11px;
+	fill: var(--text-muted);
+}
+
+.gantt-date-header.today {
+	font-weight: 600;
+	fill: var(--interactive-accent);
+}
+
+/* 今天标记线 */
+.gantt-today-line {
+	stroke: var(--interactive-accent);
+	stroke-width: 2;
+	stroke-dasharray: 4 2;
+	pointer-events: none;
+}
+
+/* 依赖箭头 */
+.gantt-dependency-arrow {
+	stroke: var(--text-muted);
+	stroke-width: 1.5;
+	fill: none;
+	pointer-events: none;
+}
+
+.gantt-dependency-arrow:hover {
+	stroke: var(--interactive-accent);
+	stroke-width: 2;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+	.frappe-gantt-root {
+		min-height: 300px;
+		padding: 8px;
+	}
+
+	.gantt-control-panel {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.gantt-stats {
+		flex-direction: column;
+		gap: 4px;
+		align-items: flex-start;
+	}
+}
