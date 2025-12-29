@@ -45,6 +45,7 @@ export class SvgGanttRenderer {
 	private tasks: FrappeTask[] = [];
 	private container: HTMLElement;
 	private plugin: any;
+	private app: any;  // Obsidian App 实例
 	private originalTasks: GanttTask[] = [];  // 原始任务列表（用于 tooltip）
 
 	// 尺寸相关
@@ -74,11 +75,12 @@ export class SvgGanttRenderer {
 	private onDateChange?: (task: FrappeTask, start: Date, end: Date) => void;
 	private onProgressChange?: (task: FrappeTask, progress: number) => void;
 
-	constructor(container: HTMLElement, config: FrappeGanttConfig, plugin: any, originalTasks: GanttTask[] = []) {
+	constructor(container: HTMLElement, config: FrappeGanttConfig, plugin: any, originalTasks: GanttTask[] = [], app: any = null) {
 		this.container = container;
 		this.config = config;
 		this.plugin = plugin;
 		this.originalTasks = originalTasks;
+		this.app = app || plugin?.app;
 
 		// 从配置读取尺寸
 		this.headerHeight = config.header_height ?? 50;
@@ -434,13 +436,14 @@ export class SvgGanttRenderer {
 
 		// 绘制任务名称
 		this.tasks.forEach((task, index) => {
-			const y = index * this.rowHeight + this.rowHeight / 2 + 5;
+			const y = index * this.rowHeight;
+			const textY = y + this.rowHeight / 2;
 
 			// 行背景（偶数行添加背景色）
 			if (index % 2 === 0) {
 				const rowBg = document.createElementNS(ns, 'rect');
 				rowBg.setAttribute('x', '0');
-				rowBg.setAttribute('y', String(index * this.rowHeight));
+				rowBg.setAttribute('y', String(y));
 				rowBg.setAttribute('width', String(width));
 				rowBg.setAttribute('height', String(this.rowHeight));
 				rowBg.setAttribute('fill', 'var(--background-secondary)');
@@ -448,16 +451,37 @@ export class SvgGanttRenderer {
 				svg.appendChild(rowBg);
 			}
 
-			// 任务名称文本
-			const text = document.createElementNS(ns, 'text');
-			text.setAttribute('x', String(this.padding));
-			text.setAttribute('y', String(y));
-			text.setAttribute('font-size', '12');
-			text.setAttribute('fill', 'var(--text-normal)');
-			text.setAttribute('text-anchor', 'start');  // 左对齐
-			text.style.whiteSpace = 'nowrap';  // 不换行
-			text.textContent = task.name;  // 显示完整任务描述
-			svg.appendChild(text);
+			// 使用 foreignObject 渲染富文本任务描述
+			const foreignObj = document.createElementNS(ns, 'foreignObject');
+			foreignObj.setAttribute('x', String(this.padding));
+			foreignObj.setAttribute('y', String(y));
+			foreignObj.setAttribute('width', String(width - this.padding * 2));
+			foreignObj.setAttribute('height', String(this.rowHeight));
+
+			// 创建 HTML 内容容器
+			const contentDiv = document.createElement('div');
+			contentDiv.className = 'gantt-task-list-item';
+			contentDiv.style.cssText = `
+				display: flex;
+				align-items: center;
+				height: 100%;
+				font-size: 12px;
+				color: var(--text-normal);
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				padding: 0;
+			`;
+
+			// 查找原始任务以获取完整描述
+			const originalTask = this.findOriginalTask(task);
+			const description = originalTask?.description || task.name;
+
+			// 使用富文本渲染（支持链接）
+			this.renderTaskDescriptionWithLinks(contentDiv, description);
+
+			foreignObj.appendChild(contentDiv);
+			svg.appendChild(foreignObj);
 
 			// 分隔线
 			const line = document.createElementNS(ns, 'line');
@@ -469,6 +493,100 @@ export class SvgGanttRenderer {
 			line.setAttribute('stroke-width', '0.5');
 			svg.appendChild(line);
 		});
+	}
+
+	/**
+	 * 渲染任务描述为富文本（包含可点击的链接）
+	 * 支持与 BaseCalendarRenderer 相同的链接格式
+	 */
+	private renderTaskDescriptionWithLinks(container: HTMLElement, text: string): void {
+		// Obsidian 双向链接：[[note]] 或 [[note|alias]]
+		const obsidianLinkRegex = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+		// Markdown 链接：[text](url)
+		const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+		// 网址链接：http://example.com 或 https://example.com
+		const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+		// 分割文本并处理链接
+		let lastIndex = 0;
+		const matches: Array<{ type: 'obsidian' | 'markdown' | 'url'; start: number; end: number; groups: RegExpExecArray }> = [];
+
+		// 收集所有匹配
+		let match;
+		const textLower = text;
+
+		// 收集 Obsidian 链接
+		while ((match = obsidianLinkRegex.exec(textLower)) !== null) {
+			matches.push({ type: 'obsidian', start: match.index, end: match.index + match[0].length, groups: match });
+		}
+
+		// 收集 Markdown 链接
+		while ((match = markdownLinkRegex.exec(textLower)) !== null) {
+			matches.push({ type: 'markdown', start: match.index, end: match.index + match[0].length, groups: match });
+		}
+
+		// 收集网址链接
+		while ((match = urlRegex.exec(textLower)) !== null) {
+			matches.push({ type: 'url', start: match.index, end: match.index + match[0].length, groups: match });
+		}
+
+		// 按位置排序并去重重叠
+		matches.sort((a, b) => a.start - b.start);
+		const uniqueMatches = [];
+		let lastEnd = 0;
+		for (const m of matches) {
+			if (m.start >= lastEnd) {
+				uniqueMatches.push(m);
+				lastEnd = m.end;
+			}
+		}
+
+		// 渲染文本和链接
+		lastIndex = 0;
+		for (const m of uniqueMatches) {
+			// 添加前面的普通文本
+			if (m.start > lastIndex) {
+				container.appendText(text.substring(lastIndex, m.start));
+			}
+
+			// 添加链接
+			if (m.type === 'obsidian') {
+				const notePath = m.groups[1];
+				const displayText = m.groups[2] || notePath;
+				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--obsidian' });
+				link.setAttr('data-href', notePath);
+				link.href = 'javascript:void(0)';
+				link.addEventListener('click', async (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					// 尝试打开文件
+					const file = this.app.metadataCache.getFirstLinkpathDest(notePath, '');
+					if (file) {
+						this.app.workspace.openLinkText(notePath, '');
+					}
+				});
+			} else if (m.type === 'markdown') {
+				const displayText = m.groups[1];
+				const url = m.groups[2];
+				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--markdown' });
+				link.href = url;
+				link.setAttr('target', '_blank');
+				link.setAttr('rel', 'noopener noreferrer');
+			} else if (m.type === 'url') {
+				const url = m.groups[1];
+				const link = container.createEl('a', { text: url, cls: 'gc-link gc-link--url' });
+				link.href = url;
+				link.setAttr('target', '_blank');
+				link.setAttr('rel', 'noopener noreferrer');
+			}
+
+			lastIndex = m.end;
+		}
+
+		// 添加剩余的普通文本
+		if (lastIndex < text.length) {
+			container.appendText(text.substring(lastIndex));
+		}
 	}
 
 	/**

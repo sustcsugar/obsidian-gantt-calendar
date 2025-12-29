@@ -19,6 +19,7 @@ export class FrappeGanttWrapper {
 	private config: FrappeGanttConfig;
 	private isInitialized = false;
 	private plugin: any;
+	private app: any;  // Obsidian App 实例
 	private originalTasks: GanttTask[] = [];
 
 	/**
@@ -32,6 +33,7 @@ export class FrappeGanttWrapper {
 	constructor(container: HTMLElement, config: FrappeGanttConfig, plugin: any, originalTasks: GanttTask[] = []) {
 		this.container = container;
 		this.plugin = plugin;
+		this.app = plugin?.app;
 		this.originalTasks = originalTasks;
 		this.config = {
 			...config,
@@ -58,8 +60,8 @@ export class FrappeGanttWrapper {
 		}
 
 		try {
-			// 创建 SVG 渲染器（传递 plugin 和原始任务列表）
-			this.renderer = new SvgGanttRenderer(this.container, this.config, this.plugin, this.originalTasks);
+			// 创建 SVG 渲染器（传递 plugin、原始任务列表和 app）
+			this.renderer = new SvgGanttRenderer(this.container, this.config, this.plugin, this.originalTasks, this.app);
 
 			// 设置事件处理器
 			this.renderer.setEventHandlers({
