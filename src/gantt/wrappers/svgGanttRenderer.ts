@@ -449,15 +449,8 @@ export class SvgGanttRenderer {
 			text.setAttribute('font-size', '12');
 			text.setAttribute('fill', 'var(--text-normal)');
 			text.setAttribute('text-anchor', 'start');  // 左对齐
-
-			// 截断长文本
-			const maxWidth = width - this.padding * 2 - 10;
-			const maxChars = Math.floor(maxWidth / 7); // 假设每个字符约7px宽
-			const displayName = task.name.length > maxChars
-				? task.name.substring(0, maxChars) + '...'
-				: task.name;
-
-			text.textContent = displayName;
+			text.style.whiteSpace = 'nowrap';  // 不换行
+			text.textContent = task.name;  // 显示完整任务描述
 			svg.appendChild(text);
 
 			// 分隔线
