@@ -50,6 +50,10 @@ export class SvgGanttRenderer {
 	private taskColumnWidth = 200;  // 任务列宽度
 	private padding = 18;
 
+	// 日期范围（用于滚动到今天）
+	private minDate: Date | null = null;
+	private totalDays = 0;
+
 	// 布局容器
 	private ganttLayout: HTMLElement | null = null;
 	private headerContainer: HTMLElement | null = null;
@@ -123,6 +127,10 @@ export class SvgGanttRenderer {
 		// 计算日期范围
 		const { minDate, maxDate, totalDays } = this.calculateDateRange();
 
+		// 保存日期范围信息（用于滚动到今天）
+		this.minDate = minDate;
+		this.totalDays = totalDays;
+
 		// 计算尺寸
 		const ganttWidth = totalDays * this.columnWidth + this.padding * 2;
 		const ganttHeight = this.headerHeight + this.tasks.length * this.rowHeight + this.padding * 2;
@@ -167,7 +175,7 @@ export class SvgGanttRenderer {
 		this.ganttSvg = this.createSvgElement(
 			this.ganttContainer,
 			ganttWidth,
-			ganttHeight - this.headerHeight,
+			ganttHeight,  // 使用完整高度以保持y坐标系统一致
 			GanttClasses.elements.chartSvg
 		);
 		this.renderGanttChart(this.ganttSvg, minDate, totalDays, ganttHeight);
@@ -229,14 +237,48 @@ export class SvgGanttRenderer {
 	private setupSyncScrolling(): void {
 		if (!this.headerContainer || !this.taskListContainer || !this.ganttContainer) return;
 
-		// 水平滚动同步：甘特图 <-> 时间轴
 		const headerContainer = this.headerContainer;
 		const taskListContainer = this.taskListContainer;
 		const ganttContainer = this.ganttContainer;
 
+		// 使用标志位防止循环触发
+		let isSyncing = false;
+
+		// chart 容器滚动 → 同步到 header 和 tasklist
 		ganttContainer.addEventListener('scroll', () => {
+			if (isSyncing) return;
+			isSyncing = true;
+
 			headerContainer.scrollLeft = ganttContainer.scrollLeft;
 			taskListContainer.scrollTop = ganttContainer.scrollTop;
+
+			requestAnimationFrame(() => {
+				isSyncing = false;
+			});
+		});
+
+		// header 容器滚动 → 同步到 chart
+		headerContainer.addEventListener('scroll', () => {
+			if (isSyncing) return;
+			isSyncing = true;
+
+			ganttContainer.scrollLeft = headerContainer.scrollLeft;
+
+			requestAnimationFrame(() => {
+				isSyncing = false;
+			});
+		});
+
+		// tasklist 容器滚动 → 同步到 chart
+		taskListContainer.addEventListener('scroll', () => {
+			if (isSyncing) return;
+			isSyncing = true;
+
+			ganttContainer.scrollTop = taskListContainer.scrollTop;
+
+			requestAnimationFrame(() => {
+				isSyncing = false;
+			});
 		});
 	}
 
@@ -280,24 +322,24 @@ export class SvgGanttRenderer {
 		const ns = 'http://www.w3.org/2000/svg';
 		const width = this.taskColumnWidth;
 
-		// 背景
+		// 背景 - 只需要任务区域的高度
 		const bg = document.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
 		bg.setAttribute('y', '0');
 		bg.setAttribute('width', String(width));
-		bg.setAttribute('height', String(this.headerHeight + this.tasks.length * this.rowHeight));
+		bg.setAttribute('height', String(this.tasks.length * this.rowHeight));
 		bg.setAttribute('fill', 'var(--background-primary)');
 		svg.appendChild(bg);
 
 		// 绘制任务名称
 		this.tasks.forEach((task, index) => {
-			const y = this.headerHeight + index * this.rowHeight + this.rowHeight / 2 + 5;
+			const y = index * this.rowHeight + this.rowHeight / 2 + 5;
 
 			// 行背景（偶数行添加背景色）
 			if (index % 2 === 0) {
 				const rowBg = document.createElementNS(ns, 'rect');
 				rowBg.setAttribute('x', '0');
-				rowBg.setAttribute('y', String(this.headerHeight + index * this.rowHeight));
+				rowBg.setAttribute('y', String(index * this.rowHeight));
 				rowBg.setAttribute('width', String(width));
 				rowBg.setAttribute('height', String(this.rowHeight));
 				rowBg.setAttribute('fill', 'var(--background-secondary)');
@@ -325,9 +367,9 @@ export class SvgGanttRenderer {
 			// 分隔线
 			const line = document.createElementNS(ns, 'line');
 			line.setAttribute('x1', '0');
-			line.setAttribute('y1', String(this.headerHeight + (index + 1) * this.rowHeight));
+			line.setAttribute('y1', String((index + 1) * this.rowHeight));
 			line.setAttribute('x2', String(width));
-			line.setAttribute('y2', String(this.headerHeight + (index + 1) * this.rowHeight));
+			line.setAttribute('y2', String((index + 1) * this.rowHeight));
 			line.setAttribute('stroke', 'var(--background-modifier-border)');
 			line.setAttribute('stroke-width', '0.5');
 			svg.appendChild(line);
@@ -400,7 +442,7 @@ export class SvgGanttRenderer {
 		const width = totalDays * this.columnWidth + this.padding * 2;
 		const height = fullHeight - this.headerHeight;
 
-		// 背景
+		// 背景 - 从 y=0 开始
 		const bg = document.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
 		bg.setAttribute('y', '0');
@@ -530,7 +572,6 @@ export class SvgGanttRenderer {
 			line.setAttribute('stroke', 'var(--interactive-accent)');
 			line.setAttribute('stroke-width', '2');
 			line.setAttribute('stroke-dasharray', '4 2');
-			// 今天线不需要特殊类名，使用样式选择器即可
 
 			svg.appendChild(line);
 		}
@@ -684,6 +725,30 @@ export class SvgGanttRenderer {
 		const existing = document.querySelector(`.${GanttTooltipClasses.block}`);
 		if (existing) {
 			existing.remove();
+		}
+	}
+
+	/**
+	 * 滚动到今天
+	 */
+	scrollToToday(): void {
+		if (!this.ganttContainer || !this.minDate) return;
+
+		const today = new Date();
+		const daysDiff = Math.floor((today.getTime() - this.minDate.getTime()) / (24 * 60 * 60 * 1000));
+
+		if (daysDiff >= 0 && daysDiff <= this.totalDays) {
+			// 计算今天的 x 坐标
+			const todayX = this.padding + daysDiff * this.columnWidth + this.columnWidth / 2;
+
+			// 获取容器宽度
+			const containerWidth = this.ganttContainer.clientWidth;
+
+			// 滚动到使今天线居中的位置
+			const scrollLeft = todayX - containerWidth / 2;
+
+			// 设置滚动位置
+			this.ganttContainer.scrollLeft = Math.max(0, scrollLeft);
 		}
 	}
 

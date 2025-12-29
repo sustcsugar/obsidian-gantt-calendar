@@ -93,11 +93,9 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
 	 * 跳转到今天
 	 */
 	public jumpToToday(): void {
-		// Frappe Gantt 会自动显示今天的位置
-		// 这里可以添加滚动到今天的逻辑
 		if (this.ganttWrapper) {
-			// 刷新视图以确保今天标记正确
-			this.ganttWrapper.updateTasks(this.currentFrappeTasks);
+			// 滚动到今天的位置
+			this.ganttWrapper.scrollToToday();
 		}
 	}
 

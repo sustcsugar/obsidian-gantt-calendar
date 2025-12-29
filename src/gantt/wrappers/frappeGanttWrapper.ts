@@ -110,6 +110,15 @@ export class FrappeGanttWrapper {
 	}
 
 	/**
+	 * 滚动到今天
+	 */
+	scrollToToday(): void {
+		if (this.renderer) {
+			this.renderer.scrollToToday();
+		}
+	}
+
+	/**
 	 * 获取当前任务列表
 	 *
 	 * @returns 当前任务列表

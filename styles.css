@@ -3042,23 +3042,13 @@ Author: sugar
 	overflow-y: hidden;
 	border-bottom: 1px solid var(--background-modifier-border);
 	background-color: var(--background-secondary);
+	/* 隐藏滚动条但保留滚动功能 */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE 10+ */
 }
 
 .gc-gantt-view__header-container::-webkit-scrollbar {
-	height: 8px;
-}
-
-.gc-gantt-view__header-container::-webkit-scrollbar-track {
-	background: var(--background-primary);
-}
-
-.gc-gantt-view__header-container::-webkit-scrollbar-thumb {
-	background: var(--background-modifier-border);
-	border-radius: 4px;
-}
-
-.gc-gantt-view__header-container::-webkit-scrollbar-thumb:hover {
-	background: var(--text-muted);
+	display: none; /* Chrome, Safari, Opera */
 }
 
 .gc-gantt-view__header-svg {
@@ -3072,23 +3062,13 @@ Author: sugar
 	overflow-y: auto;
 	border-right: 1px solid var(--background-modifier-border);
 	background-color: var(--background-primary);
+	/* 隐藏滚动条但保留滚动功能 */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE 10+ */
 }
 
 .gc-gantt-view__tasklist-container::-webkit-scrollbar {
-	width: 8px;
-}
-
-.gc-gantt-view__tasklist-container::-webkit-scrollbar-track {
-	background: var(--background-primary);
-}
-
-.gc-gantt-view__tasklist-container::-webkit-scrollbar-thumb {
-	background: var(--background-modifier-border);
-	border-radius: 4px;
-}
-
-.gc-gantt-view__tasklist-container::-webkit-scrollbar-thumb:hover {
-	background: var(--text-muted);
+	display: none; /* Chrome, Safari, Opera */
 }
 
 .gc-gantt-view__tasklist-svg {
