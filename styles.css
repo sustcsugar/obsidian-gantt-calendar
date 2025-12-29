@@ -2973,7 +2973,8 @@ Author: sugar
 }
 
 /* ============================================
-   Frappe Gantt 集成样式
+   ============================================
+   甘特图样式 (BEM 规范)
    ============================================ */
 
 /* 甘特图容器 */
@@ -2983,86 +2984,233 @@ Author: sugar
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
+	width: 100%;
+	height: 100%;
 }
 
+/* 甘特图根容器 */
 .frappe-gantt-root {
 	flex: 1 1 auto;
-	min-height: 400px;
+	min-height: 500px;
+	min-width: 100%;
 	position: relative;
-	overflow: auto;
+	overflow: hidden;
 	background-color: var(--background-primary);
 	border-radius: 8px;
-	padding: 16px;
+	padding: 8px;
 }
 
-/* Frappe Gantt 基础样式覆盖 */
-.frappe-gantt-container {
+/* ============================================
+   BEM 布局结构
+   gantt__layout - 主布局容器
+   gantt__corner - 左上角空白区域
+   gantt__header-container - 顶部时间轴容器
+   gantt__tasklist-container - 左侧任务列表容器
+   gantt__chart-container - 右侧甘特图容器
+   ============================================ */
+
+/* 主布局容器 - 使用 Grid 布局实现冻结效果 */
+.gc-gantt-view__layout {
+	display: grid;
+	grid-template-columns: 200px 1fr;
+	grid-template-rows: 50px 1fr;
+	grid-template-areas:
+		"corner header"
+		"tasklist chart";
 	width: 100%;
 	height: 100%;
-	display: flex;
-	flex-direction: column;
+	gap: 0;
+	overflow: hidden;
 }
 
-.frappe-gantt-svg {
+/* 左上角空白区域 */
+.gc-gantt-view__corner {
+	grid-area: corner;
+	overflow: hidden;
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.gc-gantt-view__corner-svg {
 	display: block;
-	width: 100%;
-	height: 100%;
 }
+
+/* 顶部时间轴容器 */
+.gc-gantt-view__header-container {
+	grid-area: header;
+	overflow-x: auto;
+	overflow-y: hidden;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.gc-gantt-view__header-container::-webkit-scrollbar {
+	height: 8px;
+}
+
+.gc-gantt-view__header-container::-webkit-scrollbar-track {
+	background: var(--background-primary);
+}
+
+.gc-gantt-view__header-container::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.gc-gantt-view__header-container::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+.gc-gantt-view__header-svg {
+	display: block;
+}
+
+/* 左侧任务列表容器 */
+.gc-gantt-view__tasklist-container {
+	grid-area: tasklist;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-right: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+}
+
+.gc-gantt-view__tasklist-container::-webkit-scrollbar {
+	width: 8px;
+}
+
+.gc-gantt-view__tasklist-container::-webkit-scrollbar-track {
+	background: var(--background-primary);
+}
+
+.gc-gantt-view__tasklist-container::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.gc-gantt-view__tasklist-container::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+.gc-gantt-view__tasklist-svg {
+	display: block;
+}
+
+/* 右侧甘特图容器 */
+.gc-gantt-view__chart-container {
+	grid-area: chart;
+	overflow: auto;
+	background-color: var(--background-primary);
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar-track {
+	background: var(--background-primary);
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+.gc-gantt-view__chart-svg {
+	display: block;
+}
+
+/* ============================================
+   甘特图内部元素样式
+   ============================================ */
 
 /* 甘特图网格 */
-.gantt-grid line {
+.gc-gantt-view__grid line {
 	stroke: var(--background-modifier-border);
 	stroke-width: 1;
 }
 
 /* 甘特图任务条 */
-.gantt-bar-group rect {
+.gc-gantt-view__bar-group rect {
 	transition: all 0.15s ease;
 	cursor: pointer;
 }
 
-.gantt-bar-group:hover rect {
-	opacity: 1;
+.gc-gantt-view__bar-group:hover rect {
+	opacity: 1 !important;
 	filter: brightness(1.1);
 }
 
 /* 任务状态颜色 */
-.gantt-bar-group .task-completed {
+.gc-gantt-view__bar-group .task-completed {
 	fill: var(--task-completed-color, #52c41a);
 }
 
-.gantt-bar-group .task-cancelled {
+.gc-gantt-view__bar-group .task-cancelled {
 	fill: var(--text-muted, #999);
 	opacity: 0.5;
 }
 
 /* 优先级颜色 */
-.gantt-bar-group .priority-highest {
+.gc-gantt-view__bar-group .priority-highest {
 	fill: var(--priority-highest-color, #ef4444);
 }
 
-.gantt-bar-group .priority-high {
+.gc-gantt-view__bar-group .priority-high {
 	fill: var(--priority-high-color, #f97316);
 }
 
-.gantt-bar-group .priority-medium {
+.gc-gantt-view__bar-group .priority-medium {
 	fill: var(--priority-medium-color, #eab308);
 }
 
-.gantt-bar-group .priority-low {
+.gc-gantt-view__bar-group .priority-low {
 	fill: var(--priority-low-color, #22c55e);
 }
 
-.gantt-bar-group .priority-lowest {
+.gc-gantt-view__bar-group .priority-lowest {
 	fill: var(--priority-lowest-color, #3b82f6);
 }
 
+/* ============================================
+   其他甘特图样式
+   ============================================ */
+
 /* 任务标签文字 */
-.gantt-bar-group text {
+.gc-gantt-view__bar-group text {
 	font-family: var(--font-ui-medium);
 	-webkit-user-select: none;
 	user-select: none;
 	pointer-events: none;
+}
+
+/* 今天标记线 */
+.gantt-today-line {
+	stroke: var(--interactive-accent);
+	stroke-width: 2;
+	stroke-dasharray: 4 2;
+	pointer-events: none;
+}
+
+/* 自定义弹窗 */
+.gc-gantt-view-tooltip {
+	min-width: 200px;
+	max-width: 300px;
+	padding: 12px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.gc-gantt-view-tooltip strong {
+	color: var(--text-normal);
 }
 
 /* 空状态 */
@@ -3138,7 +3286,7 @@ Author: sugar
 }
 
 /* 自定义弹窗 */
-.gantt-popup {
+.gc-gantt-view-tooltip {
 	min-width: 200px;
 	max-width: 300px;
 	padding: 12px;

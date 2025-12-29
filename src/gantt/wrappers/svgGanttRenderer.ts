@@ -2,9 +2,18 @@
  * SVG 甘特图渲染器
  * 自研实现，参考 Frappe Gantt 设计
  * 完全控制渲染、交互和样式
+ *
+ * 布局结构：
+ * ┌────────────┬──────────────────────────────┐
+ * │ 空白区域   │ 时间轴（水平固定）           │
+ * ├────────────┼──────────────────────────────┤
+ * │ 任务列表   │ 甘特图（双向滚动）           │
+ * │ (垂直固定) │                              │
+ * └────────────┴──────────────────────────────┘
  */
 
 import type { FrappeTask, FrappeGanttConfig } from '../types';
+import { GanttClasses, GanttTooltipClasses } from '../../utils/bem';
 
 /**
  * SVG 元素辅助方法
@@ -24,7 +33,12 @@ function addSvgClass(element: Element, className: string): void {
  * 使用 SVG 绘制专业的甘特图
  */
 export class SvgGanttRenderer {
-	private svgElement: SVGSVGElement | null = null;
+	// 多个 SVG 元素
+	private headerSvg: SVGSVGElement | null = null;   // 时间轴
+	private taskListSvg: SVGSVGElement | null = null;  // 任务列表
+	private ganttSvg: SVGSVGElement | null = null;     // 甘特图主体
+	private cornerSvg: SVGSVGElement | null = null;    // 左上角空白
+
 	private config: FrappeGanttConfig;
 	private tasks: FrappeTask[] = [];
 	private container: HTMLElement;
@@ -33,7 +47,15 @@ export class SvgGanttRenderer {
 	private headerHeight = 50;
 	private rowHeight = 40;
 	private columnWidth = 50;
+	private taskColumnWidth = 200;  // 任务列宽度
 	private padding = 18;
+
+	// 布局容器
+	private ganttLayout: HTMLElement | null = null;
+	private headerContainer: HTMLElement | null = null;
+	private taskListContainer: HTMLElement | null = null;
+	private ganttContainer: HTMLElement | null = null;
+	private cornerContainer: HTMLElement | null = null;
 
 	// 事件回调
 	private onDateChange?: (task: FrappeTask, start: Date, end: Date) => void;
@@ -46,6 +68,7 @@ export class SvgGanttRenderer {
 		// 从配置读取尺寸
 		this.headerHeight = config.header_height ?? 50;
 		this.columnWidth = config.column_width ?? 50;
+		this.taskColumnWidth = 200;  // 固定任务列宽度
 		this.padding = config.padding ?? 18;
 	}
 
@@ -91,7 +114,7 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 主渲染方法
+	 * 主渲染方法 - 使用多区域布局实现冻结效果
 	 */
 	private render(): void {
 		// 清空容器
@@ -100,37 +123,57 @@ export class SvgGanttRenderer {
 		// 计算日期范围
 		const { minDate, maxDate, totalDays } = this.calculateDateRange();
 
-		// 计算 SVG 尺寸
-		const width = Math.max(this.container.offsetWidth || 800, totalDays * this.columnWidth + this.padding * 2);
-		const height = this.headerHeight + this.tasks.length * this.rowHeight + this.padding * 2;
+		// 计算尺寸
+		const ganttWidth = totalDays * this.columnWidth + this.padding * 2;
+		const ganttHeight = this.headerHeight + this.tasks.length * this.rowHeight + this.padding * 2;
+		const taskListWidth = this.taskColumnWidth;
+		const taskListHeight = ganttHeight;
 
-		// 创建 SVG 元素
-		this.svgElement = this.container.createSvg('svg');
-		this.svgElement.setAttribute('width', '100%');
-		this.svgElement.setAttribute('height', '100%');
-		this.svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
-		addSvgClass(this.svgElement, 'gantt-svg');
+		// 创建 BEM 结构的布局容器
+		this.ganttLayout = this.container.createDiv(GanttClasses.elements.layout);
 
-		// 创建命名空间
-		const ns = 'http://www.w3.org/2000/svg';
+		// 左上角空白区域
+		this.cornerContainer = this.ganttLayout.createDiv(GanttClasses.elements.corner);
+		this.cornerSvg = this.createSvgElement(
+			this.cornerContainer,
+			taskListWidth,
+			this.headerHeight,
+			GanttClasses.elements.cornerSvg
+		);
+		this.renderCorner(this.cornerSvg);
 
-		// 1. 绘制背景
-		this.renderBackground(ns, width, height);
+		// 顶部时间轴容器（可水平滚动）
+		this.headerContainer = this.ganttLayout.createDiv(GanttClasses.elements.headerContainer);
+		this.headerSvg = this.createSvgElement(
+			this.headerContainer,
+			ganttWidth,
+			this.headerHeight,
+			GanttClasses.elements.headerSvg
+		);
+		this.renderHeader(this.headerSvg, minDate, totalDays);
 
-		// 2. 绘制头部（日期列）
-		this.renderHeader(ns, minDate, totalDays, width);
+		// 左侧任务列表容器（可垂直滚动）
+		this.taskListContainer = this.ganttLayout.createDiv(GanttClasses.elements.tasklistContainer);
+		this.taskListSvg = this.createSvgElement(
+			this.taskListContainer,
+			taskListWidth,
+			taskListHeight,
+			GanttClasses.elements.tasklistSvg
+		);
+		this.renderTaskList(this.taskListSvg);
 
-		// 3. 绘制网格线
-		this.renderGrid(ns, minDate, totalDays, width, height);
+		// 右侧甘特图容器（双向滚动）
+		this.ganttContainer = this.ganttLayout.createDiv(GanttClasses.elements.chartContainer);
+		this.ganttSvg = this.createSvgElement(
+			this.ganttContainer,
+			ganttWidth,
+			ganttHeight - this.headerHeight,
+			GanttClasses.elements.chartSvg
+		);
+		this.renderGanttChart(this.ganttSvg, minDate, totalDays, ganttHeight);
 
-		// 4. 绘制今天线
-		this.renderTodayLine(ns, minDate, totalDays, height);
-
-		// 5. 绘制任务条
-		this.renderTaskBars(ns, minDate, totalDays);
-
-		// 6. 添加弹窗容器
-		this.renderPopupContainer();
+		// 设置同步滚动
+		this.setupSyncScrolling();
 	}
 
 	/**
@@ -164,29 +207,150 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 渲染背景
+	 * 创建 SVG 元素的辅助方法
 	 */
-	private renderBackground(ns: string, width: number, height: number): void {
+	private createSvgElement(
+		container: HTMLElement,
+		width: number,
+		height: number,
+		className: string
+	): SVGSVGElement {
+		const svg = container.createSvg('svg');
+		svg.setAttribute('width', String(width));
+		svg.setAttribute('height', String(height));
+		svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+		addSvgClass(svg, className);
+		return svg;
+	}
+
+	/**
+	 * 设置同步滚动
+	 */
+	private setupSyncScrolling(): void {
+		if (!this.headerContainer || !this.taskListContainer || !this.ganttContainer) return;
+
+		// 水平滚动同步：甘特图 <-> 时间轴
+		const headerContainer = this.headerContainer;
+		const taskListContainer = this.taskListContainer;
+		const ganttContainer = this.ganttContainer;
+
+		ganttContainer.addEventListener('scroll', () => {
+			headerContainer.scrollLeft = ganttContainer.scrollLeft;
+			taskListContainer.scrollTop = ganttContainer.scrollTop;
+		});
+	}
+
+	/**
+	 * 渲染左上角空白区域
+	 */
+	private renderCorner(svg: SVGSVGElement | null): void {
+		if (!svg) return;
+
+		const ns = 'http://www.w3.org/2000/svg';
+		const width = this.taskColumnWidth;
+		const height = this.headerHeight;
+
+		// 背景
 		const bg = document.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
 		bg.setAttribute('y', '0');
 		bg.setAttribute('width', String(width));
 		bg.setAttribute('height', String(height));
-		bg.setAttribute('fill', 'var(--background-primary)');
-		this.svgElement!.appendChild(bg);
+		bg.setAttribute('fill', 'var(--background-secondary)');
+		svg.appendChild(bg);
+
+		// 可选：添加标题
+		const text = document.createElementNS(ns, 'text');
+		text.setAttribute('x', String(width / 2));
+		text.setAttribute('y', String(height / 2 + 5));
+		text.setAttribute('text-anchor', 'middle');
+		text.setAttribute('font-size', '12');
+		text.setAttribute('font-weight', '600');
+		text.setAttribute('fill', 'var(--text-muted)');
+		text.textContent = '任务列表';
+		svg.appendChild(text);
 	}
 
 	/**
-	 * 渲染头部（日期列）
+	 * 渲染任务列表（左侧）
 	 */
-	private renderHeader(ns: string, minDate: Date, totalDays: number, width: number): void {
+	private renderTaskList(svg: SVGSVGElement | null): void {
+		if (!svg) return;
+
+		const ns = 'http://www.w3.org/2000/svg';
+		const width = this.taskColumnWidth;
+
+		// 背景
+		const bg = document.createElementNS(ns, 'rect');
+		bg.setAttribute('x', '0');
+		bg.setAttribute('y', '0');
+		bg.setAttribute('width', String(width));
+		bg.setAttribute('height', String(this.headerHeight + this.tasks.length * this.rowHeight));
+		bg.setAttribute('fill', 'var(--background-primary)');
+		svg.appendChild(bg);
+
+		// 绘制任务名称
+		this.tasks.forEach((task, index) => {
+			const y = this.headerHeight + index * this.rowHeight + this.rowHeight / 2 + 5;
+
+			// 行背景（偶数行添加背景色）
+			if (index % 2 === 0) {
+				const rowBg = document.createElementNS(ns, 'rect');
+				rowBg.setAttribute('x', '0');
+				rowBg.setAttribute('y', String(this.headerHeight + index * this.rowHeight));
+				rowBg.setAttribute('width', String(width));
+				rowBg.setAttribute('height', String(this.rowHeight));
+				rowBg.setAttribute('fill', 'var(--background-secondary)');
+				rowBg.setAttribute('opacity', '0.3');
+				svg.appendChild(rowBg);
+			}
+
+			// 任务名称文本
+			const text = document.createElementNS(ns, 'text');
+			text.setAttribute('x', String(this.padding));
+			text.setAttribute('y', String(y));
+			text.setAttribute('font-size', '12');
+			text.setAttribute('fill', 'var(--text-normal)');
+
+			// 截断长文本
+			const maxWidth = width - this.padding * 2 - 10;
+			const maxChars = Math.floor(maxWidth / 7); // 假设每个字符约7px宽
+			const displayName = task.name.length > maxChars
+				? task.name.substring(0, maxChars) + '...'
+				: task.name;
+
+			text.textContent = displayName;
+			svg.appendChild(text);
+
+			// 分隔线
+			const line = document.createElementNS(ns, 'line');
+			line.setAttribute('x1', '0');
+			line.setAttribute('y1', String(this.headerHeight + (index + 1) * this.rowHeight));
+			line.setAttribute('x2', String(width));
+			line.setAttribute('y2', String(this.headerHeight + (index + 1) * this.rowHeight));
+			line.setAttribute('stroke', 'var(--background-modifier-border)');
+			line.setAttribute('stroke-width', '0.5');
+			svg.appendChild(line);
+		});
+	}
+
+	/**
+	 * 渲染头部（时间轴）
+	 */
+	private renderHeader(svg: SVGSVGElement | null, minDate: Date, totalDays: number): void {
+		if (!svg) return;
+
+		const ns = 'http://www.w3.org/2000/svg';
+		const width = totalDays * this.columnWidth + this.padding * 2;
+
+		// 背景
 		const headerBg = document.createElementNS(ns, 'rect');
 		headerBg.setAttribute('x', '0');
 		headerBg.setAttribute('y', '0');
 		headerBg.setAttribute('width', String(width));
 		headerBg.setAttribute('height', String(this.headerHeight));
 		headerBg.setAttribute('fill', 'var(--background-secondary)');
-		this.svgElement!.appendChild(headerBg);
+		svg.appendChild(headerBg);
 
 		// 绘制日期文本
 		for (let i = 0; i < totalDays; i++) {
@@ -217,8 +381,42 @@ export class SvgGanttRenderer {
 			const label = this.formatDateLabel(date, i);
 			text.textContent = label;
 
-			this.svgElement!.appendChild(text);
+			svg.appendChild(text);
 		}
+	}
+
+	/**
+	 * 渲染甘特图主体（网格线 + 任务条）
+	 */
+	private renderGanttChart(
+		svg: SVGSVGElement | null,
+		minDate: Date,
+		totalDays: number,
+		fullHeight: number
+	): void {
+		if (!svg) return;
+
+		const ns = 'http://www.w3.org/2000/svg';
+		const width = totalDays * this.columnWidth + this.padding * 2;
+		const height = fullHeight - this.headerHeight;
+
+		// 背景
+		const bg = document.createElementNS(ns, 'rect');
+		bg.setAttribute('x', '0');
+		bg.setAttribute('y', '0');
+		bg.setAttribute('width', String(width));
+		bg.setAttribute('height', String(height));
+		bg.setAttribute('fill', 'var(--background-primary)');
+		svg.appendChild(bg);
+
+		// 绘制网格线
+		this.renderGrid(ns, svg, minDate, totalDays, width, height);
+
+		// 绘制今天线
+		this.renderTodayLine(ns, svg, minDate, totalDays, height);
+
+		// 绘制任务条
+		this.renderTaskBars(ns, svg, minDate, totalDays);
 	}
 
 	/**
@@ -259,9 +457,18 @@ export class SvgGanttRenderer {
 	/**
 	 * 渲染网格线
 	 */
-	private renderGrid(ns: string, minDate: Date, totalDays: number, width: number, height: number): void {
+	private renderGrid(
+		ns: string,
+		svg: SVGSVGElement | null,
+		minDate: Date,
+		totalDays: number,
+		width: number,
+		height: number
+	): void {
+		if (!svg) return;
+
 		const gridGroup = document.createElementNS(ns, 'g');
-		addSvgClass(gridGroup, 'gantt-grid');
+		addSvgClass(gridGroup, GanttClasses.elements.grid);
 
 		// 垂直线（日期分隔）
 		for (let i = 0; i <= totalDays; i++) {
@@ -269,7 +476,7 @@ export class SvgGanttRenderer {
 
 			const line = document.createElementNS(ns, 'line');
 			line.setAttribute('x1', String(x));
-			line.setAttribute('y1', String(this.headerHeight));
+			line.setAttribute('y1', '0');
 			line.setAttribute('x2', String(x));
 			line.setAttribute('y2', String(height));
 			line.setAttribute('stroke', 'var(--background-modifier-border)');
@@ -281,7 +488,7 @@ export class SvgGanttRenderer {
 
 		// 水平线（任务行分隔）
 		for (let i = 0; i <= this.tasks.length; i++) {
-			const y = this.headerHeight + i * this.rowHeight;
+			const y = i * this.rowHeight;
 
 			const line = document.createElementNS(ns, 'line');
 			line.setAttribute('x1', String(this.padding));
@@ -294,13 +501,21 @@ export class SvgGanttRenderer {
 			gridGroup.appendChild(line);
 		}
 
-		this.svgElement!.appendChild(gridGroup);
+		svg.appendChild(gridGroup);
 	}
 
 	/**
 	 * 渲染今天线
 	 */
-	private renderTodayLine(ns: string, minDate: Date, totalDays: number, height: number): void {
+	private renderTodayLine(
+		ns: string,
+		svg: SVGSVGElement | null,
+		minDate: Date,
+		totalDays: number,
+		height: number
+	): void {
+		if (!svg) return;
+
 		const today = new Date();
 		const daysDiff = Math.floor((today.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
 
@@ -309,24 +524,31 @@ export class SvgGanttRenderer {
 
 			const line = document.createElementNS(ns, 'line');
 			line.setAttribute('x1', String(x));
-			line.setAttribute('y1', String(this.headerHeight));
+			line.setAttribute('y1', '0');
 			line.setAttribute('x2', String(x));
 			line.setAttribute('y2', String(height));
 			line.setAttribute('stroke', 'var(--interactive-accent)');
 			line.setAttribute('stroke-width', '2');
 			line.setAttribute('stroke-dasharray', '4 2');
-			addSvgClass(line, 'gantt-today-line');
+			// 今天线不需要特殊类名，使用样式选择器即可
 
-			this.svgElement!.appendChild(line);
+			svg.appendChild(line);
 		}
 	}
 
 	/**
 	 * 渲染任务条
 	 */
-	private renderTaskBars(ns: string, minDate: Date, totalDays: number): void {
+	private renderTaskBars(
+		ns: string,
+		svg: SVGSVGElement | null,
+		minDate: Date,
+		totalDays: number
+	): void {
+		if (!svg) return;
+
 		const tasksGroup = document.createElementNS(ns, 'g');
-		addSvgClass(tasksGroup, 'gantt-tasks');
+		addSvgClass(tasksGroup, GanttClasses.elements.tasks);
 
 		this.tasks.forEach((task, index) => {
 			const taskStart = new Date(task.start);
@@ -336,12 +558,12 @@ export class SvgGanttRenderer {
 			const duration = Math.ceil((taskEnd.getTime() - taskStart.getTime()) / (24 * 60 * 60 * 1000)) + 1;
 
 			const x = this.padding + startOffset * this.columnWidth;
-			const y = this.headerHeight + index * this.rowHeight + (this.rowHeight - 24) / 2;
+			const y = index * this.rowHeight + (this.rowHeight - 24) / 2;
 			const barWidth = duration * this.columnWidth - 8;
 
 			// 任务条组
 			const barGroup = document.createElementNS(ns, 'g');
-			addSvgClass(barGroup, 'gantt-bar-group');
+			addSvgClass(barGroup, GanttClasses.elements.barGroup);
 			barGroup.setAttribute('data-task-id', task.id);
 
 			// 任务条背景
@@ -387,24 +609,6 @@ export class SvgGanttRenderer {
 				barGroup.appendChild(progress);
 			}
 
-			// 任务名称
-			const text = document.createElementNS(ns, 'text');
-			text.setAttribute('x', String(x + 8));
-			text.setAttribute('y', String(y + 16));
-			text.setAttribute('font-size', '11');
-			text.setAttribute('fill', 'white');
-			text.setAttribute('pointer-events', 'none');
-
-			// 截断长文本
-			const maxWidth = Math.max(barWidth - 16, 20);
-			const charsPerPx = 0.12;
-			const maxChars = Math.floor(maxWidth / charsPerPx);
-			const displayName = task.name.length > maxChars
-				? task.name.substring(0, maxChars) + '...'
-				: task.name;
-
-			text.textContent = displayName;
-
 			// 添加点击事件
 			bar.addEventListener('click', () => this.handleTaskClick(task));
 
@@ -420,11 +624,10 @@ export class SvgGanttRenderer {
 			});
 
 			barGroup.appendChild(bar);
-			barGroup.appendChild(text);
 			tasksGroup.appendChild(barGroup);
 		});
 
-		this.svgElement!.appendChild(tasksGroup);
+		svg.appendChild(tasksGroup);
 	}
 
 	/**
@@ -454,7 +657,7 @@ export class SvgGanttRenderer {
 
 		// 创建弹窗
 		const popup = document.createElement('div');
-		popup.classList.add('gantt-tooltip');
+		popup.classList.add(GanttTooltipClasses.block);
 		popup.innerHTML = this.config.custom_popup_html(task);
 
 		// 定位
@@ -478,7 +681,7 @@ export class SvgGanttRenderer {
 	 * 隐藏弹窗
 	 */
 	private hidePopup(): void {
-		const existing = document.querySelector('.gantt-tooltip');
+		const existing = document.querySelector(`.${GanttTooltipClasses.block}`);
 		if (existing) {
 			existing.remove();
 		}
@@ -489,14 +692,22 @@ export class SvgGanttRenderer {
 	 */
 	destroy(): void {
 		this.hidePopup();
-		this.svgElement = null;
+		this.headerSvg = null;
+		this.taskListSvg = null;
+		this.ganttSvg = null;
+		this.cornerSvg = null;
+		this.headerContainer = null;
+		this.taskListContainer = null;
+		this.ganttContainer = null;
+		this.cornerContainer = null;
+		this.ganttLayout = null;
 		this.tasks = [];
 	}
 
 	/**
-	 * 获取 SVG 元素
+	 * 获取 SVG 元素（保留兼容性）
 	 */
 	getSvgElement(): SVGSVGElement | null {
-		return this.svgElement;
+		return this.ganttSvg;
 	}
 }
