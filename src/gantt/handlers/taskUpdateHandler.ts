@@ -5,8 +5,7 @@
 
 import { App, Notice, TFile } from 'obsidian';
 import type { GanttTask } from '../../types';
-import type { FrappeTask, ParsedTaskId, DateFieldType } from '../types';
-import { TaskDataAdapter } from '../adapters/taskDataAdapter';
+import type { FrappeTask, DateFieldType } from '../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 
 /**
@@ -29,7 +28,7 @@ export class TaskUpdateHandler {
 	 * @param newEnd - 新的结束日期
 	 * @param startField - 开始时间字段名
 	 * @param endField - 结束时间字段名
-	 * @param allTasks - 所有任务列表（用于解析ID）
+	 * @param _allTasks - 所有任务列表（保留参数以保持兼容性，但不再使用）
 	 */
 	async handleDateChange(
 		frappeTask: FrappeTask,
@@ -37,35 +36,34 @@ export class TaskUpdateHandler {
 		newEnd: Date,
 		startField: DateFieldType,
 		endField: DateFieldType,
-		allTasks: GanttTask[]
+		_allTasks: GanttTask[]
 	): Promise<void> {
 		try {
-			// 1. 解析任务ID
-			const parsedId = TaskDataAdapter.parseTaskId(frappeTask.id, allTasks);
-			if (!parsedId) {
-				console.error('[TaskUpdateHandler] Failed to parse task ID:', frappeTask.id);
-				new Notice('无法找到对应的任务');
+			// 直接从 FrappeTask 获取任务信息
+			if (!frappeTask.filePath || frappeTask.lineNumber === undefined) {
+				console.error('[TaskUpdateHandler] Missing task information:', frappeTask);
+				new Notice('任务信息不完整');
 				return;
 			}
 
-			// 2. 获取文件对象
-			const file = this.app.vault.getAbstractFileByPath(parsedId.filePath);
+			// 获取文件对象
+			const file = this.app.vault.getAbstractFileByPath(frappeTask.filePath);
 			if (!file || !(file instanceof TFile)) {
 				new Notice('无法找到文件');
 				return;
 			}
 
-			// 3. 读取文件内容
+			// 读取文件内容
 			const content = await this.app.vault.read(file);
 			const lines = content.split('\n');
 
-			if (parsedId.lineNumber < 0 || parsedId.lineNumber >= lines.length) {
+			if (frappeTask.lineNumber < 0 || frappeTask.lineNumber >= lines.length) {
 				new Notice('任务行号超出范围');
 				return;
 			}
 
-			// 4. 更新任务行
-			const originalLine = lines[parsedId.lineNumber];
+			// 更新任务行
+			const originalLine = lines[frappeTask.lineNumber];
 			const updatedLine = this.updateTaskDatesInLine(
 				originalLine,
 				newStart,
@@ -74,15 +72,15 @@ export class TaskUpdateHandler {
 				endField
 			);
 
-			lines[parsedId.lineNumber] = updatedLine;
+			lines[frappeTask.lineNumber] = updatedLine;
 
-			// 5. 写回文件
+			// 写回文件
 			await this.app.vault.modify(file, lines.join('\n'));
 
-			// 6. 通知缓存更新
-			await this.plugin.taskCache.updateFileCache(parsedId.filePath);
+			// 通知缓存更新
+			await this.plugin.taskCache.updateFileCache(frappeTask.filePath);
 
-			// 7. 显示通知
+			// 显示通知
 			new Notice(`任务时间已更新: ${formatDate(newStart, 'yyyy-MM-dd')} - ${formatDate(newEnd, 'yyyy-MM-dd')}`);
 
 		} catch (error) {
@@ -96,22 +94,23 @@ export class TaskUpdateHandler {
 	 *
 	 * @param frappeTask - Frappe Gantt 任务对象
 	 * @param progress - 新的进度值 (0-100)
-	 * @param allTasks - 所有任务列表
+	 * @param _allTasks - 所有任务列表（保留参数以保持兼容性，但不再使用）
 	 */
 	async handleProgressChange(
 		frappeTask: FrappeTask,
 		progress: number,
-		allTasks: GanttTask[]
+		_allTasks: GanttTask[]
 	): Promise<void> {
 		try {
-			const parsedId = TaskDataAdapter.parseTaskId(frappeTask.id, allTasks);
-			if (!parsedId) {
-				new Notice('无法找到对应的任务');
+			// 直接从 FrappeTask 获取任务信息
+			if (!frappeTask.filePath || frappeTask.lineNumber === undefined) {
+				console.error('[TaskUpdateHandler] Missing task information:', frappeTask);
+				new Notice('任务信息不完整');
 				return;
 			}
 
 			// 获取文件对象
-			const file = this.app.vault.getAbstractFileByPath(parsedId.filePath);
+			const file = this.app.vault.getAbstractFileByPath(frappeTask.filePath);
 			if (!file || !(file instanceof TFile)) {
 				new Notice('无法找到文件');
 				return;
@@ -120,19 +119,19 @@ export class TaskUpdateHandler {
 			const content = await this.app.vault.read(file);
 			const lines = content.split('\n');
 
-			if (parsedId.lineNumber < 0 || parsedId.lineNumber >= lines.length) {
+			if (frappeTask.lineNumber < 0 || frappeTask.lineNumber >= lines.length) {
 				new Notice('任务行号超出范围');
 				return;
 			}
 
 			// 更新复选框状态
-			const originalLine = lines[parsedId.lineNumber];
+			const originalLine = lines[frappeTask.lineNumber];
 			const updatedLine = this.updateTaskCompletionInLine(originalLine, progress >= 100);
 
-			lines[parsedId.lineNumber] = updatedLine;
+			lines[frappeTask.lineNumber] = updatedLine;
 			await this.app.vault.modify(file, lines.join('\n'));
 
-			await this.plugin.taskCache.updateFileCache(parsedId.filePath);
+			await this.plugin.taskCache.updateFileCache(frappeTask.filePath);
 
 			new Notice(progress >= 100 ? '任务已标记为完成' : '任务已标记为未完成');
 
@@ -146,19 +145,22 @@ export class TaskUpdateHandler {
 	 * 处理任务点击事件
 	 *
 	 * @param frappeTask - 被点击的任务
-	 * @param allTasks - 所有任务列表
+	 * @param _allTasks - 所有任务列表（保留参数以保持兼容性，但不再使用）
 	 */
-	handleTaskClick(frappeTask: FrappeTask, allTasks: GanttTask[]): void {
-		const parsedId = TaskDataAdapter.parseTaskId(frappeTask.id, allTasks);
-		if (parsedId) {
-			// 打开文件并跳转到对应行
-			this.app.workspace.openLinkText(
-				parsedId.fileName,
-				'',
-				true,
-				{ state: { line: parsedId.lineNumber } }
-			);
+	handleTaskClick(frappeTask: FrappeTask, _allTasks: GanttTask[]): void {
+		// 直接从 FrappeTask 获取任务信息
+		if (!frappeTask.filePath || !frappeTask.fileName) {
+			console.error('[TaskUpdateHandler] Missing task information:', frappeTask);
+			return;
 		}
+
+		// 打开文件并跳转到对应行
+		this.app.workspace.openLinkText(
+			frappeTask.fileName,
+			'',
+			true,
+			{ state: { line: frappeTask.lineNumber } }
+		);
 	}
 
 	/**

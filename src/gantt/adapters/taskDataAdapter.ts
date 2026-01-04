@@ -4,7 +4,7 @@
  */
 
 import type { GanttTask } from '../../types';
-import type { FrappeTask, DateFieldType, ParsedTaskId } from '../types';
+import type { FrappeTask, DateFieldType } from '../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 
 /**
@@ -90,36 +90,6 @@ export class TaskDataAdapter {
 		// 移除文件扩展名并替换特殊字符
 		const sanitizedName = task.fileName.replace(/\.md$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 		return `${sanitizedName}-${task.lineNumber}-${index}`;
-	}
-
-	/**
-	 * 解析任务ID获取原始任务信息
-	 *
-	 * @param id - Frappe Gantt 任务ID
-	 * @param allTasks - 所有任务列表（用于查找完整路径）
-	 * @returns 解析结果
-	 */
-	static parseTaskId(id: string, allTasks: GanttTask[]): ParsedTaskId | null {
-		const parts = id.split('-');
-		if (parts.length < 2) return null;
-
-		const index = parseInt(parts[parts.length - 1]);
-		const lineNumber = parseInt(parts[parts.length - 2]);
-		const fileName = parts.slice(0, -2).join('-') + '.md';
-
-		// 从任务列表中查找完整路径
-		const task = allTasks.find(
-			t => t.fileName === fileName && t.lineNumber === lineNumber
-		);
-
-		if (!task) return null;
-
-		return {
-			filePath: task.filePath,
-			fileName: task.fileName,
-			lineNumber: task.lineNumber,
-			index
-		};
 	}
 
 	/**

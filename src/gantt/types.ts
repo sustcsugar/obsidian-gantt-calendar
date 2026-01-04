@@ -85,20 +85,6 @@ export interface FrappePopupConfig {
 }
 
 /**
- * 任务ID解析结果
- */
-export interface ParsedTaskId {
-	/** 文件路径 */
-	filePath: string;
-	/** 文件名 */
-	fileName: string;
-	/** 行号 */
-	lineNumber: number;
-	/** 索引 */
-	index: number;
-}
-
-/**
  * 日期字段类型（用于任务时间范围）
  */
 export type DateFieldType =
