@@ -1,4 +1,4 @@
-import { BaseCalendarRenderer } from './BaseCalendarRenderer';
+import { BaseViewRenderer } from './BaseViewRenderer';
 import { isToday, isThisWeek, isThisMonth } from '../dateUtils/dateUtilsIndex';
 import type { GanttTask, SortState } from '../types';
 import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
@@ -10,7 +10,7 @@ import { TaskCardComponent, TaskViewConfig } from '../components/TaskCard';
 /**
  * 任务视图渲染器
  */
-export class TaskViewRenderer extends BaseCalendarRenderer {
+export class TaskViewRenderer extends BaseViewRenderer {
 	// 任务筛选状态
 	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'all';
 

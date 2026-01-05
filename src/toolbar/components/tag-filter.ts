@@ -40,7 +40,7 @@ function extractAllTags(tasks: GanttTask[]): Map<string, number> {
 }
 
 /**
- * 获取标签颜色索引（复用 BaseCalendarRenderer 逻辑）
+ * 获取标签颜色索引（复用 BaseViewRenderer 逻辑）
  * @param tag 标签名称
  * @returns 颜色索引（0-5）
  */

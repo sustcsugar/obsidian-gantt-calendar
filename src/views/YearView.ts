@@ -1,11 +1,11 @@
-import { BaseCalendarRenderer } from './BaseCalendarRenderer';
+import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GanttTask } from '../types';
 
 /**
  * 年视图渲染器
  */
-export class YearViewRenderer extends BaseCalendarRenderer {
+export class YearViewRenderer extends BaseViewRenderer {
 	private yearContainer: HTMLElement | null = null;
 
 	render(container: HTMLElement, currentDate: Date): void {

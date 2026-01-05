@@ -1,5 +1,5 @@
 import { Notice } from 'obsidian';
-import { BaseCalendarRenderer } from './BaseCalendarRenderer';
+import { BaseViewRenderer } from './BaseViewRenderer';
 import { getWeekOfDate } from '../dateUtils/dateUtilsIndex';
 import { updateTaskDateField } from '../tasks/taskUpdater';
 import type { GanttTask, SortState } from '../types';
@@ -10,7 +10,7 @@ import { TaskCardComponent, WeekViewConfig } from '../components/TaskCard';
 /**
  * 周视图渲染器
  */
-export class WeekViewRenderer extends BaseCalendarRenderer {
+export class WeekViewRenderer extends BaseViewRenderer {
 	// 排序状态
 	private sortState: SortState = DEFAULT_SORT_STATE;
 

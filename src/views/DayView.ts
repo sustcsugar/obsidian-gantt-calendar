@@ -1,5 +1,5 @@
 import { TFile, MarkdownRenderer } from 'obsidian';
-import { BaseCalendarRenderer } from './BaseCalendarRenderer';
+import { BaseViewRenderer } from './BaseViewRenderer';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import type { GanttTask, SortState } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
@@ -10,7 +10,7 @@ import { TaskCardComponent, DayViewConfig } from '../components/TaskCard';
 /**
  * 日视图渲染器
  */
-export class DayViewRenderer extends BaseCalendarRenderer {
+export class DayViewRenderer extends BaseViewRenderer {
 	// 排序状态
 	private sortState: SortState = DEFAULT_SORT_STATE;
 

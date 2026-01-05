@@ -1,4 +1,4 @@
-import { BaseCalendarRenderer } from './BaseCalendarRenderer';
+import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GanttTask } from '../types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
@@ -6,7 +6,7 @@ import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
 /**
  * 月视图渲染器
  */
-export class MonthViewRenderer extends BaseCalendarRenderer {
+export class MonthViewRenderer extends BaseViewRenderer {
 
 	render(container: HTMLElement, currentDate: Date): void {
 		const year = currentDate.getFullYear();

@@ -58,3 +58,27 @@ DOM类名统一使用 ./src/utils/bem.ts 进行管理, 新建类名需在此文�
 正则表达式统一使用 ./src/utils/RegularExpression.ts 进行管理.
 全局任务悬浮窗统一复用 ./src/utils/tooltipManager.ts
 任务条目更新统一复用 updateTaskProperties函数进行.
+
+## Git 提交规范
+
+**重要规则**：
+- ❌ **禁止自动提交**：完成代码修改后，不要自动执行 `git commit` 或 `git push`
+- ✅ **等待用户指示**：仅当用户明确要求提交时，才执行 Git 提交操作
+- ✅ **可以运行构建**：修改代码后可以运行 `npm run build` 进行验证
+- ✅ **可以查看状态**：可以使用 `git status`、`git diff` 等命令查看修改状态
+
+**正确的工作流程**：
+1. 修改代码
+2. 运行构建验证（`npm run build`）
+3. 报告修改内容和状态
+4. **等待**用户明确指示是否提交
+
+**如果用户要求提交**：
+1. 使用 `git add` 添加修改的文件
+2. 使用 `git commit` 创建提交，提交信息格式：
+   ```
+   type: description
+
+   Detailed explanation if needed
+   ```
+3. 等待用户指示是否 push

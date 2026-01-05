@@ -55,7 +55,7 @@ async function readTaskLine(app: App, task: GanttTask): Promise<{ file: TFile; c
  * 更新任务的完成状态
  *
  * **使用场景**：
- * 1. **BaseCalendarRenderer.ts:107** - 任务复选框点击事件
+ * 1. **BaseViewRenderer.ts:107** - 任务复选框点击事件
  *    - 用户点击任务前的复选框时，调用此函数切换任务完成状态
  *    - 完成时自动添加完成日期（completionDate）
  *    - 取消完成时自动移除完成日期

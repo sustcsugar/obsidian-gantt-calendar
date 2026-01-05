@@ -612,7 +612,7 @@ export class SvgGanttRenderer {
 
 	/**
 	 * 渲染任务描述为富文本（包含可点击的链接）
-	 * 支持与 BaseCalendarRenderer 相同的链接格式
+	 * 支持与 BaseViewRenderer 相同的链接格式
 	 */
 	private renderTaskDescriptionWithLinks(container: HTMLElement, text: string): void {
 		// Obsidian 双向链接：[[note]] 或 [[note|alias]]

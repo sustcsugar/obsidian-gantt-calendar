@@ -12,7 +12,7 @@ import { RegularExpressions } from '../utils/RegularExpressions';
  * 日历渲染器基类
  * 提供子视图共享的工具方法和状态管理
  */
-export abstract class BaseCalendarRenderer {
+export abstract class BaseViewRenderer {
 	protected app: App;
 	protected plugin: any;
 	protected domCleanups: Array<() => void> = [];
@@ -120,7 +120,7 @@ export abstract class BaseCalendarRenderer {
 			try {
 				fn();
 			} catch (err) {
-				console.error('[BaseCalendarRenderer] Error during DOM cleanup', err);
+				console.error('[BaseViewRenderer] Error during DOM cleanup', err);
 			}
 		}
 		this.domCleanups = [];

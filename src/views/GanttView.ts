@@ -5,7 +5,7 @@
  */
 
 import { Notice } from 'obsidian';
-import { BaseCalendarRenderer } from './BaseCalendarRenderer';
+import { BaseViewRenderer } from './BaseViewRenderer';
 import type { GanttTask, GanttTimeGranularity, SortState, TagFilterState } from '../types';
 import { DEFAULT_TAG_FILTER_STATE } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
@@ -23,7 +23,7 @@ import {
  *
  * 基于 Frappe Gantt 的重新实现
  */
-export class GanttViewRenderer extends BaseCalendarRenderer {
+export class GanttViewRenderer extends BaseViewRenderer {
 	// 保存当前渲染容器的引用
 	private currentContainer: HTMLElement | null = null;
 
@@ -421,7 +421,7 @@ export class GanttViewRenderer extends BaseCalendarRenderer {
 	}
 
 	/**
-	 * 公共清理方法（由 BaseCalendarRenderer 调用）
+	 * 公共清理方法（由 BaseViewRenderer 调用）
 	 */
 	public override runDomCleanups(): void {
 		this.cleanup();
