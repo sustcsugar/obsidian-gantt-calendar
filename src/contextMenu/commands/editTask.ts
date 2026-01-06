@@ -57,137 +57,291 @@ class EditTaskModal extends Modal {
     contentEl.addClass('gantt-date-picker-modal');
     contentEl.createEl('h2', { text: '编辑任务' });
 
+    // 添加紧凑样式
+    this.addCompactStyles();
 
     // 任务描述（可选）
     if (this.allowEditContent) {
-      // 保留原始描述，包括 wiki 链接和超链接等
-      const originalContent = this.task.description || '';
-      const descSetting = new Setting(contentEl)
-        .setName('任务描述')
-        .setDesc('修改任务的描述内容（不支持换行，Enter 键将转为空格）')
-        .addTextArea(text => {
-          text.setValue(originalContent);
-          // 强制设置样式，覆盖 Obsidian 默认样式
-          text.inputEl.style.minHeight = 'auto';
-          text.inputEl.style.height = '60px';
-          text.inputEl.style.width = '100%';
-          text.inputEl.style.maxWidth = '400px';
-          text.inputEl.style.resize = 'none'; // 禁止拖动调整大小
-          text.inputEl.style.overflow = 'auto'; // 内容过多时显示滚动条
+      const descContainer = contentEl.createDiv({ cls: 'gc-edit-desc-container' });
+      descContainer.createEl('label', { text: '任务描述', cls: 'gc-edit-label' });
+      descContainer.createEl('div', { text: '不支持换行，Enter 键将转为空格', cls: 'gc-edit-hint' });
 
-          // 阻止换行：Enter 键转为空格
-          text.inputEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              const start = text.inputEl.selectionStart;
-              const end = text.inputEl.selectionEnd;
-              const value = text.inputEl.value;
-              text.inputEl.value = value.slice(0, start) + ' ' + value.slice(end);
-              text.inputEl.selectionStart = text.inputEl.selectionEnd = start + 1;
-              this.content = text.inputEl.value;
-            }
-          });
+      const textArea = descContainer.createEl('textarea', { cls: 'gc-edit-textarea' });
+      textArea.value = this.task.description || '';
 
-          text.onChange((v) => {
-            // 兜底：将任何换行符替换为空格
-            this.content = v.replace(/[\r\n]+/g, ' ');
-          });
-        });
-      // 修复描述文本区域样式
-      descSetting.controlEl.style.width = '100%';
-      descSetting.controlEl.style.maxWidth = '400px';
-    }
-
-
-    // 优先级
-    new Setting(contentEl)
-      .setName('优先级')
-      .setDesc('选择任务优先级（留空表示不更改）')
-      .addDropdown(drop => {
-        drop.addOptions({
-          '': '不更改',
-          'highest': '🔺 最高',
-          'high': '⏫ 高',
-          'medium': '🔼 中',
-          'low': '🔽 低',
-          'lowest': '⏬ 最低',
-          'normal': '清除（普通）',
-        });
-        drop.setValue('');
-        drop.onChange(value => {
-          this.priority = (value === '') ? undefined : (value as any);
-        });
+      // 阻止换行：Enter 键转为空格
+      textArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const start = textArea.selectionStart;
+          const end = textArea.selectionEnd;
+          const value = textArea.value;
+          textArea.value = value.slice(0, start) + ' ' + value.slice(end);
+          textArea.selectionStart = textArea.selectionEnd = start + 1;
+          this.content = textArea.value;
+        }
       });
 
-    // 日期输入生成器
+      textArea.addEventListener('input', () => {
+        // 兜底：将任何换行符替换为空格
+        this.content = textArea.value.replace(/[\r\n]+/g, ' ');
+      });
+    }
+
+    // 优先级选择（按钮网格）
+    const priorityContainer = contentEl.createDiv({ cls: 'gc-priority-container' });
+    priorityContainer.createEl('label', { text: '优先级', cls: 'gc-edit-label' });
+
+    const priorityGrid = priorityContainer.createDiv({ cls: 'gc-priority-grid' });
+    const priorityOptions: Array<{ value: any, label: string, icon: string }> = [
+      { value: 'highest', label: '最高', icon: '🔺' },
+      { value: 'high', label: '高', icon: '⏫' },
+      { value: 'medium', label: '中', icon: '🔼' },
+      { value: 'normal', label: '普通', icon: '◽' },
+      { value: 'low', label: '低', icon: '🔽' },
+      { value: 'lowest', label: '最低', icon: '⏬' },
+    ];
+
+    priorityOptions.forEach(option => {
+      const btn = priorityGrid.createEl('button', {
+        cls: 'gc-priority-btn',
+        text: `${option.icon} ${option.label}`
+      });
+      btn.dataset.value = option.value;
+
+      btn.addEventListener('click', () => {
+        // 移除所有按钮的选中状态
+        priorityGrid.querySelectorAll('.gc-priority-btn').forEach(b => b.removeClass('gc-priority-selected'));
+        // 添加当前按钮的选中状态
+        btn.addClass('gc-priority-selected');
+        // 记录用户选择的优先级，'normal' 表示普通（无优先级）
+        this.priority = option.value;
+      });
+    });
+
+    // 日期输入（紧凑布局）
+    const dateContainer = contentEl.createDiv({ cls: 'gc-dates-container' });
+    dateContainer.createEl('label', { text: '日期设置', cls: 'gc-edit-label' });
+
+    const datesGrid = dateContainer.createDiv({ cls: 'gc-dates-grid' });
+
     const addDateSetting = (
-      name: string,
+      label: string,
       current: Date | undefined,
       onChange: (d: Date | null) => void
     ) => {
-      const s = new Setting(contentEl).setName(name);
-      let textControl: any;
-      const input = s.addText(t => {
-        textControl = t;
-        const initStr = current ? formatDate(current, 'yyyy-MM-dd') : '';
-        t.setPlaceholder('yyyy-MM-dd').setValue(initStr);
-        t.inputEl.type = 'date';
-        if (initStr) t.inputEl.value = initStr;
-        t.onChange(v => {
-          if (!v) { onChange(null); return; }
-          const parsed = this.parseDate(v);
-          if (parsed) onChange(parsed);
-        });
-      });
-      s.addExtraButton(btn => btn
-        .setIcon('x')
-        .setTooltip('清除日期')
-        .onClick(() => {
-          textControl.inputEl.value = '';
+      const dateItem = datesGrid.createDiv({ cls: 'gc-date-item' });
+      const labelEl = dateItem.createEl('label', { text: label, cls: 'gc-date-label' });
+
+      const inputContainer = dateItem.createDiv({ cls: 'gc-date-input-container' });
+      const input = inputContainer.createEl('input', { type: 'date', cls: 'gc-date-input' });
+
+      const initStr = current ? formatDate(current, 'yyyy-MM-dd') : '';
+      if (initStr) input.value = initStr;
+
+      input.addEventListener('change', () => {
+        if (!input.value) {
           onChange(null);
-        })
-      );
-      return input;
+          return;
+        }
+        const parsed = this.parseDate(input.value);
+        if (parsed) onChange(parsed);
+      });
+
+      const clearBtn = inputContainer.createEl('button', {
+        cls: 'gc-date-clear',
+        text: '×'
+      });
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        onChange(null);
+      });
     };
 
-    addDateSetting('创建日期', this.task.createdDate, (d) => this.createdDate = d);
-    addDateSetting('开始日期', this.task.startDate, (d) => this.startDate = d);
-    addDateSetting('计划日期', this.task.scheduledDate, (d) => this.scheduledDate = d);
-    addDateSetting('截止日期', this.task.dueDate, (d) => this.dueDate = d);
-    addDateSetting('完成日期', this.task.completionDate, (d) => this.completionDate = d);
-    addDateSetting('取消日期', this.task.cancelledDate, (d) => this.cancelledDate = d);
+    addDateSetting('➕ 创建', this.task.createdDate, (d) => this.createdDate = d);
+    addDateSetting('🛫 开始', this.task.startDate, (d) => this.startDate = d);
+    addDateSetting('⏳ 计划', this.task.scheduledDate, (d) => this.scheduledDate = d);
+    addDateSetting('📅 截止', this.task.dueDate, (d) => this.dueDate = d);
+    addDateSetting('✅ 完成', this.task.completionDate, (d) => this.completionDate = d);
+    addDateSetting('❌ 取消', this.task.cancelledDate, (d) => this.cancelledDate = d);
 
     // 操作按钮
-    new Setting(contentEl)
-      .addButton(btn => btn
-        .setButtonText('保存')
-        .setCta()
-        .onClick(async () => {
-          try {
-            // 只将实际更改的字段写入，未更改的字段保留原值
-            const updates: any = {};
-            if (this.completed !== undefined) updates.completed = this.completed;
-            if (this.priority !== undefined) updates.priority = this.priority;
-            if (this.createdDate !== undefined) updates.createdDate = this.createdDate;
-            if (this.startDate !== undefined) updates.startDate = this.startDate;
-            if (this.scheduledDate !== undefined) updates.scheduledDate = this.scheduledDate;
-            if (this.dueDate !== undefined) updates.dueDate = this.dueDate;
-            if (this.completionDate !== undefined) updates.completionDate = this.completionDate;
-            if (this.cancelledDate !== undefined) updates.cancelledDate = this.cancelledDate;
-            if (this.content !== undefined) updates.content = this.content;
-            await updateTaskProperties(this.app, this.task, updates, this.enabledFormats);
-            this.onSuccess();
-            this.close();
-            new Notice('任务已更新');
-          } catch (err) {
-            console.error('Failed to update task', err);
-            new Notice('更新任务失败');
-          }
-        }))
-      .addButton(btn => btn
-        .setButtonText('取消')
-        .onClick(() => this.close())
-      );
+    const buttonContainer = contentEl.createDiv({ cls: 'gc-edit-buttons' });
+    buttonContainer.createEl('button', { cls: 'mod-cta', text: '保存' }).addEventListener('click', async () => {
+      try {
+        const updates: any = {};
+        if (this.completed !== undefined) updates.completed = this.completed;
+        // 直接传递优先级值，'normal' 会被 serializeTask 正确处理为清除优先级
+        if (this.priority !== undefined) {
+          updates.priority = this.priority;
+        }
+        if (this.createdDate !== undefined) updates.createdDate = this.createdDate;
+        if (this.startDate !== undefined) updates.startDate = this.startDate;
+        if (this.scheduledDate !== undefined) updates.scheduledDate = this.scheduledDate;
+        if (this.dueDate !== undefined) updates.dueDate = this.dueDate;
+        if (this.completionDate !== undefined) updates.completionDate = this.completionDate;
+        if (this.cancelledDate !== undefined) updates.cancelledDate = this.cancelledDate;
+        if (this.content !== undefined) updates.content = this.content;
+        await updateTaskProperties(this.app, this.task, updates, this.enabledFormats);
+        this.onSuccess();
+        this.close();
+        new Notice('任务已更新');
+      } catch (err) {
+        console.error('Failed to update task', err);
+        new Notice('更新任务失败');
+      }
+    });
+    buttonContainer.createEl('button', { text: '取消' }).addEventListener('click', () => this.close());
+  }
+
+  private addCompactStyles(): void {
+    // 创建样式元素
+    const style = document.createElement('style');
+    style.textContent = `
+      .gc-edit-desc-container {
+        margin-bottom: 16px;
+      }
+      .gc-edit-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: var(--font-ui-small);
+        color: var(--text-normal);
+      }
+      .gc-edit-hint {
+        font-size: var(--font-ui-smaller);
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .gc-edit-textarea {
+        width: 100%;
+        min-height: 60px;
+        max-height: 60px;
+        padding: 8px;
+        border: 1px solid var(--background-modifier-border);
+        border-radius: 4px;
+        background: var(--background-secondary);
+        color: var(--text-normal);
+        resize: none;
+        overflow: auto;
+        font-family: var(--font-interface);
+        font-size: var(--font-ui-small);
+      }
+      .gc-edit-textarea:focus {
+        outline: 2px solid var(--interactive-accent);
+        border-color: var(--interactive-accent);
+      }
+      .gc-priority-container {
+        margin-bottom: 20px;
+      }
+      .gc-priority-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .gc-priority-btn {
+        padding: 8px 12px;
+        border: 1px solid var(--background-modifier-border);
+        border-radius: 4px;
+        background: var(--background-secondary);
+        color: var(--text-normal);
+        cursor: pointer;
+        font-size: var(--font-ui-small);
+        transition: all 0.2s;
+      }
+      .gc-priority-btn:hover {
+        background: var(--background-modifier-hover);
+      }
+      .gc-priority-selected {
+        background: var(--interactive-accent) !important;
+        color: var(--text-on-accent) !important;
+        border-color: var(--interactive-accent) !important;
+      }
+      .gc-dates-container {
+        margin-bottom: 20px;
+      }
+      .gc-dates-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .gc-date-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .gc-date-label {
+        font-size: var(--font-ui-smaller);
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+      .gc-date-input-container {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .gc-date-input {
+        flex: 1;
+        padding: 6px 8px;
+        border: 1px solid var(--background-modifier-border);
+        border-radius: 4px;
+        background: var(--background-secondary);
+        color: var(--text-normal);
+        font-size: var(--font-ui-small);
+      }
+      .gc-date-input:focus {
+        outline: 2px solid var(--interactive-accent);
+        border-color: var(--interactive-accent);
+      }
+      .gc-date-clear {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--background-modifier-border);
+        border-radius: 4px;
+        background: var(--background-secondary);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .gc-date-clear:hover {
+        background: var(--background-modifier-hover);
+        color: var(--text-normal);
+      }
+      .gc-edit-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+      }
+      .gc-edit-buttons button {
+        padding: 8px 16px;
+        border: 1px solid var(--background-modifier-border);
+        border-radius: 4px;
+        background: var(--background-secondary);
+        color: var(--text-normal);
+        cursor: pointer;
+        font-size: var(--font-ui-small);
+      }
+      .gc-edit-buttons button:hover {
+        background: var(--background-modifier-hover);
+      }
+      .gc-edit-buttons button.mod-cta {
+        background: var(--interactive-accent);
+        color: var(--text-on-accent);
+        border-color: var(--interactive-accent);
+      }
+      .gc-edit-buttons button.mod-cta:hover {
+        background: var(--interactive-accent-hover);
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   onClose(): void {
