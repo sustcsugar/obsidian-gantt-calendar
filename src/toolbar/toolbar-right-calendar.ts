@@ -3,6 +3,7 @@ import { renderCalendarViewSwitcher } from './components/calendar-view-switcher'
 import { renderRefreshButton } from './components/refresh-button';
 import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
+import { renderCreateTaskButton } from './components/create-task-button';
 import type { CalendarViewType } from '../types';
 import type { DayViewRenderer } from '../views/DayView';
 import type { WeekViewRenderer } from '../views/WeekView';
@@ -105,7 +106,15 @@ export class ToolbarRightCalendar {
 			buttonClass: 'calendar-view-compact-btn'
 		});
 
-		// ===== 右侧：刷新按钮 =====
+		// ===== 右侧：功能按钮 =====
+
+		// 创建任务按钮（所有视图共有）
+		if (plugin) {
+			renderCreateTaskButton(container, {
+				plugin: plugin,
+				buttonClass: 'calendar-nav-compact-btn'
+			});
+		}
 
 		// 刷新按钮（所有视图共有，始终在最右边）
 		renderRefreshButton(container, onRefresh, '刷新任务');

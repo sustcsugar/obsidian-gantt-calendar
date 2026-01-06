@@ -6,6 +6,7 @@ import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderFieldSelector } from './components/field-selector';
 import { renderDateRangeFilter, type DateRangeState } from './components/date-range-filter';
+import { renderCreateTaskButton } from './components/create-task-button';
 import type { DateFieldType } from './components/field-selector';
 
 /**
@@ -105,6 +106,14 @@ export class ToolbarRightTask {
 					onFilterChange();
 				},
 				getAllTasks: () => plugin.taskCache.getAllTasks()
+			});
+		}
+
+		// 创建任务按钮
+		if (plugin) {
+			renderCreateTaskButton(container, {
+				plugin: plugin,
+				buttonClass: 'calendar-nav-compact-btn'
 			});
 		}
 

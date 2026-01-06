@@ -5,6 +5,7 @@ import { renderTimeGranularity } from './components/time-granularity';
 import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderDualFieldSelector, type DateFieldType } from './components/field-selector';
+import { renderCreateTaskButton } from './components/create-task-button';
 
 /**
  * 工具栏右侧区域 - 甘特视图功能区
@@ -86,6 +87,14 @@ export class ToolbarRightGantt {
 					onRefresh();
 				},
 				getAllTasks: () => plugin.taskCache.getAllTasks()
+			});
+		}
+
+		// 创建任务按钮
+		if (plugin) {
+			renderCreateTaskButton(container, {
+				plugin: plugin,
+				buttonClass: 'calendar-nav-compact-btn'
 			});
 		}
 

@@ -38,6 +38,11 @@ export const BLOCKS = {
 	/** 链接 */
 	LINK: 'link',
 
+	/** 创建任务弹窗 */
+	CREATE_TASK_MODAL: 'create-task-modal',
+	/** 创建任务按钮 */
+	CREATE_TASK_BUTTON: 'create-task-btn',
+
 
 
 } as const;
@@ -351,6 +356,36 @@ export const ToolbarComponentClasses = {
 };
 
 
+
+/**
+ * 创建任务弹窗类名常量
+ */
+export const CreateTaskModalClasses = {
+	block: bem(BLOCKS.CREATE_TASK_MODAL),
+
+	elements: {
+		form: bem(BLOCKS.CREATE_TASK_MODAL, 'form'),
+		field: bem(BLOCKS.CREATE_TASK_MODAL, 'field'),
+		label: bem(BLOCKS.CREATE_TASK_MODAL, 'label'),
+		input: bem(BLOCKS.CREATE_TASK_MODAL, 'input'),
+		textarea: bem(BLOCKS.CREATE_TASK_MODAL, 'textarea'),
+		tagsContainer: bem(BLOCKS.CREATE_TASK_MODAL, 'tags-container'),
+		tagItem: bem(BLOCKS.CREATE_TASK_MODAL, 'tag-item'),
+		tagItemSelected: bem(BLOCKS.CREATE_TASK_MODAL, 'tag-item', 'selected'),
+		tagInput: bem(BLOCKS.CREATE_TASK_MODAL, 'tag-input'),
+		buttons: bem(BLOCKS.CREATE_TASK_MODAL, 'buttons'),
+	},
+};
+
+/**
+ * 创建任务按钮类名常量
+ */
+export const CreateTaskButtonClasses = {
+	block: bem(BLOCKS.CREATE_TASK_BUTTON),
+	modifiers: {
+		toolbar: bem(BLOCKS.CREATE_TASK_BUTTON, undefined, 'toolbar'),
+	},
+};
 
 /**
  * 获取带修饰符的完整类名

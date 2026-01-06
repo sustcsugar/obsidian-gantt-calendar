@@ -3477,3 +3477,116 @@ Author: sugar
 		align-items: flex-start;
 	}
 }
+
+/* ========================================
+   创建任务弹窗样式
+   ======================================== */
+
+/* 创建任务弹窗 */
+.gc-create-task-modal {
+	max-width: 600px;
+}
+
+.gc-create-task-modal__form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.gc-create-task-modal__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.gc-create-task-modal__label {
+	font-weight: 500;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}
+
+.gc-create-task-modal__input,
+.gc-create-task-modal__textarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-small);
+}
+
+.gc-create-task-modal__input:focus,
+.gc-create-task-modal__textarea:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+.gc-create-task-modal__textarea {
+	min-height: 80px;
+	resize: vertical;
+	line-height: 1.5;
+}
+
+.gc-create-task-modal__tags-container {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.gc-create-task-modal__tag-item {
+	display: inline-block;
+	padding: 4px 10px;
+	margin: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	user-select: none;
+}
+
+.gc-create-task-modal__tag-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gc-create-task-modal__tag-item--selected {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.gc-create-task-modal__tag-input {
+	flex: 1;
+}
+
+.gc-create-task-modal__buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 8px;
+	padding-top: 16px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* 创建任务按钮 */
+.gc-create-task-btn {
+	font-size: 1.2em;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.1s ease;
+}
+
+.gc-create-task-btn:active {
+	transform: scale(0.95);
+}
+
+.gc-create-task-btn--toolbar {
+	padding: 4px 8px;
+	min-width: 32px;
+}
+
