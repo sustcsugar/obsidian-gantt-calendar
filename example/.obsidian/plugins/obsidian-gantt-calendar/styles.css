@@ -1,0 +1,3807 @@
+/*
+========================================
+Gantt Calendar Plugin Styles - 甘特日历
+Architecture: ITCSS (Inverted Triangle CSS)
+Last Updated: 2025-12-26
+Author: sugar
+========================================
+*/
+
+/* ========================================
+   LAYER 1: Settings (配置层)
+   CSS Variables & Custom Properties
+   ======================================== */
+
+:root {
+	/* Festival Colors */
+	--festival-solar-color: #e74c3c;    /* 阳历节日 - 红色 */
+	--festival-lunar-color: #e8a041;    /* 农历节日 - 橙色 */
+	--festival-solar-term-color: #52c41a; /* 节气 - 绿色 */
+
+	/* Task Status Colors */
+	--task-completed-color: #52c41a;
+	--task-pending-color: #ff7a45;
+}
+
+/* ========================================
+   LAYER 2: Tools (工具层)
+   Not applicable for plain CSS
+   ======================================== */
+
+/* ========================================
+   LAYER 3: Generic (通用层)
+   Reset & Normalize
+   ======================================== */
+/* Obsidian默认样式，无需额外reset */
+
+/* ========================================
+   LAYER 4: Base (基础层)
+   HTML Element Defaults
+   ======================================== */
+/* 本项目主要使用类名，基础样式较少 */
+
+/* ========================================
+   LAYER 5: Objects (对象层)
+   Layout Structures (No Visuals)
+   ======================================== */
+
+/* Main Container */
+.calendar-content {
+	padding: 12px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.calendar-content.gantt-mode {
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+.view-content.gantt-root {
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Calendar Grid Layouts */
+.calendar-week-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin-top: 0;
+	flex: 1;
+	overflow: hidden;
+	min-height: 0;
+	position: relative;
+}
+
+.calendar-week-header-row {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0;
+	flex-shrink: 0;
+	z-index: 5;
+	position: sticky;
+	top: 0;
+}
+
+.calendar-week-tasks-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	flex: 1 1 auto;
+	min-height: 0;
+	position: relative;
+}
+
+.calendar-time-grid {
+	display: grid;
+	grid-template-columns: 60px repeat(7, 1fr);
+	gap: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	flex: 1 1 auto;
+	min-height: 0;
+	position: relative;
+}
+
+.calendar-day-grid {
+	display: grid;
+	grid-template-columns: 60px 1fr;
+	gap: 0;
+	margin: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	grid-row: 2;
+	position: relative;
+}
+
+/* Gantt Layout Objects */
+/* BEM命名: gc-view--gantt */
+.calendar-gantt-view,
+.gc-view.gc-view--gantt {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	position: relative;
+}
+
+.gc-gantt-view__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	gap: 0;
+	overflow: hidden;
+}
+
+.gc-gantt-view__task-list {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	overflow-x: hidden;
+	min-height: 0;
+	padding-right: 4px;
+	display: grid;
+	grid-auto-rows: 40px;
+	gap: 6px;
+	align-content: start;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.gc-gantt-view__task-list::-webkit-scrollbar {
+	display: none;
+}
+
+.gc-gantt-view__time {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	overflow: hidden;
+}
+
+.gc-gantt-view__bars-grid {
+	display: grid;
+	grid-auto-rows: 40px;
+	gap: 6px;
+	align-content: start;
+}
+
+/* ==================== Year/Month/Week Layout ==================== */
+/* BEM命名: gc-view--year/--month/--week */
+.calendar-year-container,
+.gc-view.gc-view--year {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	height: 100%;
+	overflow: hidden;
+}
+
+.calendar-months-grid,
+.gc-view--year .gc-year-view__months {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	gap: 6px;
+	width: 100%;
+	flex: 1;
+}
+
+.calendar-month-view,
+.gc-view.gc-view--month {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	height: 100%;
+	overflow: hidden;
+}
+
+.calendar-week-row,
+.gc-month-view__week-row {
+	display: grid;
+	grid-template-columns: 40px repeat(7, 1fr);
+	gap: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.calendar-month-weeks,
+.gc-month-view__weeks {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* Week/Day Layout */
+.calendar-week-view,
+.gc-view.gc-view--week {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	flex: 1;
+	overflow: hidden;
+	height: 100%;
+}
+
+.calendar-week-days-container,
+.gc-week-view__days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 12px;
+}
+
+/* ==================== Day View Layout ==================== */
+/* BEM命名: gc-day-view, gc-view */
+.calendar-day-view,
+.gc-day-view,
+.gc-view.gc-view--day {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	max-width: 100%;
+	margin: 0;
+	height: 100%;
+	flex: 1;
+	overflow: hidden;
+	padding: 12px;
+}
+
+/* 水平分屏布局修饰符 */
+.calendar-day-split-container,
+.gc-day-view--horizontal {
+	display: flex;
+	gap: 0;
+	width: 100%;
+	height: 100%;
+	flex: 1;
+	min-height: 0;
+}
+
+/* 垂直分屏布局修饰符 */
+.calendar-day-split-container-vertical,
+.gc-day-view--vertical {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	width: 100%;
+	height: 100%;
+	flex: 1;
+	min-height: 0;
+}
+
+/* ==================== Task View Layout ==================== */
+/* BEM命名: gc-view--task (Modifier) */
+.calendar-task-view,
+.task-view-list,
+.gc-view--task {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px;
+	height: auto;
+	flex: none;
+	overflow: visible;
+	width: 100%;
+}
+
+/* ========================================
+   LAYER 6: Components (组件层)
+   Complete UI Components
+   ======================================== */
+
+/* 6.1 Toolbar Component */
+/* BEM命名: gc-toolbar */
+.calendar-toolbar,
+.gc-toolbar {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 12px;
+	padding: 12px 16px;
+	margin: 8px 12px 16px;
+	position: sticky;
+	top: 8px;
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--background-primary) 82%, transparent);
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
+	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+	backdrop-filter: blur(18px) saturate(1.05);
+	-webkit-backdrop-filter: blur(18px) saturate(1.05);
+	z-index: 100;
+}
+
+.calendar-toolbar-left,
+.calendar-toolbar-center,
+.calendar-toolbar-right,
+.gc-toolbar__left,
+.gc-toolbar__center,
+.gc-toolbar__right {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.calendar-toolbar-left,
+.gc-toolbar__left {
+	flex: 0 1 auto;
+}
+
+.calendar-toolbar-center,
+.gc-toolbar__center {
+	flex: 1 1 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+}
+
+.calendar-toolbar-right,
+.gc-toolbar__right {
+	flex: 0 1 auto;
+	justify-content: flex-end;
+}
+
+.calendar-nav,
+.gc-nav {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 1;
+}
+
+.calendar-toggle-group,
+.gc-toggle-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.calendar-toggle-btn {
+	padding: 6px 12px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-modifier-hover);
+	border-radius: 6px;
+	color: var(--text-normal);
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.calendar-toggle-btn.active {
+	background-color: var(--interactive-accent);
+	border-color: var(--interactive-accent);
+	color: white;
+}
+
+.calendar-toggle-btn:hover {
+	background-color: var(--background-modifier-border);
+}
+
+.toolbar-right-task-refresh-btn {
+	padding: 6px;
+	width: 32px;
+	height: 32px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.toolbar-right-task-refresh-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.toolbar-right-task-refresh-btn svg {
+	width: 18px;
+	height: 18px;
+}
+
+.toolbar-right-task {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 0 1 auto;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+}
+
+.toolbar-right-task-field-select {
+	padding: 4px 8px;
+	border: 1px solid var(--input-border-color);
+	border-radius: 4px;
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.toolbar-right-task-field-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.toolbar-right-task-field-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-rgb, rgba(138, 109, 255, 0.1));
+}
+
+.toolbar-right-task-global-filter {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+	white-space: nowrap;
+}
+
+.toolbar-right-task-status-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.toolbar-right-task-status-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-muted);
+	white-space: nowrap;
+	margin: 0 8px;
+}
+
+.toolbar-right-task-status-select {
+	padding: 4px 8px;
+	border: 1px solid var(--input-border-color);
+	border-radius: 4px;
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.toolbar-right-task-status-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.toolbar-right-task-status-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-rgb, rgba(138, 109, 255, 0.1));
+}
+
+.toolbar-right-task-field-filter-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-muted);
+	white-space: nowrap;
+	margin: 0 8px;
+}
+
+.toolbar-right-task-date-filter-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.toolbar-right-task-date-filter-label {
+	font-size: 14px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.toolbar-right-task-date-input {
+	padding: 4px 8px;
+	border: 1px solid var(--input-border-color);
+	border-radius: 4px;
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: 12px;
+}
+
+.toolbar-right-task-date-mode-btn {
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: all 0.15s ease;
+}
+
+.toolbar-right-task-date-mode-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.toolbar-right-task-date-mode-btn.active {
+	background-color: #ff6b4a;
+	border-color: #ff6b4a;
+	color: white;
+}
+
+.calendar-nav-buttons {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.calendar-nav-btn {
+	padding: 4px 12px;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 13px;
+	color: var(--text-muted);
+	transition: all 0.15s ease;
+}
+
+.calendar-nav-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.calendar-nav-compact-btn {
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: all 0.15s ease;
+	min-width: 24px;
+	text-align: center;
+}
+
+.calendar-nav-compact-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	border-color: var(--interactive-normal);
+}
+
+.calendar-view-btn {
+	padding: 6px 16px;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-muted);
+	transition: all 0.15s ease;
+}
+
+.calendar-view-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.calendar-view-btn.active {
+	background-color: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.calendar-view-compact-btn {
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: all 0.15s ease;
+	min-width: 28px;
+	text-align: center;
+}
+
+.calendar-view-compact-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	border-color: var(--interactive-normal);
+}
+
+.calendar-view-compact-btn.active {
+	background-color: #ff6b4a;
+	border-color: #ff6b4a;
+	color: white;
+	font-weight: 500;
+}
+
+.calendar-view-compact-btn.icon-btn {
+	padding: 2px 6px;
+	min-width: auto;
+}
+
+.calendar-date-display {
+	font-weight: 600;
+	color: var(--text-normal);
+	text-align: center;
+	white-space: nowrap;
+}
+
+.calendar-view-selector {
+	display: flex;
+	gap: 6px;
+	justify-content: center;
+}
+
+/* Gantt Toolbar Components */
+.toolbar-right-gantt {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+/* ============================================
+   工具栏组件样式 (BEM: gc-toolbar)
+   ============================================ */
+
+/* 通用按钮组样式 - 带边框的紧凑按钮组 */
+/* 甘特图视图专用按钮组 (--gantt modifier) */
+.gc-toolbar__time-granularity-group--gantt,
+.gc-toolbar__status-filter-group--gantt,
+.gc-toolbar__sort-container--gantt,
+.gc-toolbar__tag-filter-container--gantt,
+.gc-toolbar__field-selector-dual-wrapper--gantt {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 2px;
+	background-color: var(--background-secondary);
+}
+
+/* 字段选择器组 */
+.gc-toolbar__field-selector-group--gantt {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* 时间颗粒度按钮 */
+.gc-toolbar__today-btn {
+	padding: 4px 10px;
+	border: none;
+	border-radius: 4px;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.gc-toolbar__today-btn:hover {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.gc-toolbar__time-granularity-btn {
+	padding: 4px 12px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.gc-toolbar__time-granularity-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.gc-toolbar__time-granularity-btn--active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 600;
+}
+
+/* 状态筛选 */
+.gc-toolbar__status-filter-label {
+	font-size: 13px;
+	color: var(--text-muted);
+	padding-left: 6px;
+}
+
+.gc-toolbar__status-filter-select {
+	padding: 4px 8px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+/* 排序按钮 */
+.gc-toolbar__sort-btn {
+	padding: 4px 10px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.gc-toolbar__sort-btn:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* 标签筛选按钮 */
+.gc-toolbar__tag-filter-btn {
+	padding: 4px 10px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.gc-toolbar__tag-filter-btn:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-toolbar__tag-filter-btn--has-selection {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.gc-toolbar__tag-filter-count {
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	border-radius: 8px;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-size: 11px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* 字段选择器 */
+.gc-toolbar__field-selector-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.gc-toolbar__field-selector-select {
+	padding: 4px 8px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+/* 向下兼容旧类名 */
+.toolbar-dual-field-selector-wrapper {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.toolbar-field-filter-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.toolbar-time-granularity-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 2px;
+	background-color: var(--background-secondary);
+}
+
+.time-today-btn {
+	padding: 4px 10px;
+	border: none;
+	border-radius: 4px;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.time-today-btn:hover {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.time-granularity-btn {
+	padding: 4px 12px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.time-granularity-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.time-granularity-btn.active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 600;
+}
+
+.toolbar-gantt-field-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.toolbar-gantt-field-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.toolbar-gantt-field-select {
+	padding: 4px 8px;
+	border: none;
+	border-radius: 4px;
+	background-color: transparent;
+	color: var(--text-normal);
+	font-size: 12px;
+}
+
+/* ============================================
+   排序下拉菜单样式 (BEM: gc-toolbar)
+   ============================================ */
+
+.gc-toolbar__sort-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 4px 0;
+	min-width: 160px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gc-toolbar__sort-dropdown-header {
+	padding: 8px 12px;
+	font-size: 11px;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 4px;
+}
+
+.gc-toolbar__sort-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+	user-select: none;
+}
+
+.gc-toolbar__sort-menu-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-toolbar__sort-menu-item--active {
+	background-color: var(--background-modifier-hover);
+	color: var(--interactive-accent);
+}
+
+.gc-toolbar__sort-option-icon {
+	font-size: 14px;
+	width: 20px;
+	text-align: center;
+}
+
+.gc-toolbar__sort-option-label {
+	flex: 1;
+	font-size: 13px;
+}
+
+.gc-toolbar__sort-option-indicator {
+	font-size: 12px;
+	width: 20px;
+	text-align: right;
+}
+
+.gc-toolbar__sort-icon {
+	font-size: 14px;
+}
+
+.gc-toolbar__sort-dropdown-icon {
+	font-size: 10px;
+	opacity: 0.7;
+}
+
+/* ============================================
+   标签筛选下拉菜单样式 (BEM: gc-toolbar)
+   ============================================ */
+
+.gc-toolbar__tag-filter-pane {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 6px 8px;
+	min-width: 180px;
+	max-width: 260px;
+	max-height: 280px;
+	overflow-y: auto;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gc-toolbar__tag-filter-pane::-webkit-scrollbar {
+	width: 4px;
+}
+
+.gc-toolbar__tag-filter-pane::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.gc-toolbar__tag-filter-pane::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 2px;
+}
+
+.gc-toolbar__tag-filter-pane::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+.gc-toolbar__tag-filter-operators {
+	display: flex;
+	gap: 4px;
+	padding-bottom: 4px;
+	margin-bottom: 6px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.gc-toolbar__tag-filter-operator-btn {
+	flex: 1;
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 10px;
+	font-weight: 500;
+	color: var(--text-muted);
+	transition: all 0.12s ease;
+	text-align: center;
+	line-height: 1.4;
+}
+
+.gc-toolbar__tag-filter-operator-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gc-toolbar__tag-filter-operator-btn--active {
+	background: var(--interactive-accent);
+	color: white;
+	border-color: var(--interactive-accent);
+}
+
+.gc-toolbar__tag-filter-tags-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.gc-toolbar__tag-filter-empty {
+	padding: 12px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: 11px;
+}
+
+.gc-toolbar__tag-filter-tag-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.12s ease;
+	user-select: none;
+	font-size: 11px;
+}
+
+.gc-toolbar__tag-filter-tag-item:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.gc-toolbar__tag-filter-tag-item--selected {
+	background: var(--interactive-accent);
+	border-color: var(--interactive-accent);
+	color: white;
+}
+
+.gc-toolbar__tag-filter-tag-name {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+.gc-toolbar__tag-filter-tag-item--selected .gc-toolbar__tag-filter-tag-name {
+	color: white;
+}
+
+.gc-toolbar__tag-filter-tag-count {
+	font-size: 9px;
+	color: var(--text-muted);
+	background: var(--background-modifier-border);
+	padding: 1px 4px;
+	border-radius: 6px;
+	font-weight: 500;
+	line-height: 1;
+}
+
+.gc-toolbar__tag-filter-tag-item--selected .gc-toolbar__tag-filter-tag-count {
+	background: rgba(255, 255, 255, 0.25);
+	color: white;
+}
+
+/* 标签颜色变体 */
+.gc-toolbar__tag-filter-tag-item.tag-color-0 .gc-toolbar__tag-filter-tag-name {
+	color: #3884ff;
+}
+
+.gc-toolbar__tag-filter-tag-item.tag-color-1 .gc-toolbar__tag-filter-tag-name {
+	color: #22c55e;
+}
+
+.gc-toolbar__tag-filter-tag-item.tag-color-2 .gc-toolbar__tag-filter-tag-name {
+	color: #f97316;
+}
+
+.gc-toolbar__tag-filter-tag-item.tag-color-3 .gc-toolbar__tag-filter-tag-name {
+	color: #eab308;
+}
+
+.gc-toolbar__tag-filter-tag-item.tag-color-4 .gc-toolbar__tag-filter-tag-name {
+	color: #a855f7;
+}
+
+.gc-toolbar__tag-filter-tag-item.tag-color-5 .gc-toolbar__tag-filter-tag-name {
+	color: #ec4899;
+}
+
+.gc-toolbar__tag-filter-tag-item--selected .gc-toolbar__tag-filter-tag-name {
+	color: white !important;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+	.gc-toolbar__tag-filter-pane {
+		min-width: 160px;
+		max-width: 200px;
+	}
+
+	.gc-toolbar__tag-filter-tag-item {
+		font-size: 10px;
+		padding: 2px 5px;
+	}
+
+	.gc-toolbar__tag-filter-tag-name {
+		font-size: 10px;
+	}
+
+	.gc-toolbar__tag-filter-tag-count {
+		font-size: 8px;
+		padding: 1px 3px;
+	}
+}
+
+/* 6.2 Task Card Component (统一任务卡片) */
+/* BEM命名: gc-task-card */
+.calendar-task-card,
+.gc-task-card {
+	display: flex;
+	align-items: center;
+	padding: 8px;
+	border-left: 3px solid transparent;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.calendar-task-card:hover,
+.gc-task-card:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-task-card-text,
+.gc-task-card__text {
+	flex: 1;
+	word-break: break-word;
+	line-height: 1.4;
+	color: var(--text-normal);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Task Card Modifiers */
+.gc-task-card--task {
+	padding: 10px;
+	gap: 8px;
+	flex-wrap: wrap;
+	font-size: 13px;
+}
+
+.calendar-task-card--day,
+.gc-task-card--day {
+	padding: 10px;
+	gap: 8px;
+	flex-wrap: wrap;
+	font-size: 13px;
+}
+
+
+
+.calendar-task-card--week,
+.gc-task-card--week {
+	padding: 8px;
+	gap: 8px;
+	font-size: 13px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-task-card--month,
+.gc-task-card--month {
+	padding: 4px 6px;
+	font-size: 11px;
+	line-height: 1.3;
+	border-left-width: 2px;
+	border-radius: 3px;
+}
+
+.calendar-task-card--gantt,
+.gc-task-card--gantt {
+	padding: 8px 12px;
+	border-left: 3px solid var(--interactive-accent);
+	border-top: 1px solid var(--background-modifier-border);
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ==================== Task Tags Component ==================== */
+/* BEM命名: gc-tag (独立Block), gc-task-card__tags (作为任务卡Element) */
+
+/* Tags inline container - 任务标签容器 */
+.gantt-task-tags-inline,
+.gc-task-card__tags {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	flex-wrap: wrap;
+	margin-left: 4px;
+}
+
+/* Tag badge - 标签样式 */
+.gantt-tag-badge,
+.gc-tag {
+	display: inline-flex;
+	align-items: center;
+	font-size: 11px;
+	padding: 2px 8px;
+	background-color: var(--background-primary);
+	border-radius: 12px;
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	white-space: nowrap;
+	font-weight: 500;
+	transition: all 0.2s ease;
+	cursor: default;
+}
+
+.gantt-tag-badge:hover,
+.gc-tag:hover {
+	background-color: var(--background-modifier-hover);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 标签颜色变体（6种颜色，基于hash自动分配） */
+.gantt-tag-badge.tag-color-0,
+.gc-tag--color-0 {
+	background-color: rgba(56, 132, 255, 0.1);
+	border-color: rgba(56, 132, 255, 0.2);
+	color: #3884ff;
+}
+
+.gantt-tag-badge.tag-color-1,
+.gc-tag--color-1 {
+	background-color: rgba(34, 197, 94, 0.1);
+	border-color: rgba(34, 197, 94, 0.2);
+	color: #22c55e;
+}
+
+.gantt-tag-badge.tag-color-2,
+.gc-tag--color-2 {
+	background-color: rgba(249, 115, 22, 0.1);
+	border-color: rgba(249, 115, 22, 0.2);
+	color: #f97316;
+}
+
+.gantt-tag-badge.tag-color-3,
+.gc-tag--color-3 {
+	background-color: rgba(234, 179, 8, 0.1);
+	border-color: rgba(234, 179, 8, 0.2);
+	color: #eab308;
+}
+
+.gantt-tag-badge.tag-color-4,
+.gc-tag--color-4 {
+	background-color: rgba(168, 85, 247, 0.1);
+	border-color: rgba(168, 85, 247, 0.2);
+	color: #a855f7;
+}
+
+.gantt-tag-badge.tag-color-5,
+.gc-tag--color-5 {
+	background-color: rgba(236, 72, 153, 0.1);
+	border-color: rgba(236, 72, 153, 0.2);
+	color: #ec4899;
+}
+
+/* Tooltip Tags */
+.tooltip-tags,
+.gc-task-tooltip__tags {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	margin-top: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.tooltip-tag-badge,
+.gc-tag.gc-tag--tooltip {
+	display: inline-flex;
+	align-items: center;
+	font-size: 12px;
+	padding: 3px 10px;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+}
+
+/* ==================== 响应式设计 ==================== */
+
+/* 小屏幕适配 */
+@media (max-width: 768px) {
+	.gantt-tag-badge,
+	.gc-tag {
+		font-size: 10px;
+		padding: 1px 6px;
+	}
+
+	.gantt-task-tags-inline,
+	.gc-task-card__tags {
+		gap: 3px;
+	}
+}
+
+/* 月视图小屏幕 - 限制标签显示 */
+.calendar-task-card--month .gantt-task-tags-inline,
+.gc-task-card--month .gc-task-card__tags {
+	max-width: 100%;
+	overflow: hidden;
+}
+
+.calendar-task-card--month .gantt-tag-badge,
+.gc-task-card--month .gc-tag {
+	max-width: 60px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 6.3 Year View Components */
+.calendar-month-card {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 6px;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.calendar-month-header {
+	text-align: center;
+	margin-bottom: 4px;
+	border-bottom: none;
+	padding-bottom: 2px;
+}
+
+.calendar-month-header h3 {
+	font-size: 12px;
+	font-weight: 600;
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.calendar-weekdays {
+	display: grid !important;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	grid-auto-flow: column;
+	width: 100%;
+	margin-bottom: 1px;
+}
+
+.calendar-weekday {
+	text-align: center;
+	font-size: 9px;
+	font-weight: 500;
+	color: var(--text-faint);
+	padding: 1px 0;
+}
+
+.calendar-days-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	flex: 1;
+}
+
+.calendar-day {
+	aspect-ratio: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	padding: 1px;
+	border-radius: 0;
+	cursor: pointer;
+	background-color: transparent;
+	border: none;
+	transition: all 0.15s ease;
+	min-height: 0;
+}
+
+.calendar-day-number {
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--text-normal);
+	line-height: 1;
+}
+
+.calendar-lunar-text {
+	font-size: 7px;
+	color: var(--text-faint);
+	text-align: center;
+	line-height: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* 年视图月卡片中的农历字体大小可调 */
+.calendar-month-card .calendar-lunar-text {
+	font-size: var(--year-lunar-font-size, 10px);
+}
+
+/* Hide lunar text in year view by default */
+.calendar-year-container .calendar-lunar-text {
+	display: none;
+}
+
+/* Show lunar text when there's enough space */
+.calendar-month-card.show-lunar .calendar-lunar-text {
+	display: block;
+}
+
+/* 6.4 Month View Components */
+.calendar-month-weekdays {
+	display: grid !important;
+	grid-template-columns: 40px repeat(7, 1fr);
+	width: 100%;
+	gap: 8px;
+	margin-bottom: 8px;
+	border-bottom: 2px solid var(--divider-color);
+	padding-bottom: 8px;
+}
+
+.calendar-month-weekday {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+.calendar-week-number {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.calendar-week-days {
+	display: contents;
+}
+
+.calendar-day-cell {
+	min-height: 100px;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	padding: 8px;
+	gap: 4px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	overflow: hidden;
+}
+
+.calendar-day-cell .calendar-day-number {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+	align-self: center;
+}
+
+.calendar-day-cell .calendar-lunar-text {
+	font-size: 11px;
+	color: var(--text-muted);
+	align-self: center;
+}
+
+.calendar-month-tasks {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+	margin-top: 4px;
+	flex: 1;
+	overflow: hidden;
+}
+
+.calendar-day-task-count {
+	font-size: 10px;
+	color: var(--text-muted);
+	margin-top: 2px;
+}
+
+/* 6.5 Week View Components */
+.calendar-day-column {
+	background-color: var(--background-secondary);
+	border: 1px solid var(--divider-color);
+	border-radius: 6px;
+	padding: 12px;
+	min-height: 200px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.calendar-day-column:hover {
+	background-color: var(--background-hover);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day-header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--divider-color);
+}
+
+.calendar-day-name {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.calendar-day-column-time {
+	display: flex;
+	flex-direction: column;
+	border-right: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.calendar-day-column-time:last-child {
+	border-right: none;
+}
+
+.calendar-day-column-time:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-hour-slot {
+	height: 60px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	position: relative;
+}
+
+.calendar-hour-slot.even-hour {
+	background-color: var(--background-primary);
+}
+
+.calendar-time-axis {
+	grid-column: 1 / 2;
+	display: flex;
+	flex-direction: column;
+	border-right: 1px solid var(--background-modifier-border);
+}
+
+.calendar-time-slot {
+	height: 60px;
+	padding: 4px 8px;
+	font-size: 11px;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--background-modifier-border);
+	display: flex;
+	align-items: flex-start;
+}
+
+.calendar-days-grid {
+	grid-column: 2 / -1;
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0;
+	min-height: min-content;
+}
+
+.calendar-week-tasks-column {
+	border-right: 1px solid var(--background-modifier-border);
+	padding: 8px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	background-color: var(--background-primary);
+}
+
+.calendar-week-tasks-column:last-child {
+	border-right: none;
+}
+
+.calendar-day-header-cell {
+	padding: 12px 8px;
+	text-align: center;
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 2px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	background-color: var(--background-primary);
+	position: sticky;
+	top: 0;
+	z-index: 4;
+}
+
+.calendar-day-header-cell:last-child {
+	border-right: none;
+}
+
+.calendar-day-header-cell .day-name {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.calendar-day-header-cell .day-number {
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--text-normal);
+}
+
+.calendar-day-header-cell .day-lunar {
+	font-size: 10px;
+	color: var(--text-muted);
+}
+
+/* ==================== Task Tooltip ==================== */
+/* BEM命名: gc-task-tooltip */
+.calendar-week-task-tooltip,
+.gc-task-tooltip {
+	position: fixed;
+	z-index: 1000;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	padding: 12px;
+	max-width: 300px;
+	min-width: 250px;
+	font-size: 13px;
+	line-height: 1.5;
+	pointer-events: none;
+	opacity: 0;
+	transform: translateY(-8px) scale(0.95);
+	transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+	            transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendar-week-task-tooltip.tooltip-show,
+.gc-task-tooltip--visible {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+}
+
+.calendar-week-task-tooltip .tooltip-description,
+.gc-task-tooltip .gc-task-tooltip__description {
+	margin-bottom: 8px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--divider-color);
+	color: var(--text-normal);
+	word-break: break-word;
+}
+
+.calendar-week-task-tooltip .tooltip-description strong,
+.gc-task-tooltip .gc-task-tooltip__description strong {
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.calendar-week-task-tooltip .tooltip-priority,
+.gc-task-tooltip .gc-task-tooltip__priority {
+	margin-bottom: 8px;
+	padding: 4px 0;
+	font-weight: 500;
+}
+
+.calendar-week-task-tooltip .priority-highest,
+.gc-task-tooltip .priority-highest {
+	color: #d73a49;
+}
+
+.calendar-week-task-tooltip .priority-high,
+.gc-task-tooltip .priority-high {
+	color: #e36209;
+}
+
+.calendar-week-task-tooltip .priority-medium,
+.gc-task-tooltip .priority-medium {
+	color: #ffd33d;
+}
+
+.calendar-week-task-tooltip .priority-low,
+.gc-task-tooltip .priority-low {
+	color: #28a745;
+}
+
+.calendar-week-task-tooltip .priority-lowest,
+.gc-task-tooltip .priority-lowest {
+	color: #0366d6;
+}
+
+.calendar-week-task-tooltip .tooltip-time-properties,
+.gc-task-tooltip .gc-task-tooltip__times {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.calendar-week-task-tooltip .tooltip-time-item,
+.gc-task-tooltip .gc-task-tooltip__time-item {
+	font-size: 12px;
+	color: var(--text-muted);
+	padding: 2px 0;
+}
+
+.calendar-week-task-tooltip .tooltip-overdue,
+.gc-task-tooltip .gc-task-tooltip__time-item--overdue {
+	color: #d73a49;
+	font-weight: 600;
+}
+
+.calendar-week-task-tooltip .tooltip-file,
+.gc-task-tooltip .gc-task-tooltip__file {
+	padding-top: 8px;
+	border-top: 1px solid var(--divider-color);
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.calendar-week-task-tooltip .tooltip-file-location {
+	font-family: var(--font-monospace);
+}
+
+.calendar-week-task-empty {
+	padding: 16px 8px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: 12px;
+}
+
+/* 6.6 Day View Components */
+.calendar-day-details {
+	background-color: var(--background-secondary);
+	border-radius: 6px;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.calendar-info-group {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+}
+
+.calendar-info-group label {
+	font-weight: 600;
+	min-width: 120px;
+	color: var(--text-muted);
+}
+
+.calendar-info-group span {
+	color: var(--text-normal);
+	font-weight: 500;
+}
+
+.calendar-event-section {
+	margin-top: 8px;
+}
+
+.calendar-event-section h3 {
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0 0 12px 0;
+	color: var(--text-normal);
+}
+
+.calendar-event-placeholder {
+	padding: 16px;
+	text-align: center;
+	color: var(--text-muted);
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	border: 1px dashed var(--divider-color);
+	font-size: 13px;
+}
+
+.calendar-day-column-full {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--background-primary);
+}
+
+.calendar-lunar-info {
+	display: flex;
+	gap: 16px;
+	justify-content: center;
+	align-items: center;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 6px;
+	margin: 0;
+	grid-row: 1;
+	z-index: 10;
+}
+
+.calendar-lunar-info .lunar-date {
+	font-size: 14px;
+	color: var(--text-muted);
+}
+
+.calendar-lunar-info .lunar-festival {
+	font-size: 14px;
+	color: #e74c3c;
+	font-weight: 600;
+}
+
+.calendar-current-time-indicator {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background-color: #ff0000;
+	z-index: 20;
+	box-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+	transform: translateY(-1px);
+}
+
+.calendar-current-time-indicator::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: -6px;
+	width: 12px;
+	height: 14px;
+	background-color: #ff0000;
+	border-radius: 50%;
+}
+
+.calendar-day-tasks-section {
+	margin-top: 16px;
+	padding: 12px;
+	background-color: var(--background-secondary);
+	border-radius: 6px;
+	border-top: 2px solid var(--interactive-accent);
+}
+
+.calendar-day-tasks-title {
+	margin: 0 0 12px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+/* ==================== Day View Sub-Components ==================== */
+/* BEM命名: gc-day-view Elements */
+.calendar-day-tasks-list,
+.gc-day-view__task-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+	flex: 1;
+	min-height: 0;
+}
+
+.calendar-day-split-container .calendar-day-tasks-section,
+.gc-day-view--horizontal .gc-day-view__section--tasks {
+	flex: 1 1 50%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding-right: 8px;
+	border-right: 1px solid var(--divider-color);
+	min-height: 0;
+}
+
+.calendar-day-tasks-section-full,
+.gc-day-view--tasks-only {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+}
+
+.calendar-day-split-container .calendar-day-notes-section,
+.gc-day-view--horizontal .gc-day-view__section--notes {
+	flex: 1 1 50%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding-left: 8px;
+	min-height: 0;
+}
+
+.calendar-day-divider,
+.gc-day-view__divider {
+	width: 8px;
+	background-color: transparent;
+	cursor: col-resize;
+	transition: background-color 0.2s;
+	flex-shrink: 0;
+}
+
+.calendar-day-divider:hover,
+.gc-day-view__divider:hover {
+	background-color: var(--interactive-accent);
+}
+
+.calendar-day-tasks-section-vertical,
+.gc-day-view--vertical .gc-day-view__section--tasks {
+	flex: 1 1 50%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--divider-color);
+	min-height: 0;
+}
+
+.calendar-day-tasks-section-vertical .calendar-day-tasks-title,
+.gc-day-view--vertical .gc-day-view__title {
+	margin: 0 0 12px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.calendar-day-tasks-section-vertical .calendar-day-tasks-list,
+.gc-day-view--vertical .gc-day-view__task-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+	flex: 1;
+	min-height: 0;
+}
+
+.calendar-day-notes-section-vertical,
+.gc-day-view--vertical .gc-day-view__section--notes {
+	flex: 1 1 50%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding-top: 8px;
+	min-height: 0;
+}
+
+.calendar-day-divider-vertical,
+.gc-day-view__divider--vertical {
+	height: 8px;
+	background-color: transparent;
+	cursor: row-resize;
+	transition: background-color 0.2s;
+	flex-shrink: 0;
+}
+
+.calendar-day-divider-vertical:hover {
+	background-color: var(--interactive-accent);
+}
+
+.calendar-day-notes-title {
+	margin: 0 0 12px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+	flex-shrink: 0;
+}
+
+.calendar-day-notes-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	min-height: 0;
+}
+
+.calendar-day-notes-markdown,
+.gc-day-view__notes-body {
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--text-normal);
+}
+
+/* Priority badge inline */
+/* BEM命名: gc-task-card__priority, gc-task-card__priority-badge */
+.gantt-task-priority-inline,
+.gc-task-card__priority {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.gantt-priority-badge,
+.gc-task-card__priority-badge {
+	font-size: 16px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.gantt-priority-badge.priority-highest,
+.gc-task-card__priority-badge--highest {
+	background-color: rgba(239, 68, 68, 0.1);
+}
+
+.gantt-priority-badge.priority-high,
+.gc-task-card__priority-badge--high {
+	background-color: rgba(249, 115, 22, 0.1);
+}
+
+.gantt-priority-badge.priority-medium,
+.gc-task-card__priority-badge--medium {
+	background-color: rgba(234, 179, 8, 0.1);
+}
+
+.gantt-priority-badge.priority-low,
+.gc-task-card__priority-badge--low {
+	background-color: rgba(34, 197, 94, 0.1);
+}
+
+.gantt-priority-badge.priority-lowest,
+.gc-task-card__priority-badge--lowest {
+	background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Time properties inline */
+/* BEM命名: gc-task-card__times, gc-task-card__time-badge */
+.gantt-task-time-properties-inline,
+.gc-task-card__times {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.gantt-time-badge,
+.gc-task-card__time-badge {
+	display: flex;
+	align-items: center;
+	font-size: 11px;
+	padding: 2px 6px;
+	background-color: var(--background-primary);
+	border-radius: 3px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.gantt-time-badge.gantt-overdue,
+.gc-task-card__time-badge--overdue {
+	color: #ef4444;
+	background-color: rgba(239, 68, 68, 0.1);
+	font-weight: 500;
+}
+
+.gantt-task-file,
+.gc-task-card__file {
+	display: flex;
+	align-items: center;
+	font-size: 10px;
+	color: var(--text-muted);
+	margin-left: auto;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+/* Warning Icon - 任务警告图标 */
+/* BEM命名: gc-task-card__warning */
+.gantt-task-warning-icon,
+.gc-task-card__warning {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 8px;
+	font-size: 14px;
+	cursor: help;
+	transition: transform 0.2s ease;
+}
+
+.gantt-task-warning-icon:hover,
+.gc-task-card__warning:hover {
+	transform: scale(1.2);
+}
+
+/* Ribbon Icon */
+.gantt-calendar-ribbon {
+	transition: all 0.2s ease;
+}
+
+.gantt-calendar-ribbon:hover {
+	transform: scale(1.1);
+	opacity: 0.8;
+}
+
+/* 6.9 Heatmap Components */
+/* 热力图色卡：蓝、绿、红（5级）
+	使用更高的选择器优先级并明确 background-color，避免被主题的 `.calendar-day { background-color: transparent; }` 覆盖。 */
+.calendar-day.heatmap-blue-1 { background-image: none; background-color: rgba(56, 132, 255, 0.12) !important; }
+.calendar-day.heatmap-blue-2 { background-image: none; background-color: rgba(56, 132, 255, 0.22) !important; }
+.calendar-day.heatmap-blue-3 { background-image: none; background-color: rgba(56, 132, 255, 0.32) !important; }
+.calendar-day.heatmap-blue-4 { background-image: none; background-color: rgba(56, 132, 255, 0.44) !important; }
+.calendar-day.heatmap-blue-5 { background-image: none; background-color: rgba(56, 132, 255, 0.58) !important; }
+
+.calendar-day.heatmap-green-1 { background-image: none; background-color: rgba(82, 196, 26, 0.12) !important; }
+.calendar-day.heatmap-green-2 { background-image: none; background-color: rgba(82, 196, 26, 0.22) !important; }
+.calendar-day.heatmap-green-3 { background-image: none; background-color: rgba(82, 196, 26, 0.32) !important; }
+.calendar-day.heatmap-green-4 { background-image: none; background-color: rgba(82, 196, 26, 0.44) !important; }
+.calendar-day.heatmap-green-5 { background-image: none; background-color: rgba(82, 196, 26, 0.58) !important; }
+
+.calendar-day.heatmap-red-1 { background-image: none; background-color: rgba(231, 76, 60, 0.12) !important; }
+.calendar-day.heatmap-red-2 { background-image: none; background-color: rgba(231, 76, 60, 0.22) !important; }
+.calendar-day.heatmap-red-3 { background-image: none; background-color: rgba(231, 76, 60, 0.32) !important; }
+.calendar-day.heatmap-red-4 { background-image: none; background-color: rgba(231, 76, 60, 0.44) !important; }
+.calendar-day.heatmap-red-5 { background-image: none; background-color: rgba(231, 76, 60, 0.58) !important; }
+
+.calendar-day.heatmap-purple-1 { background-image: none; background-color: rgba(142, 68, 173, 0.12) !important; }
+.calendar-day.heatmap-purple-2 { background-image: none; background-color: rgba(142, 68, 173, 0.22) !important; }
+.calendar-day.heatmap-purple-3 { background-image: none; background-color: rgba(142, 68, 173, 0.32) !important; }
+.calendar-day.heatmap-purple-4 { background-image: none; background-color: rgba(142, 68, 173, 0.44) !important; }
+.calendar-day.heatmap-purple-5 { background-image: none; background-color: rgba(142, 68, 173, 0.58) !important; }
+
+.calendar-day.heatmap-orange-1 { background-image: none; background-color: rgba(245, 124, 0, 0.12) !important; }
+.calendar-day.heatmap-orange-2 { background-image: none; background-color: rgba(245, 124, 0, 0.22) !important; }
+.calendar-day.heatmap-orange-3 { background-image: none; background-color: rgba(245, 124, 0, 0.32) !important; }
+.calendar-day.heatmap-orange-4 { background-image: none; background-color: rgba(245, 124, 0, 0.44) !important; }
+.calendar-day.heatmap-orange-5 { background-image: none; background-color: rgba(245, 124, 0, 0.58) !important; }
+
+.calendar-day.heatmap-cyan-1 { background-image: none; background-color: rgba(0, 188, 212, 0.12) !important; }
+.calendar-day.heatmap-cyan-2 { background-image: none; background-color: rgba(0, 188, 212, 0.22) !important; }
+.calendar-day.heatmap-cyan-3 { background-image: none; background-color: rgba(0, 188, 212, 0.32) !important; }
+.calendar-day.heatmap-cyan-4 { background-image: none; background-color: rgba(0, 188, 212, 0.44) !important; }
+.calendar-day.heatmap-cyan-5 { background-image: none; background-color: rgba(0, 188, 212, 0.58) !important; }
+
+.calendar-day.heatmap-pink-1 { background-image: none; background-color: rgba(233, 30, 99, 0.12) !important; }
+.calendar-day.heatmap-pink-2 { background-image: none; background-color: rgba(233, 30, 99, 0.22) !important; }
+.calendar-day.heatmap-pink-3 { background-image: none; background-color: rgba(233, 30, 99, 0.32) !important; }
+.calendar-day.heatmap-pink-4 { background-image: none; background-color: rgba(233, 30, 99, 0.44) !important; }
+.calendar-day.heatmap-pink-5 { background-image: none; background-color: rgba(233, 30, 99, 0.58) !important; }
+
+.calendar-day.heatmap-yellow-1 { background-image: none; background-color: rgba(255, 193, 7, 0.12) !important; }
+.calendar-day.heatmap-yellow-2 { background-image: none; background-color: rgba(255, 193, 7, 0.22) !important; }
+.calendar-day.heatmap-yellow-3 { background-image: none; background-color: rgba(255, 193, 7, 0.32) !important; }
+.calendar-day.heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44) !important; }
+.calendar-day.heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58) !important; }
+
+/* Heatmap palette setting (tiled single-select) */
+.heatmap-palette-setting {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.heatmap-palette-label {
+	padding: 0 10px;
+}
+
+.heatmap-palette-name {
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 4px;
+}
+
+.heatmap-palette-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.heatmap-palette-list {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	padding: 8px 10px;
+}
+
+.heatmap-palette-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	border: 2px solid transparent;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	background: var(--background-secondary);
+}
+
+.heatmap-palette-option:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.heatmap-palette-option.selected {
+	border-color: var(--interactive-accent);
+}
+
+.heatmap-palette-bars {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 14px;
+	gap: 3px;
+}
+
+.heatmap-palette-bar {
+	width: 14px;
+	height: 14px;
+	border-radius: 2px;
+	background-color: var(--background-modifier-border);
+}
+
+.heatmap-palette-label-text {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+/* 6.10 Modal Components */
+
+/* ========================================
+   Modal 通用组件样式
+   ======================================== */
+
+/* 通用标签 */
+.gc-modal__label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 8px;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+/* 提示文本 */
+.gc-modal__desc-hint {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-bottom: 8px;
+}
+
+/* 描述输入框 */
+.gc-modal__desc-textarea {
+	width: 100%;
+	min-height: 60px;
+	max-height: 60px;
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	resize: none;
+	overflow: auto;
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-small);
+}
+
+.gc-modal__desc-textarea:focus {
+	outline: 2px solid var(--interactive-accent);
+	border-color: var(--interactive-accent);
+}
+
+/* 优先级选择器容器 */
+.gc-modal__priority-container {
+	margin-bottom: 20px;
+}
+
+/* 优先级网格 (3列) */
+.gc-modal__priority-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+	margin-top: 8px;
+}
+
+/* 优先级按钮 */
+.gc-modal__priority-btn {
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	transition: all 0.2s ease;
+}
+
+.gc-modal__priority-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gc-modal__priority-btn--selected {
+	background: var(--interactive-accent) !important;
+	color: var(--text-on-accent) !important;
+	border-color: var(--interactive-accent) !important;
+}
+
+/* 日期选择器容器 */
+.gc-modal__dates-container {
+	margin-bottom: 20px;
+}
+
+/* 日期网格 (2列) */
+.gc-modal__dates-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px;
+}
+
+/* 单个日期项 */
+.gc-modal__date-item {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* 日期标签 */
+.gc-modal__date-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+/* 日期输入容器 */
+.gc-modal__date-input-container {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+}
+
+/* 日期输入框 */
+.gc-modal__date-input {
+	flex: 1;
+	padding: 6px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+.gc-modal__date-input:focus {
+	outline: 2px solid var(--interactive-accent);
+	border-color: var(--interactive-accent);
+}
+
+/* 日期清除按钮 */
+.gc-modal__date-clear {
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 20px;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.gc-modal__date-clear:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* 标签选择器组件 */
+.gc-modal__tag-item {
+	padding: 4px 10px;
+	margin: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	user-select: none;
+}
+
+.gc-modal__tag-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gc-modal__tag-item--selected {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.gc-modal__tag-input {
+	flex: 1;
+	padding: 6px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+/* Modal 按钮组 */
+.gc-modal__buttons-container {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+	margin-top: 24px;
+}
+
+.gc-modal__button--primary {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+/* Modal 分隔线 */
+.gc-modal__separator {
+	margin-top: 24px;
+	margin-bottom: 8px;
+	padding-top: 24px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* 状态弹窗样式 (修复宽度) */
+.gantt-status-modal.modal {
+	width: 480px;
+	max-width: 90vw;
+}
+
+/* ========================================
+   旧的 Modal 样式 (保留兼容性)
+   ======================================== */
+
+.gantt-date-picker-modal {
+	padding: 20px;
+}
+
+.gantt-date-picker-modal h2 {
+	margin: 0 0 20px 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.gantt-date-picker-modal .setting-item {
+	border: none;
+	padding: 10px 0;
+}
+
+.gantt-date-picker-modal .setting-item-name {
+	font-weight: 500;
+	margin-bottom: 8px;
+}
+
+.gantt-date-picker-modal input[type="date"] {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+}
+
+.gantt-date-picker-modal input[type="date"]:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+.gantt-date-picker-modal .setting-item-control {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 20px;
+}
+
+.gantt-date-picker-modal button {
+	padding: 8px 20px;
+	border-radius: 4px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.gantt-date-picker-modal button.mod-cta {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+}
+
+.gantt-date-picker-modal button.mod-cta:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.gantt-date-picker-modal button:not(.mod-cta) {
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.gantt-date-picker-modal button:not(.mod-cta):hover {
+	background: var(--background-modifier-hover);
+}
+
+/* Task modal sizing */
+.gantt-task-modal.modal {
+	width: 640px;
+	max-width: 90vw;
+	max-height: 80vh;
+}
+
+/* Festival Color Settings */
+.festival-color-settings-container {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+	padding: 12px 0;
+	margin-bottom: 16px;
+}
+
+.festival-color-setting {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+}
+
+.festival-color-label {
+	padding: 0 10px;
+}
+
+.festival-color-name {
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 4px;
+}
+
+.festival-color-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.festival-color-picker {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	flex-wrap: wrap;
+}
+
+.festival-color-input {
+	display: none;
+}
+
+.festival-color-swatch {
+	width: 14px;
+	height: 14px;
+	border-radius: 2px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+}
+
+.festival-color-swatch:hover {
+	transform: scale(1.1);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   LAYER 7: Themes (主题层)
+   Visual States & Modifiers
+   ======================================== */
+
+/* 7.1 Task Status States (高特指性) */
+
+
+/* Task View 容器 */
+.gc-view--task .gc-task-card--task.gc-task-card--completed {
+	opacity: 0.65;
+	border-left-color: var(--task-completed-color);
+}
+
+.gc-view--task .gc-task-card--task.gc-task-card--pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Day View 容器 */
+.calendar-day-tasks-list .calendar-task-card--day.completed,
+.gc-day-view__task-list .calendar-task-card--day.completed,
+.gc-day-view__task-list .gc-task-card--day.gc-task-card--completed {
+	opacity: 0.65;
+	border-left-color: var(--task-completed-color);
+}
+
+.calendar-day-tasks-list .calendar-task-card--day.pending,
+.gc-day-view__task-list .calendar-task-card--day.pending,
+.gc-day-view__task-list .gc-task-card--day.gc-task-card--pending {
+	border-left-color: var(--task-pending-color);
+}
+
+
+/* Week View */
+.calendar-week-tasks-grid .calendar-task-card--week.completed,
+.calendar-week-tasks-grid .gc-task-card--week.gc-task-card--completed {
+	opacity: 0.6;
+	border-left-color: var(--task-completed-color);
+}
+
+.calendar-week-tasks-grid .calendar-task-card--week.pending,
+.calendar-week-tasks-grid .gc-task-card--week.gc-task-card--pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Month View */
+.calendar-month-tasks .calendar-task-card--month.completed,
+.calendar-month-tasks .gc-task-card--month.gc-task-card--completed {
+	opacity: 0.5;
+	border-left-color: var(--task-completed-color);
+}
+
+.calendar-month-tasks .calendar-task-card--month.pending,
+.calendar-month-tasks .gc-task-card--month.gc-task-card--pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* Gantt View */
+.gc-task-card--gantt.gc-task-card--completed {
+	opacity: 0.7;
+	border-left-color: var(--task-completed-color);
+}
+
+.gc-task-card--gantt.gc-task-card--pending {
+	border-left-color: var(--task-pending-color);
+}
+
+/* 7.2 Interactive States (hover, active) */
+.calendar-task-card--day:hover,
+.gc-task-card--day:hover {
+	transform: translateX(4px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-task-card--week:hover,
+.gc-task-card--week:hover {
+	transform: translateX(2px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-task-card--month:hover,
+.gc-task-card--month:hover {
+	transform: translateX(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-task-card--gantt:hover,
+.gc-task-card--gantt:hover {
+	transform: translateX(2px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gc-task-card--task:hover {
+	transform: translateX(4px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day:hover {
+	background-color: var(--background-secondary);
+}
+
+.calendar-day-cell:hover {
+	background-color: var(--background-modifier-hover);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 7.3 Custom Status Colors (from Settings) */
+/* 任务卡片背景色和文字颜色 */
+.calendar-task-card.task-with-status,
+.gc-task-card.task-with-status {
+	background-color: var(--task-bg-color, var(--background-secondary));
+	color: var(--task-text-color, var(--text-normal));
+}
+
+/* 状态文字颜色应用到任务文本元素 */
+.calendar-task-card.task-with-status .calendar-task-card-text,
+.gc-task-card.task-with-status .gc-task-card__text {
+	color: var(--task-text-color, var(--text-normal));
+}
+
+/* 状态颜色应用到边框 - 只在没有completed/pending状态时应用 */
+.calendar-task-card.task-with-status:not(.completed):not(.pending),
+.gc-task-card.task-with-status:not(.gc-task-card--completed):not(.gc-task-card--pending) {
+	border-left-color: var(--task-bg-color, var(--interactive-accent));
+}
+
+/* 已完成任务保持透明度 */
+.calendar-task-card.task-with-status.completed,
+.gc-task-card.task-with-status.gc-task-card--completed {
+	opacity: 0.7;
+}
+
+/* 7.4 Festival Themes */
+.calendar-lunar-text.festival {
+	font-weight: 600;
+}
+
+/* 阳历节日 - 使用CSS变量 */
+.calendar-lunar-text.festival-solar {
+	color: var(--festival-solar-color);
+}
+
+/* 农历传统节日 - 使用CSS变量 */
+.calendar-lunar-text.festival-lunar {
+	color: var(--festival-lunar-color);
+}
+
+/* 二十四节气 - 使用CSS变量 */
+.calendar-lunar-text.festival-solarTerm {
+	color: var(--festival-solar-term-color);
+}
+
+/* Month view specific festival styles */
+.calendar-day-cell .calendar-lunar-text.festival {
+	font-weight: 600;
+}
+
+.calendar-day-cell .calendar-lunar-text.festival-solar {
+	color: var(--festival-solar-color);
+}
+
+.calendar-day-cell .calendar-lunar-text.festival-lunar {
+	color: var(--festival-lunar-color);
+}
+
+.calendar-day-cell .calendar-lunar-text.festival-solarTerm {
+	color: var(--festival-solar-term-color);
+}
+
+/* 7.5 Special States */
+/* Outside month */
+.calendar-day.outside-month {
+	opacity: 0.4;
+}
+
+.calendar-day.outside-month .calendar-day-number {
+	color: var(--text-faint);
+}
+
+.calendar-day-cell.outside-month {
+	background-color: var(--background-secondary);
+	opacity: 0.5;
+}
+
+.calendar-day-cell.outside-month .calendar-day-number {
+	color: var(--text-faint);
+}
+
+/* Today state */
+.calendar-day.today {
+	background-color: #ff6b6b;
+	border-radius: 2px;
+}
+
+.calendar-day.today .calendar-day-number {
+	color: red;
+	font-weight: 600;
+}
+
+.calendar-day.today .calendar-lunar-text {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-day-cell.today {
+	background-color: #ff6b6b;
+	border-color: #ff6b6b;
+}
+
+.calendar-day-cell.today .calendar-day-number {
+	color: white;
+	font-weight: 700;
+}
+
+.calendar-day-cell.today .calendar-lunar-text {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-day-column.today {
+	background-color: var(--interactive-accent);
+	background-image: linear-gradient(135deg, var(--interactive-accent) 0%, rgba(0, 0, 0, 0.1) 100%);
+	border-color: var(--interactive-accent);
+}
+
+.calendar-day-column.today .calendar-day-header {
+	border-bottom-color: rgba(255, 255, 255, 0.3);
+	color: white;
+}
+
+.calendar-day-column.today .calendar-day-name {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-day-column.today .calendar-day-number {
+	color: white;
+}
+
+.calendar-day-header-cell.today {
+	background-color: rgba(255, 107, 107, 0.1);
+}
+
+.calendar-day-header-cell.today .day-number {
+	color: #ff6b6b;
+}
+
+.calendar-day-column-time.today {
+	background-color: rgba(255, 107, 107, 0.05);
+}
+
+.calendar-week-tasks-column.today {
+	background-color: rgba(255, 107, 107, 0.03);
+}
+
+/* 7.6 Text Decoration (已完成任务) */
+.calendar-day-tasks-list .calendar-task-card--day.completed .calendar-task-card-text,
+.gc-day-view__task-list .calendar-task-card--day.completed .calendar-task-card-text,
+.gc-day-view__task-list .gc-task-card--day.gc-task-card--completed .gc-task-card__text,
+.calendar-week-tasks-grid .calendar-task-card--week.completed .calendar-task-card-text,
+.calendar-week-tasks-grid .gc-task-card--week.gc-task-card--completed .gc-task-card__text,
+.calendar-month-tasks .calendar-task-card--month.completed .calendar-task-card-text,
+.calendar-month-tasks .gc-task-card--month.gc-task-card--completed .gc-task-card__text,
+.gc-view--task .gc-task-card--task.gc-task-card--completed .gc-task-card__text,
+.gc-task-card--gantt.gc-task-card--completed .gc-task-card__text {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
+/* Custom scrollbar */
+.calendar-time-grid::-webkit-scrollbar {
+	width: 10px;
+}
+
+.calendar-time-grid::-webkit-scrollbar-track {
+	background: var(--background-primary);
+	border-radius: 5px;
+}
+
+.calendar-time-grid::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb-bg, var(--background-modifier-border));
+	border-radius: 5px;
+	border: 2px solid var(--background-primary);
+}
+
+.calendar-time-grid::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover, var(--text-muted));
+}
+
+/* ========================================
+   LAYER 8: Trumps (覆盖层)
+   Utilities & Overrides
+   ======================================== */
+
+/* No utility classes currently defined */
+/* Future utility classes can be added here as needed */
+
+/* ========================================
+   Task Sort Button Styles
+   ======================================== */
+
+/* 排序按钮容器 */
+.toolbar-sort-button-container {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 4px;
+}
+
+/* 排序按钮 */
+.toolbar-sort-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 8px;
+	min-width: 32px;
+}
+
+.toolbar-sort-icon {
+	font-size: 14px;
+}
+
+.toolbar-sort-dropdown-icon {
+	font-size: 10px;
+	opacity: 0.7;
+}
+
+/* 排序下拉菜单 */
+.toolbar-sort-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 4px 0;
+	min-width: 160px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toolbar-sort-dropdown-header {
+	padding: 8px 12px;
+	font-size: 11px;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 4px;
+}
+
+/* 排序菜单项 */
+.toolbar-sort-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.toolbar-sort-menu-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.toolbar-sort-menu-item.active {
+	background: var(--background-modifier-border);
+}
+
+.toolbar-sort-option-icon {
+	font-size: 14px;
+	width: 20px;
+	text-align: center;
+}
+
+.toolbar-sort-option-label {
+	flex: 1;
+	font-size: 13px;
+}
+
+.toolbar-sort-option-indicator {
+	font-size: 12px;
+	width: 20px;
+	text-align: right;
+}
+
+/* ============================================
+   标签筛选器样式（紧凑版）
+   ============================================ */
+
+/* 标签筛选按钮容器 */
+.toolbar-tag-filter-container {
+	display: inline-flex;
+	align-items: center;
+}
+
+/* 标签筛选按钮 */
+.toolbar-tag-filter-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	font-size: 12px;
+}
+
+.toolbar-tag-filter-btn:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.toolbar-tag-filter-btn:active {
+	transform: translateY(0);
+}
+
+/* 标签筛选按钮 - 有选中时的样式 */
+.toolbar-tag-filter-btn.has-selection {
+	background-color: var(--interactive-accent);
+	color: white;
+	border-color: var(--interactive-accent);
+}
+
+/* 标签图标 */
+.toolbar-tag-filter-icon {
+	font-size: 12px;
+	line-height: 1;
+}
+
+/* 标签数量徽章 */
+.toolbar-tag-filter-count {
+	background-color: var(--interactive-accent);
+	color: white;
+	font-size: 9px;
+	font-weight: 600;
+	padding: 1px 4px;
+	border-radius: 6px;
+	min-width: 14px;
+	text-align: center;
+	line-height: 1.1;
+}
+
+.toolbar-tag-filter-btn.has-selection .toolbar-tag-filter-count {
+	background-color: white;
+	color: var(--interactive-accent);
+}
+
+/* ============================================
+   标签选择窗格（紧凑版）
+   ============================================ */
+
+/* 窗格容器 - 更小更紧凑 */
+.tag-filter-pane {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 6px 8px;
+	min-width: 180px;
+	max-width: 260px;
+	max-height: 280px;
+	overflow-y: auto;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 窗格滚动条样式 */
+.tag-filter-pane::-webkit-scrollbar {
+	width: 4px;
+}
+
+.tag-filter-pane::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.tag-filter-pane::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 2px;
+}
+
+.tag-filter-pane::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+/* 组合器区域 - 更紧凑 */
+.tag-filter-operators {
+	display: flex;
+	gap: 4px;
+	padding-bottom: 4px;
+	margin-bottom: 6px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* 组合器按钮 - 更小更紧凑 */
+.tag-filter-operator-btn {
+	flex: 1;
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 10px;
+	font-weight: 500;
+	color: var(--text-muted);
+	transition: all 0.12s ease;
+	text-align: center;
+	line-height: 1.4;
+}
+
+.tag-filter-operator-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.tag-filter-operator-btn.active {
+	background: var(--interactive-accent);
+	color: white;
+	border-color: var(--interactive-accent);
+}
+
+/* 标签网格容器（平铺布局） - 更紧凑 */
+.tag-filter-tags-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+/* 空状态提示 - 更紧凑 */
+.tag-filter-empty {
+	padding: 12px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: 11px;
+}
+
+/* ============================================
+   胶囊样式标签项（紧凑版）
+   ============================================ */
+
+/* 标签项 - 胶囊样式单行布局 */
+.tag-filter-tag-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: all 0.12s ease;
+	user-select: none;
+	font-size: 11px;
+}
+
+.tag-filter-tag-item:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+/* 选中状态 */
+.tag-filter-tag-item.selected {
+	background: var(--interactive-accent);
+	border-color: var(--interactive-accent);
+	color: white;
+}
+
+/* 标签名称 */
+.tag-filter-tag-name {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+.tag-filter-tag-item.selected .tag-filter-tag-name {
+	color: white;
+}
+
+/* 任务数量 - 小徽章 */
+.tag-filter-tag-count {
+	font-size: 9px;
+	color: var(--text-muted);
+	background: var(--background-modifier-border);
+	padding: 1px 4px;
+	border-radius: 6px;
+	font-weight: 500;
+	line-height: 1;
+}
+
+.tag-filter-tag-item.selected .tag-filter-tag-count {
+	background: rgba(255, 255, 255, 0.25);
+	color: white;
+}
+
+/* ============================================
+   标签颜色变体（复用现有6种颜色）
+   ============================================ */
+
+/* 蓝色 */
+.tag-filter-tag-item.tag-color-0 .tag-filter-tag-name {
+	color: #3884ff;
+}
+
+/* 绿色 */
+.tag-filter-tag-item.tag-color-1 .tag-filter-tag-name {
+	color: #22c55e;
+}
+
+/* 橙色 */
+.tag-filter-tag-item.tag-color-2 .tag-filter-tag-name {
+	color: #f97316;
+}
+
+/* 黄色 */
+.tag-filter-tag-item.tag-color-3 .tag-filter-tag-name {
+	color: #eab308;
+}
+
+/* 紫色 */
+.tag-filter-tag-item.tag-color-4 .tag-filter-tag-name {
+	color: #a855f7;
+}
+
+/* 粉色 */
+.tag-filter-tag-item.tag-color-5 .tag-filter-tag-name {
+	color: #ec4899;
+}
+
+/* 选中状态下覆盖颜色为白色 */
+.tag-filter-tag-item.selected .tag-filter-tag-name {
+	color: white !important;
+}
+
+/* ============================================
+   响应式适配
+   ============================================ */
+
+@media (max-width: 768px) {
+	.tag-filter-pane {
+		min-width: 160px;
+		max-width: 200px;
+	}
+
+	.tag-filter-tag-item {
+		font-size: 10px;
+		padding: 2px 5px;
+	}
+
+	.tag-filter-tag-name {
+		font-size: 10px;
+	}
+
+	.tag-filter-tag-count {
+		font-size: 8px;
+		padding: 1px 3px;
+	}
+}
+
+/* ============================================
+   ============================================
+   甘特图样式 (BEM 规范)
+   ============================================ */
+
+/* 甘特图容器 */
+.gc-gantt-view__container {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+}
+
+/* 甘特图根容器 */
+.gc-gantt-view__root {
+	flex: 1 1 auto;
+	min-height: 500px;
+	min-width: 100%;
+	position: relative;
+	overflow: visible;
+	background-color: var(--background-primary);
+	border-radius: 8px;
+	padding: 8px;
+}
+
+/* ============================================
+   BEM 布局结构
+   gantt__layout - 主布局容器
+   gantt__corner - 左上角空白区域
+   gantt__header-container - 顶部时间轴容器
+   gantt__tasklist-container - 左侧任务列表容器
+   gantt__chart-container - 右侧甘特图容器
+   ============================================ */
+
+/* 主布局容器 - 使用 Grid 布局实现冻结效果 */
+.gc-gantt-view__layout {
+	display: grid;
+	grid-template-columns: 200px 4px 1fr;
+	grid-template-rows: 50px 1fr;
+	grid-template-areas:
+		"corner resizer header"
+		"tasklist resizer chart";
+	width: 100%;
+	height: 100%;
+	gap: 0;
+	overflow: hidden;
+	min-height: 0;
+}
+
+/* 左上角空白区域 */
+.gc-gantt-view__corner {
+	grid-area: corner;
+	overflow: hidden;
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	min-height: 0;
+	min-width: 0;
+}
+
+.gc-gantt-view__corner-svg {
+	display: block;
+}
+
+/* 顶部时间轴容器 */
+.gc-gantt-view__header-container {
+	grid-area: header;
+	overflow-x: auto;
+	overflow-y: hidden;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+	min-height: 0;
+	min-width: 0;
+	/* 隐藏滚动条但保留滚动功能 */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE 10+ */
+}
+
+.gc-gantt-view__header-container::-webkit-scrollbar {
+	display: none; /* Chrome, Safari, Opera */
+}
+
+.gc-gantt-view__header-svg {
+	display: block;
+}
+
+/* 左侧任务列表容器 */
+.gc-gantt-view__tasklist-container {
+	grid-area: tasklist;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-right: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	min-height: 0;
+	/* 隐藏滚动条但保留滚动功能 */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE 10+ */
+}
+
+.gc-gantt-view__tasklist-container::-webkit-scrollbar {
+	display: none; /* Chrome, Safari, Opera */
+}
+
+.gc-gantt-view__tasklist-svg {
+	display: block;
+}
+
+/* 右侧甘特图容器 */
+.gc-gantt-view__chart-container {
+	grid-area: chart;
+	overflow: auto;
+	background-color: var(--background-primary);
+	min-height: 0;
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar-track {
+	background: var(--background-primary);
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.gc-gantt-view__chart-container::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+/* 分隔条 - 可拖动调整左右布局宽度 */
+.gc-gantt-view__resizer {
+	grid-area: resizer;
+	background-color: var(--background-modifier-border);
+	cursor: col-resize;
+	transition: background-color 0.2s ease;
+	position: relative;
+	z-index: 10;
+}
+
+.gc-gantt-view__resizer:hover {
+	background-color: var(--interactive-accent);
+}
+
+.gc-gantt-view__resizer:active {
+	background-color: var(--interactive-accent-hover);
+}
+
+.gc-gantt-view__chart-svg {
+	display: block;
+}
+
+/* ============================================
+   甘特图内部元素样式
+   ============================================ */
+
+/* 甘特图网格 */
+.gc-gantt-view__grid line {
+	stroke: var(--background-modifier-border);
+	stroke-width: 1;
+}
+
+/* 甘特图任务条 */
+.gc-gantt-view__bar-group rect {
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+
+.gc-gantt-view__bar-group:hover rect {
+	opacity: 1 !important;
+	filter: brightness(1.1);
+}
+
+/* 任务状态颜色 */
+.gc-gantt-view__bar-group .task-completed {
+	fill: var(--task-completed-color, #52c41a);
+}
+
+.gc-gantt-view__bar-group .task-cancelled {
+	fill: var(--text-muted, #999);
+	opacity: 0.5;
+}
+
+/* 优先级颜色 */
+.gc-gantt-view__bar-group .priority-highest {
+	fill: var(--priority-highest-color, #ef4444);
+}
+
+.gc-gantt-view__bar-group .priority-high {
+	fill: var(--priority-high-color, #f97316);
+}
+
+.gc-gantt-view__bar-group .priority-medium {
+	fill: var(--priority-medium-color, #eab308);
+}
+
+.gc-gantt-view__bar-group .priority-low {
+	fill: var(--priority-low-color, #22c55e);
+}
+
+.gc-gantt-view__bar-group .priority-lowest {
+	fill: var(--priority-lowest-color, #3b82f6);
+}
+
+/* ============================================
+   其他甘特图样式
+   ============================================ */
+
+/* 任务标签文字 */
+.gc-gantt-view__bar-group text {
+	font-family: var(--font-ui-medium);
+	-webkit-user-select: none;
+	user-select: none;
+	pointer-events: none;
+}
+
+/* 任务列表项 */
+.gantt-task-list-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 100%;
+	font-size: 12px;
+	color: var(--text-normal);
+}
+
+.gantt-task-list-item__text {
+	flex: 1;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.gantt-task-list-item__text:hover {
+	color: var(--interactive-accent);
+}
+
+/* 任务复选框 */
+.gc-gantt-view__task-checkbox {
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	margin: 0;
+	accent-color: var(--interactive-accent);
+}
+
+/* 拖动手柄 */
+.gc-gantt-view__handle-left,
+.gc-gantt-view__handle-right {
+	opacity: 0.5;
+	transition: opacity 0.15s ease;
+}
+
+.gc-gantt-view__bar-group:hover .gc-gantt-view__handle-left,
+.gc-gantt-view__bar-group:hover .gc-gantt-view__handle-right {
+	opacity: 1;
+}
+
+/* 今天标记线 */
+.gantt-today-line {
+	stroke: var(--interactive-accent);
+	stroke-width: 2;
+	stroke-dasharray: 4 2;
+	pointer-events: none;
+}
+
+
+/* 空状态 */
+.gantt-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	text-align: center;
+	color: var(--text-muted);
+}
+
+.gantt-empty-icon {
+	font-size: 48px;
+	margin-bottom: 16px;
+	opacity: 0.5;
+}
+
+.gantt-empty-title {
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 8px;
+}
+
+.gantt-empty-reason {
+	font-size: 14px;
+	color: var(--text-muted);
+	margin-bottom: 4px;
+}
+
+.gantt-empty-hint {
+	font-size: 12px;
+	color: var(--text-faint);
+}
+
+/* 错误状态 */
+.gantt-error {
+	padding: 16px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--text-error);
+	border-radius: 8px;
+	color: var(--text-error);
+	text-align: center;
+}
+
+/* 控制面板 */
+.gantt-control-panel {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 16px;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+	margin-bottom: 12px;
+}
+
+.gantt-stats {
+	display: flex;
+	gap: 16px;
+	align-items: center;
+}
+
+.gantt-stat-item {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.gantt-stat-item strong {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+
+.gc-tag--popup {
+	display: inline-block;
+	padding: 2px 6px;
+	margin-right: 4px;
+	margin-bottom: 4px;
+	background-color: var(--tag-background);
+	color: var(--tag-color);
+	border-radius: 4px;
+	font-size: 11px;
+}
+
+/* 日期头部样式 */
+.gantt-date-header {
+	font-size: 11px;
+	fill: var(--text-muted);
+}
+
+.gantt-date-header.today {
+	font-weight: 600;
+	fill: var(--interactive-accent);
+}
+
+/* 今天标记线 */
+.gantt-today-line {
+	stroke: var(--interactive-accent);
+	stroke-width: 2;
+	stroke-dasharray: 4 2;
+	pointer-events: none;
+}
+
+/* 依赖箭头 */
+.gantt-dependency-arrow {
+	stroke: var(--text-muted);
+	stroke-width: 1.5;
+	fill: none;
+	pointer-events: none;
+}
+
+.gantt-dependency-arrow:hover {
+	stroke: var(--interactive-accent);
+	stroke-width: 2;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+	.gc-gantt-view__root {
+		min-height: 300px;
+		padding: 8px;
+	}
+
+	.gantt-control-panel {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.gantt-stats {
+		flex-direction: column;
+		gap: 4px;
+		align-items: flex-start;
+	}
+}
+
+/* ========================================
+   创建任务弹窗样式
+   ======================================== */
+
+/* 创建任务弹窗 */
+.gc-create-task-modal {
+	max-width: 600px;
+}
+
+.gc-create-task-modal__form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.gc-create-task-modal__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.gc-create-task-modal__label {
+	font-weight: 500;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}
+
+.gc-create-task-modal__input,
+.gc-create-task-modal__textarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-small);
+}
+
+.gc-create-task-modal__input:focus,
+.gc-create-task-modal__textarea:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+.gc-create-task-modal__textarea {
+	min-height: 80px;
+	resize: vertical;
+	line-height: 1.5;
+}
+
+.gc-create-task-modal__tags-container {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.gc-create-task-modal__tag-item {
+	display: inline-block;
+	padding: 4px 10px;
+	margin: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	user-select: none;
+}
+
+.gc-create-task-modal__tag-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gc-create-task-modal__tag-item--selected {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.gc-create-task-modal__tag-input {
+	flex: 1;
+}
+
+.gc-create-task-modal__buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 8px;
+	padding-top: 16px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* 创建任务按钮 */
+.gc-create-task-btn {
+	font-size: 1.2em;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.1s ease;
+}
+
+.gc-create-task-btn:active {
+	transform: scale(0.95);
+}
+
+.gc-create-task-btn--toolbar {
+	padding: 4px 8px;
+	min-width: 32px;
+}
+
