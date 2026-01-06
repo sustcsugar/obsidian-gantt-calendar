@@ -11,6 +11,8 @@ import { openEditTaskModal } from './commands/editTask';
 import { deleteTask } from './commands/deleteTask';
 import { cancelTask } from './commands/cancelTask';
 import { restoreTask } from './commands/restoreTask';
+import { setTaskPriority } from './commands/setPriority';
+import { postponeTask } from './commands/postponeTask';
 
 /**
  * 注册任务右键菜单
@@ -47,6 +49,11 @@ export function registerTaskContextMenu(
 				   });
 		});
 
+
+
+		// 分隔线
+		menu.addSeparator();
+
 		// 创建任务笔记:同名
 		menu.addItem((item) => {
 			item
@@ -65,6 +72,45 @@ export function registerTaskContextMenu(
 				.onClick(() => {
 					createNoteFromTaskAlias(app, task, defaultNotePath, enabledFormats);
 				});
+		});
+
+		// 分隔线
+		menu.addSeparator();
+
+		// 第一组：设置优先级（6个选项直接显示）
+		const priorities: Array<{ value: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal', label: string, icon: string }> = [
+			{ value: 'highest', label: '最高', icon: '🔺' },
+			{ value: 'high', label: '高', icon: '⏫' },
+			{ value: 'medium', label: '中', icon: '🔼' },
+			{ value: 'normal', label: '普通', icon: '◽' },
+			{ value: 'low', label: '低', icon: '🔽' },
+			{ value: 'lowest', label: '最低', icon: '⏬' },
+		];
+
+		priorities.forEach(p => {
+			menu.addItem((item) => {
+				item.setTitle(`${p.icon} ${p.label}`).onClick(() => {
+					setTaskPriority(app, task, p.value, enabledFormats, onRefresh);
+				});
+			});
+		});
+
+		// 分隔线
+		menu.addSeparator();
+
+		// 第二组：任务延期（1天、3天、7天）
+		const postponeOptions = [
+			{ days: 1, label: '延期 1 天' },
+			{ days: 3, label: '延期 3 天' },
+			{ days: 7, label: '延期 7 天' },
+		];
+
+		postponeOptions.forEach(option => {
+			menu.addItem((item) => {
+				item.setTitle(option.label).setIcon('calendar-clock').onClick(() => {
+					postponeTask(app, task, option.days, enabledFormats, onRefresh);
+				});
+			});
 		});
 
 		// 分隔线
