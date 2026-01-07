@@ -168,13 +168,29 @@ export function serializeTask(
 	}
 
 	// 优先级（放在描述后）
-	if (format === 'tasks' && merged.priority && merged.priority !== 'none' && merged.priority !== 'normal') {
-		parts.push(merged.priority);
+	if (format === 'tasks') {
+		const shouldOutputPriority =
+			// 情况1：不更改优先级，且原始任务有优先级（emoji 非空）
+			(updates.priority === undefined && merged.priority && merged.priority !== 'none' && merged.priority !== 'normal') ||
+			// 情况2：明确设置了非 'normal' 的优先级
+			(updates.priority !== undefined && updates.priority !== 'normal' && merged.priority);
+
+		if (shouldOutputPriority && merged.priority) {
+			parts.push(merged.priority);
+		}
 	}
 
 	// 优先级（Dataview 格式）
-	if (format === 'dataview' && updates.priority !== undefined && updates.priority !== 'normal') {
-		parts.push(`[priority:: ${updates.priority}]`);
+	if (format === 'dataview') {
+		const shouldOutputPriority =
+			// 情况1：不更改优先级，且原始任务有优先级
+			(updates.priority === undefined && task.priority && task.priority !== 'normal') ||
+			// 情况2：明确设置了非 'normal' 的优先级
+			(updates.priority !== undefined && updates.priority !== 'normal');
+
+		if (shouldOutputPriority && updates.priority) {
+			parts.push(`[priority:: ${updates.priority}]`);
+		}
 	}
 
 	// 日期字段（固定顺序）

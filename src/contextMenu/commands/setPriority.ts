@@ -19,7 +19,7 @@ export async function setTaskPriority(
 ): Promise<void> {
 	try {
 		const updates = {
-			priority: priority === 'normal' ? undefined : priority
+			priority: priority
 		};
 
 		await updateTaskProperties(app, task, updates, enabledFormats);
