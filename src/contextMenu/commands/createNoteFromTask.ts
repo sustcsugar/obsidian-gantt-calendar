@@ -195,13 +195,22 @@ export async function createNoteFromTaskCore(
 		// 3) 确保目标文件夹存在
 		await ensureFolderExists(app, defaultPath);
 
-		// 4) 构建文件路径
-		const filePath = normalizePath(`${defaultPath}/${fileName}.md`);
+		// 4) 检查整个 vault 中是否存在同名文件
+		const existingFileInVault = app.metadataCache.getFirstLinkpathDest(fileName, task.filePath);
+		if (existingFileInVault) {
+			new Notice(`已存在同名笔记: ${fileName}.md`);
+			const leaf = app.workspace.getLeaf(false);
+			await leaf.openFile(existingFileInVault);
+			// 直接将任务改为双链，方便后续跳转
+			await updateTaskProperties(app, task, { content: options.wikiLinkContent }, enabledFormats);
+			return;
+		}
 
-		// 5) 检查文件是否已存在
+		// 5) 构建文件路径并检查指定目录下是否已存在
+		const filePath = normalizePath(`${defaultPath}/${fileName}.md`);
 		const existingFile = app.vault.getAbstractFileByPath(filePath);
 		if (existingFile) {
-			new Notice(`文件已存在: ${fileName}.md`);
+			new Notice(`指定目录下已存在文件: ${fileName}.md`);
 			const leaf = app.workspace.getLeaf(false);
 			await leaf.openFile(existingFile as any);
 			// 仍将任务内容改为双链，方便后续跳转
