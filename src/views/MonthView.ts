@@ -2,6 +2,7 @@ import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GCTask } from '../types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
+import { MonthViewClasses } from '../utils/bem';
 
 /**
  * 月视图渲染器
@@ -16,58 +17,67 @@ export class MonthViewRenderer extends BaseViewRenderer {
 		const monthContainer = container.createDiv('gc-view gc-view--month');
 
 		// 星期标签
-		const weekdaysDiv = monthContainer.createDiv('calendar-month-weekdays');
-		weekdaysDiv.createEl('div', { text: '', cls: 'calendar-month-weekday' }); // 周编号列占位
+		const weekdaysDiv = monthContainer.createDiv(MonthViewClasses.elements.weekdays);
+		weekdaysDiv.createEl('div', { text: '', cls: MonthViewClasses.elements.weekday }); // 周编号列占位
 		const startOnMonday = !!(this.plugin?.settings?.startOnMonday);
 		const labelsSunFirst = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 		const labelsMonFirst = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 		(startOnMonday ? labelsMonFirst : labelsSunFirst).forEach((day) => {
-			weekdaysDiv.createEl('div', { text: day, cls: 'calendar-month-weekday' });
+			weekdaysDiv.createEl('div', { text: day, cls: MonthViewClasses.elements.weekday });
 		});
 
 		// 周行
-		const weeksDiv = monthContainer.createDiv('calendar-month-weeks');
+		const weeksDiv = monthContainer.createDiv(MonthViewClasses.elements.weeks);
 		monthData.weeks.forEach((week) => {
-			const weekDiv = weeksDiv.createDiv('calendar-week-row');
+			const weekDiv = weeksDiv.createDiv(MonthViewClasses.elements.weekRow);
 
 			// 周编号
-			const weekNum = weekDiv.createDiv('calendar-week-number');
+			const weekNum = weekDiv.createDiv(MonthViewClasses.elements.weekNumber);
 			weekNum.createEl('span', { text: `W${week.weekNumber}` });
 
 			// 一周的日期
-			const daysDiv = weekDiv.createDiv('calendar-week-days');
+			const daysDiv = weekDiv.createDiv(MonthViewClasses.elements.weekDays);
 			week.days.forEach((day) => {
 				const dayEl = daysDiv.createEl('div');
-				dayEl.addClass('calendar-day-cell');
+				dayEl.addClass(MonthViewClasses.elements.dayCell);
 
 				const dateNum = dayEl.createEl('div', { text: day.day.toString() });
-				dateNum.addClass('calendar-day-number');
+				dateNum.addClass(MonthViewClasses.elements.dayNumber);
 
 				if (day.lunarText) {
 					const lunarEl = dayEl.createEl('div', { text: day.lunarText });
-					lunarEl.addClass('calendar-lunar-text');
+					lunarEl.addClass(MonthViewClasses.elements.lunarText);
 					if (day.festival || day.festivalType) {
-						lunarEl.addClass('festival');
+						lunarEl.addClass(MonthViewClasses.modifiers.festival);
 						if (day.festivalType) {
-							lunarEl.addClass(`festival-${day.festivalType}`);
+							// 根据节日类型添加对应的修饰符类名
+							const festivalClassMap: Record<string, string> = {
+								solar: MonthViewClasses.modifiers.festivalSolar,
+								lunar: MonthViewClasses.modifiers.festivalLunar,
+								solarTerm: MonthViewClasses.modifiers.festivalSolarTerm,
+							};
+							const festivalClass = festivalClassMap[day.festivalType];
+							if (festivalClass) {
+								lunarEl.addClass(festivalClass);
+							}
 						}
 					}
 				}
 
 				// 任务列表
-				const tasksContainer = dayEl.createDiv('calendar-month-tasks');
+				const tasksContainer = dayEl.createDiv(MonthViewClasses.elements.tasks);
 				this.loadMonthViewTasks(tasksContainer, day.date);
 
 				if (!day.isCurrentMonth) {
-					dayEl.addClass('outside-month');
+					dayEl.addClass(MonthViewClasses.modifiers.outsideMonth);
 				}
 				if (day.isToday) {
-					dayEl.addClass('today');
+					dayEl.addClass(MonthViewClasses.modifiers.today);
 				}
 
 				dayEl.onclick = (e: MouseEvent) => {
 					// 点击任务时不触发日期选择
-					if ((e.target as HTMLElement).closest('.calendar-month-task-item')) {
+					if ((e.target as HTMLElement).closest(`.${MonthViewClasses.elements.taskItem}`)) {
 						return;
 					}
 					if (this.plugin.calendarView) {
@@ -116,7 +126,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 			// 显示更多任务提示
 			if (currentDayTasks.length > taskLimit) {
-				const moreCount = container.createDiv('calendar-month-task-more');
+				const moreCount = container.createDiv(MonthViewClasses.elements.taskMore);
 				moreCount.setText(`+${currentDayTasks.length - taskLimit} more`);
 			}
 		} catch (error) {

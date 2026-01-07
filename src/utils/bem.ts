@@ -23,6 +23,8 @@ export const BLOCKS = {
 	VIEW: 'view',
 	/** 日视图 */
 	DAY_VIEW: 'day-view',
+	/** 月视图 */
+	MONTH_VIEW: 'month-view',
 	/** 年视图 */
 	YEAR_VIEW: 'year-view',
 	/** 甘特图 */
@@ -412,6 +414,39 @@ export const YearViewClasses = {
 	/** Modifiers */
 	modifiers: {
 		showLunar: bem(BLOCKS.YEAR_VIEW, undefined, 'show-lunar'),
+	},
+};
+
+/**
+ * 月视图类名常量
+ */
+export const MonthViewClasses = {
+	block: bem(BLOCKS.MONTH_VIEW),
+
+	/** Elements */
+	elements: {
+		weekdays: bem(BLOCKS.MONTH_VIEW, 'weekdays'),
+		weekday: bem(BLOCKS.MONTH_VIEW, 'weekday'),
+		weeks: bem(BLOCKS.MONTH_VIEW, 'weeks'),
+		weekRow: bem(BLOCKS.MONTH_VIEW, 'week-row'),
+		weekNumber: bem(BLOCKS.MONTH_VIEW, 'week-number'),
+		weekDays: bem(BLOCKS.MONTH_VIEW, 'week-days'),
+		dayCell: bem(BLOCKS.MONTH_VIEW, 'day-cell'),
+		dayNumber: bem(BLOCKS.MONTH_VIEW, 'day-number'),
+		lunarText: bem(BLOCKS.MONTH_VIEW, 'lunar-text'),
+		tasks: bem(BLOCKS.MONTH_VIEW, 'tasks'),
+		taskItem: bem(BLOCKS.MONTH_VIEW, 'task-item'),
+		taskMore: bem(BLOCKS.MONTH_VIEW, 'task-more'),
+	},
+
+	/** Modifiers */
+	modifiers: {
+		outsideMonth: bem(BLOCKS.MONTH_VIEW, 'day-cell', 'outside-month'),
+		today: bem(BLOCKS.MONTH_VIEW, 'day-cell', 'today'),
+		festival: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival'),
+		festivalSolar: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival-solar'),
+		festivalLunar: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival-lunar'),
+		festivalSolarTerm: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival-solar-term'),
 	},
 };
 

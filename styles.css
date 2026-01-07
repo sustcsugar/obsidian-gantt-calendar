@@ -212,7 +212,7 @@ Author: sugar
 	overflow: hidden;
 }
 
-.calendar-week-row,
+/* BEM类名: gc-month-view__week-row */
 .gc-month-view__week-row {
 	display: grid;
 	grid-template-columns: 40px repeat(7, 1fr);
@@ -222,7 +222,7 @@ Author: sugar
 	border-radius: 4px;
 }
 
-.calendar-month-weeks,
+/* BEM类名: gc-month-view__weeks */
 .gc-month-view__weeks {
 	display: flex;
 	flex-direction: column;
@@ -1469,7 +1469,8 @@ Author: sugar
 }
 
 /* 6.4 Month View Components */
-.calendar-month-weekdays {
+/* BEM类名: gc-month-view__weekdays */
+.gc-month-view__weekdays {
 	display: grid !important;
 	grid-template-columns: 40px repeat(7, 1fr);
 	width: 100%;
@@ -1479,14 +1480,16 @@ Author: sugar
 	padding-bottom: 8px;
 }
 
-.calendar-month-weekday {
+/* BEM类名: gc-month-view__weekday */
+.gc-month-view__weekday {
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--text-muted);
 	text-align: center;
 }
 
-.calendar-week-number {
+/* BEM类名: gc-month-view__week-number */
+.gc-month-view__week-number {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1495,11 +1498,13 @@ Author: sugar
 	color: var(--text-muted);
 }
 
-.calendar-week-days {
+/* BEM类名: gc-month-view__week-days */
+.gc-month-view__week-days {
 	display: contents;
 }
 
-.calendar-day-cell {
+/* BEM类名: gc-month-view__day-cell */
+.gc-month-view__day-cell {
 	min-height: 100px;
 	display: flex;
 	flex-direction: column;
@@ -1515,20 +1520,23 @@ Author: sugar
 	overflow: hidden;
 }
 
-.calendar-day-cell .calendar-day-number {
+/* BEM类名: gc-month-view__day-number */
+.gc-month-view__day-cell .gc-month-view__day-number {
 	font-size: 16px;
 	font-weight: 600;
 	color: var(--text-normal);
 	align-self: center;
 }
 
-.calendar-day-cell .calendar-lunar-text {
+/* BEM类名: gc-month-view__lunar-text */
+.gc-month-view__day-cell .gc-month-view__lunar-text {
 	font-size: 11px;
 	color: var(--text-muted);
 	align-self: center;
 }
 
-.calendar-month-tasks {
+/* BEM类名: gc-month-view__tasks */
+.gc-month-view__tasks {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
@@ -2529,14 +2537,15 @@ Author: sugar
 }
 
 /* Month View */
-.calendar-month-tasks .calendar-task-card--month.completed,
-.calendar-month-tasks .gc-task-card--month.gc-task-card--completed {
+/* BEM类名: gc-month-view__tasks */
+.gc-month-view__tasks .calendar-task-card--month.completed,
+.gc-month-view__tasks .gc-task-card--month.gc-task-card--completed {
 	opacity: 0.5;
 	border-left-color: var(--task-completed-color);
 }
 
-.calendar-month-tasks .calendar-task-card--month.pending,
-.calendar-month-tasks .gc-task-card--month.gc-task-card--pending {
+.gc-month-view__tasks .calendar-task-card--month.pending,
+.gc-month-view__tasks .gc-task-card--month.gc-task-card--pending {
 	border-left-color: var(--task-pending-color);
 }
 
@@ -2584,7 +2593,8 @@ Author: sugar
 	background-color: var(--background-secondary);
 }
 
-.calendar-day-cell:hover {
+/* BEM类名: gc-month-view__day-cell */
+.gc-month-view__day-cell:hover {
 	background-color: var(--background-modifier-hover);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -2640,19 +2650,23 @@ Author: sugar
 }
 
 /* Month view specific festival styles */
-.calendar-day-cell .calendar-lunar-text.festival {
+/* BEM类名: gc-month-view__lunar-text--festival */
+.gc-month-view__lunar-text--festival {
 	font-weight: 600;
 }
 
-.calendar-day-cell .calendar-lunar-text.festival-solar {
+/* BEM类名: gc-month-view__lunar-text--festival-solar */
+.gc-month-view__lunar-text--festival-solar {
 	color: var(--festival-solar-color);
 }
 
-.calendar-day-cell .calendar-lunar-text.festival-lunar {
+/* BEM类名: gc-month-view__lunar-text--festival-lunar */
+.gc-month-view__lunar-text--festival-lunar {
 	color: var(--festival-lunar-color);
 }
 
-.calendar-day-cell .calendar-lunar-text.festival-solarTerm {
+/* BEM类名: gc-month-view__lunar-text--festival-solar-term */
+.gc-month-view__lunar-text--festival-solar-term {
 	color: var(--festival-solar-term-color);
 }
 
@@ -2666,44 +2680,61 @@ Author: sugar
 	color: var(--text-faint);
 }
 
-.calendar-day-cell.outside-month {
+/* BEM类名: gc-month-view__day-cell--outside-month */
+.gc-month-view__day-cell--outside-month {
 	background-color: var(--background-secondary);
 	opacity: 0.5;
 }
 
-.calendar-day-cell.outside-month .calendar-day-number {
+.gc-month-view__day-cell--outside-month .gc-month-view__day-number {
 	color: var(--text-faint);
 }
 
 /* Today state */
-.calendar-day.today,
+/* 年视图今天样式：使用伪元素创建红色虚线圆圈，不干扰热力图背景 */
 .gc-year-view__day.today {
-	background-color: #ff6b6b;
-	border-radius: 2px;
+	position: relative;
 }
 
-.calendar-day.today .calendar-day-number,
+.gc-year-view__day.today::before {
+	content: '';
+	position: absolute;
+	inset: 4px;
+	border: 2px dashed #ff6b6b;
+	border-radius: 50%;
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* 确保日期内容在圆圈之上 */
+.gc-year-view__day.today > * {
+	position: relative;
+	z-index: 2;
+}
+
+/* 年视图今天的阳历和农历日期显示为红色 */
 .gc-year-view__day.today .gc-year-view__day-number {
-	color: red;
+	color: #ff6b6b;
 	font-weight: 600;
 }
 
-.calendar-day.today .calendar-lunar-text,
 .gc-year-view__day.today .gc-year-view__lunar-text {
-	color: rgba(255, 255, 255, 0.9);
+	color: #ff6b6b;
 }
 
-.calendar-day-cell.today {
+/* 月视图今天样式 */
+/* BEM类名: gc-month-view__day-cell--today */
+.gc-month-view__day-cell--today {
 	background-color: #ff6b6b;
 	border-color: #ff6b6b;
 }
 
-.calendar-day-cell.today .calendar-day-number {
+.gc-month-view__day-cell--today .gc-month-view__day-number {
 	color: white;
 	font-weight: 700;
 }
 
-.calendar-day-cell.today .calendar-lunar-text {
+.gc-month-view__day-cell--today .gc-month-view__lunar-text {
 	color: rgba(255, 255, 255, 0.9);
 }
 
@@ -2748,8 +2779,8 @@ Author: sugar
 .gc-day-view__task-list .gc-task-card--day.gc-task-card--completed .gc-task-card__text,
 .calendar-week-tasks-grid .calendar-task-card--week.completed .calendar-task-card-text,
 .calendar-week-tasks-grid .gc-task-card--week.gc-task-card--completed .gc-task-card__text,
-.calendar-month-tasks .calendar-task-card--month.completed .calendar-task-card-text,
-.calendar-month-tasks .gc-task-card--month.gc-task-card--completed .gc-task-card__text,
+.gc-month-view__tasks .calendar-task-card--month.completed .calendar-task-card-text,
+.gc-month-view__tasks .gc-task-card--month.gc-task-card--completed .gc-task-card__text,
 .gc-view--task .gc-task-card--task.gc-task-card--completed .gc-task-card__text,
 .gc-task-card--gantt.gc-task-card--completed .gc-task-card__text {
 	text-decoration: line-through;
