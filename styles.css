@@ -1199,7 +1199,6 @@ Author: sugar
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.calendar-task-card--month,
 .gc-task-card--month {
 	padding: 4px 6px;
 	font-size: 11px;
@@ -1347,13 +1346,11 @@ Author: sugar
 }
 
 /* 月视图小屏幕 - 限制标签显示 */
-.calendar-task-card--month .gantt-task-tags-inline,
 .gc-task-card--month .gc-task-card__tags {
 	max-width: 100%;
 	overflow: hidden;
 }
 
-.calendar-task-card--month .gantt-tag-badge,
 .gc-task-card--month .gc-tag {
 	max-width: 60px;
 	overflow: hidden;
@@ -2538,13 +2535,11 @@ Author: sugar
 
 /* Month View */
 /* BEM类名: gc-month-view__tasks */
-.gc-month-view__tasks .calendar-task-card--month.completed,
 .gc-month-view__tasks .gc-task-card--month.gc-task-card--completed {
 	opacity: 0.5;
 	border-left-color: var(--task-completed-color);
 }
 
-.gc-month-view__tasks .calendar-task-card--month.pending,
 .gc-month-view__tasks .gc-task-card--month.gc-task-card--pending {
 	border-left-color: var(--task-pending-color);
 }
@@ -2572,7 +2567,6 @@ Author: sugar
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.calendar-task-card--month:hover,
 .gc-task-card--month:hover {
 	transform: translateX(1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -2779,7 +2773,6 @@ Author: sugar
 .gc-day-view__task-list .gc-task-card--day.gc-task-card--completed .gc-task-card__text,
 .calendar-week-tasks-grid .calendar-task-card--week.completed .calendar-task-card-text,
 .calendar-week-tasks-grid .gc-task-card--week.gc-task-card--completed .gc-task-card__text,
-.gc-month-view__tasks .calendar-task-card--month.completed .calendar-task-card-text,
 .gc-month-view__tasks .gc-task-card--month.gc-task-card--completed .gc-task-card__text,
 .gc-view--task .gc-task-card--task.gc-task-card--completed .gc-task-card__text,
 .gc-task-card--gantt.gc-task-card--completed .gc-task-card__text {

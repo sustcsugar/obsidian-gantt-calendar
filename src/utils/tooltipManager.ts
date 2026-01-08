@@ -67,7 +67,8 @@ export class TooltipManager {
 	 * 初始化 tooltip（懒加载，首次使用时创建）
 	 */
 	private ensureTooltip(): HTMLElement {
-		if (!this.tooltip) {
+		// 检查tooltip是否存在且在DOM树中（修复bug: 避免复用已失效的DOM引用）
+		if (!this.tooltip || !document.body.contains(this.tooltip)) {
 			this.tooltip = document.body.createDiv('gc-task-tooltip');
 			this.tooltip.style.opacity = '0';
 
