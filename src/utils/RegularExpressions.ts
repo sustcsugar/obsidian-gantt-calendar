@@ -259,7 +259,7 @@ export class RegularExpressions {
          * 优先级值常量
          * Dataview 格式使用文本值表示优先级
          */
-        priorityValues: ['highest', 'high', 'medium', 'low', 'lowest'] as const,
+        priorityValues: ['highest', 'high', 'medium', 'normal', 'low', 'lowest'] as const,
 
         /**
          * 日期字段名常量

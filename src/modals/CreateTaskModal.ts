@@ -34,7 +34,7 @@ export class CreateTaskModal extends Modal {
 
 	// 表单状态
 	private description: string = '';
-	private priority: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal' = 'medium';
+	private priority: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal' = 'normal';
 	private createdDate: Date;
 	private dueDate: Date;
 	private selectedTags: Set<string> = new Set();
@@ -56,8 +56,8 @@ export class CreateTaskModal extends Modal {
 		this.createdDate = this.targetDate;
 		this.dueDate = this.targetDate;
 
-		// 设置默认优先级
-		this.priority = this.plugin.settings.defaultTaskPriority || 'medium';
+		// 设置默认优先级（默认为 normal）
+		this.priority = this.plugin.settings.defaultTaskPriority || 'normal';
 	}
 
 	onOpen() {
@@ -121,9 +121,9 @@ export class CreateTaskModal extends Modal {
 			highest: '🔺 最高',
 			high: '⏫ 高',
 			medium: '🔼 中',
+			normal: '◽ 普通',
 			low: '🔽 低',
 			lowest: '⏬ 最低',
-			normal: '无',
 		};
 
 		Object.entries(options).forEach(([value, label]) => {

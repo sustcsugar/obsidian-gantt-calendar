@@ -27,9 +27,9 @@ const PRIORITY_WEIGHTS: Record<string, number> = {
 	'highest': 5,
 	'high': 4,
 	'medium': 3,
-	'low': 2,
-	'lowest': 1,
-	'undefined': 0
+	'normal': 2,
+	'low': 1,
+	'lowest': 0
 };
 
 /**
@@ -48,8 +48,9 @@ function compareDates(a: Date | undefined, b: Date | undefined): number {
  */
 const comparators: Record<SortField, (a: GCTask, b: GCTask) => number> = {
 	priority: (a, b) => {
-		const aPriority = PRIORITY_WEIGHTS[a.priority || 'undefined'] ?? 0;
-		const bPriority = PRIORITY_WEIGHTS[b.priority || 'undefined'] ?? 0;
+		// 所有任务都应该有优先级，默认为 'normal'
+		const aPriority = PRIORITY_WEIGHTS[a.priority || 'normal'] ?? 2;
+		const bPriority = PRIORITY_WEIGHTS[b.priority || 'normal'] ?? 2;
 		return aPriority - bPriority; // 升序：低优先级在前
 	},
 

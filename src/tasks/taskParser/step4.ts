@@ -245,7 +245,7 @@ export function parseTasksDates(content: string): ParsedDates {
  * ```
  */
 export function parseTasksAttributes(content: string): ParsedTaskAttributes {
-    const priority = parseTasksPriority(content);
+    const priority = parseTasksPriority(content) || 'normal'; // 未指定优先级时默认为 normal
     const dates = parseTasksDates(content);
 
     return {
@@ -346,7 +346,7 @@ export function parseDataviewDates(content: string): ParsedDates {
  * ```
  */
 export function parseDataviewAttributes(content: string): ParsedTaskAttributes {
-    const priority = parseDataviewPriority(content);
+    const priority = parseDataviewPriority(content) || 'normal'; // 未指定优先级时默认为 normal
     const dates = parseDataviewDates(content);
 
     return {
@@ -388,9 +388,9 @@ export function parseTaskAttributes(
         return parseDataviewAttributes(content);
     }
 
-    // 未知格式返回空结果
+    // 未知格式返回空结果（优先级默认为 normal）
     return {
-        priority: undefined,
+        priority: 'normal',
         dates: {},
         hasCancelledDate: false,
     };

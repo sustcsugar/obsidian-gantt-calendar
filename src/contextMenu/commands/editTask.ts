@@ -109,6 +109,11 @@ class EditTaskModal extends Modal {
       });
       btn.dataset.value = option.value;
 
+      // 如果是当前任务的优先级，设置为选中状态
+      if (option.value === (this.task.priority || 'normal')) {
+        btn.addClass('gc-priority-selected');
+      }
+
       btn.addEventListener('click', () => {
         // 移除所有按钮的选中状态
         priorityGrid.querySelectorAll('.gc-priority-btn').forEach(b => b.removeClass('gc-priority-selected'));

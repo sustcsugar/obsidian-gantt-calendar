@@ -77,12 +77,13 @@ export interface CalendarMonth {
  * - Tasks (emoji): `- [ ] 🎯 Task title ⏫ ➕ 2025-01-10 📅 2025-01-15`
  * - Dataview (field): `- [ ] 🎯 Task title [priority:: high] [created:: 2025-01-10] [due:: 2025-01-15]`
  *
- * 优先级对应关系：
- * - 🔺 = highest
- * - ⏫ = high
- * - 🔼 = medium
- * - 🔽 = low
- * - ⏬ = lowest
+ * 优先级对应关系（6个档位）：
+ * - 🔺 = highest (最高)
+ * - ⏫ = high (高)
+ * - 🔼 = medium (中高)
+ * - 无emoji = normal (普通，默认优先级)
+ * - 🔽 = low (低)
+ * - ⏬ = lowest (最低)
  *
  * 日期 emoji 对应关系：
  * - ➕ = createdDate (创建日期)
@@ -102,7 +103,7 @@ export interface GCTask {
 	cancelled?: boolean;           // 任务是否已取消（使用 [-] 复选框）
 	status?: TaskStatusType;       // 任务状态类型
 	format?: 'tasks' | 'dataview'; // 源格式：用于写回时选择正确的字段样式
-	priority?: string;             // 优先级：highest, high, medium, low, lowest
+	priority: string;              // 优先级：highest, high, medium, normal, low, lowest（默认normal）
 	tags?: string[];               // 任务标签列表
 	createdDate?: Date;            // 创建日期
 	startDate?: Date;              // 开始日期

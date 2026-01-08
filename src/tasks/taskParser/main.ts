@@ -93,6 +93,7 @@ export function parseTasksFromListItems(
             completed,
             cancelled,
             status,
+            priority: 'normal', // 默认优先级
         };
 
         // 解析标签
@@ -109,7 +110,7 @@ export function parseTasksFromListItems(
             );
 
             task.format = format;
-            task.priority = priority;
+            task.priority = priority || 'normal'; // 确保有默认优先级
             task.createdDate = dates.createdDate;
             task.startDate = dates.startDate;
             task.scheduledDate = dates.scheduledDate;
@@ -281,6 +282,7 @@ export function parseSingleTaskLine(
         completed,
         cancelled,
         status,
+        priority: 'normal', // 默认优先级
     };
 
     // 解析标签
@@ -296,7 +298,7 @@ export function parseSingleTaskLine(
         );
 
         task.format = format;
-        task.priority = priority;
+        task.priority = priority || 'normal'; // 确保有默认优先级
         Object.assign(task, dates);
 
         if (hasCancelledDate && !task.completed) {

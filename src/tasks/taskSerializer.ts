@@ -108,10 +108,10 @@ export function serializeTask(
 		completed: updates.completed !== undefined ? updates.completed : task.completed,
 		cancelled: updates.cancelled !== undefined ? updates.cancelled : task.cancelled,
 		status: updates.status !== undefined ? updates.status : task.status,
-		// 修复：统一将 priority 转换为 emoji，避免"不更改"时输出文本值
+		// 优先级：所有任务都应该有优先级，默认为 'normal'
 		priority: updates.priority !== undefined
 			? getPriorityEmoji(updates.priority)
-			: getPriorityEmoji(task.priority as any),
+			: getPriorityEmoji((task.priority || 'normal') as any),
 		description: updates.content !== undefined ? updates.content : task.description,
 		// 保留标签
 		tags: task.tags,
@@ -169,11 +169,12 @@ export function serializeTask(
 
 	// 优先级（放在描述后）
 	if (format === 'tasks') {
+		// 只有非 'normal' 的优先级才输出 emoji
 		const shouldOutputPriority =
 			// 情况1：不更改优先级，且原始任务有优先级（emoji 非空）
-			(updates.priority === undefined && merged.priority && merged.priority !== 'none' && merged.priority !== 'normal') ||
+			(updates.priority === undefined && merged.priority && merged.priority !== 'none') ||
 			// 情况2：明确设置了非 'normal' 的优先级
-			(updates.priority !== undefined && updates.priority !== 'normal' && merged.priority);
+			(updates.priority !== undefined && updates.priority !== 'normal');
 
 		if (shouldOutputPriority && merged.priority) {
 			parts.push(merged.priority);
@@ -182,14 +183,17 @@ export function serializeTask(
 
 	// 优先级（Dataview 格式）
 	if (format === 'dataview') {
+		// 只有非 'normal' 的优先级才输出字段
 		const shouldOutputPriority =
-			// 情况1：不更改优先级，且原始任务有优先级
+			// 情况1：不更改优先级，且原始任务有优先级（不是 'normal'）
 			(updates.priority === undefined && task.priority && task.priority !== 'normal') ||
 			// 情况2：明确设置了非 'normal' 的优先级
 			(updates.priority !== undefined && updates.priority !== 'normal');
 
-		if (shouldOutputPriority && updates.priority) {
-			parts.push(`[priority:: ${updates.priority}]`);
+		if (shouldOutputPriority) {
+			// 使用 updates.priority 或回退到 task.priority
+			const priorityValue = updates.priority !== undefined ? updates.priority : task.priority;
+			parts.push(`[priority:: ${priorityValue}]`);
 		}
 	}
 

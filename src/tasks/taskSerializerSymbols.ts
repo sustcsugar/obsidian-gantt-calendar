@@ -21,9 +21,9 @@ export type TaskFormatType = 'tasks' | 'dataview';
 
 /**
  * 优先级级别
- * 对应 GCTask.priority 属性的五种级别
+ * 对应 GCTask.priority 属性的六种级别
  */
-export type PriorityLevel = 'highest' | 'high' | 'medium' | 'low' | 'lowest';
+export type PriorityLevel = 'highest' | 'high' | 'medium' | 'normal' | 'low' | 'lowest';
 
 /**
  * 日期字段类型
@@ -102,6 +102,7 @@ export const TASKS_FORMAT_CONFIG: TaskFormatConfig = {
             highest: RegularExpressions.Tasks.prioritySymbols.highest,
             high: RegularExpressions.Tasks.prioritySymbols.high,
             medium: RegularExpressions.Tasks.prioritySymbols.medium,
+            normal: '', // normal 优先级不输出 emoji
             low: RegularExpressions.Tasks.prioritySymbols.low,
             lowest: RegularExpressions.Tasks.prioritySymbols.lowest,
         },
@@ -147,6 +148,7 @@ export const DATAVIEW_FORMAT_CONFIG: TaskFormatConfig = {
             highest: 'priority:: highest',
             high: 'priority:: high',
             medium: 'priority:: medium',
+            normal: 'priority:: normal',
             low: 'priority:: low',
             lowest: 'priority:: lowest',
         },
