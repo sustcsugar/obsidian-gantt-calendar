@@ -5,8 +5,10 @@
 
 import { SvgGanttRenderer } from './svgGanttRenderer';
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
+import { TimeGranularity } from '../types';
 import type { GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
+import type { GanttTimeGranularity } from '../../types';
 
 /**
  * 甘特图适配器类
@@ -117,6 +119,42 @@ export class GanttChartAdapter {
 			this.renderer.updateConfig({ view_mode: mode });
 		}
 		this.config.view_mode = mode;
+	}
+
+	/**
+	 * 切换时间颗粒度
+	 *
+	 * @param granularity - UI颗粒度类型
+	 */
+	changeGranularity(granularity: GanttTimeGranularity): void {
+		// 映射UI颗粒度到内部颗粒度
+		const timeGranularity = this.mapToTimeGranularity(granularity);
+
+		// 更新渲染器配置
+		if (this.renderer) {
+			this.renderer.updateConfig({
+				granularity: timeGranularity
+			});
+		}
+
+		// 更新本地配置
+		this.config.granularity = timeGranularity;
+		this.config.view_mode = granularity;
+	}
+
+	/**
+	 * 映射UI颗粒度到内部颗粒度枚举
+	 *
+	 * @param uiGranularity - UI颗粒度类型
+	 * @returns 内部TimeGranularity枚举值
+	 */
+	private mapToTimeGranularity(uiGranularity: GanttTimeGranularity): TimeGranularity {
+		const map: Record<GanttTimeGranularity, TimeGranularity> = {
+			'day': 'day' as TimeGranularity,
+			'week': 'week' as TimeGranularity,
+			'month': 'month' as TimeGranularity
+		};
+		return map[uiGranularity] || ('day' as TimeGranularity);
 	}
 
 	/**

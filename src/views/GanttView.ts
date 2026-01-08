@@ -16,7 +16,8 @@ import {
 	TaskDataAdapter,
 	type GanttChartConfig,
 	type DateFieldType,
-	type TaskStatusFilter
+	type TaskStatusFilter,
+	TimeGranularity
 } from '../gantt';
 
 /**
@@ -71,10 +72,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	public setTimeGranularity(value: GanttTimeGranularity): void {
 		this.timeGranularity = value;
 		this.ganttViewMode = this.mapGranularityToViewMode(value);
-		if (this.ganttWrapper) {
-			this.ganttWrapper.changeViewMode(this.ganttViewMode);
-		}
-		this.refresh();
+		this.refresh();  // refresh() 会重新渲染整个视图，使用新的颗粒度
 	}
 
 	public getSortState(): SortState { return this.sortState; }
@@ -182,6 +180,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			// 8. 配置 甘特图
 			const config: GanttChartConfig = {
 				view_mode: this.ganttViewMode,
+				granularity: this.mapToTimeGranularity(this.timeGranularity),  // 添加颗粒度配置（转换为枚举）
 				language: 'zh',
 				header_height: 50,
 				column_width: 40,
@@ -342,6 +341,18 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			'month': 'month'
 		};
 		return modeMap[granularity] || 'day';
+	}
+
+	/**
+	 * 映射 UI 颗粒度到内部 TimeGranularity 枚举
+	 */
+	private mapToTimeGranularity(granularity: GanttTimeGranularity): TimeGranularity {
+		const granularityMap: Record<GanttTimeGranularity, TimeGranularity> = {
+			'day': TimeGranularity.DAY,
+			'week': TimeGranularity.WEEK,
+			'month': TimeGranularity.MONTH
+		};
+		return granularityMap[granularity] || TimeGranularity.DAY;
 	}
 
 	/**

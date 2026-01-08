@@ -13,6 +13,7 @@
  */
 
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
+import { TimeGranularity, GRANULARITY_CONFIGS, getWeekNumber } from '../types';
 import type { GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
@@ -47,6 +48,9 @@ export class SvgGanttRenderer {
 	private plugin: any;
 	private app: any;  // Obsidian App 实例
 
+	// 时间颗粒度
+	private granularity: TimeGranularity = TimeGranularity.DAY;
+
 	// 尺寸相关
 	private headerHeight = 50;
 	private rowHeight = 40;
@@ -58,7 +62,7 @@ export class SvgGanttRenderer {
 
 	// 日期范围（用于滚动到今天）
 	private minDate: Date | null = null;
-	private totalDays = 0;
+	private totalUnits = 0;  // 颗粒度单元数（原totalDays）
 
 	// 布局容器
 	private ganttLayout: HTMLElement | null = null;
@@ -92,6 +96,9 @@ export class SvgGanttRenderer {
 		this.taskNumberColumnWidth = 40;  // 固定序号列宽度
 		this.taskColumnWidth = this.taskNumberColumnWidth + 200;  // 序号列 + 任务内容列
 		this.padding = config.padding ?? 18;
+
+		// 初始化时间颗粒度
+		this.granularity = config.granularity ?? TimeGranularity.DAY;
 	}
 
 	/**
@@ -107,6 +114,33 @@ export class SvgGanttRenderer {
 	 */
 	refresh(tasks: GanttChartTask[]): void {
 		this.tasks = tasks;
+		this.render();
+	}
+
+	/**
+	 * 更新配置（支持颗粒度切换）
+	 */
+	updateConfig(config: Partial<GanttChartConfig>): void {
+		// 更新颗粒度
+		if (config.granularity) {
+			this.granularity = config.granularity;
+		}
+
+		// 更新配置对象
+		this.config = { ...this.config, ...config };
+
+		// 更新尺寸配置（如果提供）
+		if (config.header_height !== undefined) {
+			this.headerHeight = config.header_height;
+		}
+		if (config.column_width !== undefined) {
+			this.columnWidth = config.column_width;
+		}
+		if (config.padding !== undefined) {
+			this.padding = config.padding;
+		}
+
+		// 重新渲染
 		this.render();
 	}
 
@@ -154,20 +188,6 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 更新配置
-	 */
-	updateConfig(config: Partial<GanttChartConfig>): void {
-		this.config = { ...this.config, ...config };
-
-		// 更新尺寸
-		if (config.header_height !== undefined) this.headerHeight = config.header_height;
-		if (config.column_width !== undefined) this.columnWidth = config.column_width;
-		if (config.padding !== undefined) this.padding = config.padding;
-
-		this.render();
-	}
-
-	/**
 	 * 设置事件处理器
 	 */
 	setEventHandlers(handlers: {
@@ -186,14 +206,14 @@ export class SvgGanttRenderer {
 		this.container.empty();
 
 		// 计算日期范围
-		const { minDate, maxDate, totalDays } = this.calculateDateRange();
+		const { minDate, maxDate, totalUnits, granularity } = this.calculateDateRange();
 
 		// 保存日期范围信息（用于滚动到今天）
 		this.minDate = minDate;
-		this.totalDays = totalDays;
+		this.totalUnits = totalUnits;
 
 		// 计算尺寸
-		const ganttWidth = totalDays * this.columnWidth + this.padding * 2;
+		const ganttWidth = totalUnits * this.columnWidth + this.padding * 2;
 		const ganttHeight = this.headerHeight + this.tasks.length * this.rowHeight + this.padding * 2;
 		// 任务列表使用足够大的宽度来显示完整任务描述
 		const taskListWidth = 2040; // taskNumberColumnWidth (40) + contentWidth (2000)
@@ -220,7 +240,7 @@ export class SvgGanttRenderer {
 			this.headerHeight,
 			GanttClasses.elements.headerSvg
 		);
-		this.renderHeader(this.headerSvg, minDate, totalDays);
+		this.renderHeader(this.headerSvg, minDate, totalUnits, granularity);
 
 		// 左侧任务列表容器（可垂直滚动）
 		this.taskListContainer = this.ganttLayout.createDiv(GanttClasses.elements.tasklistContainer);
@@ -240,7 +260,7 @@ export class SvgGanttRenderer {
 			ganttHeight,  // 使用完整高度以保持y坐标系统一致
 			GanttClasses.elements.chartSvg
 		);
-		this.renderGanttChart(this.ganttSvg, minDate, totalDays, ganttHeight);
+		this.renderGanttChart(this.ganttSvg, minDate, totalUnits, ganttHeight, granularity);
 
 		// 创建分隔条
 		this.resizer = this.ganttLayout.createDiv(GanttClasses.elements.resizer);
@@ -255,13 +275,22 @@ export class SvgGanttRenderer {
 	/**
 	 * 计算日期范围
 	 */
-	private calculateDateRange(): { minDate: Date; maxDate: Date; totalDays: number } {
+	private calculateDateRange(): {
+		minDate: Date;
+		maxDate: Date;
+		totalUnits: number;  // 颗粒度单元数（原totalDays）
+		granularity: TimeGranularity
+	} {
+		const config = GRANULARITY_CONFIGS[this.granularity];
+
 		if (this.tasks.length === 0) {
 			const today = new Date();
+			const defaultUnits = 30; // 默认30个单元
 			return {
 				minDate: today,
-				maxDate: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000),
-				totalDays: 30
+				maxDate: new Date(today.getTime() + defaultUnits * config.milliseconds),
+				totalUnits: defaultUnits,
+				granularity: this.granularity
 			};
 		}
 
@@ -273,13 +302,24 @@ export class SvgGanttRenderer {
 		let minDate = new Date(Math.min(...dates.map(d => d.getTime())));
 		let maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
 
-		// 添加一些边距
-		minDate = new Date(minDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-		maxDate = new Date(maxDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+		// 根据颗粒度对齐网格边界
+		minDate = config.gridAligner(minDate);
+		maxDate = config.gridAligner(maxDate);
 
-		const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
+		// 确保maxDate > minDate（至少1个单元）
+		if (maxDate <= minDate) {
+			maxDate = new Date(minDate.getTime() + config.milliseconds);
+		}
 
-		return { minDate, maxDate, totalDays };
+		// 添加边距（前2后2个单元）
+		const paddingUnits = 2;
+		minDate = new Date(minDate.getTime() - paddingUnits * config.milliseconds);
+		maxDate = new Date(maxDate.getTime() + paddingUnits * config.milliseconds);
+
+		// 计算总单元数
+		const totalUnits = Math.ceil((maxDate.getTime() - minDate.getTime()) / config.milliseconds);
+
+		return { minDate, maxDate, totalUnits, granularity: this.granularity };
 	}
 
 	/**
@@ -762,13 +802,19 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 渲染头部（时间轴）
+	 * 渲染头部（时间轴）- 支持颗粒度
 	 */
-	private renderHeader(svg: SVGSVGElement | null, minDate: Date, totalDays: number): void {
+	private renderHeader(
+		svg: SVGSVGElement | null,
+		minDate: Date,
+		totalUnits: number,
+		granularity: TimeGranularity
+	): void {
 		if (!svg) return;
 
 		const ns = 'http://www.w3.org/2000/svg';
-		const width = totalDays * this.columnWidth + this.padding * 2;
+		const config = GRANULARITY_CONFIGS[granularity];
+		const width = totalUnits * this.columnWidth + this.padding * 2;
 
 		// 背景
 		const headerBg = document.createElementNS(ns, 'rect');
@@ -779,36 +825,31 @@ export class SvgGanttRenderer {
 		headerBg.setAttribute('fill', 'var(--background-secondary)');
 		svg.appendChild(headerBg);
 
-		// 绘制日期文本
-		for (let i = 0; i < totalDays; i++) {
-			const date = new Date(minDate);
-			date.setDate(date.getDate() + i);
-
+		// 绘制时间单元标签
+		for (let i = 0; i < totalUnits; i++) {
+			const unitDate = this.getDateForUnit(minDate, i, granularity);
 			const x = this.padding + i * this.columnWidth;
 			const y = this.headerHeight / 2;
 
-			// 判断是否是今天
+			// 判断是否是今天所在的单元
 			const today = new Date();
-			const isToday = (
-				date.getDate() === today.getDate() &&
-				date.getMonth() === today.getMonth() &&
-				date.getFullYear() === today.getFullYear()
-			);
+			const isCurrentUnit = this.isSameUnit(unitDate, today, granularity);
 
-			// 绘制日期
+			// 绘制标签
 			const text = document.createElementNS(ns, 'text');
 			text.setAttribute('x', String(x + this.columnWidth / 2));
 			text.setAttribute('y', String(y + 6));
 			text.setAttribute('text-anchor', 'middle');
 			text.setAttribute('font-size', '11');
-			text.setAttribute('fill', isToday ? 'var(--interactive-accent)' : 'var(--text-muted)');
-			text.setAttribute('font-weight', isToday ? '600' : '400');
+			text.setAttribute('fill', isCurrentUnit ? 'var(--interactive-accent)' : 'var(--text-muted)');
+			text.setAttribute('font-weight', isCurrentUnit ? '600' : '400');
 
-			// 根据视图模式格式化日期
-			const label = this.formatDateLabel(date, i);
-			text.textContent = label;
-
-			svg.appendChild(text);
+			// 使用颗粒度配置的标签格式化器
+			const label = config.labelFormatter(unitDate, i, getWeekNumber);
+			if (label) {  // 只渲染非空标签
+				text.textContent = label;
+				svg.appendChild(text);
+			}
 		}
 	}
 
@@ -818,13 +859,14 @@ export class SvgGanttRenderer {
 	private renderGanttChart(
 		svg: SVGSVGElement | null,
 		minDate: Date,
-		totalDays: number,
-		fullHeight: number
+		totalUnits: number,
+		fullHeight: number,
+		granularity: TimeGranularity
 	): void {
 		if (!svg) return;
 
 		const ns = 'http://www.w3.org/2000/svg';
-		const width = totalDays * this.columnWidth + this.padding * 2;
+		const width = totalUnits * this.columnWidth + this.padding * 2;
 		const height = fullHeight - this.headerHeight;
 
 		// 背景 - 从 y=0 开始
@@ -837,68 +879,76 @@ export class SvgGanttRenderer {
 		svg.appendChild(bg);
 
 		// 绘制网格线
-		this.renderGrid(ns, svg, minDate, totalDays, width, height);
+		this.renderGrid(ns, svg, minDate, totalUnits, width, height, granularity);
 
 		// 绘制今天线
-		this.renderTodayLine(ns, svg, minDate, totalDays, height);
+		this.renderTodayLine(ns, svg, minDate, totalUnits, height, granularity);
 
 		// 绘制任务条
-		this.renderTaskBars(ns, svg, minDate, totalDays);
+		this.renderTaskBars(ns, svg, minDate, totalUnits, granularity);
 	}
 
 	/**
-	 * 格式化日期标签
+	 * 获取指定单元的日期 - 辅助方法
 	 */
-	private formatDateLabel(date: Date, index: number): string {
-		const viewMode = this.config.view_mode;
+	private getDateForUnit(minDate: Date, unitIndex: number, granularity: TimeGranularity): Date {
+		const config = GRANULARITY_CONFIGS[granularity];
+		return new Date(minDate.getTime() + unitIndex * config.milliseconds);
+	}
 
-		switch (viewMode) {
-			case 'day':
-				return `${date.getMonth() + 1}/${date.getDate()}`;
-			case 'week':
-				if (date.getDay() === 1 || index === 0) {
-					return `W${this.getWeekNumber(date)}`;
-				}
-				return '';
-			case 'month':
-				if (date.getDate() === 1 || index === 0) {
-					return `${date.getMonth() + 1}月`;
-				}
-				return '';
-			default:
-				return `${date.getMonth() + 1}/${date.getDate()}`;
+	/**
+	 * 判断两个日期是否在同一颗粒度单元 - 辅助方法
+	 */
+	private isSameUnit(date1: Date, date2: Date, granularity: TimeGranularity): boolean {
+		switch (granularity) {
+			case TimeGranularity.DAY:
+				return date1.getFullYear() === date2.getFullYear() &&
+					   date1.getMonth() === date2.getMonth() &&
+					   date1.getDate() === date2.getDate();
+			case TimeGranularity.WEEK:
+				return getWeekNumber(date1) === getWeekNumber(date2) &&
+					   date1.getFullYear() === date2.getFullYear();
+			case TimeGranularity.MONTH:
+				return date1.getFullYear() === date2.getFullYear() &&
+					   date1.getMonth() === date2.getMonth();
 		}
+		return false;
 	}
 
 	/**
-	 * 获取周数
+	 * 判断是否为主要网格线 - 辅助方法
 	 */
-	private getWeekNumber(date: Date): number {
-		const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-		const dayNum = d.getUTCDay() || 7;
-		d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-		const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-		return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+	private isMajorGridLine(unitIndex: number, granularity: TimeGranularity): boolean {
+		switch (granularity) {
+			case TimeGranularity.DAY:
+				return unitIndex % 7 === 0; // 每周加粗
+			case TimeGranularity.WEEK:
+				return unitIndex % 4 === 0; // 每月（约4周）加粗
+			case TimeGranularity.MONTH:
+				return unitIndex % 3 === 0; // 每季度加粗
+		}
+		return false;
 	}
 
 	/**
-	 * 渲染网格线
+	 * 渲染网格线 - 支持颗粒度
 	 */
 	private renderGrid(
 		ns: string,
 		svg: SVGSVGElement | null,
 		minDate: Date,
-		totalDays: number,
+		totalUnits: number,
 		width: number,
-		height: number
+		height: number,
+		granularity: TimeGranularity
 	): void {
 		if (!svg) return;
 
 		const gridGroup = document.createElementNS(ns, 'g');
 		addSvgClass(gridGroup, GanttClasses.elements.grid);
 
-		// 垂直线（日期分隔）
-		for (let i = 0; i <= totalDays; i++) {
+		// 垂直线（时间单元分隔）
+		for (let i = 0; i <= totalUnits; i++) {
 			const x = this.padding + i * this.columnWidth;
 
 			const line = document.createElementNS(ns, 'line');
@@ -908,12 +958,15 @@ export class SvgGanttRenderer {
 			line.setAttribute('y2', String(height));
 			line.setAttribute('stroke', 'var(--background-modifier-border)');
 			line.setAttribute('stroke-width', '0.5');
-			line.setAttribute('stroke-dasharray', i % 7 === 0 ? 'none' : '2 2');
+
+			// 根据颗粒度设置主要/次要网格线
+			const isMajorLine = this.isMajorGridLine(i, granularity);
+			line.setAttribute('stroke-dasharray', isMajorLine ? 'none' : '2 2');
 
 			gridGroup.appendChild(line);
 		}
 
-		// 水平线（任务行分隔）
+		// 水平线（任务行分隔）- 保持不变
 		for (let i = 0; i <= this.tasks.length; i++) {
 			const y = i * this.rowHeight;
 
@@ -932,22 +985,24 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 渲染今天线
+	 * 渲染今天线 - 支持颗粒度
 	 */
 	private renderTodayLine(
 		ns: string,
 		svg: SVGSVGElement | null,
 		minDate: Date,
-		totalDays: number,
-		height: number
+		totalUnits: number,
+		height: number,
+		granularity: TimeGranularity
 	): void {
 		if (!svg) return;
 
 		const today = new Date();
-		const daysDiff = Math.floor((today.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
+		const config = GRANULARITY_CONFIGS[granularity];
+		const unitsDiff = (today.getTime() - minDate.getTime()) / config.milliseconds;
 
-		if (daysDiff >= 0 && daysDiff <= totalDays) {
-			const x = this.padding + daysDiff * this.columnWidth + this.columnWidth / 2;
+		if (unitsDiff >= 0 && unitsDiff <= totalUnits) {
+			const x = this.padding + unitsDiff * this.columnWidth;
 
 			const line = document.createElementNS(ns, 'line');
 			line.setAttribute('x1', String(x));
@@ -963,25 +1018,29 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 渲染任务条
+	 * 渲染任务条 - 支持颗粒度（保持原始精度）
 	 */
 	private renderTaskBars(
 		ns: string,
 		svg: SVGSVGElement | null,
 		minDate: Date,
-		totalDays: number
+		totalUnits: number,
+		granularity: TimeGranularity
 	): void {
 		if (!svg) return;
 
 		const tasksGroup = document.createElementNS(ns, 'g');
 		addSvgClass(tasksGroup, GanttClasses.elements.tasks);
 
+		const config = GRANULARITY_CONFIGS[granularity];
+
 		this.tasks.forEach((task, index) => {
 			const taskStart = new Date(task.start);
 			const taskEnd = new Date(task.end);
 
-			const startOffset = Math.floor((taskStart.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
-			const duration = Math.ceil((taskEnd.getTime() - taskStart.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+			// 计算任务在当前颗粒度下的精确位置和宽度
+			const startOffset = (taskStart.getTime() - minDate.getTime()) / config.milliseconds;
+			const duration = (taskEnd.getTime() - taskStart.getTime()) / config.milliseconds;
 
 			const x = this.padding + startOffset * this.columnWidth;
 			const y = index * this.rowHeight + (this.rowHeight - 24) / 2;
@@ -1549,27 +1608,29 @@ export class SvgGanttRenderer {
 		// 3. 添加新任务条（简化处理：重新渲染整个甘特图区域）
 		if (added.length > 0) {
 			if (this.ganttSvg) {
-				const { minDate, totalDays } = this.calculateDateRange();
+				const { minDate, totalUnits, granularity } = this.calculateDateRange();
 				const ganttHeight = this.tasks.length * this.rowHeight + 10;
-				this.renderGanttChart(this.ganttSvg, minDate, totalDays, ganttHeight);
+				this.renderGanttChart(this.ganttSvg, minDate, totalUnits, ganttHeight, granularity);
 			}
 		}
 	}
 
 	/**
-	 * 更新单个任务条元素
+	 * 更新单个任务条元素 - 支持颗粒度
 	 */
 	private updateTaskBarElement(barGroup: SVGGElement, task: GanttChartTask): void {
 		const ns = 'http://www.w3.org/2000/svg';
-		const { minDate } = this.calculateDateRange();
+		const { minDate, granularity } = this.calculateDateRange();
+		const config = GRANULARITY_CONFIGS[granularity];
+
 		const startDate = new Date(task.start);
 		const endDate = new Date(task.end);
 
-		const startDays = Math.floor((startDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
-		const endDays = Math.floor((endDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
-		const duration = endDays - startDays + 1;
+		// 计算任务在当前颗粒度下的精确位置和宽度
+		const startOffset = (startDate.getTime() - minDate.getTime()) / config.milliseconds;
+		const duration = (endDate.getTime() - startDate.getTime()) / config.milliseconds;
 
-		const x = this.padding + startDays * this.columnWidth;
+		const x = this.padding + startOffset * this.columnWidth;
 		const y = this.tasks.findIndex(t => t.id === task.id) * this.rowHeight + 10; // 10px top padding
 		const width = duration * this.columnWidth;
 
@@ -1610,17 +1671,18 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 滚动到今天
+	 * 滚动到今天 - 支持颗粒度
 	 */
 	scrollToToday(): void {
 		if (!this.ganttContainer || !this.minDate) return;
 
 		const today = new Date();
-		const daysDiff = Math.floor((today.getTime() - this.minDate.getTime()) / (24 * 60 * 60 * 1000));
+		const config = GRANULARITY_CONFIGS[this.granularity];
+		const unitsDiff = (today.getTime() - this.minDate.getTime()) / config.milliseconds;
 
-		if (daysDiff >= 0 && daysDiff <= this.totalDays) {
+		if (unitsDiff >= 0 && unitsDiff <= this.totalUnits) {
 			// 计算今天的 x 坐标
-			const todayX = this.padding + daysDiff * this.columnWidth + this.columnWidth / 2;
+			const todayX = this.padding + unitsDiff * this.columnWidth;
 
 			// 获取容器宽度
 			const containerWidth = this.ganttContainer.clientWidth;

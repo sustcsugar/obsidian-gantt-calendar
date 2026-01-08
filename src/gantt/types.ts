@@ -78,6 +78,8 @@ export type GanttViewMode = 'day' | 'week' | 'month' | 'quarter_day' | 'half_day
 export interface GanttChartConfig {
 	/** 视图模式 */
 	view_mode: GanttViewMode;
+	/** 时间颗粒度（新增） */
+	granularity?: TimeGranularity;
 	/** 语言代码 */
 	language: string;
 	/** 头部高度 (px) */
@@ -165,3 +167,80 @@ export interface GanttStyleConfig {
 	/** 低优先级颜色 */
 	lowPriorityColor: string;
 }
+
+/**
+ * 时间颗粒度枚举
+ */
+export enum TimeGranularity {
+	DAY = 'day',
+	WEEK = 'week',
+	MONTH = 'month'
+}
+
+/**
+ * 颗粒度配置接口
+ */
+export interface GranularityConfig {
+	/** 颗粒度类型 */
+	granularity: TimeGranularity;
+	/** 对应的毫秒数 */
+	milliseconds: number;
+	/** 标签格式化函数 */
+	labelFormatter: (date: Date, index: number, getWeekNumber: (date: Date) => number) => string;
+	/** 网格对齐函数 */
+	gridAligner: (date: Date) => Date;
+}
+
+/**
+ * 获取周数的辅助函数
+ */
+export function getWeekNumber(date: Date): number {
+	const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	const dayNum = d.getUTCDay() || 7;
+	d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+	return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+/**
+ * 颗粒度配置映射表
+ */
+export const GRANULARITY_CONFIGS: Record<TimeGranularity, GranularityConfig> = {
+	[TimeGranularity.DAY]: {
+		granularity: TimeGranularity.DAY,
+		milliseconds: 24 * 60 * 60 * 1000,
+		labelFormatter: (date: Date) => `${date.getMonth() + 1}/${date.getDate()}`,
+		gridAligner: (date: Date) => {
+			const aligned = new Date(date);
+			aligned.setHours(0, 0, 0, 0);
+			return aligned;
+		}
+	},
+	[TimeGranularity.WEEK]: {
+		granularity: TimeGranularity.WEEK,
+		milliseconds: 7 * 24 * 60 * 60 * 1000,
+		labelFormatter: (date: Date, index: number, getWeekNumber: (date: Date) => number) => {
+			const weekNum = getWeekNumber(date);
+			return `W${weekNum}`;
+		},
+		gridAligner: (date: Date) => {
+			const aligned = new Date(date);
+			const dayOfWeek = aligned.getDay();
+			const diff = aligned.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+			aligned.setDate(diff);
+			aligned.setHours(0, 0, 0, 0);
+			return aligned;
+		}
+	},
+	[TimeGranularity.MONTH]: {
+		granularity: TimeGranularity.MONTH,
+		milliseconds: 30.436875 * 24 * 60 * 60 * 1000, // 平均月长
+		labelFormatter: (date: Date) => `${date.getMonth() + 1}月`,
+		gridAligner: (date: Date) => {
+			const aligned = new Date(date);
+			aligned.setDate(1);
+			aligned.setHours(0, 0, 0, 0);
+			return aligned;
+		}
+	}
+};
