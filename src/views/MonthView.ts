@@ -2,8 +2,9 @@ import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GCTask } from '../types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
-import { MonthViewClasses } from '../utils/bem';
+import { MonthViewClasses, TaskCardClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
+import { TooltipManager } from '../utils/tooltipManager';
 
 /**
  * 月视图渲染器
@@ -76,8 +77,8 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				}
 
 				dayEl.onclick = (e: MouseEvent) => {
-					// 点击任务时不触发日期选择
-					if ((e.target as HTMLElement).closest(`.${MonthViewClasses.elements.taskItem}`)) {
+					// 点击任务时不触发日期选择（使用正确的任务卡片类名）
+					if ((e.target as HTMLElement).closest(`.${TaskCardClasses.block}`)) {
 						return;
 					}
 					if (this.plugin.calendarView) {
@@ -145,6 +146,9 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			app: this.app,
 			plugin: this.plugin,
 			onClick: (task) => {
+				// 隐藏 tooltip
+				const tooltipManager = TooltipManager.getInstance(this.plugin);
+				tooltipManager.hide();
 				// 刷新当前月视图
 				const viewContainer = document.querySelector('.calendar-month-view-container');
 				if (viewContainer) {

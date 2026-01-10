@@ -7,6 +7,7 @@ import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardComponent, WeekViewConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
+import { TooltipManager } from '../utils/tooltipManager';
 
 /**
  * 周视图渲染器
@@ -169,6 +170,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			plugin: this.plugin,
 			targetDate,
 			onClick: (task) => {
+				// 隐藏 tooltip
+				const tooltipManager = TooltipManager.getInstance(this.plugin);
+				tooltipManager.hide();
 				// 刷新当前周视图
 				const viewContainer = document.querySelector('.calendar-week-view-container');
 				if (viewContainer) {
