@@ -6,6 +6,7 @@ import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
 import { ViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, TaskViewConfig } from '../components/TaskCard';
+import { Logger } from '../utils/logger';
 
 /**
  * 任务视图渲染器
@@ -161,7 +162,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 
 			tasks.forEach(task => this.renderTaskItem(task, listContainer));
 		} catch (error) {
-			console.error('Error rendering task view', error);
+			Logger.error('TaskView', 'Error rendering task view', error);
 			listContainer.empty();
 			listContainer.createEl('div', { text: '加载任务时出错', cls: 'gantt-task-empty' });
 		}

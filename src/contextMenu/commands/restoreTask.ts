@@ -1,6 +1,7 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { Logger } from '../../utils/logger';
 
 /**
  * 恢复已取消的任务
@@ -39,7 +40,7 @@ export async function restoreTask(
 		new Notice('任务已恢复');
 		onRefresh();
 	} catch (error) {
-		console.error('Failed to restore task:', error);
+		Logger.error('restoreTask', 'Failed to restore task:', error);
 		new Notice('恢复任务失败');
 	}
 }

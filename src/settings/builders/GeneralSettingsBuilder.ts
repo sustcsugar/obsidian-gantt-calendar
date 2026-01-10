@@ -33,5 +33,16 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 					this.plugin.settings.defaultView = value as 'day' | 'week' | 'month' | 'year' | 'task' | 'gantt';
 					await this.saveAndRefresh();
 				}));
+
+		// 开发者模式
+		new Setting(this.containerEl)
+			.setName('开发者模式')
+			.setDesc('启用后将输出详细的调试日志，关闭后仅显示统计信息和错误')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableDebugMode)
+				.onChange(async (value) => {
+					this.plugin.settings.enableDebugMode = value;
+					await this.saveAndRefresh();
+				}));
 	}
 }

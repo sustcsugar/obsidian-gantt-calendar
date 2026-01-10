@@ -9,6 +9,7 @@ import { getStatusColor, DEFAULT_TASK_STATUSES } from '../../tasks/taskStatus';
 import { RegularExpressions } from '../../utils/RegularExpressions';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { TooltipManager } from '../../utils/tooltipManager';
+import { Logger } from '../../utils/logger';
 
 /**
  * 任务卡片渲染器
@@ -102,7 +103,7 @@ export class TaskCardRenderer {
 				taskItem.toggleClass('gc-task-card--completed', isNowCompleted);
 				taskItem.toggleClass('gc-task-card--pending', !isNowCompleted);
 			} catch (error) {
-				console.error('Error updating task:', error);
+				Logger.error('TaskCardRenderer', 'Error updating task:', error);
 				checkbox.checked = task.completed;
 			}
 		});

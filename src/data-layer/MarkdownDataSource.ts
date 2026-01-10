@@ -26,6 +26,7 @@ import {
 	TaskChanges
 } from './types';
 import { IDataSource, ChangeEventHandler } from './IDataSource';
+import { Logger } from '../utils/logger';
 
 /**
  * 生成任务ID
@@ -76,7 +77,7 @@ export class MarkdownDataSource implements IDataSource {
 	 * 初始化数据源
 	 */
 	async initialize(config: DataSourceConfig): Promise<void> {
-		console.log('[MarkdownDataSource] initialize() started');
+		Logger.debug('MarkdownDataSource', 'initialize() started');
 		const scanStartTime = performance.now();
 
 		this.config = config;
@@ -90,7 +91,7 @@ export class MarkdownDataSource implements IDataSource {
 		await this.notifyInitialTasks(allTasks);
 
 		const scanElapsed = performance.now() - scanStartTime;
-		console.log(`[MarkdownDataSource] initialize() completed in ${scanElapsed.toFixed(2)}ms`);
+		Logger.stats('MarkdownDataSource', `initialize() completed in ${scanElapsed.toFixed(2)}ms`);
 	}
 
 	/**
@@ -185,7 +186,7 @@ export class MarkdownDataSource implements IDataSource {
 	 */
 	private async scanAllFiles(): Promise<GCTask[]> {
 		const markdownFiles = this.app.vault.getMarkdownFiles();
-		console.log('[MarkdownDataSource] Scanning', markdownFiles.length, 'markdown files');
+		Logger.stats('MarkdownDataSource', `Scanning ${markdownFiles.length} markdown files`);
 
 		const BATCH_SIZE = 50;
 		const batches: TFile[][] = [];
@@ -194,7 +195,7 @@ export class MarkdownDataSource implements IDataSource {
 			batches.push(markdownFiles.slice(i, i + BATCH_SIZE));
 		}
 
-		console.log(`[MarkdownDataSource] Processing in ${batches.length} batches of ${BATCH_SIZE} files`);
+		Logger.debug('MarkdownDataSource', `Processing in ${batches.length} batches of ${BATCH_SIZE} files`);
 
 		// 【关键优化】在扫描阶段收集所有任务，避免二次解析
 		const allTasks: GCTask[] = [];
@@ -220,7 +221,7 @@ export class MarkdownDataSource implements IDataSource {
 			}
 		}
 
-		console.log('[MarkdownDataSource] All files scanned');
+		Logger.debug('MarkdownDataSource', 'All files scanned');
 		return allTasks;
 	}
 
@@ -273,22 +274,22 @@ export class MarkdownDataSource implements IDataSource {
 		// 监听文件修改（使用防抖处理）
 		this.app.vault.on('modify', (file) => {
 			if (file instanceof TFile && file.extension === 'md') {
-				console.log(`[MarkdownDataSource] File modify event received: ${file.path}`);
+				Logger.debug('MarkdownDataSource', `File modify event received: ${file.path}`);
 
 				if (this.processingFiles.has(file.path)) {
-					console.log(`[MarkdownDataSource] File already being processed, skipping: ${file.path}`);
+					Logger.debug('MarkdownDataSource', `File already being processed, skipping: ${file.path}`);
 					return;
 				}
 
 				const existingTimer = this.debounceTimers.get(file.path);
 				if (existingTimer !== undefined) {
 					clearTimeout(existingTimer);
-					console.log(`[MarkdownDataSource] Debouncing file modification: ${file.path}`);
+					Logger.debug('MarkdownDataSource', `Debouncing file modification: ${file.path}`);
 				}
 
 				const timer = window.setTimeout(async () => {
 					this.processingFiles.add(file.path);
-					console.log(`[MarkdownDataSource] Processing file modification: ${file.path}`);
+					Logger.debug('MarkdownDataSource', `Processing file modification: ${file.path}`);
 
 					const startTime = performance.now();
 
@@ -309,14 +310,14 @@ export class MarkdownDataSource implements IDataSource {
 						const changes = this.detectChangesByIds(oldTaskIds, parseResult?.tasks || []);
 						if (changes) {
 							const elapsed = performance.now() - startTime;
-							console.log(`[MarkdownDataSource] Changes detected in ${elapsed.toFixed(2)}ms:`, {
+							Logger.debug('MarkdownDataSource', `Changes detected in ${elapsed.toFixed(2)}ms:`, {
 								created: changes.created.length,
 								updated: changes.updated.length,
 								deleted: changes.deleted.length
 							});
 							this.changeHandler(changes);
 						} else {
-							console.log(`[MarkdownDataSource] No actual changes detected for ${file.path}`);
+							Logger.debug('MarkdownDataSource', `No actual changes detected for ${file.path}`);
 						}
 					}
 
@@ -324,7 +325,7 @@ export class MarkdownDataSource implements IDataSource {
 					this.processingFiles.delete(file.path);
 
 					const elapsed = performance.now() - startTime;
-					console.log(`[MarkdownDataSource] File modification processed in ${elapsed.toFixed(2)}ms`);
+					Logger.debug('MarkdownDataSource', `File modification processed in ${elapsed.toFixed(2)}ms`);
 				}, this.DEBOUNCE_MS);
 
 				this.debounceTimers.set(file.path, timer);

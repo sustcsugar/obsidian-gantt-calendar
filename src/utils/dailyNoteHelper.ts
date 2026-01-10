@@ -8,6 +8,7 @@
 import { App, Notice, Modal, TFile, TFolder } from 'obsidian';
 import type { GanttCalendarSettings } from '../settings';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
+import { Logger } from './logger';
 
 /**
  * 新任务数据接口
@@ -93,7 +94,7 @@ async function handleMissingDailyNote(
 			new Notice('已创建 Daily Note 并添加任务');
 		}
 	} catch (error) {
-		console.error('[DailyNoteHelper] Error creating daily note:', error);
+		Logger.error('DailyNoteHelper', 'Error creating daily note:', error);
 		new Notice('创建 Daily Note 失败: ' + (error as Error).message);
 	}
 }

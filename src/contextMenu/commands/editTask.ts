@@ -2,6 +2,7 @@ import { App, Modal, Setting, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
+import { Logger } from '../../utils/logger';
 
 
 export function openEditTaskModal(
@@ -192,7 +193,7 @@ class EditTaskModal extends Modal {
         this.close();
         new Notice('任务已更新');
       } catch (err) {
-        console.error('Failed to update task', err);
+        Logger.error('editTask', 'Failed to update task', err);
         new Notice('更新任务失败');
       }
     });

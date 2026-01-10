@@ -6,6 +6,7 @@ import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardClasses, DayViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, DayViewConfig } from '../components/TaskCard';
+import { Logger } from '../utils/logger';
 
 /**
  * 日视图渲染器
@@ -142,7 +143,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 			currentDayTasks.forEach(task => this.renderTaskItem(task, listContainer, normalizedTarget));
 		} catch (error) {
-			console.error('Error loading day view tasks', error);
+			Logger.error('DayView', 'Error loading day view tasks', error);
 			listContainer.empty();
 			listContainer.createEl('div', { text: '加载任务时出错', cls: 'gantt-task-empty' });
 		}
@@ -272,7 +273,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			const noteContent = contentContainer.createDiv(DayViewClasses.elements.notesBody);
 			await MarkdownRenderer.render(this.app, content, noteContent, file.path, this.plugin.calendarView);
 		} catch (error) {
-			console.error('Error loading daily note', error);
+			Logger.error('DayView', 'Error loading daily note', error);
 			contentContainer.empty();
 			contentContainer.createEl('div', { text: '加载 Daily Note 时出错', cls: 'gantt-task-empty' });
 		}

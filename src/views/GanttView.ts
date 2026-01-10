@@ -10,6 +10,7 @@ import type { GCTask, GanttTimeGranularity, SortState, TagFilterState } from '..
 import { DEFAULT_TAG_FILTER_STATE } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { GanttClasses } from '../utils/bem';
+import { Logger } from '../utils/logger';
 import {
 	GanttChartAdapter,
 	TaskUpdateHandler,
@@ -211,7 +212,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			this.renderControlPanel(root, ganttTasks.length);
 
 		} catch (error) {
-			console.error('[GanttViewRenderer] Error rendering gantt:', error);
+			Logger.error('GanttView', 'Error rendering gantt:', error);
 			root.createEl('div', {
 				text: '渲染甘特图时出错: ' + (error as Error).message,
 				cls: 'gantt-error'
@@ -394,7 +395,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 				}
 			}
 		} catch (error) {
-			console.error('[GanttViewRenderer] Error in incremental update:', error);
+			Logger.error('GanttView', 'Error in incremental update:', error);
 			// 出错时回退到完整刷新
 			this.refresh();
 		}

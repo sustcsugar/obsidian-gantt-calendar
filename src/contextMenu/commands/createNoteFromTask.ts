@@ -2,6 +2,7 @@ import { App, Notice, normalizePath } from 'obsidian';
 import type { GCTask } from '../../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { Logger } from '../../utils/logger';
 
 // ==================== 类型定义 ====================
 
@@ -240,7 +241,7 @@ export async function createNoteFromTaskCore(
 		// 9) 更新源任务行为双链，使用 updateTaskProperties 保留 tags 等元数据
 		await updateTaskProperties(app, task, { content: options.wikiLinkContent }, enabledFormats);
 	} catch (error) {
-		console.error('Failed to create note from task:', error);
+		Logger.error('createNoteFromTask', 'Failed to create note from task:', error);
 		new Notice('创建笔记失败');
 	}
 }

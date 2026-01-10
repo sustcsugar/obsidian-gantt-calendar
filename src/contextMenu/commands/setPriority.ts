@@ -1,6 +1,7 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { Logger } from '../../utils/logger';
 
 /**
  * 设置任务优先级
@@ -26,7 +27,7 @@ export async function setTaskPriority(
 		onRefresh();
 		new Notice('优先级已更新');
 	} catch (err) {
-		console.error('Failed to update task priority', err);
+		Logger.error('setPriority', 'Failed to update task priority', err);
 		new Notice('更新优先级失败');
 	}
 }

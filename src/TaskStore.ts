@@ -1,5 +1,6 @@
 import { App } from 'obsidian';
 import { GCTask } from './types';
+import { Logger } from './utils/logger';
 
 // 任务更新相关函数已迁移至 tasks/taskUpdater.ts，此处重新导出以保持向后兼容
 export {
@@ -84,17 +85,17 @@ export class TaskStore {
 	 */
 	private setupEventForwarding(): void {
 		this.eventBus.on('task:created', () => {
-			console.log('[TaskStore] Event: task:created');
+			Logger.debug('TaskStore', 'Event: task:created');
 			this.invalidateCache();
 			this.notifyListenersDebounced();
 		});
 		this.eventBus.on('task:updated', () => {
-			console.log('[TaskStore] Event: task:updated');
+			Logger.debug('TaskStore', 'Event: task:updated');
 			this.invalidateCache();
 			this.notifyListenersDebounced();
 		});
 		this.eventBus.on('task:deleted', () => {
-			console.log('[TaskStore] Event: task:deleted');
+			Logger.debug('TaskStore', 'Event: task:deleted');
 			this.invalidateCache();
 			this.notifyListenersDebounced();
 		});
@@ -105,12 +106,12 @@ export class TaskStore {
 	 */
 	async initialize(globalTaskFilter: string, enabledFormats?: string[], retryCount: number = 0): Promise<void> {
 		if (this.isInitializing) {
-			console.log('[TaskStore] Already initializing, skipping...');
+			Logger.debug('TaskStore', 'Already initializing, skipping...');
 			return;
 		}
 
-		console.log('[TaskStore] ===== Starting initialization =====');
-		console.log('[TaskStore] Config:', {
+		Logger.debug('TaskStore', '===== Starting initialization =====');
+		Logger.debug('TaskStore', 'Config:', {
 			globalTaskFilter,
 			enabledFormats,
 			retryCount
@@ -130,21 +131,20 @@ export class TaskStore {
 		};
 
 		const markdownFiles = this.app.vault.getMarkdownFiles();
-		console.log('[TaskStore] Vault has', markdownFiles.length, 'markdown files');
+		Logger.stats('TaskStore', `Vault has ${markdownFiles.length} markdown files`);
 
 		if (markdownFiles.length === 0 && retryCount < 3) {
-			console.log(`[TaskStore] Vault not ready, retrying in 500ms...`);
+			Logger.debug('TaskStore', 'Vault not ready, retrying in 500ms...');
 			this.isInitializing = false;
 			await new Promise(resolve => setTimeout(resolve, 500));
 			return this.initialize(globalTaskFilter, enabledFormats, retryCount + 1);
 		}
 
-		const timerLabel = retryCount === 0 ? '[TaskStore] Initial scan' : `[TaskStore] Initial scan (retry ${retryCount})`;
-		console.time(timerLabel);
+		const scanStartTime = performance.now();
 
 		await this.markdownSource.initialize(config);
 
-		console.log('[TaskStore] MarkdownDataSource initialized');
+		Logger.debug('TaskStore', 'MarkdownDataSource initialized');
 
 		this.isInitialized = true;
 		this.isInitializing = false;
@@ -152,13 +152,13 @@ export class TaskStore {
 		this.notifyListeners();
 
 		const stats = this.repository.getStats();
-		console.timeEnd(timerLabel);
-		console.log('[TaskStore] Init summary', {
+		const scanElapsed = performance.now() - scanStartTime;
+		Logger.stats('TaskStore', `Initial scan completed in ${scanElapsed.toFixed(2)}ms`, {
 			totalFiles: markdownFiles.length,
 			tasksFound: stats.totalTasks,
 			dataSources: stats.dataSources
 		});
-		console.log('[TaskStore] ===== Initialization complete =====');
+		Logger.debug('TaskStore', '===== Initialization complete =====');
 	}
 
 	/**
@@ -166,15 +166,15 @@ export class TaskStore {
 	 */
 	getAllTasks(): GCTask[] {
 		if (this.cacheValid && this.cachedTasks) {
-			console.log('[TaskStore] Returning cached tasks', this.cachedTasks.length);
+			Logger.debug('TaskStore', 'Returning cached tasks', this.cachedTasks.length);
 			return this.cachedTasks;
 		}
 
 		const startTime = performance.now();
-		console.log('[TaskStore] Cache miss, rebuilding...');
+		Logger.debug('TaskStore', 'Cache miss, rebuilding...');
 
 		const allTasks = this.repository.getAllTasks();
-		console.log(`[TaskStore] Got ${allTasks.length} tasks from repository`);
+		Logger.debug('TaskStore', `Got ${allTasks.length} tasks from repository`);
 
 		if (this.enableDuplicateCheck) {
 			this.checkDuplicates(allTasks);
@@ -184,7 +184,7 @@ export class TaskStore {
 		this.cacheValid = true;
 
 		const elapsed = performance.now() - startTime;
-		console.log(`[TaskStore] Cache rebuilt in ${elapsed.toFixed(2)}ms (${allTasks.length} tasks)`);
+		Logger.stats('TaskStore', `Cache rebuilt in ${elapsed.toFixed(2)}ms (${allTasks.length} tasks)`);
 
 		return allTasks;
 	}
@@ -199,7 +199,7 @@ export class TaskStore {
 			JSON.stringify(this.enabledFormats) !== JSON.stringify(enabledFormats);
 
 		if (needsReinit) {
-			console.log('[TaskStore] Settings changed, reinitializing...');
+			Logger.debug('TaskStore', 'Settings changed, reinitializing...');
 			await this.initialize(trimmedFilter, enabledFormats);
 		}
 	}
@@ -222,7 +222,7 @@ export class TaskStore {
 	clear(): void {
 		this.repository.clear();
 		this.isInitialized = false;
-		console.log('[TaskStore] Cache cleared');
+		Logger.debug('TaskStore', 'Cache cleared');
 	}
 
 	/**
@@ -269,7 +269,7 @@ export class TaskStore {
 			try {
 				listener();
 			} catch (error) {
-				console.error('[TaskStore] Error in update listener:', error);
+				Logger.error('TaskStore', 'Error in update listener:', error);
 			}
 		});
 	}
@@ -304,7 +304,7 @@ export class TaskStore {
 		});
 
 		if (duplicates.length > 0) {
-			console.warn('[TaskStore] Duplicate tasks found:', duplicates);
+			Logger.warn('TaskStore', 'Duplicate tasks found:', duplicates);
 		}
 	}
 }

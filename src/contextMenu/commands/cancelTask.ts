@@ -1,6 +1,7 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { Logger } from '../../utils/logger';
 
 /**
  * 取消任务
@@ -41,7 +42,7 @@ export async function cancelTask(
 		new Notice('任务已取消');
 		onRefresh();
 	} catch (error) {
-		console.error('Failed to cancel task:', error);
+		Logger.error('cancelTask', 'Failed to cancel task:', error);
 		new Notice('取消任务失败');
 	}
 }

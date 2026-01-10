@@ -1,5 +1,6 @@
 import { App, Notice, TFile } from 'obsidian';
 import type { GCTask } from '../../types';
+import { Logger } from '../../utils/logger';
 
 /**
  * 删除任务
@@ -39,7 +40,7 @@ export async function deleteTask(
 		new Notice('任务已删除');
 		onRefresh();
 	} catch (error) {
-		console.error('Failed to delete task:', error);
+		Logger.error('deleteTask', 'Failed to delete task:', error);
 		new Notice('删除任务失败');
 	}
 }

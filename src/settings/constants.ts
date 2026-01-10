@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	enableTemplaterForDailyNote: false, // 默认不使用 Templater
 	templaterTemplatePath: '', // 默认模板路径
 	defaultTaskPriority: 'medium', // 默认中等优先级
+	enableDebugMode: false, // 默认关闭开发者模式
 };
 
 /**

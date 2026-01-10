@@ -4,6 +4,7 @@ import { GanttCalendarSettings, DEFAULT_SETTINGS, GanttCalendarSettingTab } from
 import { TaskStore } from './src/TaskStore';
 import { registerAllCommands } from './src/commands/commandsIndex';
 import { TooltipManager } from './src/utils/tooltipManager';
+import { Logger } from './src/utils/logger';
 
 export default class GanttCalendarPlugin extends Plugin {
     settings: GanttCalendarSettings;
@@ -11,6 +12,9 @@ export default class GanttCalendarPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
+
+        // Initialize logger
+        Logger.init(this);
 
         // Initialize task store
         this.taskCache = new TaskStore(this.app);
@@ -20,12 +24,12 @@ export default class GanttCalendarPlugin extends Plugin {
             setTimeout(() => {
                         this.taskCache.initialize(this.settings.globalTaskFilter, this.settings.enabledTaskFormats)
                     .then(() => {
-                        console.log('[GanttCalendar] Task cache initialized');
+                        Logger.stats('Main', 'Task cache initialized');
                         // Refresh all views after cache is ready
                         this.refreshCalendarViews();
                     })
                     .catch(error => {
-                        console.error('[GanttCalendar] Failed to initialize task cache:', error);
+                        Logger.error('Main', 'Failed to initialize task cache:', error);
                         new Notice('任务缓存初始化失败');
                     });
             }, 800);  // 布局就绪后再延迟 800ms，避免 vault 未就绪
@@ -53,15 +57,6 @@ export default class GanttCalendarPlugin extends Plugin {
 
         // This adds a settings tab so the user can configure various aspects of the plugin
         this.addSettingTab(new GanttCalendarSettingTab(this.app, this));
-
-        // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-        // Using this function will automatically remove the event listener when this plugin is disabled.
-        this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-            console.log('click', evt);
-        });
-
-        // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-        this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
     }
 
     onunload() {

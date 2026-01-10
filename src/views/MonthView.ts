@@ -3,6 +3,7 @@ import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GCTask } from '../types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
 import { MonthViewClasses } from '../utils/bem';
+import { Logger } from '../utils/logger';
 
 /**
  * 月视图渲染器
@@ -129,7 +130,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				moreCount.setText(`+${currentDayTasks.length - taskLimit} more`);
 			}
 		} catch (error) {
-			console.error('Error loading month view tasks', error);
+			Logger.error('MonthView', 'Error loading month view tasks', error);
 		}
 	}
 

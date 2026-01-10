@@ -10,6 +10,7 @@
  */
 
 import { EventHandler } from './types';
+import { Logger } from '../utils/logger';
 
 export class EventBus {
 	private listeners: Map<string, Set<EventHandler>> = new Map();
@@ -50,7 +51,7 @@ export class EventBus {
 				try {
 					handler(data);
 				} catch (error) {
-					console.error(`[EventBus] Error in ${eventName} handler:`, error);
+					Logger.error('EventBus', `Error in ${eventName} handler:`, error);
 				}
 			});
 		}

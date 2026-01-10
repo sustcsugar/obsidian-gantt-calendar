@@ -18,6 +18,7 @@ import {
 	QueryOptions
 } from './types';
 import { IDataSource } from './IDataSource';
+import { Logger } from '../utils/logger';
 
 /**
  * 生成任务ID
@@ -162,7 +163,7 @@ export class TaskRepository {
 		changes: DataSourceChanges
 	): Promise<void> {
 		const startTime = performance.now();
-		console.log(`[TaskRepository] Processing changes from ${sourceId}:`, {
+		Logger.debug('TaskRepository', `Processing changes from ${sourceId}:`, {
 			created: changes.created.length,
 			updated: changes.updated.length,
 			deleted: changes.deleted.length,
@@ -246,7 +247,7 @@ export class TaskRepository {
 		}
 
 		const elapsed = performance.now() - startTime;
-		console.log(`[TaskRepository] Changes processed in ${elapsed.toFixed(2)}ms`);
+		Logger.stats('TaskRepository', `Changes processed in ${elapsed.toFixed(2)}ms`);
 	}
 
 	/**

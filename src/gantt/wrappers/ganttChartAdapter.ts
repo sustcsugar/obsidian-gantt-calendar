@@ -9,6 +9,7 @@ import { TimeGranularity } from '../types';
 import type { GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import type { GanttTimeGranularity } from '../../types';
+import { Logger } from '../../utils/logger';
 
 /**
  * 甘特图适配器类
@@ -91,7 +92,7 @@ export class GanttChartAdapter {
 
 			this.isInitialized = true;
 		} catch (error) {
-			console.error('[GanttChartAdapter] Failed to initialize:', error);
+			Logger.error('GanttChartAdapter', 'Failed to initialize:', error);
 			throw error;
 		}
 	}

@@ -7,6 +7,7 @@ import { updateTaskCompletion } from '../tasks/taskUpdater';
 import { getStatusColor, DEFAULT_TASK_STATUSES, getStatusByKey } from '../tasks/taskStatus';
 import type { TaskStatus } from '../tasks/taskStatus';
 import { RegularExpressions } from '../utils/RegularExpressions';
+import { Logger } from '../utils/logger';
 
 /**
  * 日历渲染器基类
@@ -104,7 +105,7 @@ export abstract class BaseViewRenderer {
 			try {
 				fn();
 			} catch (err) {
-				console.error('[BaseViewRenderer] Error during DOM cleanup', err);
+				Logger.error('BaseViewRenderer', 'Error during DOM cleanup', err);
 			}
 		}
 		this.domCleanups = [];
@@ -188,7 +189,7 @@ export abstract class BaseViewRenderer {
 				taskItem.toggleClass('completed', isNowCompleted);
 				taskItem.toggleClass('pending', !isNowCompleted);
 			} catch (error) {
-				console.error('Error updating task:', error);
+				Logger.error('BaseViewRenderer', 'Error updating task:', error);
 				new Notice('更新任务失败');
 				checkbox.checked = task.completed;
 			}

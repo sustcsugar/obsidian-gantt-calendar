@@ -33,6 +33,7 @@ export interface GanttCalendarSettings {
 	enableTemplaterForDailyNote: boolean; // 是否启用 Templater 集成
 	templaterTemplatePath: string; // Templater 模板路径
 	defaultTaskPriority: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal'; // 默认任务优先级
+	enableDebugMode: boolean; // 是否启用开发者模式（详细日志）
 }
 
 /**

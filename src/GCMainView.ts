@@ -9,6 +9,7 @@ import { DayViewRenderer } from './views/DayView';
 import { TaskViewRenderer } from './views/TaskView';
 import { GanttViewRenderer } from './views/GanttView';
 import { Toolbar } from './toolbar/toolbar';
+import { Logger } from './utils/logger';
 
 export const GC_VIEW_ID = 'gantt-calendar-view';
 
@@ -127,7 +128,7 @@ export class GCMainView extends ItemView {
 
 	private render(): void {
 		const startTime = performance.now();
-		console.log(`[GCMainView] render() called, viewType: ${this.viewType}`);
+		Logger.debug('GCMainView', `render() called, viewType: ${this.viewType}`);
 
 		// 清理上一次渲染的资源
 		this.yearRenderer.runDomCleanups();
@@ -185,7 +186,7 @@ export class GCMainView extends ItemView {
 		}
 
 		const elapsed = performance.now() - startTime;
-		console.log(`[GCMainView] render() completed in ${elapsed.toFixed(2)}ms`);
+		Logger.stats('GCMainView', `render() completed in ${elapsed.toFixed(2)}ms`);
 	}
 
 	private renderCalendarContent(content: HTMLElement): void {

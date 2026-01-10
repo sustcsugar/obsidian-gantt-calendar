@@ -17,6 +17,7 @@ import { TimeGranularity, GRANULARITY_CONFIGS, getWeekNumber } from '../types';
 import type { GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
+import { Logger } from '../../utils/logger';
 
 /**
  * SVG 元素辅助方法
@@ -784,7 +785,7 @@ export class SvgGanttRenderer {
 				try {
 					await this.onProgressChange(ganttTask, newCompletedState ? 100 : 0);
 				} catch (error) {
-					console.error('[SvgGanttRenderer] Error updating task completion:', error);
+					Logger.error('SvgGanttRenderer', 'Error updating task completion:', error);
 					// 恢复复选框状态
 					checkbox.checked = isCompleted;
 				}
@@ -1451,7 +1452,7 @@ export class SvgGanttRenderer {
 				if (task!) await this.handleEndDateChange(task!, newEnd);
 			}
 		} catch (error) {
-			console.error('[SvgGanttRenderer] Error updating task dates:', error);
+			Logger.error('SvgGanttRenderer', 'Error updating task dates:', error);
 		}
 	}
 
@@ -1514,7 +1515,7 @@ export class SvgGanttRenderer {
 			await updateTaskProperties(this.app, task as any, updates, this.plugin.settings.enabledTaskFormats);
 			await this.plugin.taskCache.updateFileCache(task.filePath);
 		} catch (error) {
-			console.error('[SvgGanttRenderer] Error updating start date:', error);
+			Logger.error('SvgGanttRenderer', 'Error updating start date:', error);
 		}
 	}
 
@@ -1533,7 +1534,7 @@ export class SvgGanttRenderer {
 			await updateTaskProperties(this.app, task as any, updates, this.plugin.settings.enabledTaskFormats);
 			await this.plugin.taskCache.updateFileCache(task.filePath);
 		} catch (error) {
-			console.error('[SvgGanttRenderer] Error updating end date:', error);
+			Logger.error('SvgGanttRenderer', 'Error updating end date:', error);
 		}
 	}
 

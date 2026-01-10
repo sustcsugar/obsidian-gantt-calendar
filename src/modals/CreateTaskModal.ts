@@ -13,6 +13,7 @@ import type GanttCalendarPlugin from '../../main';
 import type { GCTask } from '../types';
 import { createTaskInDailyNote, type CreateTaskData } from '../utils/dailyNoteHelper';
 import { CreateTaskModalClasses } from '../utils/bem';
+import { Logger } from '../utils/logger';
 
 /**
  * 任务创建弹窗选项
@@ -326,7 +327,7 @@ export class CreateTaskModal extends Modal {
 			this.onSuccess();
 			this.close();
 		} catch (error) {
-			console.error('[CreateTaskModal] Error creating task:', error);
+			Logger.error('CreateTaskModal', 'Error creating task:', error);
 			new Notice('创建任务失败: ' + (error as Error).message);
 		}
 	}

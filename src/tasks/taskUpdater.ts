@@ -1,6 +1,7 @@
 import { App, TFile } from 'obsidian';
 import { GCTask } from '../types';
 import { serializeTask, TaskUpdates } from './taskSerializer';
+import { Logger } from '../utils/logger';
 
 
 /**
@@ -127,7 +128,7 @@ export async function updateTaskProperties(
 	enabledFormats: string[]
 ): Promise<void> {
 	const startTime = performance.now();
-	console.log('[taskUpdater] updateTaskProperties called:', {
+	Logger.debug('taskUpdater', 'updateTaskProperties called:', {
 		task: task.description || task.content,
 		filePath: task.filePath,
 		lineNumber: task.lineNumber,
@@ -138,7 +139,7 @@ export async function updateTaskProperties(
 	const { file, lines, taskLineIndex } = await readTaskLine(app, task);
 	const taskLine = lines[taskLineIndex];
 
-	console.log('[taskUpdater] Original task line:', taskLine);
+	Logger.debug('taskUpdater', 'Original task line:', taskLine);
 
 	// 确定任务格式
 	const formatToUse = determineTaskFormat(task, taskLine, enabledFormats);
@@ -162,12 +163,12 @@ export async function updateTaskProperties(
 		formatToUse
 	);
 
-	console.log('[taskUpdater] Serialized task content:', taskContent);
+	Logger.debug('taskUpdater', 'Serialized task content:', taskContent);
 
 	// 拼接完整的任务行：缩进 + 列表标记 + 空格 + 任务内容
 	const finalTaskLine = `${indent}${listMarker} ${taskContent}`;
 
-	console.log('[taskUpdater] Final task line:', finalTaskLine);
+	Logger.debug('taskUpdater', 'Final task line:', finalTaskLine);
 
 	// 写回文件
 	lines[taskLineIndex] = finalTaskLine;
@@ -178,5 +179,5 @@ export async function updateTaskProperties(
 	const writeElapsed = performance.now() - writeStart;
 
 	const totalElapsed = performance.now() - startTime;
-	console.log(`[taskUpdater] Task updated in ${totalElapsed.toFixed(2)}ms (write: ${writeElapsed.toFixed(2)}ms)`);
+	Logger.debug('taskUpdater', `Task updated in ${totalElapsed.toFixed(2)}ms (write: ${writeElapsed.toFixed(2)}ms)`);
 }

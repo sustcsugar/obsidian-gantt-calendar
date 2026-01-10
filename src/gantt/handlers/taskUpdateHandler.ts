@@ -7,6 +7,7 @@ import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { GanttChartTask, DateFieldType } from '../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
+import { Logger } from '../../utils/logger';
 
 /**
  * 任务更新回调函数类型
@@ -51,7 +52,7 @@ export class TaskUpdateHandler {
 		try {
 			// 直接从 GanttChartTask 获取任务信息
 			if (!ganttTask.filePath || ganttTask.lineNumber === undefined) {
-				console.error('[TaskUpdateHandler] Missing task information:', ganttTask);
+				Logger.error('TaskUpdateHandler', 'Missing task information:', ganttTask);
 				new Notice('任务信息不完整');
 				return;
 			}
@@ -81,7 +82,7 @@ export class TaskUpdateHandler {
 			this.onTaskUpdated?.(ganttTask.filePath);
 
 		} catch (error) {
-			console.error('[TaskUpdateHandler] Error updating task:', error);
+			Logger.error('TaskUpdateHandler', 'Error updating task:', error);
 			new Notice('更新任务失败: ' + (error as Error).message);
 		}
 	}
@@ -101,7 +102,7 @@ export class TaskUpdateHandler {
 		try {
 			// 直接从 GanttChartTask 获取任务信息
 			if (!ganttTask.filePath || ganttTask.lineNumber === undefined) {
-				console.error('[TaskUpdateHandler] Missing task information:', ganttTask);
+				Logger.error('TaskUpdateHandler', 'Missing task information:', ganttTask);
 				new Notice('任务信息不完整');
 				return;
 			}
@@ -127,7 +128,7 @@ export class TaskUpdateHandler {
 			this.onTaskUpdated?.(ganttTask.filePath);
 
 		} catch (error) {
-			console.error('[TaskUpdateHandler] Error updating progress:', error);
+			Logger.error('TaskUpdateHandler', 'Error updating progress:', error);
 			new Notice('更新进度失败: ' + (error as Error).message);
 		}
 	}

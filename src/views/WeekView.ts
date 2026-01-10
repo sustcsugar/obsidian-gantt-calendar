@@ -6,6 +6,7 @@ import type { GCTask, SortState } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardComponent, WeekViewConfig } from '../components/TaskCard';
+import { Logger } from '../utils/logger';
 
 /**
  * 周视图渲染器
@@ -91,7 +92,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			const allTasks = this.plugin.taskCache.getAllTasks();
 			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
 			if (!sourceTask) {
-				console.error('[WeekView] Source task not found:', taskId);
+				Logger.error('WeekView', 'Source task not found:', taskId);
 				return;
 			}
 
@@ -106,9 +107,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 					targetDate,
 					this.plugin.settings.enabledTaskFormats
 				);
-				console.log('[WeekView] Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
+				Logger.debug('WeekView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
 			} catch (error) {
-				console.error('[WeekView] Error updating task date:', error);
+				Logger.error('WeekView', 'Error updating task date:', error);
 				new Notice('更新任务日期失败');
 			}
 		});
@@ -151,7 +152,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 			currentDayTasks.forEach(task => this.renderTaskItem(task, columnContainer, targetDate));
 		} catch (error) {
-			console.error('Error loading week view tasks', error);
+			Logger.error('WeekView', 'Error loading week view tasks', error);
 			columnContainer.createEl('div', { text: '加载出错', cls: 'calendar-week-task-empty' });
 		}
 	}
