@@ -104,6 +104,31 @@ export function serializeTask(
 ): string {
 	// 1. 合并原始数据和更新数据
 	// 注意：updates 中的日期字段可能是 null（表示清除），task 中的日期字段是 undefined（表示不存在）
+
+	// 确定描述文本：优先使用更新内容，否则使用原始描述
+	// 如果都为空，尝试从原始 content 中提取（移除元数据后的纯文本）
+	let finalDescription = updates.content !== undefined ? updates.content : task.description;
+
+	// 如果描述为空，尝试从原始 content 中提取一个备用描述
+	// 这是防止字段丢失的关键修复
+	if (!finalDescription || finalDescription.trim() === '') {
+		if (task.content && task.content.trim() !== '') {
+			// 使用原始内容，但移除 Tasks 格式的元数据（emoji 优先级和日期）
+			// 这样可以保留任务的核心描述文本
+			let fallbackDesc = task.content;
+			// 移除优先级 emoji
+			fallbackDesc = fallbackDesc.replace(/[🔺⏫🔼🔽⏬]/g, ' ');
+			// 移除日期 emoji + 日期值
+			fallbackDesc = fallbackDesc.replace(/[➕🛫⏳📅❌✅]\s*\d{4}-\d{2}-\d{2}/g, ' ');
+			// 移除 Dataview 字段
+			fallbackDesc = fallbackDesc.replace(/\[(priority|created|start|scheduled|due|cancelled|completion)::\s*[^\]]+\]/gi, ' ');
+			// 移除标签（因为标签会单独处理）
+			fallbackDesc = fallbackDesc.replace(/#[\u4e00-\u9fa5a-zA-Z0-9_]+/g, ' ');
+			// 清理空格
+			finalDescription = fallbackDesc.replace(/\s+/g, ' ').trim();
+		}
+	}
+
 	const merged: MergedTask = {
 		completed: updates.completed !== undefined ? updates.completed : task.completed,
 		cancelled: updates.cancelled !== undefined ? updates.cancelled : task.cancelled,
@@ -112,7 +137,7 @@ export function serializeTask(
 		priority: updates.priority !== undefined
 			? getPriorityEmoji(updates.priority)
 			: getPriorityEmoji((task.priority || 'normal') as any),
-		description: updates.content !== undefined ? updates.content : task.description,
+		description: finalDescription,
 		// 保留标签
 		tags: task.tags,
 		// 处理日期字段：undefined 使用原始值，null 转为 undefined（表示清除）

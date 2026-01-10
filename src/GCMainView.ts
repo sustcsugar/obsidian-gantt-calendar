@@ -126,6 +126,9 @@ export class GCMainView extends ItemView {
 	}
 
 	private render(): void {
+		const startTime = performance.now();
+		console.log(`[GCMainView] render() called, viewType: ${this.viewType}`);
+
 		// 清理上一次渲染的资源
 		this.yearRenderer.runDomCleanups();
 		this.monthRenderer.runDomCleanups();
@@ -179,6 +182,9 @@ export class GCMainView extends ItemView {
 		if (this.viewType === 'year') {
 			this.yearRenderer.applyLunarFontSize(content);
 		}
+
+		const elapsed = performance.now() - startTime;
+		console.log(`[GCMainView] render() completed in ${elapsed.toFixed(2)}ms`);
 	}
 
 	private renderCalendarContent(content: HTMLElement): void {

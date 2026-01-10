@@ -126,8 +126,19 @@ export async function updateTaskProperties(
 	updates: TaskUpdates,
 	enabledFormats: string[]
 ): Promise<void> {
+	const startTime = performance.now();
+	console.log('[taskUpdater] updateTaskProperties called:', {
+		task: task.description || task.content,
+		filePath: task.filePath,
+		lineNumber: task.lineNumber,
+		updates,
+		format: task.format
+	});
+
 	const { file, lines, taskLineIndex } = await readTaskLine(app, task);
 	const taskLine = lines[taskLineIndex];
+
+	console.log('[taskUpdater] Original task line:', taskLine);
 
 	// 确定任务格式
 	const formatToUse = determineTaskFormat(task, taskLine, enabledFormats);
@@ -151,11 +162,21 @@ export async function updateTaskProperties(
 		formatToUse
 	);
 
+	console.log('[taskUpdater] Serialized task content:', taskContent);
+
 	// 拼接完整的任务行：缩进 + 列表标记 + 空格 + 任务内容
 	const finalTaskLine = `${indent}${listMarker} ${taskContent}`;
+
+	console.log('[taskUpdater] Final task line:', finalTaskLine);
 
 	// 写回文件
 	lines[taskLineIndex] = finalTaskLine;
 	const newContent = lines.join('\n');
+
+	const writeStart = performance.now();
 	await app.vault.modify(file, newContent);
+	const writeElapsed = performance.now() - writeStart;
+
+	const totalElapsed = performance.now() - startTime;
+	console.log(`[taskUpdater] Task updated in ${totalElapsed.toFixed(2)}ms (write: ${writeElapsed.toFixed(2)}ms)`);
 }

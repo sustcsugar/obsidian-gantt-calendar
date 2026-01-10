@@ -11,6 +11,9 @@ import { TaskCardComponent, TaskViewConfig } from '../components/TaskCard';
  * 任务视图渲染器
  */
 export class TaskViewRenderer extends BaseViewRenderer {
+	// 性能优化：当前渲染周期的任务缓存
+	private currentRenderTasks: GCTask[] | null = null;
+
 	// 任务筛选状态
 	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'all';
 
@@ -90,10 +93,16 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {
+		// 性能优化：在渲染开始时获取所有任务并缓存
+		this.currentRenderTasks = this.plugin.taskCache.getAllTasks();
+
 		// 创建任务视图容器
 		const taskRoot = container.createDiv(withModifiers(ViewClasses.block, ViewClasses.modifiers.task));
 
 		this.loadTaskList(taskRoot);
+
+		// 渲染完成后清空缓存
+		this.currentRenderTasks = null;
 	}
 
 	/**
@@ -104,7 +113,8 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		listContainer.createEl('div', { text: '加载中...', cls: 'gantt-task-empty' });
 
 		try {
-			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
+			// 性能优化：使用缓存的任务列表，避免重复调用 getAllTasks()
+			let tasks: GCTask[] = this.currentRenderTasks || this.plugin.taskCache.getAllTasks();
 
 			// 应用完成状态筛选
 			if (this.taskFilter === 'completed') {

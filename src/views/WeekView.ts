@@ -11,6 +11,9 @@ import { TaskCardComponent, WeekViewConfig } from '../components/TaskCard';
  * 周视图渲染器
  */
 export class WeekViewRenderer extends BaseViewRenderer {
+	// 性能优化：当前渲染周期的任务缓存
+	private currentRenderTasks: GCTask[] | null = null;
+
 	// 排序状态 - 默认优先级降序
 	private sortState: SortState = { field: 'priority', order: 'desc' };
 
@@ -23,6 +26,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {
+		// 性能优化：只调用一次 getAllTasks()，缓存结果供整个渲染周期使用
+		this.currentRenderTasks = this.plugin.taskCache.getAllTasks();
+
 		const weekData = getWeekOfDate(currentDate, currentDate.getFullYear(), !!(this.plugin?.settings?.startOnMonday));
 
 		const weekContainer = container.createDiv('gc-view gc-view--week');
@@ -57,6 +63,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			// 设置拖拽目标
 			this.setupDragDropForColumn(dayTasksColumn, day.date);
 		});
+
+		// 渲染完成后清空缓存
+		this.currentRenderTasks = null;
 	}
 
 	/**
@@ -88,7 +97,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			const lineNumber = parseInt(lineNum, 10);
 
 			// 查找源任务
-			const allTasks = this.plugin.taskCache.getAllTasks();
+			const allTasks = this.currentRenderTasks || this.plugin.taskCache.getAllTasks();
 			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
 			if (!sourceTask) {
 				console.error('[WeekView] Source task not found:', taskId);
@@ -121,7 +130,8 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		columnContainer.empty();
 
 		try {
-			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
+			// 性能优化：使用缓存的任务列表，避免重复调用 getAllTasks()
+			let tasks: GCTask[] = this.currentRenderTasks || this.plugin.taskCache.getAllTasks();
 			// 应用标签筛选
 			tasks = this.applyTagFilter(tasks);
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';

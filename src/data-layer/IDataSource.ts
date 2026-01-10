@@ -1,14 +1,14 @@
 /**
  * IDataSource - 数据源抽象接口
  *
- * 所有数据源（Markdown、飞书等）都必须实现此接口。
- * 提供统一的数据访问方式，支持多数据源扩展。
+ * 数据源必须实现此接口。
+ * 使用 GCTask 作为统一格式，避免无意义的转换。
  */
 
+import type { GCTask } from '../types';
 import {
 	DataSourceConfig,
 	DataSourceChanges,
-	ExternalTask,
 	SyncStatus,
 	TaskChanges
 } from './types';
@@ -51,7 +51,7 @@ export interface IDataSource {
 	 * 获取所有任务
 	 * @returns 任务列表
 	 */
-	getTasks(): Promise<ExternalTask[]>;
+	getTasks(): Promise<GCTask[]>;
 
 	/**
 	 * 监听数据变化
@@ -64,7 +64,7 @@ export interface IDataSource {
 	 * @param task - 任务对象
 	 * @returns 任务ID
 	 */
-	createTask(task: ExternalTask): Promise<string>;
+	createTask(task: GCTask): Promise<string>;
 
 	/**
 	 * 更新任务

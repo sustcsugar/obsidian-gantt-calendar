@@ -11,6 +11,9 @@ import { TaskCardComponent, DayViewConfig } from '../components/TaskCard';
  * 日视图渲染器
  */
 export class DayViewRenderer extends BaseViewRenderer {
+	// 性能优化：当前渲染周期的任务缓存
+	private currentRenderTasks: GCTask[] | null = null;
+
 	// 排序状态
 	private sortState: SortState = DEFAULT_SORT_STATE;
 
@@ -23,6 +26,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {
+		// 性能优化：在渲染开始时获取所有任务并缓存
+		this.currentRenderTasks = this.plugin.taskCache.getAllTasks();
+
 		const dayContainer = container.createDiv('gc-view gc-view--day');
 
 		// 检查是否显示 Daily Note
@@ -45,6 +51,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 			this.loadDayViewTasks(tasksList, new Date(currentDate));
 		}
+
+		// 渲染完成后清空缓存
+		this.currentRenderTasks = null;
 	}
 
 	/**
@@ -110,7 +119,8 @@ export class DayViewRenderer extends BaseViewRenderer {
 		listContainer.createEl('div', { text: '加载中...', cls: 'gantt-task-empty' });
 
 		try {
-			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
+			// 性能优化：使用缓存的任务列表，避免重复调用 getAllTasks()
+			let tasks: GCTask[] = this.currentRenderTasks || this.plugin.taskCache.getAllTasks();
 			// 应用标签筛选
 			tasks = this.applyTagFilter(tasks);
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';

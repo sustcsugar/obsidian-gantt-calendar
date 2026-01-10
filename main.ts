@@ -1,19 +1,19 @@
 import { App, Plugin, TFile, Notice } from 'obsidian';
 import { GCMainView, GC_VIEW_ID } from './src/GCMainView';
 import { GanttCalendarSettings, DEFAULT_SETTINGS, GanttCalendarSettingTab } from './src/settings';
-import { TaskCacheManager } from './src/taskManager';
+import { TaskStore } from './src/TaskStore';
 import { registerAllCommands } from './src/commands/commandsIndex';
 import { TooltipManager } from './src/utils/tooltipManager';
 
 export default class GanttCalendarPlugin extends Plugin {
     settings: GanttCalendarSettings;
-    taskCache: TaskCacheManager;
+    taskCache: TaskStore;
 
     async onload() {
         await this.loadSettings();
 
-        // Initialize task cache manager
-        this.taskCache = new TaskCacheManager(this.app);
+        // Initialize task store
+        this.taskCache = new TaskStore(this.app);
 
         // 不阻塞 onload：布局就绪后再延迟触发首次扫描
         this.app.workspace.onLayoutReady(() => {

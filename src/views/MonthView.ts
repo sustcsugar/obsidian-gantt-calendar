@@ -8,8 +8,13 @@ import { MonthViewClasses } from '../utils/bem';
  * 月视图渲染器
  */
 export class MonthViewRenderer extends BaseViewRenderer {
+	// 性能优化：当前渲染周期的任务缓存
+	private currentRenderTasks: GCTask[] | null = null;
 
 	render(container: HTMLElement, currentDate: Date): void {
+		// 性能优化：只调用一次 getAllTasks()，缓存结果供整个渲染周期使用
+		this.currentRenderTasks = this.plugin.taskCache.getAllTasks();
+
 		const year = currentDate.getFullYear();
 		const month = currentDate.getMonth() + 1;
 		const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));
@@ -86,6 +91,9 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				};
 			});
 		});
+
+		// 渲染完成后清空缓存
+		this.currentRenderTasks = null;
 	}
 
 	/**
@@ -95,7 +103,8 @@ export class MonthViewRenderer extends BaseViewRenderer {
 		container.empty();
 
 		try {
-			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
+			// 性能优化：使用缓存的任务列表，避免重复调用 getAllTasks()
+			let tasks: GCTask[] = this.currentRenderTasks || this.plugin.taskCache.getAllTasks();
 			// 应用标签筛选
 			tasks = this.applyTagFilter(tasks);
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';

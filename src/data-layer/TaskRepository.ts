@@ -2,26 +2,33 @@
  * TaskRepository - 任务仓库
  *
  * 任务仓库是数据层的核心组件，负责：
- * - 管理多个数据源（Markdown、飞书等）
- * - 维护统一任务缓存
+ * - 管理数据源
+ * - 维护任务缓存
  * - 提供高性能查询接口
  * - 处理数据源变化事件
  *
  * 设计模式：仓库模式（Repository Pattern）
+ * 直接使用 GCTask 作为内部格式，避免无意义的转换。
  */
 
 import { EventBus } from './EventBus';
+import type { GCTask } from '../types';
 import {
 	DataSourceChanges,
-	ExternalTask,
-	NormalizedTask,
 	QueryOptions
 } from './types';
 import { IDataSource } from './IDataSource';
 
+/**
+ * 生成任务ID
+ */
+function generateTaskId(task: GCTask): string {
+	return `${task.filePath}:${task.lineNumber}`;
+}
+
 export class TaskRepository {
 	private dataSources: Map<string, IDataSource> = new Map();
-	private taskCache: Map<string, NormalizedTask> = new Map();
+	private taskCache: Map<string, GCTask> = new Map();
 	private fileIndex: Map<string, Set<string>> = new Map();
 	private eventBus: EventBus;
 
@@ -45,7 +52,7 @@ export class TaskRepository {
 	 * @param options - 查询选项
 	 * @returns 任务列表
 	 */
-	getAllTasks(options?: QueryOptions): NormalizedTask[] {
+	getAllTasks(options?: QueryOptions): GCTask[] {
 		const tasks = Array.from(this.taskCache.values());
 		return this.filterTasks(tasks, options);
 	}
@@ -54,16 +61,16 @@ export class TaskRepository {
 	 * 根据日期范围获取任务
 	 * @param start - 开始日期
 	 * @param end - 结束日期
-	 * @param dateField - 日期字段
+	 * @param dateField - 日期字段名
 	 * @returns 任务列表
 	 */
 	getTasksByDateRange(
 		start: Date,
 		end: Date,
-		dateField: keyof import('./types').TaskDates = 'due'
-	): NormalizedTask[] {
+		dateField: keyof GCTask = 'dueDate'
+	): GCTask[] {
 		return Array.from(this.taskCache.values()).filter(task => {
-			const date = task.dates[dateField];
+			const date = task[dateField] as Date | undefined;
 			return date && date >= start && date <= end;
 		});
 	}
@@ -73,7 +80,7 @@ export class TaskRepository {
 	 * @param filePath - 文件路径
 	 * @returns 任务列表
 	 */
-	getTasksByFilePath(filePath: string): NormalizedTask[] {
+	getTasksByFilePath(filePath: string): GCTask[] {
 		const taskIds = this.fileIndex.get(filePath) || new Set();
 		return Array.from(taskIds)
 			.map(id => this.taskCache.get(id)!)
@@ -102,34 +109,44 @@ export class TaskRepository {
 	 * @param options - 查询选项
 	 * @returns 过滤后的任务列表
 	 */
-	private filterTasks(tasks: NormalizedTask[], options?: QueryOptions): NormalizedTask[] {
+	private filterTasks(tasks: GCTask[], options?: QueryOptions): GCTask[] {
 		if (!options) return tasks;
 
 		let filtered = tasks;
 
 		if (options.status?.length) {
-			filtered = filtered.filter(t => options.status!.includes(t.status));
+			filtered = filtered.filter(t => options.status!.includes(t.status as any));
 		}
 
 		if (options.priority?.length) {
-			filtered = filtered.filter(t => options.priority!.includes(t.priority));
+			filtered = filtered.filter(t => options.priority!.includes(t.priority as any));
 		}
 
 		if (options.tags?.length) {
 			filtered = filtered.filter(t =>
-				options.tags!.some(tag => t.tags.includes(tag))
+				options.tags!.some(tag => t.tags?.includes(tag))
 			);
 		}
 
 		if (options.dateRange) {
+			const fieldMap: Record<keyof import('./types').TaskDates, keyof GCTask> = {
+				created: 'createdDate',
+				start: 'startDate',
+				scheduled: 'scheduledDate',
+				due: 'dueDate',
+				completed: 'completionDate',
+				cancelled: 'cancelledDate'
+			};
+			const gcField = fieldMap[options.dateRange.field];
+
 			filtered = filtered.filter(t => {
-				const date = t.dates[options.dateRange!.field];
+				const date = t[gcField] as Date | undefined;
 				return date && date >= options.dateRange!.start && date <= options.dateRange!.end;
 			});
 		}
 
 		if (options.sources?.length) {
-			filtered = filtered.filter(t => options.sources!.includes(t.sourceId));
+			filtered = filtered.filter(t => options.sources!.includes(t.filePath));
 		}
 
 		return filtered;
@@ -144,80 +161,92 @@ export class TaskRepository {
 		sourceId: string,
 		changes: DataSourceChanges
 	): Promise<void> {
+		const startTime = performance.now();
+		console.log(`[TaskRepository] Processing changes from ${sourceId}:`, {
+			created: changes.created.length,
+			updated: changes.updated.length,
+			deleted: changes.deleted.length,
+			deletedFilePaths: changes.deletedFilePaths?.length || 0
+		});
+
 		// 处理新增任务
 		for (const task of changes.created) {
-			const normalized = this.externalToNormalized(task);
-			this.taskCache.set(normalized.id, normalized);
+			const taskId = generateTaskId(task);
+			this.taskCache.set(taskId, task);
 
 			// 更新文件索引
-			if (normalized.filePath) {
-				if (!this.fileIndex.has(normalized.filePath)) {
-					this.fileIndex.set(normalized.filePath, new Set());
+			if (task.filePath) {
+				if (!this.fileIndex.has(task.filePath)) {
+					this.fileIndex.set(task.filePath, new Set());
 				}
-				this.fileIndex.get(normalized.filePath)!.add(normalized.id);
+				this.fileIndex.get(task.filePath)!.add(taskId);
 			}
 
 			// 发布事件
-			this.eventBus.emit('task:created', { task: normalized });
+			this.eventBus.emit('task:created', { task });
 		}
 
 		// 处理更新任务
-		for (const { id, changes: taskChanges } of changes.updated) {
-			const task = this.taskCache.get(id);
-			if (task) {
-				const updated = { ...task, ...taskChanges };
-				this.taskCache.set(id, updated);
+		for (const { id, changes: taskChanges, task: newTask } of changes.updated) {
+			let updatedTask: GCTask | undefined;
 
+			// 优先使用完整的新任务对象（如果提供）
+			if (newTask) {
+				updatedTask = newTask;
+				this.taskCache.set(id, newTask);
+			} else {
+				// 否则使用增量更新
+				const task = this.taskCache.get(id);
+				if (task) {
+					updatedTask = { ...task, ...taskChanges };
+					this.taskCache.set(id, updatedTask);
+				}
+			}
+
+			if (updatedTask) {
 				// 发布事件
-				this.eventBus.emit('task:updated', { task: updated });
+				this.eventBus.emit('task:updated', { task: updatedTask });
 			}
 		}
 
 		// 处理删除任务
 		for (const task of changes.deleted) {
-			this.taskCache.delete(task.id);
+			const taskId = generateTaskId(task);
+			this.taskCache.delete(taskId);
 
 			// 更新文件索引
-			if (task.metadata?.filePath) {
-				const filePath = task.metadata.filePath as string;
-				const taskIds = this.fileIndex.get(filePath);
+			if (task.filePath) {
+				const taskIds = this.fileIndex.get(task.filePath);
 				if (taskIds) {
-					taskIds.delete(task.id);
+					taskIds.delete(taskId);
 					if (taskIds.size === 0) {
-						this.fileIndex.delete(filePath);
+						this.fileIndex.delete(task.filePath);
 					}
 				}
 			}
 
 			// 发布事件
-			this.eventBus.emit('task:deleted', { taskId: task.id });
+			this.eventBus.emit('task:deleted', { taskId });
 		}
-	}
 
-	/**
-	 * 将外部任务格式转换为内部格式
-	 * @param external - 外部任务
-	 * @returns 规范化任务
-	 */
-	private externalToNormalized(external: ExternalTask): NormalizedTask {
-		return {
-			id: external.id,
-			sourceId: external.sourceId,
-			externalId: external.id,
-			title: external.title,
-			description: external.description,
-			status: external.status,
-			priority: external.priority,
-			tags: external.tags,
-			dates: external.dates,
-			version: external.version,
-			createdAt: external.createdAt,
-			updatedAt: external.updatedAt,
-			syncInfo: external.syncInfo,
-			filePath: external.metadata?.filePath,
-			lineNumber: external.metadata?.lineNumber,
-			metadata: external.metadata
-		};
+		// 处理文件删除（按文件路径清理所有任务）
+		if (changes.deletedFilePaths) {
+			for (const filePath of changes.deletedFilePaths) {
+				const taskIds = this.fileIndex.get(filePath);
+				if (taskIds) {
+					// 删除该文件的所有任务
+					for (const taskId of taskIds) {
+						this.taskCache.delete(taskId);
+						this.eventBus.emit('task:deleted', { taskId });
+					}
+					// 清理文件索引
+					this.fileIndex.delete(filePath);
+				}
+			}
+		}
+
+		const elapsed = performance.now() - startTime;
+		console.log(`[TaskRepository] Changes processed in ${elapsed.toFixed(2)}ms`);
 	}
 
 	/**

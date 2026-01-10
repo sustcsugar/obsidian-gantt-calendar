@@ -5,7 +5,8 @@
 import { TaskRepository } from '../TaskRepository';
 import { EventBus } from '../EventBus';
 import { IDataSource } from '../IDataSource';
-import type { ExternalTask, NormalizedTask, DataSourceChanges, DataSourceConfig } from '../types';
+import type { GCTask } from '../../types';
+import type { DataSourceChanges, DataSourceConfig } from '../types';
 
 // Mock 数据源用于测试
 class MockDataSource implements IDataSource {
@@ -13,14 +14,14 @@ class MockDataSource implements IDataSource {
 	readonly sourceName = 'Mock Data Source';
 	readonly isReadOnly = false;
 
-	private tasks: ExternalTask[] = [];
+	private tasks: GCTask[] = [];
 	private changeHandler?: (changes: DataSourceChanges) => void | Promise<void>;
 
 	async initialize(config: DataSourceConfig): Promise<void> {
 		// Mock implementation
 	}
 
-	async getTasks(): Promise<ExternalTask[]> {
+	async getTasks(): Promise<GCTask[]> {
 		return this.tasks;
 	}
 
@@ -28,7 +29,7 @@ class MockDataSource implements IDataSource {
 		this.changeHandler = handler;
 	}
 
-	async createTask(task: ExternalTask): Promise<string> {
+	async createTask(task: GCTask): Promise<string> {
 		this.tasks.push(task);
 		this.changeHandler?.({
 			sourceId: this.sourceId,
@@ -36,11 +37,11 @@ class MockDataSource implements IDataSource {
 			updated: [],
 			deleted: []
 		});
-		return task.id;
+		return `${task.filePath}:${task.lineNumber}`;
 	}
 
 	async updateTask(taskId: string, changes: any): Promise<void> {
-		const task = this.tasks.find(t => t.id === taskId);
+		const task = this.tasks.find(t => `${t.filePath}:${t.lineNumber}` === taskId);
 		if (task) {
 			Object.assign(task, changes);
 			this.changeHandler?.({
@@ -53,7 +54,7 @@ class MockDataSource implements IDataSource {
 	}
 
 	async deleteTask(taskId: string): Promise<void> {
-		const index = this.tasks.findIndex(t => t.id === taskId);
+		const index = this.tasks.findIndex(t => `${t.filePath}:${t.lineNumber}` === taskId);
 		if (index >= 0) {
 			const task = this.tasks[index];
 			this.tasks.splice(index, 1);
@@ -114,18 +115,15 @@ describe('TaskRepository', () => {
 		it('should return tasks from data source', async () => {
 			repository.registerDataSource(mockSource);
 
-			const mockTask: ExternalTask = {
-				id: '1',
-				sourceId: 'mock',
-				title: 'Test Task',
-				status: 'todo' as any,
+			const mockTask: GCTask = {
+				filePath: 'test.md',
+				fileName: 'test.md',
+				lineNumber: 1,
+				content: '- [ ] Test task',
+				description: 'Test task',
+				completed: false,
 				priority: 'normal',
-				tags: [],
-				dates: {},
-				metadata: {},
-				version: 1,
-				updatedAt: new Date(),
-				createdAt: new Date()
+				status: 'todo'
 			};
 
 			await mockSource.createTask(mockTask);
@@ -135,7 +133,7 @@ describe('TaskRepository', () => {
 
 			const tasks = repository.getAllTasks();
 			expect(tasks).toHaveLength(1);
-			expect(tasks[0].title).toBe('Test Task');
+			expect(tasks[0].description).toBe('Test task');
 		});
 	});
 
