@@ -30,10 +30,12 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	// 保存当前渲染容器的引用
 	private currentContainer: HTMLElement | null = null;
 
+	// 任务状态筛选状态（甘特图默认只显示未完成任务）
+	protected taskFilter: 'all' | 'completed' | 'uncompleted' = 'uncompleted';
+
 	// 时间字段配置
 	private startField: DateFieldType = 'startDate';
 	private endField: DateFieldType = 'dueDate';
-	private statusFilter: TaskStatusFilter = 'uncompleted';
 
 	// 视图模式
 	private timeGranularity: GanttTimeGranularity = 'day';
@@ -63,9 +65,9 @@ export class GanttViewRenderer extends BaseViewRenderer {
 		this.refresh();
 	}
 
-	public getStatusFilter(): TaskStatusFilter { return this.statusFilter; }
+	public getStatusFilter(): TaskStatusFilter { return this.getTaskFilter(); }
 	public setStatusFilter(value: TaskStatusFilter): void {
-		this.statusFilter = value;
+		this.setTaskFilter(value);
 		this.refresh();
 	}
 
@@ -143,7 +145,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			// 2. 应用筛选条件
 			let filteredGlobalTasks = TaskDataAdapter.applyFilters(
 				globalTasks,
-				this.statusFilter,
+				this.getTaskFilter(),
 				this.tagFilterState.selectedTags,
 				this.tagFilterState.operator
 			);
@@ -237,8 +239,8 @@ export class GanttViewRenderer extends BaseViewRenderer {
 		});
 
 		const reasons: string[] = [];
-		if (this.statusFilter !== 'all') {
-			reasons.push(`当前筛选: ${this.statusFilter === 'completed' ? '已完成' : '未完成'}`);
+		if (this.getTaskFilter() !== 'all') {
+			reasons.push(`当前筛选: ${this.getTaskFilter() === 'completed' ? '已完成' : '未完成'}`);
 		}
 		if (this.tagFilterState.selectedTags.length > 0) {
 			reasons.push(`标签筛选: ${this.tagFilterState.selectedTags.join(', ')}`);
@@ -370,7 +372,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			// 2. 应用筛选和排序
 			let filteredGlobalTasks = TaskDataAdapter.applyFilters(
 				globalTasks,
-				this.statusFilter,
+				this.getTaskFilter(),
 				this.tagFilterState.selectedTags,
 				this.tagFilterState.operator
 			);

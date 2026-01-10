@@ -12,9 +12,6 @@ import { Logger } from '../utils/logger';
  * 任务视图渲染器
  */
 export class TaskViewRenderer extends BaseViewRenderer {
-	// 任务筛选状态
-	private taskFilter: 'all' | 'completed' | 'uncompleted' = 'all';
-
 	// 时间字段筛选
 	private timeFieldFilter: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' = 'dueDate';
 
@@ -28,14 +25,6 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	private sortState: SortState = DEFAULT_SORT_STATE;
 
 	// ===== Getter/Setter 方法 =====
-
-	public getTaskFilter(): 'all' | 'completed' | 'uncompleted' {
-		return this.taskFilter;
-	}
-
-	public setTaskFilter(value: 'all' | 'completed' | 'uncompleted'): void {
-		this.taskFilter = value;
-	}
 
 	public getTimeFilterField(): 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' {
 		return this.timeFieldFilter;
@@ -69,27 +58,6 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		this.sortState = state;
 	}
 
-	/**
-	 * 创建状态筛选组（在工具栏右侧功能区调用）
-	 */
-	public createStatusFilterGroup(container: HTMLElement, onFilterChange: () => void): void {
-		const statusFilterGroup = container.createDiv('toolbar-right-task-status-group');
-		const statusLabel = statusFilterGroup.createEl('span', { text: '状态', cls: 'toolbar-right-task-status-label' });
-
-		const statusSelect = statusFilterGroup.createEl('select', { cls: 'toolbar-right-task-status-select' });
-		statusSelect.innerHTML = `
-			<option value="all">全部</option>
-			<option value="uncompleted">未完成</option>
-			<option value="completed">已完成</option>
-		`;
-		statusSelect.value = this.taskFilter;
-		statusSelect.addEventListener('change', (e) => {
-			const value = (e.target as HTMLSelectElement).value as 'all' | 'completed' | 'uncompleted';
-			this.setTaskFilter(value);
-			onFilterChange();
-		});
-	}
-
 	render(container: HTMLElement, currentDate: Date): void {
 		// 创建任务视图容器
 		const taskRoot = container.createDiv(withModifiers(ViewClasses.block, ViewClasses.modifiers.task));
@@ -107,12 +75,8 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		try {
 			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
 
-			// 应用完成状态筛选
-			if (this.taskFilter === 'completed') {
-				tasks = tasks.filter(t => t.completed);
-			} else if (this.taskFilter === 'uncompleted') {
-				tasks = tasks.filter(t => !t.completed);
-			}
+			// 应用状态筛选（使用基类方法）
+			tasks = this.applyStatusFilter(tasks);
 
 			// 日期范围筛选
 			const mode = this.getDateRangeMode();

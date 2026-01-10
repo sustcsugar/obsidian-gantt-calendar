@@ -1,3 +1,4 @@
+import { Notice } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { GCTask } from '../types';
@@ -5,11 +6,66 @@ import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
 import { MonthViewClasses, TaskCardClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
 import { TooltipManager } from '../utils/tooltipManager';
+import { updateTaskDateField } from '../tasks/taskUpdater';
 
 /**
  * 月视图渲染器
  */
 export class MonthViewRenderer extends BaseViewRenderer {
+	/**
+	 * 设置日期格子的拖放功能
+	 */
+	private setupDragDropForDayCell(dayCell: HTMLElement, targetDate: Date): void {
+		dayCell.addEventListener('dragover', (e: DragEvent) => {
+			e.preventDefault();
+			if (e.dataTransfer) {
+				e.dataTransfer.dropEffect = 'move';
+			}
+			dayCell.style.backgroundColor = 'var(--background-modifier-hover)';
+		});
+
+		dayCell.addEventListener('dragleave', (e: DragEvent) => {
+			if (e.target === dayCell) {
+				dayCell.style.backgroundColor = '';
+			}
+		});
+
+		dayCell.addEventListener('drop', async (e: DragEvent) => {
+			e.preventDefault();
+			dayCell.style.backgroundColor = '';
+
+			const taskId = e.dataTransfer?.getData('taskId');
+			if (!taskId) return;
+
+			const [filePath, lineNum] = taskId.split(':');
+			const lineNumber = parseInt(lineNum, 10);
+
+			const allTasks = this.plugin.taskCache.getAllTasks();
+			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
+			if (!sourceTask) {
+				Logger.error('MonthView', 'Source task not found:', taskId);
+				return;
+			}
+
+			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
+
+			try {
+				this.clearTaskTooltips();
+				await updateTaskDateField(
+					this.app,
+					sourceTask,
+					dateFieldName,
+					targetDate,
+					this.plugin.settings.enabledTaskFormats
+				);
+				Logger.debug('MonthView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
+			} catch (error) {
+				Logger.error('MonthView', 'Error updating task date:', error);
+				new Notice('更新任务日期失败');
+			}
+		});
+	}
+
 	render(container: HTMLElement, currentDate: Date): void {
 		const year = currentDate.getFullYear();
 		const month = currentDate.getMonth() + 1;
@@ -69,6 +125,9 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				const tasksContainer = dayEl.createDiv(MonthViewClasses.elements.tasks);
 				this.loadMonthViewTasks(tasksContainer, day.date);
 
+				// 设置拖放目标
+				this.setupDragDropForDayCell(dayEl, day.date);
+
 				if (!day.isCurrentMonth) {
 					dayEl.addClass(MonthViewClasses.modifiers.outsideMonth);
 				}
@@ -97,6 +156,8 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 		try {
 			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
+			// 应用状态筛选
+			tasks = this.applyStatusFilter(tasks);
 			// 应用标签筛选
 			tasks = this.applyTagFilter(tasks);
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';

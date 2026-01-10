@@ -4,6 +4,7 @@ import { renderRefreshButton } from './components/refresh-button';
 import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderCreateTaskButton } from './components/create-task-button';
+import { renderStatusFilter } from './components/status-filter';
 import type { CalendarViewType } from '../types';
 import type { DayViewRenderer } from '../views/DayView';
 import type { WeekViewRenderer } from '../views/WeekView';
@@ -66,6 +67,17 @@ export class ToolbarRightCalendar {
 		container.addClass('calendar-toolbar-right');
 
 		// ===== 左侧：筛选和排序按钮 =====
+
+		// 状态筛选按钮（周视图和月视图）
+		if (currentViewType === 'week' || currentViewType === 'month') {
+			const renderer = currentViewType === 'week' ? this.weekRenderer : this.monthRenderer;
+			if (renderer) {
+				renderStatusFilter(container, renderer.getTaskFilter() || 'all', (value) => {
+					renderer.setTaskFilter(value);
+					onRender();
+				});
+			}
+		}
 
 		// 排序按钮（仅在日视图和周视图显示）
 		if (currentViewType === 'day' || currentViewType === 'week') {

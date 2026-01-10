@@ -124,6 +124,8 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 		try {
 			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
+			// 应用状态筛选
+			tasks = this.applyStatusFilter(tasks);
 			// 应用标签筛选
 			tasks = this.applyTagFilter(tasks);
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';

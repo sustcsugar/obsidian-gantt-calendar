@@ -21,6 +21,9 @@ export abstract class BaseViewRenderer {
 	// 标签筛选状态
 	protected tagFilterState: TagFilterState = DEFAULT_TAG_FILTER_STATE;
 
+	// 任务状态筛选状态
+	protected taskFilter: 'all' | 'completed' | 'uncompleted' = 'uncompleted';
+
 	constructor(app: App, plugin: any) {
 		this.app = app;
 		this.plugin = plugin;
@@ -123,6 +126,31 @@ export abstract class BaseViewRenderer {
 	 */
 	public setTagFilterState(state: TagFilterState): void {
 		this.tagFilterState = state;
+	}
+
+	/**
+	 * 获取任务状态筛选
+	 */
+	public getTaskFilter(): 'all' | 'completed' | 'uncompleted' {
+		return this.taskFilter;
+	}
+
+	/**
+	 * 设置任务状态筛选
+	 */
+	public setTaskFilter(value: 'all' | 'completed' | 'uncompleted'): void {
+		this.taskFilter = value;
+	}
+
+	/**
+	 * 应用状态筛选到任务列表
+	 * @param tasks 原始任务列表
+	 * @returns 筛选后的任务列表
+	 */
+	protected applyStatusFilter(tasks: GCTask[]): GCTask[] {
+		if (this.taskFilter === 'all') return tasks;
+		if (this.taskFilter === 'completed') return tasks.filter(t => t.completed);
+		return tasks.filter(t => !t.completed);
 	}
 
 	/**
