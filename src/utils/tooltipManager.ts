@@ -256,11 +256,13 @@ export class TooltipManager {
 
 		// 边界检测
 		if (left + tooltipWidth > window.innerWidth) {
-			// 右侧空间不够，显示在左侧
+			// 右侧空间不够，显示在卡片左侧
 			if (this.mousePosition) {
 				left = this.mousePosition.x - tooltipWidth - 15;
 			} else {
-				left = window.innerWidth - tooltipWidth - 10;
+				// tooltip右边缘对齐卡片左边缘，留10px间距
+				const rect = card.getBoundingClientRect();
+				left = rect.left - tooltipWidth - 10;
 			}
 		}
 		if (left < 10) {
