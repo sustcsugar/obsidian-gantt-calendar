@@ -622,8 +622,12 @@ export class SvgGanttRenderer {
 				}
 			});
 
-			// 使用富文本渲染（支持链接）
-			this.renderTaskDescriptionWithLinks(textContainer, task.name);
+			// 使用用户设置 showGlobalFilterInTaskText 控制是否显示全局过滤词
+			const gf = (this.plugin?.settings?.globalTaskFilter || '').trim();
+			const displayText = (this.plugin?.settings?.showGlobalFilterInTaskText && gf)
+				? gf + ' ' + task.name
+				: task.name;
+			this.renderTaskDescriptionWithLinks(textContainer, displayText);
 			contentDiv.appendChild(textContainer);
 
 			contentForeignObj.appendChild(contentDiv);

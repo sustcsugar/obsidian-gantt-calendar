@@ -131,7 +131,8 @@ export class TaskCardRenderer {
 			taskTextEl.addClass('gc-task-card__text--limited');
 		}
 
-		if (config.showGlobalFilter && gf) {
+		// 使用用户设置 showGlobalFilterInTaskText 控制是否显示全局过滤词
+		if (this.plugin?.settings?.showGlobalFilterInTaskText && gf) {
 			taskTextEl.appendText(gf + ' ');
 		}
 
