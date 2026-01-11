@@ -35,9 +35,6 @@ export default class GanttCalendarPlugin extends Plugin {
             }, 800);  // 布局就绪后再延迟 800ms，避免 vault 未就绪
         });
 
-        // 文件变化监听器已迁移到 MarkdownDataSource 内部处理
-        // 不再需要在这里手动注册监听器
-
         // Register the calendar view
         this.registerView(GC_VIEW_ID, (leaf) => new GCMainView(leaf, this));
 

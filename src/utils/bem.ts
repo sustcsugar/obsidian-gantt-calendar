@@ -222,26 +222,6 @@ export const ViewClasses = {
 };
 
 /**
- * 工具栏类名常量
- */
-export const ToolbarClasses = {
-	block: bem(BLOCKS.TOOLBAR),
-
-	/** Elements */
-	elements: {
-		left: bem(BLOCKS.TOOLBAR, 'left'),
-		center: bem(BLOCKS.TOOLBAR, 'center'),
-		right: bem(BLOCKS.TOOLBAR, 'right'),
-	},
-
-	/** 修饰符 */
-	modifiers: {
-		gantt: bem(BLOCKS.TOOLBAR, undefined, 'gantt'), // 右侧甘特图工具栏区
-		task: bem(BLOCKS.TOOLBAR, undefined, 'task'),   // 右侧任务视图工具栏区
-	},
-};
-
-/**
  * 链接类名常量
  */
 export const LinkClasses = {
@@ -293,81 +273,102 @@ export const GanttClasses = {
 
 
 /**
- * 工具栏组件类名常量
- * 所有工具栏按钮统一使用 toolbar 作为 block
- * 通过 --gantt 等修饰符区分不同视图
+ * 工具栏类名常量
+ * 包含工具栏容器、区域和所有内部组件
  */
-export const ToolbarComponentClasses = {
-	/** 视图修饰符 */
+export const ToolbarClasses = {
+	/** Block 名称 */
+	block: bem(BLOCKS.TOOLBAR),
+
+	/** Elements - 工具栏区域 */
+	elements: {
+		left: bem(BLOCKS.TOOLBAR, 'left'),
+		center: bem(BLOCKS.TOOLBAR, 'center'),
+		right: bem(BLOCKS.TOOLBAR, 'right'),
+	},
+
+	/** Modifiers - 视图修饰符 */
 	modifiers: {
 		gantt: bem(BLOCKS.TOOLBAR, undefined, 'gantt'),
 		task: bem(BLOCKS.TOOLBAR, undefined, 'task'),
 	},
 
-	/** 时间颗粒度按钮组 */
-	timeGranularity: {
-		group: bem(BLOCKS.TOOLBAR, 'time-granularity-group'),
-		groupGantt: bem(BLOCKS.TOOLBAR, 'time-granularity-group', 'gantt'),
-		todayBtn: bem(BLOCKS.TOOLBAR, 'today-btn'),
-		btn: bem(BLOCKS.TOOLBAR, 'time-granularity-btn'),
-		btnActive: bem(BLOCKS.TOOLBAR, 'time-granularity-btn', 'active'),
-	},
+	/** Components - 工具栏内部组件 */
+	components: {
+		/** 视图切换器 */
+		viewToggle: {
+			group: bem(BLOCKS.TOOLBAR, 'view-toggle-group'),
+			btn: bem(BLOCKS.TOOLBAR, 'view-toggle-btn'),
+			btnActive: bem(BLOCKS.TOOLBAR, 'view-toggle-btn', 'active'),
+		},
 
-	/** 状态筛选 */
-	statusFilter: {
-		group: bem(BLOCKS.TOOLBAR, 'status-filter-group'),
-		groupGantt: bem(BLOCKS.TOOLBAR, 'status-filter-group', 'gantt'),
-		label: bem(BLOCKS.TOOLBAR, 'status-filter-label'),
-		select: bem(BLOCKS.TOOLBAR, 'status-filter-select'),
-	},
+		/** 日期显示 */
+		titleDisplay: bem(BLOCKS.TOOLBAR, 'title-display'),
 
-	/** 排序按钮 */
-	sort: {
-		container: bem(BLOCKS.TOOLBAR, 'sort-container'),
-		containerGantt: bem(BLOCKS.TOOLBAR, 'sort-container', 'gantt'),
-		btn: bem(BLOCKS.TOOLBAR, 'sort-btn'),
-		icon: bem(BLOCKS.TOOLBAR, 'sort-icon'),
-		dropdownIcon: bem(BLOCKS.TOOLBAR, 'sort-dropdown-icon'),
-		dropdown: bem(BLOCKS.TOOLBAR, 'sort-dropdown'),
-		dropdownHeader: bem(BLOCKS.TOOLBAR, 'sort-dropdown-header'),
-		menuItem: bem(BLOCKS.TOOLBAR, 'sort-menu-item'),
-		menuItemActive: bem(BLOCKS.TOOLBAR, 'sort-menu-item', 'active'),
-		optionIcon: bem(BLOCKS.TOOLBAR, 'sort-option-icon'),
-		optionLabel: bem(BLOCKS.TOOLBAR, 'sort-option-label'),
-		optionIndicator: bem(BLOCKS.TOOLBAR, 'sort-option-indicator'),
-	},
+		/** 时间颗粒度按钮组 */
+		timeGranularity: {
+			group: bem(BLOCKS.TOOLBAR, 'time-granularity-group'),
+			groupGantt: bem(BLOCKS.TOOLBAR, 'time-granularity-group', 'gantt'),
+			todayBtn: bem(BLOCKS.TOOLBAR, 'today-btn'),
+			btn: bem(BLOCKS.TOOLBAR, 'time-granularity-btn'),
+			btnActive: bem(BLOCKS.TOOLBAR, 'time-granularity-btn', 'active'),
+		},
 
-	/** 标签筛选 */
-	tagFilter: {
-		container: bem(BLOCKS.TOOLBAR, 'tag-filter-container'),
-		containerGantt: bem(BLOCKS.TOOLBAR, 'tag-filter-container', 'gantt'),
-		btn: bem(BLOCKS.TOOLBAR, 'tag-filter-btn'),
-		icon: bem(BLOCKS.TOOLBAR, 'tag-filter-icon'),
-		count: bem(BLOCKS.TOOLBAR, 'tag-filter-count'),
-		btnHasSelection: bem(BLOCKS.TOOLBAR, 'tag-filter-btn', 'has-selection'),
-		pane: bem(BLOCKS.TOOLBAR, 'tag-filter-pane'),
-		operators: bem(BLOCKS.TOOLBAR, 'tag-filter-operators'),
-		operatorBtn: bem(BLOCKS.TOOLBAR, 'tag-filter-operator-btn'),
-		operatorBtnActive: bem(BLOCKS.TOOLBAR, 'tag-filter-operator-btn', 'active'),
-		tagsGrid: bem(BLOCKS.TOOLBAR, 'tag-filter-tags-grid'),
-		empty: bem(BLOCKS.TOOLBAR, 'tag-filter-empty'),
-		tagItem: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item'),
-		tagItemSelected: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item', 'selected'),
-		tagName: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-name'),
-		tagCount: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-count'),
-	},
+		/** 状态筛选 */
+		statusFilter: {
+			group: bem(BLOCKS.TOOLBAR, 'status-filter-group'),
+			groupGantt: bem(BLOCKS.TOOLBAR, 'status-filter-group', 'gantt'),
+			label: bem(BLOCKS.TOOLBAR, 'status-filter-label'),
+			select: bem(BLOCKS.TOOLBAR, 'status-filter-select'),
+		},
 
-	/** 字段选择器 */
-	fieldSelector: {
-		group: bem(BLOCKS.TOOLBAR, 'field-selector-group'),
-		groupGantt: bem(BLOCKS.TOOLBAR, 'field-selector-group', 'gantt'),
-		label: bem(BLOCKS.TOOLBAR, 'field-selector-label'),
-		select: bem(BLOCKS.TOOLBAR, 'field-selector-select'),
-		dualWrapper: bem(BLOCKS.TOOLBAR, 'field-selector-dual-wrapper'),
-		dualWrapperGantt: bem(BLOCKS.TOOLBAR, 'field-selector-dual-wrapper', 'gantt'),
+		/** 排序按钮 */
+		sort: {
+			container: bem(BLOCKS.TOOLBAR, 'sort-container'),
+			containerGantt: bem(BLOCKS.TOOLBAR, 'sort-container', 'gantt'),
+			btn: bem(BLOCKS.TOOLBAR, 'sort-btn'),
+			icon: bem(BLOCKS.TOOLBAR, 'sort-icon'),
+			dropdownIcon: bem(BLOCKS.TOOLBAR, 'sort-dropdown-icon'),
+			dropdown: bem(BLOCKS.TOOLBAR, 'sort-dropdown'),
+			dropdownHeader: bem(BLOCKS.TOOLBAR, 'sort-dropdown-header'),
+			menuItem: bem(BLOCKS.TOOLBAR, 'sort-menu-item'),
+			menuItemActive: bem(BLOCKS.TOOLBAR, 'sort-menu-item', 'active'),
+			optionIcon: bem(BLOCKS.TOOLBAR, 'sort-option-icon'),
+			optionLabel: bem(BLOCKS.TOOLBAR, 'sort-option-label'),
+			optionIndicator: bem(BLOCKS.TOOLBAR, 'sort-option-indicator'),
+		},
+
+		/** 标签筛选 */
+		tagFilter: {
+			container: bem(BLOCKS.TOOLBAR, 'tag-filter-container'),
+			containerGantt: bem(BLOCKS.TOOLBAR, 'tag-filter-container', 'gantt'),
+			btn: bem(BLOCKS.TOOLBAR, 'tag-filter-btn'),
+			icon: bem(BLOCKS.TOOLBAR, 'tag-filter-icon'),
+			count: bem(BLOCKS.TOOLBAR, 'tag-filter-count'),
+			btnHasSelection: bem(BLOCKS.TOOLBAR, 'tag-filter-btn', 'has-selection'),
+			pane: bem(BLOCKS.TOOLBAR, 'tag-filter-pane'),
+			operators: bem(BLOCKS.TOOLBAR, 'tag-filter-operators'),
+			operatorBtn: bem(BLOCKS.TOOLBAR, 'tag-filter-operator-btn'),
+			operatorBtnActive: bem(BLOCKS.TOOLBAR, 'tag-filter-operator-btn', 'active'),
+			tagsGrid: bem(BLOCKS.TOOLBAR, 'tag-filter-tags-grid'),
+			empty: bem(BLOCKS.TOOLBAR, 'tag-filter-empty'),
+			tagItem: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item'),
+			tagItemSelected: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item', 'selected'),
+			tagName: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-name'),
+			tagCount: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-count'),
+		},
+
+		/** 字段选择器 */
+		fieldSelector: {
+			group: bem(BLOCKS.TOOLBAR, 'field-selector-group'),
+			groupGantt: bem(BLOCKS.TOOLBAR, 'field-selector-group', 'gantt'),
+			label: bem(BLOCKS.TOOLBAR, 'field-selector-label'),
+			select: bem(BLOCKS.TOOLBAR, 'field-selector-select'),
+			dualWrapper: bem(BLOCKS.TOOLBAR, 'field-selector-dual-wrapper'),
+			dualWrapperGantt: bem(BLOCKS.TOOLBAR, 'field-selector-dual-wrapper', 'gantt'),
+		},
 	},
 };
-
 
 
 /**

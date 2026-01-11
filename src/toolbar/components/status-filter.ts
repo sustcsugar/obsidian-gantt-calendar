@@ -1,4 +1,4 @@
-import { ToolbarComponentClasses } from '../../utils/bem';
+import { ToolbarClasses } from '../../utils/bem';
 
 export type StatusValue = 'all' | 'completed' | 'uncompleted';
 
@@ -10,10 +10,10 @@ export function renderStatusFilter(
 	current: StatusValue,
 	onChange: (v: StatusValue) => void
 ): void {
-	const group = container.createDiv(ToolbarComponentClasses.statusFilter.groupGantt);
-	group.createEl('span', { text: '状态', cls: ToolbarComponentClasses.statusFilter.label });
+	const group = container.createDiv(ToolbarClasses.components.statusFilter.groupGantt);
+	group.createEl('span', { text: '状态', cls: ToolbarClasses.components.statusFilter.label });
 
-	const select = group.createEl('select', { cls: ToolbarComponentClasses.statusFilter.select });
+	const select = group.createEl('select', { cls: ToolbarClasses.components.statusFilter.select });
 	select.innerHTML = `
 		<option value="all">全部</option>
 		<option value="uncompleted">未完成</option>

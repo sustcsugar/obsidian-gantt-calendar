@@ -186,7 +186,6 @@ Author: sugar
 
 /* ==================== Year/Month/Week Layout ==================== */
 /* BEM命名: gc-view--year/--month/--week */
-.calendar-year-container,
 .gc-view.gc-view--year {
 	display: flex;
 	flex-direction: column;
@@ -195,7 +194,7 @@ Author: sugar
 	overflow: hidden;
 }
 
-.calendar-months-grid,
+/* BEM: 年视图月份网格 */
 .gc-view--year .gc-year-view__months {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
@@ -371,13 +370,15 @@ Author: sugar
 }
 
 .calendar-toggle-group,
-.gc-toggle-group {
+.gc-toggle-group,
+.gc-toolbar__view-toggle-group {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
-.calendar-toggle-btn {
+.calendar-toggle-btn,
+.gc-toolbar__view-toggle-btn {
 	padding: 6px 12px;
 	border: 1px solid var(--background-modifier-border);
 	background-color: var(--background-modifier-hover);
@@ -385,15 +386,18 @@ Author: sugar
 	color: var(--text-normal);
 	cursor: pointer;
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	font-size: 13px;
 }
 
-.calendar-toggle-btn.active {
+.calendar-toggle-btn.active,
+.gc-toolbar__view-toggle-btn--active {
 	background-color: var(--interactive-accent);
 	border-color: var(--interactive-accent);
 	color: white;
 }
 
-.calendar-toggle-btn:hover {
+.calendar-toggle-btn:hover,
+.gc-toolbar__view-toggle-btn:hover {
 	background-color: var(--background-modifier-border);
 }
 
@@ -639,7 +643,8 @@ Author: sugar
 	min-width: auto;
 }
 
-.calendar-date-display {
+.calendar-title-display,
+.gc-toolbar__title-display {
 	font-weight: 600;
 	color: var(--text-normal);
 	text-align: center;
@@ -1362,7 +1367,6 @@ Author: sugar
 
 /* 6.3 Year View Components */
 /* 月卡片 - BEM类名: gc-year-view__month-card */
-.calendar-month-card,
 .gc-year-view__month-card {
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
@@ -1375,7 +1379,6 @@ Author: sugar
 }
 
 /* 月份标题 - BEM类名: gc-year-view__month-header */
-.calendar-month-header,
 .gc-year-view__month-header {
 	text-align: center;
 	margin-bottom: 4px;
@@ -1383,7 +1386,7 @@ Author: sugar
 	padding-bottom: 2px;
 }
 
-.calendar-month-header h3 {
+.gc-year-view__month-header h3 {
 	font-size: 12px;
 	font-weight: 600;
 	margin: 0;
@@ -1391,7 +1394,6 @@ Author: sugar
 }
 
 /* 星期标签容器 - BEM类名: gc-year-view__weekdays */
-.calendar-weekdays,
 .gc-year-view__weekdays {
 	display: grid !important;
 	grid-template-columns: repeat(7, 1fr);
@@ -1400,7 +1402,6 @@ Author: sugar
 }
 
 /* 星期标签 - BEM类名: gc-year-view__weekday */
-.calendar-weekday,
 .gc-year-view__weekday {
 	text-align: center;
 	font-size: 9px;
@@ -1410,7 +1411,6 @@ Author: sugar
 }
 
 /* 日期网格 - BEM类名: gc-year-view__days-grid */
-.calendar-days-grid,
 .gc-year-view__days-grid {
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
@@ -1418,7 +1418,6 @@ Author: sugar
 }
 
 /* 日期单元格 - BEM类名: gc-year-view__day */
-.calendar-day,
 .gc-year-view__day {
 	aspect-ratio: 1;
 	display: flex;
@@ -1436,7 +1435,6 @@ Author: sugar
 }
 
 /* 日期数字 - BEM类名: gc-year-view__day-number */
-.calendar-day-number,
 .gc-year-view__day-number {
 	font-size: 13px;
 	font-weight: 400;
@@ -1445,7 +1443,6 @@ Author: sugar
 }
 
 /* 农历文本 - BEM类名: gc-year-view__lunar-text */
-.calendar-lunar-text,
 .gc-year-view__lunar-text {
 	font-size: 7px;
 	color: var(--text-faint);
@@ -1457,13 +1454,11 @@ Author: sugar
 }
 
 /* 年视图月卡片中的农历字体大小可调 */
-.calendar-month-card .calendar-lunar-text,
 .gc-year-view__month-card .gc-year-view__lunar-text {
 	font-size: var(--year-lunar-font-size, 10px);
 }
 
 /* 年视图农历始终显示 */
-.calendar-year-container .calendar-lunar-text,
 .gc-view--year .gc-year-view__lunar-text {
 	display: block;
 }
@@ -1547,7 +1542,6 @@ Author: sugar
 }
 
 /* 任务数量 - BEM类名: gc-year-view__task-count */
-.calendar-day-task-count,
 .gc-year-view__task-count {
 	font-size: 10px;
 	color: var(--text-muted);
@@ -2189,57 +2183,8 @@ Author: sugar
 }
 
 /* 6.9 Heatmap Components */
-/* 热力图色卡：蓝、绿、红（5级）
-	使用更高的选择器优先级并明确 background-color，避免被主题的 `.calendar-day { background-color: transparent; }` 覆盖。 */
-.calendar-day.heatmap-blue-1 { background-image: none; background-color: rgba(56, 132, 255, 0.12) !important; }
-.calendar-day.heatmap-blue-2 { background-image: none; background-color: rgba(56, 132, 255, 0.22) !important; }
-.calendar-day.heatmap-blue-3 { background-image: none; background-color: rgba(56, 132, 255, 0.32) !important; }
-.calendar-day.heatmap-blue-4 { background-image: none; background-color: rgba(56, 132, 255, 0.44) !important; }
-.calendar-day.heatmap-blue-5 { background-image: none; background-color: rgba(56, 132, 255, 0.58) !important; }
-
-.calendar-day.heatmap-green-1 { background-image: none; background-color: rgba(82, 196, 26, 0.12) !important; }
-.calendar-day.heatmap-green-2 { background-image: none; background-color: rgba(82, 196, 26, 0.22) !important; }
-.calendar-day.heatmap-green-3 { background-image: none; background-color: rgba(82, 196, 26, 0.32) !important; }
-.calendar-day.heatmap-green-4 { background-image: none; background-color: rgba(82, 196, 26, 0.44) !important; }
-.calendar-day.heatmap-green-5 { background-image: none; background-color: rgba(82, 196, 26, 0.58) !important; }
-
-.calendar-day.heatmap-red-1 { background-image: none; background-color: rgba(231, 76, 60, 0.12) !important; }
-.calendar-day.heatmap-red-2 { background-image: none; background-color: rgba(231, 76, 60, 0.22) !important; }
-.calendar-day.heatmap-red-3 { background-image: none; background-color: rgba(231, 76, 60, 0.32) !important; }
-.calendar-day.heatmap-red-4 { background-image: none; background-color: rgba(231, 76, 60, 0.44) !important; }
-.calendar-day.heatmap-red-5 { background-image: none; background-color: rgba(231, 76, 60, 0.58) !important; }
-
-.calendar-day.heatmap-purple-1 { background-image: none; background-color: rgba(142, 68, 173, 0.12) !important; }
-.calendar-day.heatmap-purple-2 { background-image: none; background-color: rgba(142, 68, 173, 0.22) !important; }
-.calendar-day.heatmap-purple-3 { background-image: none; background-color: rgba(142, 68, 173, 0.32) !important; }
-.calendar-day.heatmap-purple-4 { background-image: none; background-color: rgba(142, 68, 173, 0.44) !important; }
-.calendar-day.heatmap-purple-5 { background-image: none; background-color: rgba(142, 68, 173, 0.58) !important; }
-
-.calendar-day.heatmap-orange-1 { background-image: none; background-color: rgba(245, 124, 0, 0.12) !important; }
-.calendar-day.heatmap-orange-2 { background-image: none; background-color: rgba(245, 124, 0, 0.22) !important; }
-.calendar-day.heatmap-orange-3 { background-image: none; background-color: rgba(245, 124, 0, 0.32) !important; }
-.calendar-day.heatmap-orange-4 { background-image: none; background-color: rgba(245, 124, 0, 0.44) !important; }
-.calendar-day.heatmap-orange-5 { background-image: none; background-color: rgba(245, 124, 0, 0.58) !important; }
-
-.calendar-day.heatmap-cyan-1 { background-image: none; background-color: rgba(0, 188, 212, 0.12) !important; }
-.calendar-day.heatmap-cyan-2 { background-image: none; background-color: rgba(0, 188, 212, 0.22) !important; }
-.calendar-day.heatmap-cyan-3 { background-image: none; background-color: rgba(0, 188, 212, 0.32) !important; }
-.calendar-day.heatmap-cyan-4 { background-image: none; background-color: rgba(0, 188, 212, 0.44) !important; }
-.calendar-day.heatmap-cyan-5 { background-image: none; background-color: rgba(0, 188, 212, 0.58) !important; }
-
-.calendar-day.heatmap-pink-1 { background-image: none; background-color: rgba(233, 30, 99, 0.12) !important; }
-.calendar-day.heatmap-pink-2 { background-image: none; background-color: rgba(233, 30, 99, 0.22) !important; }
-.calendar-day.heatmap-pink-3 { background-image: none; background-color: rgba(233, 30, 99, 0.32) !important; }
-.calendar-day.heatmap-pink-4 { background-image: none; background-color: rgba(233, 30, 99, 0.44) !important; }
-.calendar-day.heatmap-pink-5 { background-image: none; background-color: rgba(233, 30, 99, 0.58) !important; }
-
-.calendar-day.heatmap-yellow-1 { background-image: none; background-color: rgba(255, 193, 7, 0.12) !important; }
-.calendar-day.heatmap-yellow-2 { background-image: none; background-color: rgba(255, 193, 7, 0.22) !important; }
-.calendar-day.heatmap-yellow-3 { background-image: none; background-color: rgba(255, 193, 7, 0.32) !important; }
-.calendar-day.heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44) !important; }
-.calendar-day.heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58) !important; }
-
-/* 热力图 BEM 类名支持 - 为年视图新类名添加相同样式 */
+/* 热力图色卡：蓝、绿、红（5级） - BEM类名支持 */
+/* 为年视图新类名添加热力图样式 */
 .gc-year-view__day.heatmap-blue-1 { background-image: none; background-color: rgba(56, 132, 255, 0.12) !important; }
 .gc-year-view__day.heatmap-blue-2 { background-image: none; background-color: rgba(56, 132, 255, 0.22) !important; }
 .gc-year-view__day.heatmap-blue-3 { background-image: none; background-color: rgba(56, 132, 255, 0.32) !important; }
@@ -2596,7 +2541,8 @@ Author: sugar
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.calendar-day:hover {
+/* 年视图日期悬停效果 */
+.gc-year-view__day:hover {
 	background-color: var(--background-secondary);
 }
 
@@ -2633,25 +2579,22 @@ Author: sugar
 }
 
 /* 7.4 Festival Themes */
-.calendar-lunar-text.festival,
+/* 年视图节日样式 */
 .gc-year-view__lunar-text.festival {
 	font-weight: 600;
 }
 
 /* 阳历节日 - 使用CSS变量 */
-.calendar-lunar-text.festival-solar,
 .gc-year-view__lunar-text.festival-solar {
 	color: var(--festival-solar-color);
 }
 
 /* 农历传统节日 - 使用CSS变量 */
-.calendar-lunar-text.festival-lunar,
 .gc-year-view__lunar-text.festival-lunar {
 	color: var(--festival-lunar-color);
 }
 
 /* 二十四节气 - 使用CSS变量 */
-.calendar-lunar-text.festival-solarTerm,
 .gc-year-view__lunar-text.festival-solarTerm {
 	color: var(--festival-solar-term-color);
 }
@@ -2678,15 +2621,6 @@ Author: sugar
 }
 
 /* 7.5 Special States */
-/* Outside month */
-.calendar-day.outside-month {
-	opacity: 0.4;
-}
-
-.calendar-day.outside-month .calendar-day-number {
-	color: var(--text-faint);
-}
-
 /* BEM类名: gc-month-view__day-cell--outside-month */
 .gc-month-view__day-cell--outside-month {
 	background-color: var(--background-secondary);
@@ -2694,6 +2628,19 @@ Author: sugar
 }
 
 .gc-month-view__day-cell--outside-month .gc-month-view__day-number {
+	color: var(--text-faint);
+}
+
+/* BEM类名: gc-year-view__day.outside-month (年视图非本月日期) */
+.gc-year-view__day.outside-month {
+	opacity: 0.4;
+}
+
+.gc-year-view__day.outside-month .gc-year-view__day-number {
+	color: var(--text-faint);
+}
+
+.gc-year-view__day.outside-month .gc-year-view__lunar-text {
 	color: var(--text-faint);
 }
 

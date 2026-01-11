@@ -3,7 +3,7 @@
  * @module toolbar/components/field-selector
  */
 
-import { ToolbarComponentClasses } from '../../utils/bem';
+import { ToolbarClasses } from '../../utils/bem';
 
 /**
  * 时间字段类型
@@ -83,7 +83,7 @@ export function renderFieldSelector(
 		customOptions,
 		containerClass
 	} = options;
-	const classes = ToolbarComponentClasses.fieldSelector;
+	const classes = ToolbarClasses.components.fieldSelector;
 
 	// 创建字段筛选组
 	const fieldFilterGroup = container.createDiv(classes.group);
@@ -163,7 +163,7 @@ export function renderDualFieldSelector(
 		containerClass,
 		excludeFields = []
 	} = options;
-	const classes = ToolbarComponentClasses.fieldSelector;
+	const classes = ToolbarClasses.components.fieldSelector;
 
 	const wrapper = container.createDiv(classes.dualWrapperGantt);
 	if (containerClass) wrapper.addClass(containerClass);

@@ -1,4 +1,4 @@
-import type { CalendarViewType } from '../types';
+import { ToolbarClasses } from '../utils/bem';
 
 /**
  * 工具栏中间区域 - 信息展示区
@@ -7,22 +7,17 @@ import type { CalendarViewType } from '../types';
 export class ToolbarCenter {
 	/**
 	 * 渲染中间区域
-	 * @param container 中间容器元素
-	 * @param currentViewType 当前视图类型
-	 * @param currentDate 当前日期
-	 * @param dateRangeText 日期范围文本
+	 * @param container 中间容器元素（类名已在 toolbar.ts 中设置）
+	 * @param titleText 标题文本
 	 */
 	render(
 		container: HTMLElement,
-		currentViewType: CalendarViewType,
-		currentDate: Date,
-		dateRangeText: string
+		titleText: string
 	): void {
 		container.empty();
-		container.addClass('calendar-toolbar-center');
 
-		const dateDisplay = container.createEl('span');
-		dateDisplay.addClass('calendar-date-display');
-		dateDisplay.setText(dateRangeText);
+		const titleDisplay = container.createEl('span');
+		titleDisplay.addClass(ToolbarClasses.components.titleDisplay);
+		titleDisplay.setText(titleText);
 	}
 }

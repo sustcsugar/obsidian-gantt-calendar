@@ -152,7 +152,7 @@ export class GCMainView extends ItemView {
 			currentViewType: this.viewType,
 			lastCalendarViewType: this.lastCalendarViewType,
 			currentDate: this.currentDate,
-			dateRangeText: this.getDateRangeText(),
+			titleText: this.getViewTitle(),
 			globalFilterText: this.plugin?.settings?.globalTaskFilter,
 			taskRenderer: this.taskRenderer,
             ganttRenderer: this.ganttRenderer,
@@ -292,7 +292,7 @@ export class GCMainView extends ItemView {
 		this.render();
 	}
 
-	private getDateRangeText(): string {
+	private getViewTitle(): string {
 		const monthAbbreviations = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 		switch (this.viewType) {
@@ -311,7 +311,7 @@ export class GCMainView extends ItemView {
 			case 'task':
 				return '任务视图';
             case 'gantt':
-                return '甘特图视图';
+                return '甘特图视图(beta:周月颗粒度有问题)';
 		}
 	}
 }

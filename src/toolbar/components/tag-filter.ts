@@ -5,7 +5,7 @@
 
 import type { GCTask } from '../../types';
 import type { TagFilterState } from '../../types';
-import { ToolbarComponentClasses } from '../../utils/bem';
+import { ToolbarClasses } from '../../utils/bem';
 import { TagPill } from '../../components/tagPill';
 
 /**
@@ -71,7 +71,7 @@ export function renderTagFilterButton(
 	options: TagFilterOptions
 ): { cleanup: () => void } {
 	const { getCurrentState, onTagFilterChange, getAllTasks } = options;
-	const classes = ToolbarComponentClasses.tagFilter;
+	const classes = ToolbarClasses.components.tagFilter;
 
 	// 创建按钮容器
 	const buttonContainer = container.createDiv(classes.containerGantt);

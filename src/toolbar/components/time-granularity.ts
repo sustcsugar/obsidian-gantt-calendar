@@ -3,7 +3,7 @@
  * 用于甘特图视图，提供日/周/月三种时间颗粒度选择
  */
 
-import { ToolbarComponentClasses } from '../../utils/bem';
+import { ToolbarClasses } from '../../utils/bem';
 
 export type TimeGranularity = 'day' | 'week' | 'month';
 
@@ -20,11 +20,11 @@ export function renderTimeGranularity(
 	options: TimeGranularityOptions,
 	onToday?: () => void
 ): void {
-	const group = container.createDiv(ToolbarComponentClasses.timeGranularity.groupGantt);
+	const group = container.createDiv(ToolbarClasses.components.timeGranularity.groupGantt);
 
 	// 今天按钮
 	const todayBtn = group.createEl('button', {
-		cls: ToolbarComponentClasses.timeGranularity.todayBtn,
+		cls: ToolbarClasses.components.timeGranularity.todayBtn,
 		text: '今',
 	});
 	todayBtn.addEventListener('click', () => {
@@ -39,21 +39,21 @@ export function renderTimeGranularity(
 
 	granularities.forEach(({ value, label }) => {
 		const btn = group.createEl('button', {
-			cls: ToolbarComponentClasses.timeGranularity.btn,
+			cls: ToolbarClasses.components.timeGranularity.btn,
 			text: label,
 		});
 
 		if (value === options.current) {
-			btn.addClass(ToolbarComponentClasses.timeGranularity.btnActive);
+			btn.addClass(ToolbarClasses.components.timeGranularity.btnActive);
 		}
 
 		btn.addEventListener('click', () => {
 			// 移除所有按钮的 active 状态
-			group.querySelectorAll(`.${ToolbarComponentClasses.timeGranularity.btn}`).forEach((b) => {
-				b.removeClass(ToolbarComponentClasses.timeGranularity.btnActive);
+			group.querySelectorAll(`.${ToolbarClasses.components.timeGranularity.btn}`).forEach((b) => {
+				b.removeClass(ToolbarClasses.components.timeGranularity.btnActive);
 			});
 			// 添加当前按钮的 active 状态
-			btn.addClass(ToolbarComponentClasses.timeGranularity.btnActive);
+			btn.addClass(ToolbarClasses.components.timeGranularity.btnActive);
 			// 触发回调
 			options.onChange(value);
 		});

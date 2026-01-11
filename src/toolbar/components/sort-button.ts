@@ -6,7 +6,7 @@
 import { setIcon } from 'obsidian';
 import type { SortState } from '../../types';
 import { SORT_OPTIONS, getSortDisplayText, updateSortState } from '../../tasks/taskSorter';
-import { ToolbarComponentClasses } from '../../utils/bem';
+import { ToolbarClasses } from '../../utils/bem';
 
 /**
  * 排序按钮配置选项
@@ -38,11 +38,11 @@ export function renderSortButton(
 	const { getCurrentState, onSortChange } = options;
 
 	// 创建按钮容器
-	const buttonContainer = container.createDiv(ToolbarComponentClasses.sort.containerGantt);
+	const buttonContainer = container.createDiv(ToolbarClasses.components.sort.containerGantt);
 
 	// 创建排序按钮
 	const sortBtn = buttonContainer.createEl('button', {
-		cls: `calendar-view-compact-btn ${ToolbarComponentClasses.sort.btn}`,
+		cls: `calendar-view-compact-btn ${ToolbarClasses.components.sort.btn}`,
 		attr: { title: '排序选项' }
 	});
 
@@ -50,9 +50,9 @@ export function renderSortButton(
 	const updateButtonDisplay = () => {
 		const currentState = getCurrentState();
 		sortBtn.empty();
-		const iconSpan = sortBtn.createSpan(ToolbarComponentClasses.sort.icon);
+		const iconSpan = sortBtn.createSpan(ToolbarClasses.components.sort.icon);
 		iconSpan.setText(getSortDisplayText(currentState));
-		const dropdownIcon = sortBtn.createSpan(ToolbarComponentClasses.sort.dropdownIcon);
+		const dropdownIcon = sortBtn.createSpan(ToolbarClasses.components.sort.dropdownIcon);
 		setIcon(dropdownIcon, 'chevron-down');
 	};
 
@@ -61,13 +61,13 @@ export function renderSortButton(
 		const currentState = getCurrentState();
 		menuItems.forEach((item, index) => {
 			const option = SORT_OPTIONS[index];
-			const indicator = item.querySelector(`.${ToolbarComponentClasses.sort.optionIndicator}`) as HTMLElement;
+			const indicator = item.querySelector(`.${ToolbarClasses.components.sort.optionIndicator}`) as HTMLElement;
 
 			if (currentState.field === option.field) {
-				item.addClass(ToolbarComponentClasses.sort.menuItemActive);
+				item.addClass(ToolbarClasses.components.sort.menuItemActive);
 				indicator.textContent = currentState.order === 'asc' ? '⬆️' : '⬇️';
 			} else {
-				item.removeClass(ToolbarComponentClasses.sort.menuItemActive);
+				item.removeClass(ToolbarClasses.components.sort.menuItemActive);
 				indicator.textContent = '';
 			}
 		});
@@ -77,25 +77,25 @@ export function renderSortButton(
 
 	// 创建下拉菜单（添加到 body 以便正确定位）
 	const dropdown = document.createElement('div');
-	dropdown.addClass(ToolbarComponentClasses.sort.dropdown);
+	dropdown.addClass(ToolbarClasses.components.sort.dropdown);
 	dropdown.style.display = 'none';
 
 	// 添加菜单标题
-	dropdown.createEl('div', { text: '排序方式 (点击切换)', cls: ToolbarComponentClasses.sort.dropdownHeader });
+	dropdown.createEl('div', { text: '排序方式 (点击切换)', cls: ToolbarClasses.components.sort.dropdownHeader });
 
 	const menuItems: HTMLElement[] = [];
 
 	// 添加各个排序选项
 	SORT_OPTIONS.forEach((option) => {
-		const item = dropdown.createEl('div', { cls: ToolbarComponentClasses.sort.menuItem });
+		const item = dropdown.createEl('div', { cls: ToolbarClasses.components.sort.menuItem });
 
-		const iconSpan = item.createSpan(ToolbarComponentClasses.sort.optionIcon);
+		const iconSpan = item.createSpan(ToolbarClasses.components.sort.optionIcon);
 		iconSpan.setText(option.icon);
 
-		const labelSpan = item.createSpan(ToolbarComponentClasses.sort.optionLabel);
+		const labelSpan = item.createSpan(ToolbarClasses.components.sort.optionLabel);
 		labelSpan.setText(option.label);
 
-		const indicator = item.createSpan(ToolbarComponentClasses.sort.optionIndicator);
+		const indicator = item.createSpan(ToolbarClasses.components.sort.optionIndicator);
 
 		item.addEventListener('click', (e) => {
 			e.stopPropagation();

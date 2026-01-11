@@ -10,6 +10,7 @@ import { ToolbarCenter } from './toolbar-center';
 import { ToolbarRightCalendar } from './toolbar-right-calendar';
 import { ToolbarRightTask } from './toolbar-right-task';
 import { ToolbarRightGantt } from './toolbar-right-gantt';
+import { ToolbarClasses } from '../utils/bem';
 
 /**
  * 工具栏主控制器
@@ -49,12 +50,12 @@ export class Toolbar {
 	 */
 	render(container: HTMLElement, config: ToolbarConfig): void {
 		container.empty();
-		container.addClass('calendar-toolbar');
+		container.addClass(ToolbarClasses.block);
 
 		// 创建三个区域容器
-		const leftContainer = container.createDiv('calendar-toolbar-left');
-		const centerContainer = container.createDiv('calendar-toolbar-center');
-		const rightContainer = container.createDiv('calendar-toolbar-right');
+		const leftContainer = container.createDiv(ToolbarClasses.elements.left);
+		const centerContainer = container.createDiv(ToolbarClasses.elements.center);
+		const rightContainer = container.createDiv(ToolbarClasses.elements.right);
 
 		// 渲染左侧视图选择器
 		this.leftSection.render(
@@ -67,9 +68,7 @@ export class Toolbar {
 		// 渲染中间信息展示区
 		this.centerSection.render(
 			centerContainer,
-			config.currentViewType,
-			config.currentDate,
-			config.dateRangeText
+			config.titleText
 		);
 
 		// 渲染右侧功能区（根据视图类型选择）
@@ -114,7 +113,7 @@ export interface ToolbarConfig {
 	currentViewType: CalendarViewType;
 	lastCalendarViewType: CalendarViewType;
 	currentDate: Date;
-	dateRangeText: string;
+	titleText: string;
 
 	// 任务视图相关
 	globalFilterText?: string;
