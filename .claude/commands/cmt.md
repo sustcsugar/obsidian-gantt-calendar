@@ -10,7 +10,11 @@ allowed-tools: Bash(git add:*), Bash(git status:*),Bash(git commit:*),Bash(git d
 2. 概括性的总结代码变动情况
 3. 请忽略 example/ 路径下的文件变动
 4. commit需要前缀
-    1. feature-:表示新增功能特性
-    2. refactor-:表示代码重构,功能不变
-    3. fix-:表示修复了现存的bug
+  - feat: - 新功能
+  - fix: - 修复bug
+  - refactor: - 重构
+  - docs: - 文档更新
+  - style: - 代码格式调整
+  - test: - 测试相关
+  - chore: - 杂务/配置变更
 5. 生成的信息要有概括性,不需要太复杂,只含有梗概信息
