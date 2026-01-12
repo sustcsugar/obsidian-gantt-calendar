@@ -85,16 +85,12 @@ export function renderStatusFilterButton(
 				cls: [classes.statusItem, isSelected ? classes.statusItemSelected : ''].join(' ')
 			});
 
-			// 默认显示状态背景色
-			item.style.backgroundColor = statusConfig.backgroundColor;
-			item.style.color = statusConfig.textColor;
-
 			// 复选框
 			const checkbox = item.createEl('span', classes.statusCheckbox);
 			if (isSelected) {
 				checkbox.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-					<rect x="1" y="1" width="14" height="14" rx="2"/>
-					<path d="M4 8l3 3 6-6" stroke="white" stroke-width="1.5" fill="none"/>
+					<rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+					<path d="M4 8l3 3 6-6" stroke="currentColor" stroke-width="1.5" fill="none"/>
 				</svg>`;
 			} else {
 				checkbox.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -102,9 +98,11 @@ export function renderStatusFilterButton(
 				</svg>`;
 			}
 
-			// 状态名称
+			// 状态名称 - 应用背景色和文字颜色
 			const label = item.createEl('span', classes.statusLabel);
 			label.setText(statusConfig.name);
+			label.style.backgroundColor = statusConfig.backgroundColor;
+			label.style.color = statusConfig.textColor;
 
 			// 点击事件 - 阻止冒泡，保持弹窗打开
 			item.addEventListener('click', (e) => {
