@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-gantt-calendar",
 	"name": "Gantt Calendar",
-	"version": "1.5.1",
+	"version": "1.5.2",
 	"minAppVersion": "1.5.0",
 	"description": "Gantt-style calendar with day/week/month/year views and a task board that reads Tasks/Dataview items, supports global filters and date filters for quick scheduling.",
 	"author": "Sugar",
