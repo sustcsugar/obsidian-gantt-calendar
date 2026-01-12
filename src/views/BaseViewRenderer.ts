@@ -187,7 +187,11 @@ export abstract class BaseViewRenderer {
 		return tasks.filter(task => {
 			// 任务没有标签
 			if (!task.tags || task.tags.length === 0) {
-				return false;
+				if (operator === 'NOT') {
+					return true;  // NOT 模式：保留没有标签的任务
+				} else {
+					return false;  // AND/OR 模式：过滤掉没有标签的任务
+				}
 			}
 
 			// 将任务标签转换为小写用于匹配
@@ -201,6 +205,11 @@ export abstract class BaseViewRenderer {
 			// OR 模式：任务包含任一选中标签即可
 			if (operator === 'OR') {
 				return selectedTagsLower.some(tag => taskTagsLower.includes(tag));
+			}
+
+			// NOT 模式：排除包含任一选中标签的任务
+			if (operator === 'NOT') {
+				return !selectedTagsLower.some(tag => taskTagsLower.includes(tag));
 			}
 
 			return false;

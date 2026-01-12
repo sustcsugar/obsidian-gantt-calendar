@@ -182,14 +182,14 @@ export class TaskDataAdapter {
 	 * @param tasks - 原始任务列表
 	 * @param statusFilter - 状态筛选条件
 	 * @param selectedTags - 选中的标签列表
-	 * @param tagOperator - 标签组合方式 (AND/OR)
+	 * @param tagOperator - 标签组合方式 (AND/OR/NOT)
 	 * @returns 筛选后的任务列表
 	 */
 	static applyFilters(
 		tasks: GCTask[],
 		statusFilter: StatusFilterState,
 		selectedTags: string[] = [],
-		tagOperator: 'AND' | 'OR' = 'OR'
+		tagOperator: 'AND' | 'OR' | 'NOT' = 'OR'
 	): GCTask[] {
 		let filtered = tasks;
 
@@ -207,8 +207,13 @@ export class TaskDataAdapter {
 			const selectedTagsLower = selectedTags.map(tag => tag.toLowerCase());
 
 			filtered = filtered.filter(task => {
+				// 对于没有标签的任务
 				if (!task.tags || task.tags.length === 0) {
-					return false;
+					if (tagOperator === 'NOT') {
+						return true;  // NOT 模式：保留没有标签的任务
+					} else {
+						return false;  // AND/OR 模式：过滤掉没有标签的任务
+					}
 				}
 
 				// 将任务标签转换为小写用于匹配
@@ -216,8 +221,11 @@ export class TaskDataAdapter {
 
 				if (tagOperator === 'AND') {
 					return selectedTagsLower.every(tag => taskTagsLower.includes(tag));
-				} else {
+				} else if (tagOperator === 'OR') {
 					return selectedTagsLower.some(tag => taskTagsLower.includes(tag));
+				} else {
+					// NOT: 排除包含任一选中标签的任务
+					return !selectedTagsLower.some(tag => taskTagsLower.includes(tag));
 				}
 			});
 		}

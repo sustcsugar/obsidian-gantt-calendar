@@ -115,6 +115,7 @@ export function renderTagFilterButton(
 	// 存储组合器按钮元素引用，用于更新状态
 	let andBtnElement: HTMLElement | null = null;
 	let orBtnElement: HTMLElement | null = null;
+	let notBtnElement: HTMLElement | null = null;
 
 	// 存储标签项元素的映射，用于更新选中状态而不重新渲染
 	const tagItemElements = new Map<string, HTMLElement>();
@@ -125,9 +126,15 @@ export function renderTagFilterButton(
 		if (state.operator === 'AND') {
 			andBtnElement?.addClass(classes.operatorBtnActive);
 			orBtnElement?.removeClass(classes.operatorBtnActive);
-		} else {
+			notBtnElement?.removeClass(classes.operatorBtnActive);
+		} else if (state.operator === 'OR') {
 			andBtnElement?.removeClass(classes.operatorBtnActive);
 			orBtnElement?.addClass(classes.operatorBtnActive);
+			notBtnElement?.removeClass(classes.operatorBtnActive);
+		} else {
+			andBtnElement?.removeClass(classes.operatorBtnActive);
+			orBtnElement?.removeClass(classes.operatorBtnActive);
+			notBtnElement?.addClass(classes.operatorBtnActive);
 		}
 	};
 
@@ -165,6 +172,17 @@ export function renderTagFilterButton(
 		});
 		if (state.operator === 'OR') orBtnElement.addClass(classes.operatorBtnActive);
 
+		notBtnElement = operators.createEl('button', {
+			text: 'NOT',
+			cls: classes.operatorBtn,
+			attr: {
+				title: '排除模式：排除包含任一选中标签的任务',
+				'aria-label': 'NOT 排除模式',
+				'type': 'button'
+			}
+		});
+		if (state.operator === 'NOT') notBtnElement.addClass(classes.operatorBtnActive);
+
 		// 组合器按钮点击事件 - 阻止冒泡，不重新渲染
 		andBtnElement.addEventListener('click', (e) => {
 			e.stopPropagation();
@@ -180,6 +198,15 @@ export function renderTagFilterButton(
 			const currentState = getCurrentState();
 			if (currentState.operator !== 'OR') {
 				onTagFilterChange({ ...currentState, operator: 'OR' });
+				updateOperatorButtons();
+			}
+		});
+
+		notBtnElement.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const currentState = getCurrentState();
+			if (currentState.operator !== 'NOT') {
+				onTagFilterChange({ ...currentState, operator: 'NOT' });
 				updateOperatorButtons();
 			}
 		});
