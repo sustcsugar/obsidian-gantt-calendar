@@ -11,6 +11,7 @@ import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { TooltipManager } from '../../utils/tooltipManager';
 import { Logger } from '../../utils/logger';
 import { TagPill } from '../tagPill';
+import { LinkRenderer } from '../../utils/linkRenderer';
 
 /**
  * 任务卡片渲染器
@@ -145,80 +146,7 @@ export class TaskCardRenderer {
 	 * 渲染任务描述为富文本（包含可点击的链接）
 	 */
 	private renderTaskDescriptionWithLinks(container: HTMLElement, text: string): void {
-		const obsidianLinkRegex = RegularExpressions.Links.obsidianLinkRegex;
-		const markdownLinkRegex = RegularExpressions.Links.markdownLinkRegex;
-		const urlLinkRegex = RegularExpressions.Links.urlLinkRegex;
-
-		let lastIndex = 0;
-		const matches: Array<{ type: 'obsidian' | 'markdown' | 'url'; start: number; end: number; groups: RegExpExecArray }> = [];
-
-		// 收集所有匹配
-		let match;
-		const textLower = text;
-
-		while ((match = obsidianLinkRegex.exec(textLower)) !== null) {
-			matches.push({ type: 'obsidian', start: match.index, end: match.index + match[0].length, groups: match });
-		}
-		while ((match = markdownLinkRegex.exec(textLower)) !== null) {
-			matches.push({ type: 'markdown', start: match.index, end: match.index + match[0].length, groups: match });
-		}
-		while ((match = urlLinkRegex.exec(textLower)) !== null) {
-			matches.push({ type: 'url', start: match.index, end: match.index + match[0].length, groups: match });
-		}
-
-		// 按位置排序并去重重叠
-		matches.sort((a, b) => a.start - b.start);
-		const uniqueMatches = [];
-		let lastEnd = 0;
-		for (const m of matches) {
-			if (m.start >= lastEnd) {
-				uniqueMatches.push(m);
-				lastEnd = m.end;
-			}
-		}
-
-		// 渲染文本和链接
-		lastIndex = 0;
-		for (const m of uniqueMatches) {
-			if (m.start > lastIndex) {
-				container.appendText(text.substring(lastIndex, m.start));
-			}
-
-			if (m.type === 'obsidian') {
-				const notePath = m.groups[1];
-				const displayText = m.groups[2] || notePath;
-				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--obsidian' });
-				link.setAttr('data-href', notePath);
-				link.href = 'javascript:void(0)';
-				link.addEventListener('click', async (e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					const file = this.app.metadataCache.getFirstLinkpathDest(notePath, '');
-					if (file) {
-						await openFileInExistingLeaf(this.app, file.path, 0);
-					}
-				});
-			} else if (m.type === 'markdown') {
-				const displayText = m.groups[1];
-				const url = m.groups[2];
-				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--markdown' });
-				link.href = url;
-				link.setAttr('target', '_blank');
-				link.addEventListener('click', (e) => e.stopPropagation());
-			} else if (m.type === 'url') {
-				const url = m.groups[1];
-				const link = container.createEl('a', { text: url, cls: 'gc-link gc-link--url' });
-				link.href = url;
-				link.setAttr('target', '_blank');
-				link.addEventListener('click', (e) => e.stopPropagation());
-			}
-
-			lastIndex = m.end;
-		}
-
-		if (lastIndex < text.length) {
-			container.appendText(text.substring(lastIndex));
-		}
+		LinkRenderer.renderTaskDescriptionWithLinks(container, text, this.app);
 	}
 
 	/**

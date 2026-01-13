@@ -18,6 +18,7 @@ import type { GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
 import { Logger } from '../../utils/logger';
+import { LinkRenderer } from '../../utils/linkRenderer';
 
 /**
  * SVG 元素辅助方法
@@ -661,93 +662,7 @@ export class SvgGanttRenderer {
 	 * 支持与 BaseViewRenderer 相同的链接格式
 	 */
 	private renderTaskDescriptionWithLinks(container: HTMLElement, text: string): void {
-		// Obsidian 双向链接：[[note]] 或 [[note|alias]]
-		const obsidianLinkRegex = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
-		// Markdown 链接：[text](url)
-		const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-		// 网址链接：http://example.com 或 https://example.com
-		const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-		// 分割文本并处理链接
-		let lastIndex = 0;
-		const matches: Array<{ type: 'obsidian' | 'markdown' | 'url'; start: number; end: number; groups: RegExpExecArray }> = [];
-
-		// 收集所有匹配
-		let match;
-		const textLower = text;
-
-		// 收集 Obsidian 链接
-		while ((match = obsidianLinkRegex.exec(textLower)) !== null) {
-			matches.push({ type: 'obsidian', start: match.index, end: match.index + match[0].length, groups: match });
-		}
-
-		// 收集 Markdown 链接
-		while ((match = markdownLinkRegex.exec(textLower)) !== null) {
-			matches.push({ type: 'markdown', start: match.index, end: match.index + match[0].length, groups: match });
-		}
-
-		// 收集网址链接
-		while ((match = urlRegex.exec(textLower)) !== null) {
-			matches.push({ type: 'url', start: match.index, end: match.index + match[0].length, groups: match });
-		}
-
-		// 按位置排序并去重重叠
-		matches.sort((a, b) => a.start - b.start);
-		const uniqueMatches = [];
-		let lastEnd = 0;
-		for (const m of matches) {
-			if (m.start >= lastEnd) {
-				uniqueMatches.push(m);
-				lastEnd = m.end;
-			}
-		}
-
-		// 渲染文本和链接
-		lastIndex = 0;
-		for (const m of uniqueMatches) {
-			// 添加前面的普通文本
-			if (m.start > lastIndex) {
-				container.appendText(text.substring(lastIndex, m.start));
-			}
-
-			// 添加链接
-			if (m.type === 'obsidian') {
-				const notePath = m.groups[1];
-				const displayText = m.groups[2] || notePath;
-				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--obsidian' });
-				link.setAttr('data-href', notePath);
-				link.href = 'javascript:void(0)';
-				link.addEventListener('click', async (e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					// 尝试打开文件
-					const file = this.app.metadataCache.getFirstLinkpathDest(notePath, '');
-					if (file) {
-						this.app.workspace.openLinkText(notePath, '');
-					}
-				});
-			} else if (m.type === 'markdown') {
-				const displayText = m.groups[1];
-				const url = m.groups[2];
-				const link = container.createEl('a', { text: displayText, cls: 'gc-link gc-link--markdown' });
-				link.href = url;
-				link.setAttr('target', '_blank');
-				link.setAttr('rel', 'noopener noreferrer');
-			} else if (m.type === 'url') {
-				const url = m.groups[1];
-				const link = container.createEl('a', { text: url, cls: 'gc-link gc-link--url' });
-				link.href = url;
-				link.setAttr('target', '_blank');
-				link.setAttr('rel', 'noopener noreferrer');
-			}
-
-			lastIndex = m.end;
-		}
-
-		// 添加剩余的普通文本
-		if (lastIndex < text.length) {
-			container.appendText(text.substring(lastIndex));
-		}
+		LinkRenderer.renderTaskDescriptionWithLinks(container, text, this.app);
 	}
 
 	/**
