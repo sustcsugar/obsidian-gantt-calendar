@@ -15,7 +15,7 @@
  * - 完整任务由 TaskRepository 统一存储
  */
 
-import { App, TFile, TAbstractFile } from 'obsidian';
+import { App, TFile, TAbstractFile, EventRef } from 'obsidian';
 import { parseTasksFromListItems } from '../tasks/taskParser/main';
 import { areTasksEqual } from '../tasks/taskUtils';
 import { EventBus } from './EventBus';
@@ -68,6 +68,8 @@ export class MarkdownDataSource implements IDataSource {
 	private processingFiles: Set<string> = new Set();
 	// 防止重复注册事件监听器
 	private fileWatchersRegistered: boolean = false;
+	// 保存事件监听器引用，用于清理
+	private vaultEventRefs: EventRef[] = [];
 
 	constructor(app: App, eventBus: EventBus, config: DataSourceConfig) {
 		this.app = app;
@@ -183,6 +185,13 @@ export class MarkdownDataSource implements IDataSource {
 	 * 销毁数据源
 	 */
 	destroy(): void {
+		// 移除所有 vault 事件监听器
+		this.vaultEventRefs.forEach((eventRef) => {
+			this.app.vault.offref(eventRef);
+		});
+		this.vaultEventRefs = [];
+		this.fileWatchersRegistered = false;
+
 		this.debounceTimers.forEach((timer) => clearTimeout(timer));
 		this.debounceTimers.clear();
 		this.processingFiles.clear();
@@ -281,7 +290,7 @@ export class MarkdownDataSource implements IDataSource {
 	 */
 	private setupFileWatchers(): void {
 		// 监听文件修改（使用防抖处理）
-		this.app.vault.on('modify', (file) => {
+		const modifyRef = this.app.vault.on('modify', (file) => {
 			if (file instanceof TFile && file.extension === 'md') {
 				Logger.debug('MarkdownDataSource', `File modify event received: ${file.path}`);
 
@@ -340,9 +349,10 @@ export class MarkdownDataSource implements IDataSource {
 				this.debounceTimers.set(file.path, timer);
 			}
 		});
+		this.vaultEventRefs.push(modifyRef);
 
 		// 监听文件删除
-		this.app.vault.on('delete', (file) => {
+		const deleteRef = this.app.vault.on('delete', (file) => {
 			if (file instanceof TFile && file.extension === 'md') {
 				const oldCache = this.cache.get(file.path);
 				this.cache.delete(file.path);
@@ -359,9 +369,10 @@ export class MarkdownDataSource implements IDataSource {
 				}
 			}
 		});
+		this.vaultEventRefs.push(deleteRef);
 
 		// 监听文件重命名
-		this.app.vault.on('rename', (file, oldPath) => {
+		const renameRef = this.app.vault.on('rename', (file, oldPath) => {
 			if (file instanceof TFile && file.extension === 'md') {
 				const oldCache = this.cache.get(oldPath);
 				if (oldCache) {
@@ -383,6 +394,7 @@ export class MarkdownDataSource implements IDataSource {
 				}
 			}
 		});
+		this.vaultEventRefs.push(renameRef);
 	}
 
 	/**

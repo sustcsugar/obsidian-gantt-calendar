@@ -224,6 +224,8 @@ export class TaskStore {
 	 * 清空存储
 	 */
 	clear(): void {
+		// 销毁数据源，移除所有事件监听器
+		this.markdownSource.destroy();
 		this.repository.clear();
 		this.isInitialized = false;
 		Logger.debug('TaskStore', 'Cache cleared');

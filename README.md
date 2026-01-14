@@ -27,7 +27,17 @@
 
 ### 安装插件
 
-手动安装
+#### 使用`BRAT`插件安装:
+1. 下载并启用社区插件 `BRAT`
+2. 执行命令 `Add a beta plugin for testing (with or without version)`
+![BRAT命令1](docs/BRAT_cmd.png)
+
+3. 填写仓库地址即可
+![BRAT命令2](docs/BRAT_cmd_1.png)
+
+
+
+#### 手动安装
 1. 下载最新的 [Release](https://github.com/sustcsugar/obsidian-gantt-calendar/releases)
 2. 解压后将文件夹复制到 `<你的库>/.obsidian/plugins/`
 3. 重启 Obsidian 并在设置中启用插件
