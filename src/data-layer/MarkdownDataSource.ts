@@ -66,6 +66,9 @@ export class MarkdownDataSource implements IDataSource {
 	private readonly DEBOUNCE_MS = 50;
 	// 防止并发处理同一文件
 	private processingFiles: Set<string> = new Set();
+	// 待处理文件队列：当文件正在处理时，新的修改请求会被加入此队列
+	// 处理完成后会重新检查这些文件，避免遗漏快速连续的修改
+	private pendingFileChecks: Set<string> = new Set();
 	// 防止重复注册事件监听器
 	private fileWatchersRegistered: boolean = false;
 	// 保存事件监听器引用，用于清理
@@ -182,6 +185,60 @@ export class MarkdownDataSource implements IDataSource {
 	}
 
 	/**
+	 * 处理文件修改
+	 * 【修复Bug 2】将文件处理逻辑提取为独立方法，支持待处理队列机制
+	 *
+	 * 工作流程：
+	 * 1. 标记文件为处理中
+	 * 2. 获取旧任务ID列表
+	 * 3. 解析新任务
+	 * 4. 检测变化并通知
+	 * 5. 清除处理中标记
+	 * 6. 如果有待处理标记，递归重新检查（避免遗漏快速连续的修改）
+	 */
+	private async processFileModification(filePath: string): Promise<void> {
+		this.processingFiles.add(filePath);
+		Logger.debug('MarkdownDataSource', `Processing file modification: ${filePath}`);
+
+		try {
+			const oldCache = this.cache.get(filePath);
+			const oldTaskIds = oldCache?.taskIds || [];
+
+			const parseResult = await this.parseFileForScan(filePath);
+			if (parseResult) {
+				this.cache.set(filePath, parseResult.cache);
+			} else {
+				this.cache.delete(filePath);
+			}
+
+			if (this.changeHandler && oldCache) {
+				const changes = this.detectChangesByIds(oldTaskIds, parseResult?.tasks || []);
+				if (changes) {
+					Logger.debug('MarkdownDataSource', `Changes detected for ${filePath}:`, {
+						created: changes.created.length,
+						updated: changes.updated.length,
+						deleted: changes.deleted.length
+					});
+					this.changeHandler(changes);
+				} else {
+					Logger.debug('MarkdownDataSource', `No actual changes detected for ${filePath}`);
+				}
+			}
+		} finally {
+			this.processingFiles.delete(filePath);
+
+			// 处理完成后，检查是否有待处理的重新检查
+			// 【修复Bug 2】这是关键：快速连续的修改不会丢失
+			if (this.pendingFileChecks.has(filePath)) {
+				this.pendingFileChecks.delete(filePath);
+				Logger.debug('MarkdownDataSource', `Rechecking pending file: ${filePath}`);
+				// 重新处理该文件
+				await this.processFileModification(filePath);
+			}
+		}
+	}
+
+	/**
 	 * 销毁数据源
 	 */
 	destroy(): void {
@@ -195,6 +252,7 @@ export class MarkdownDataSource implements IDataSource {
 		this.debounceTimers.forEach((timer) => clearTimeout(timer));
 		this.debounceTimers.clear();
 		this.processingFiles.clear();
+		this.pendingFileChecks.clear();  // 清理待处理队列
 		this.cache.clear();
 	}
 
@@ -290,14 +348,10 @@ export class MarkdownDataSource implements IDataSource {
 	 */
 	private setupFileWatchers(): void {
 		// 监听文件修改（使用防抖处理）
+		// 【修复Bug 2】改进并发处理：使用待处理队列而非直接跳过
 		const modifyRef = this.app.vault.on('modify', (file) => {
 			if (file instanceof TFile && file.extension === 'md') {
 				Logger.debug('MarkdownDataSource', `File modify event received: ${file.path}`);
-
-				if (this.processingFiles.has(file.path)) {
-					Logger.debug('MarkdownDataSource', `File already being processed, skipping: ${file.path}`);
-					return;
-				}
 
 				const existingTimer = this.debounceTimers.get(file.path);
 				if (existingTimer !== undefined) {
@@ -306,50 +360,53 @@ export class MarkdownDataSource implements IDataSource {
 				}
 
 				const timer = window.setTimeout(async () => {
-					this.processingFiles.add(file.path);
-					Logger.debug('MarkdownDataSource', `Processing file modification: ${file.path}`);
-
-					const startTime = performance.now();
-
-					// 获取旧的任务ID列表
-					const oldCache = this.cache.get(file.path);
-					const oldTaskIds = oldCache?.taskIds || [];
-
-					// 解析新任务
-					const parseResult = await this.parseFileForScan(file.path);
-					if (parseResult) {
-						this.cache.set(file.path, parseResult.cache);
-					} else {
-						this.cache.delete(file.path);
+					// 【修复Bug 2】如果文件正在处理，标记为待处理而非跳过
+					if (this.processingFiles.has(file.path)) {
+						this.pendingFileChecks.add(file.path);
+						Logger.debug('MarkdownDataSource', `File pending for recheck: ${file.path}`);
+						return;
 					}
 
-					if (this.changeHandler && oldCache) {
-						// 检测变化
-						const changes = this.detectChangesByIds(oldTaskIds, parseResult?.tasks || []);
-						if (changes) {
-							const elapsed = performance.now() - startTime;
-							Logger.debug('MarkdownDataSource', `Changes detected in ${elapsed.toFixed(2)}ms:`, {
-								created: changes.created.length,
-								updated: changes.updated.length,
-								deleted: changes.deleted.length
-							});
-							this.changeHandler(changes);
-						} else {
-							Logger.debug('MarkdownDataSource', `No actual changes detected for ${file.path}`);
-						}
-					}
-
+					await this.processFileModification(file.path);
 					this.debounceTimers.delete(file.path);
-					this.processingFiles.delete(file.path);
-
-					const elapsed = performance.now() - startTime;
-					Logger.debug('MarkdownDataSource', `File modification processed in ${elapsed.toFixed(2)}ms`);
 				}, this.DEBOUNCE_MS);
 
 				this.debounceTimers.set(file.path, timer);
 			}
 		});
 		this.vaultEventRefs.push(modifyRef);
+
+		// 【修复Bug 1】监听文件创建
+		// QuickAdd 等插件创建新文件时需要此监听器才能检测到新任务
+		const createRef = this.app.vault.on('create', async (file) => {
+			if (file instanceof TFile && file.extension === 'md') {
+				Logger.debug('MarkdownDataSource', `File create event: ${file.path}`);
+
+				const existingTimer = this.debounceTimers.get(file.path);
+				if (existingTimer !== undefined) {
+					clearTimeout(existingTimer);
+				}
+
+				const timer = window.setTimeout(async () => {
+					const parseResult = await this.parseFileForScan(file.path);
+					if (parseResult && this.changeHandler) {
+						// 新文件的所有任务都是新增的
+						Logger.debug('MarkdownDataSource', `New file created with ${parseResult.tasks.length} tasks: ${file.path}`);
+						this.changeHandler({
+							sourceId: this.sourceId,
+							created: parseResult.tasks,
+							updated: [],
+							deleted: []
+						});
+						this.cache.set(file.path, parseResult.cache);
+					}
+					this.debounceTimers.delete(file.path);
+				}, this.DEBOUNCE_MS);
+
+				this.debounceTimers.set(file.path, timer);
+			}
+		});
+		this.vaultEventRefs.push(createRef);
 
 		// 监听文件删除
 		const deleteRef = this.app.vault.on('delete', (file) => {
@@ -395,6 +452,40 @@ export class MarkdownDataSource implements IDataSource {
 			}
 		});
 		this.vaultEventRefs.push(renameRef);
+
+		// 【开发模式】监听 metadataCache 变化
+		// 用于调试和验证问题，避免生产环境性能开销
+		// 通过设置插件实例的 __dev_mode__ 属性为 true 来启用
+		const isDev = (this.app as any).plugins?.plugins?.['obsidian-gantt-calendar']?.['__dev_mode__'] === true;
+
+		if (isDev) {
+			Logger.debug('MarkdownDataSource', 'Dev mode: Adding metadataCache listener');
+
+			const metadataRef = this.app.metadataCache.on('changed', (file) => {
+				if (file instanceof TFile && file.extension === 'md') {
+					Logger.debug('MarkdownDataSource', `[DEV] Metadata changed: ${file.path}`);
+
+					// 使用相同的防抖机制
+					const existingTimer = this.debounceTimers.get(file.path);
+					if (existingTimer !== undefined) {
+						clearTimeout(existingTimer);
+					}
+
+					const timer = window.setTimeout(async () => {
+						// 如果文件正在处理，标记为待处理
+						if (this.processingFiles.has(file.path)) {
+							this.pendingFileChecks.add(file.path);
+							return;
+						}
+						await this.processFileModification(file.path);
+						this.debounceTimers.delete(file.path);
+					}, this.DEBOUNCE_MS);
+
+					this.debounceTimers.set(file.path, timer);
+				}
+			});
+			this.vaultEventRefs.push(metadataRef);
+		}
 	}
 
 	/**

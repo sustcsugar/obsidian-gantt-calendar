@@ -35,34 +35,46 @@ const PRIORITY_WEIGHTS: Record<string, number> = {
 /**
  * 比较可选日期
  * 无日期的任务排在后面
+ * 【修复】日期相同时，按描述文本二级排序，确保顺序一致
  */
-function compareDates(a: Date | undefined, b: Date | undefined): number {
-	if (!a && !b) return 0;
+function compareDates(a: Date | undefined, b: Date | undefined, taskA: GCTask, taskB: GCTask): number {
+	if (!a && !b) {
+		// 都没有日期时，按描述文本排序
+		return taskA.description.localeCompare(taskB.description, 'zh-CN', { numeric: true });
+	}
 	if (!a) return 1;  // a 无日期排在后面
 	if (!b) return -1; // b 无日期排在后面
-	return a.getTime() - b.getTime();
+	const timeDiff = a.getTime() - b.getTime();
+	if (timeDiff !== 0) return timeDiff;
+	// 日期相同时，按描述文本排序
+	return taskA.description.localeCompare(taskB.description, 'zh-CN', { numeric: true });
 }
 
 /**
  * 各字段的比较函数
+ * 【修复】所有比较函数都添加了二级排序（按描述文本），确保主排序值相同时顺序一致
  */
 const comparators: Record<SortField, (a: GCTask, b: GCTask) => number> = {
 	priority: (a, b) => {
 		// 所有任务都应该有优先级，默认为 'normal'
 		const aPriority = PRIORITY_WEIGHTS[a.priority || 'normal'] ?? 2;
 		const bPriority = PRIORITY_WEIGHTS[b.priority || 'normal'] ?? 2;
-		return aPriority - bPriority; // 升序：低优先级在前
+		if (aPriority !== bPriority) {
+			return aPriority - bPriority; // 升序：低优先级在前
+		}
+		// 【修复】优先级相同时，按描述文本字母排序
+		return a.description.localeCompare(b.description, 'zh-CN', { numeric: true });
 	},
 
 	description: (a, b) => {
 		return a.description.localeCompare(b.description, 'zh-CN', { numeric: true });
 	},
 
-	createdDate: (a, b) => compareDates(a.createdDate, b.createdDate),
-	startDate: (a, b) => compareDates(a.startDate, b.startDate),
-	scheduledDate: (a, b) => compareDates(a.scheduledDate, b.scheduledDate),
-	dueDate: (a, b) => compareDates(a.dueDate, b.dueDate),
-	completionDate: (a, b) => compareDates(a.completionDate, b.completionDate),
+	createdDate: (a, b) => compareDates(a.createdDate, b.createdDate, a, b),
+	startDate: (a, b) => compareDates(a.startDate, b.startDate, a, b),
+	scheduledDate: (a, b) => compareDates(a.scheduledDate, b.scheduledDate, a, b),
+	dueDate: (a, b) => compareDates(a.dueDate, b.dueDate, a, b),
+	completionDate: (a, b) => compareDates(a.completionDate, b.completionDate, a, b),
 };
 
 /**
