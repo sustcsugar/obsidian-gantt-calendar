@@ -1,6 +1,7 @@
+import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { isToday, isThisWeek, isThisMonth } from '../dateUtils/dateUtilsIndex';
-import type { GCTask, SortState } from '../types';
+import type { GCTask, SortState, StatusFilterState, TagFilterState } from '../types';
 import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
@@ -27,6 +28,74 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	// 任务列表容器缓存
 	private taskListContainer: HTMLElement | null = null;
 
+	// 设置前缀
+	private readonly SETTINGS_PREFIX = 'taskView';
+
+	constructor(app: App, plugin: any) {
+		super(app, plugin);
+		// 从设置加载初始状态
+		this.initializeFilterStates(this.SETTINGS_PREFIX);
+		this.initializeSortState();
+		this.initializeTaskViewSpecificStates();
+	}
+
+	/**
+	 * 初始化排序状态
+	 */
+	private initializeSortState(): void {
+		const settings = this.plugin?.settings;
+		if (!settings) return;
+
+		const savedField = settings[`${this.SETTINGS_PREFIX}SortField`];
+		const savedOrder = settings[`${this.SETTINGS_PREFIX}SortOrder`];
+		if (savedField && savedOrder) {
+			this.sortState = { field: savedField, order: savedOrder };
+		}
+	}
+
+	/**
+	 * 初始化 TaskView 特有状态
+	 */
+	private initializeTaskViewSpecificStates(): void {
+		const settings = this.plugin?.settings;
+		if (!settings) return;
+
+		if (settings.taskViewTimeFieldFilter) {
+			this.timeFieldFilter = settings.taskViewTimeFieldFilter;
+		}
+		if (settings.taskViewDateRangeMode) {
+			this.dateRangeMode = settings.taskViewDateRangeMode;
+		}
+	}
+
+	/**
+	 * 保存排序状态
+	 */
+	private async saveSortState(): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings[`${this.SETTINGS_PREFIX}SortField`] = this.sortState.field;
+		this.plugin.settings[`${this.SETTINGS_PREFIX}SortOrder`] = this.sortState.order;
+		await this.plugin.saveSettings();
+	}
+
+	/**
+	 * 保存时间字段筛选
+	 */
+	private async saveTimeFieldFilter(): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings.taskViewTimeFieldFilter = this.timeFieldFilter;
+		await this.plugin.saveSettings();
+	}
+
+	/**
+	 * 保存日期范围模式
+	 */
+	private async saveDateRangeMode(): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings.taskViewDateRangeMode = this.dateRangeMode;
+		await this.plugin.saveSettings();
+	}
+
 	// ===== Getter/Setter 方法 =====
 
 	public getTimeFilterField(): 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate' {
@@ -35,6 +104,9 @@ export class TaskViewRenderer extends BaseViewRenderer {
 
 	public setTimeFilterField(value: any): void {
 		this.timeFieldFilter = value;
+		this.saveTimeFieldFilter().catch(err => {
+			Logger.error('TaskView', 'Failed to save time field filter', err);
+		});
 	}
 
 	public getSpecificDate(): Date | null {
@@ -51,6 +123,9 @@ export class TaskViewRenderer extends BaseViewRenderer {
 
 	public setDateRangeMode(mode: 'all' | 'day' | 'week' | 'month' | 'custom'): void {
 		this.dateRangeMode = mode;
+		this.saveDateRangeMode().catch(err => {
+			Logger.error('TaskView', 'Failed to save date range mode', err);
+		});
 	}
 
 	public getSortState(): SortState {
@@ -59,6 +134,29 @@ export class TaskViewRenderer extends BaseViewRenderer {
 
 	public setSortState(state: SortState): void {
 		this.sortState = state;
+		this.saveSortState().catch(err => {
+			Logger.error('TaskView', 'Failed to save sort state', err);
+		});
+	}
+
+	/**
+	 * 重写状态筛选 setter 以支持持久化
+	 */
+	public setStatusFilterState(state: StatusFilterState): void {
+		super.setStatusFilterState(state);
+		this.saveStatusFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('TaskView', 'Failed to save status filter', err);
+		});
+	}
+
+	/**
+	 * 重写标签筛选 setter 以支持持久化
+	 */
+	public setTagFilterState(state: TagFilterState): void {
+		super.setTagFilterState(state);
+		this.saveTagFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('TaskView', 'Failed to save tag filter', err);
+		});
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {

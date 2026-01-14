@@ -1,6 +1,11 @@
 import type GanttCalendarPlugin from '../../main';
-import type { SortField, SortOrder } from '../types';
+import type { SortField, SortOrder, TagFilterOperator } from '../types';
 import type { TaskStatus } from '../tasks/taskStatus';
+
+/**
+ * 日期字段类型
+ */
+type DateFieldType = 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate';
 
 /**
  * Gantt Calendar Plugin Settings Interface
@@ -34,6 +39,40 @@ export interface GanttCalendarSettings {
 	templaterTemplatePath: string; // Templater 模板路径
 	defaultTaskPriority: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal'; // 默认任务优先级
 	enableDebugMode: boolean; // 是否启用开发者模式（详细日志）
+
+	// ========== 持久化筛选和排序状态 ==========
+
+	// TaskView 状态
+	taskViewSortField: SortField;
+	taskViewSortOrder: SortOrder;
+	taskViewSelectedStatuses: string[];
+	taskViewSelectedTags: string[];
+	taskViewTagOperator: TagFilterOperator;
+	taskViewTimeFieldFilter: DateFieldType;
+	taskViewDateRangeMode: 'all' | 'day' | 'week' | 'month' | 'custom';
+
+	// DayView 状态
+	dayViewSortField: SortField;
+	dayViewSortOrder: SortOrder;
+	dayViewSelectedStatuses: string[];
+	dayViewSelectedTags: string[];
+	dayViewTagOperator: TagFilterOperator;
+
+	// WeekView 状态
+	weekViewSortField: SortField;
+	weekViewSortOrder: SortOrder;
+	weekViewSelectedStatuses: string[];
+	weekViewSelectedTags: string[];
+	weekViewTagOperator: TagFilterOperator;
+
+	// MonthView 状态
+	monthViewSelectedStatuses: string[];
+	monthViewSelectedTags: string[];
+	monthViewTagOperator: TagFilterOperator;
+
+	// YearView 状态
+	yearViewSelectedTags: string[];
+	yearViewTagOperator: TagFilterOperator;
 }
 
 /**

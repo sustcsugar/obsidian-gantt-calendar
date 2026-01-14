@@ -33,6 +33,40 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	templaterTemplatePath: '', // 默认模板路径
 	defaultTaskPriority: 'medium', // 默认中等优先级
 	enableDebugMode: false, // 默认关闭开发者模式
+
+	// ========== 持久化筛选和排序状态默认值 ==========
+
+	// TaskView
+	taskViewSortField: 'dueDate',
+	taskViewSortOrder: 'asc',
+	taskViewSelectedStatuses: ['todo'],
+	taskViewSelectedTags: [],
+	taskViewTagOperator: 'OR',
+	taskViewTimeFieldFilter: 'dueDate',
+	taskViewDateRangeMode: 'week',
+
+	// DayView
+	dayViewSortField: 'dueDate',
+	dayViewSortOrder: 'asc',
+	dayViewSelectedStatuses: ['todo'],
+	dayViewSelectedTags: [],
+	dayViewTagOperator: 'OR',
+
+	// WeekView
+	weekViewSortField: 'priority',
+	weekViewSortOrder: 'desc',
+	weekViewSelectedStatuses: ['todo'],
+	weekViewSelectedTags: [],
+	weekViewTagOperator: 'OR',
+
+	// MonthView
+	monthViewSelectedStatuses: ['todo'],
+	monthViewSelectedTags: [],
+	monthViewTagOperator: 'OR',
+
+	// YearView
+	yearViewSelectedTags: [],
+	yearViewTagOperator: 'OR',
 };
 
 /**

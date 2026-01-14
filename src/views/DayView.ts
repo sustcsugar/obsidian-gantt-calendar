@@ -1,7 +1,7 @@
-import { TFile, MarkdownRenderer } from 'obsidian';
+import { TFile, MarkdownRenderer, App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
-import type { GCTask, SortState } from '../types';
+import type { GCTask, SortState, StatusFilterState, TagFilterState } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardClasses, DayViewClasses, withModifiers } from '../utils/bem';
@@ -15,12 +15,68 @@ export class DayViewRenderer extends BaseViewRenderer {
 	// 排序状态
 	private sortState: SortState = DEFAULT_SORT_STATE;
 
+	// 设置前缀
+	private readonly SETTINGS_PREFIX = 'dayView';
+
+	constructor(app: App, plugin: any) {
+		super(app, plugin);
+		this.initializeFilterStates(this.SETTINGS_PREFIX);
+		this.initializeSortState();
+	}
+
+	/**
+	 * 初始化排序状态
+	 */
+	private initializeSortState(): void {
+		const settings = this.plugin?.settings;
+		if (!settings) return;
+
+		const savedField = settings[`${this.SETTINGS_PREFIX}SortField`];
+		const savedOrder = settings[`${this.SETTINGS_PREFIX}SortOrder`];
+		if (savedField && savedOrder) {
+			this.sortState = { field: savedField, order: savedOrder };
+		}
+	}
+
+	/**
+	 * 保存排序状态
+	 */
+	private async saveSortState(): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings[`${this.SETTINGS_PREFIX}SortField`] = this.sortState.field;
+		this.plugin.settings[`${this.SETTINGS_PREFIX}SortOrder`] = this.sortState.order;
+		await this.plugin.saveSettings();
+	}
+
 	public getSortState(): SortState {
 		return this.sortState;
 	}
 
 	public setSortState(state: SortState): void {
 		this.sortState = state;
+		this.saveSortState().catch(err => {
+			Logger.error('DayView', 'Failed to save sort state', err);
+		});
+	}
+
+	/**
+	 * 重写状态筛选 setter 以支持持久化
+	 */
+	public setStatusFilterState(state: StatusFilterState): void {
+		super.setStatusFilterState(state);
+		this.saveStatusFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('DayView', 'Failed to save status filter', err);
+		});
+	}
+
+	/**
+	 * 重写标签筛选 setter 以支持持久化
+	 */
+	public setTagFilterState(state: TagFilterState): void {
+		super.setTagFilterState(state);
+		this.saveTagFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('DayView', 'Failed to save tag filter', err);
+		});
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {

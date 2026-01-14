@@ -1,8 +1,10 @@
+import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
-import type { GCTask } from '../types';
+import type { GCTask, TagFilterState } from '../types';
 import { YearViewClasses } from '../utils/bem';
 import { YearViewLayoutManager } from '../utils/yearViewLayout';
+import { Logger } from '../utils/logger';
 
 /**
  * 年视图布局类型
@@ -13,6 +15,23 @@ type YearViewLayout = '4x3' | '3x4' | '2x6' | '1x12';
  * 年视图渲染器
  */
 export class YearViewRenderer extends BaseViewRenderer {
+	// 设置前缀
+	private readonly SETTINGS_PREFIX = 'yearView';
+
+	constructor(app: App, plugin: any) {
+		super(app, plugin);
+		this.initializeFilterStates(this.SETTINGS_PREFIX);
+	}
+
+	/**
+	 * 重写标签筛选 setter 以支持持久化
+	 */
+	public setTagFilterState(state: TagFilterState): void {
+		super.setTagFilterState(state);
+		this.saveTagFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('YearView', 'Failed to save tag filter', err);
+		});
+	}
 	private yearContainer: HTMLElement | null = null;
 	private monthsGrid: HTMLElement | null = null;
 	private resizeObserver: ResizeObserver | null = null;

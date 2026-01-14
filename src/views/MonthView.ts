@@ -1,7 +1,7 @@
-import { Notice } from 'obsidian';
+import { Notice, App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
-import type { GCTask } from '../types';
+import type { GCTask, StatusFilterState, TagFilterState } from '../types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
 import { MonthViewClasses, TaskCardClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
@@ -12,6 +12,33 @@ import { updateTaskDateField } from '../tasks/taskUpdater';
  * 月视图渲染器
  */
 export class MonthViewRenderer extends BaseViewRenderer {
+	// 设置前缀
+	private readonly SETTINGS_PREFIX = 'monthView';
+
+	constructor(app: App, plugin: any) {
+		super(app, plugin);
+		this.initializeFilterStates(this.SETTINGS_PREFIX);
+	}
+
+	/**
+	 * 重写状态筛选 setter 以支持持久化
+	 */
+	public setStatusFilterState(state: StatusFilterState): void {
+		super.setStatusFilterState(state);
+		this.saveStatusFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('MonthView', 'Failed to save status filter', err);
+		});
+	}
+
+	/**
+	 * 重写标签筛选 setter 以支持持久化
+	 */
+	public setTagFilterState(state: TagFilterState): void {
+		super.setTagFilterState(state);
+		this.saveTagFilterState(this.SETTINGS_PREFIX).catch(err => {
+			Logger.error('MonthView', 'Failed to save tag filter', err);
+		});
+	}
 	/**
 	 * 设置日期格子的拖放功能
 	 */

@@ -138,9 +138,57 @@ export abstract class BaseViewRenderer {
 
 	/**
 	 * 设置状态筛选状态
+	 * 子类可重写此方法以实现持久化
 	 */
 	public setStatusFilterState(state: StatusFilterState): void {
 		this.statusFilterState = state;
+	}
+
+	/**
+	 * 从插件设置初始化筛选状态
+	 * @param settingsPrefix 设置字段前缀（如 'taskView', 'dayView'）
+	 */
+	protected initializeFilterStates(settingsPrefix: string): void {
+		const settings = this.plugin?.settings;
+		if (!settings) return;
+
+		// 加载状态筛选
+		const savedStatuses = settings[`${settingsPrefix}SelectedStatuses`];
+		if (savedStatuses !== undefined) {
+			this.statusFilterState = { selectedStatuses: savedStatuses };
+		}
+
+		// 加载标签筛选
+		const savedTags = settings[`${settingsPrefix}SelectedTags`];
+		const savedOperator = settings[`${settingsPrefix}TagOperator`];
+		if (savedTags !== undefined || savedOperator !== undefined) {
+			this.tagFilterState = {
+				selectedTags: savedTags || [],
+				operator: savedOperator || 'OR'
+			};
+		}
+	}
+
+	/**
+	 * 保存状态筛选到设置
+	 */
+	protected async saveStatusFilterState(settingsPrefix: string): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings[`${settingsPrefix}SelectedStatuses`] =
+			this.statusFilterState.selectedStatuses;
+		await this.plugin.saveSettings();
+	}
+
+	/**
+	 * 保存标签筛选到设置
+	 */
+	protected async saveTagFilterState(settingsPrefix: string): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings[`${settingsPrefix}SelectedTags`] =
+			this.tagFilterState.selectedTags;
+		this.plugin.settings[`${settingsPrefix}TagOperator`] =
+			this.tagFilterState.operator;
+		await this.plugin.saveSettings();
 	}
 
 	/**
