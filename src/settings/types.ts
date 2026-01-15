@@ -81,6 +81,7 @@ export interface GanttCalendarSettings {
 export interface BuilderConfig {
 	containerEl: HTMLElement;
 	plugin: GanttCalendarPlugin;
+	onRefreshSettings?: () => void; // 刷新设置面板的回调函数
 }
 
 /**

@@ -47,7 +47,6 @@ export class ToolbarLeft {
 		VIEW_BUTTONS.forEach((config) => {
 			const btn = buttonGroup.createEl('button', {
 				attr: {
-					'aria-label': config.ariaLabel,
 					'data-view-type': config.type,
 				},
 			});

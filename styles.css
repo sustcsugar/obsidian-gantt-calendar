@@ -344,6 +344,8 @@ Author: sugar
 	align-items: center;
 	justify-content: center;
 	min-width: 0;
+	/* 防止内容溢出 */
+	overflow: hidden;
 }
 
 .gc-toolbar__right {
@@ -675,6 +677,10 @@ Author: sugar
 	color: var(--text-normal);
 	text-align: center;
 	white-space: nowrap;
+	/* 防止标题溢出，显示省略号 */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
 }
 
 /* BEM: 视图选择器 */
@@ -771,19 +777,62 @@ Author: sugar
 	transform: translateY(-1px);
 }
 
-/* 响应式适配 - 小屏幕隐藏文字只显示图标 */
+/* ============================================
+   响应式适配 - 渐进式布局优化
+   ============================================ */
+
+/* 中等屏幕 (< 900px) - 视图按钮只显示图标 */
 @media (max-width: 900px) {
-	.gc-toolbar__view-selector-btn {
-		padding: 6px 10px;
-		min-width: 36px;
+	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
+		padding: 6px 8px;
+		min-width: 32px;
 	}
 
-	.gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-label {
 		display: none;
 	}
 
-	.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
 		display: inline;
+	}
+}
+
+/* 小屏幕 (< 700px) - 隐藏工具栏部分次要功能 */
+@media (max-width: 700px) {
+	/* 减小工具栏内边距 */
+	.calendar-toolbar,
+	.gc-toolbar {
+		gap: 8px;
+	}
+
+	/* 缩小按钮间距 */
+	.calendar-toolbar-left,
+	.calendar-toolbar-center,
+	.gc-toolbar__left,
+	.gc-toolbar__center,
+	.gc-toolbar__right {
+		gap: 6px;
+	}
+}
+
+/* 极小屏幕 (< 550px) - 进一步优化 */
+@media (max-width: 550px) {
+	/* 激活按钮也只显示图标 */
+	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
+		display: none;
+	}
+
+	/* 标题字体缩小 */
+	.calendar-title-display,
+	.gc-toolbar__title-display {
+		font-size: 13px;
+	}
+
+	/* 导航按钮缩小 */
+	.calendar-nav-btn,
+	.gc-nav__btn {
+		padding: 4px 8px;
+		font-size: 12px;
 	}
 }
 
@@ -2607,6 +2656,27 @@ Author: sugar
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
+/* Task Status Setting */
+.task-status-setting {
+	margin-top: 12px;
+}
+
+.task-status-label {
+	padding: 0 10px;
+	margin-bottom: 12px;
+}
+
+.task-status-name {
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 4px;
+}
+
+.task-status-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
 /* ========================================
    LAYER 7: Themes (主题层)
    Visual States & Modifiers
@@ -2855,11 +2925,12 @@ Author: sugar
 }
 
 /* 7.6 Text Decoration (已完成任务) */
-.gc-day-view__task-list .gc-task-card--day.gc-task-card--completed .gc-task-card__text,
-.gc-week-view__tasks-grid .gc-task-card--week.gc-task-card--completed .gc-task-card__text,
-.gc-month-view__tasks .gc-task-card--month.gc-task-card--completed .gc-task-card__text,
-.gc-view--task .gc-task-card--task.gc-task-card--completed .gc-task-card__text,
-.gc-task-card--gantt.gc-task-card--completed .gc-task-card__text {
+/* 排除自定义状态的已完成任务，使用自定义文字颜色 */
+.gc-day-view__task-list .gc-task-card--day.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
+.gc-week-view__tasks-grid .gc-task-card--week.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
+.gc-month-view__tasks .gc-task-card--month.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
+.gc-view--task .gc-task-card--task.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
+.gc-task-card--gantt.gc-task-card--completed:not(.task-with-status) .gc-task-card__text {
 	text-decoration: line-through;
 	color: var(--text-muted);
 }

@@ -16,10 +16,12 @@ export class AddCustomStatusModal extends Modal {
 	private textColorInput: HTMLInputElement;
 	private nameError?: HTMLElement;
 	private symbolError: HTMLElement;
+	private onStatusAdded?: () => void; // 添加状态后的回调
 
-	constructor(app: App, plugin: GanttCalendarPlugin) {
+	constructor(app: App, plugin: GanttCalendarPlugin, onStatusAdded?: () => void) {
 		super(app);
 		this.plugin = plugin;
+		this.onStatusAdded = onStatusAdded;
 	}
 
 	onOpen() {
@@ -220,9 +222,10 @@ export class AddCustomStatusModal extends Modal {
 		this.plugin.refreshCalendarViews();
 		this.close();
 
-		// 刷新设置界面 - 重新调用 display
-		// 由于 Modal 和 SettingTab 在不同的上下文中，这里直接关闭即可
-		// 用户可以手动刷新设置页面查看新状态
+		// 通知设置面板刷新
+		if (this.onStatusAdded) {
+			this.onStatusAdded();
+		}
 	}
 
 	private showNameError(message: string): void {
