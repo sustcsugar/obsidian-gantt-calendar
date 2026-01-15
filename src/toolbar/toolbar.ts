@@ -10,6 +10,7 @@ import { ToolbarCenter } from './toolbar-center';
 import { ToolbarRightCalendar } from './toolbar-right-calendar';
 import { ToolbarRightTask } from './toolbar-right-task';
 import { ToolbarRightGantt } from './toolbar-right-gantt';
+import { ToolbarResponsiveManager } from './toolbar-responsive';
 import { ToolbarClasses } from '../utils/bem';
 
 /**
@@ -22,6 +23,7 @@ export class Toolbar {
 	private rightCalendarSection: ToolbarRightCalendar;
 	private rightTaskSection: ToolbarRightTask;
 	private rightGanttSection: ToolbarRightGantt;
+	private responsiveManager: ToolbarResponsiveManager;
 
 	constructor() {
 		this.leftSection = new ToolbarLeft();
@@ -29,6 +31,7 @@ export class Toolbar {
 		this.rightCalendarSection = new ToolbarRightCalendar();
 		this.rightTaskSection = new ToolbarRightTask();
 		this.rightGanttSection = new ToolbarRightGantt();
+		this.responsiveManager = new ToolbarResponsiveManager();
 	}
 
 	/**
@@ -100,6 +103,16 @@ export class Toolbar {
 				config.plugin
 			);
 		}
+
+		// 启动响应式监听
+		this.responsiveManager.observe(container, centerContainer, rightContainer);
+	}
+
+	/**
+	 * 清理资源
+	 */
+	destroy(): void {
+		this.responsiveManager.disconnect();
 	}
 }
 

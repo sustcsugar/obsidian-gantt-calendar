@@ -39,6 +39,8 @@ export function renderSortButton(
 
 	// 创建按钮容器
 	const buttonContainer = container.createDiv(ToolbarClasses.components.sort.containerWrapper);
+	// 添加响应式优先级类（第一优先级隐藏）
+	buttonContainer.addClass(ToolbarClasses.priority.priority1);
 
 	// 创建排序按钮
 	const sortBtn = buttonContainer.createEl('button', {

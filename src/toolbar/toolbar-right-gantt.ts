@@ -99,7 +99,10 @@ export class ToolbarRightGantt {
 
 		// 创建任务按钮
 		if (plugin) {
-			renderCreateTaskButton(container, {
+			// 创建包装容器以便添加响应式优先级类
+			const createTaskWrapper = container.createDiv();
+			createTaskWrapper.addClass(ToolbarClasses.priority.priority3);
+			renderCreateTaskButton(createTaskWrapper, {
 				plugin: plugin,
 				buttonClass: ToolbarClasses.components.navButtons.btn
 			});

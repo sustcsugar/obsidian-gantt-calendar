@@ -21,6 +21,8 @@ export function renderStatusFilterButton(
 
 	// 1. 创建按钮容器
 	const buttonContainer = container.createDiv(classes.container);
+	// 添加响应式优先级类（第一优先级隐藏）
+	buttonContainer.addClass(ToolbarClasses.priority.priority1);
 
 	// 2. 创建筛选按钮
 	const statusBtn = buttonContainer.createEl('button', {

@@ -75,6 +75,8 @@ export function renderTagFilterButton(
 
 	// 创建按钮容器
 	const buttonContainer = container.createDiv(classes.containerWrapper);
+	// 添加响应式优先级类（第二优先级隐藏）
+	buttonContainer.addClass(ToolbarClasses.priority.priority2);
 
 	// 创建标签筛选按钮
 	const tagBtn = buttonContainer.createEl('button', {

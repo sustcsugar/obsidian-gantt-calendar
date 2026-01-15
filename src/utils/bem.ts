@@ -292,6 +292,16 @@ export const ToolbarClasses = {
 	modifiers: {
 		gantt: bem(BLOCKS.TOOLBAR, undefined, 'gantt'),
 		task: bem(BLOCKS.TOOLBAR, undefined, 'task'),
+		/** 响应式紧凑模式 - 左侧按钮只显示图标 */
+		compact: bem(BLOCKS.TOOLBAR, undefined, 'compact'),
+	},
+
+	/** 响应式项目优先级类 */
+	priority: {
+		hidden: bem(BLOCKS.TOOLBAR, 'item', 'hidden'),
+		priority1: bem(BLOCKS.TOOLBAR, 'item', 'priority-1'),
+		priority2: bem(BLOCKS.TOOLBAR, 'item', 'priority-2'),
+		priority3: bem(BLOCKS.TOOLBAR, 'item', 'priority-3'),
 	},
 
 	/** Components - 工具栏内部组件 */

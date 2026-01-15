@@ -710,24 +710,29 @@ Author: sugar
 }
 
 /* 单个按钮 */
-/* 使用更高特异性的选择器，覆盖主题的 button 样式 */
-.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
+/* 使用 button 元素选择器提高特异性 (0,2,1)，并使用 !important 确保核心样式不被覆盖 */
+.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
-	padding: 4px 8px;
-	border: none;
-	border-radius: 6px; /* rounded */
-	background-color: transparent;
-	/* text-gray-400 */
-	color: rgb(127, 133, 142);
+	padding: 4px 8px !important;
+	border: none !important;
+	border-radius: 6px !important; /* rounded */
+	background-color: transparent !important;
+	/* 使用 Obsidian 变量确保主题兼容性 */
+	color: var(--text-normal);
 	cursor: pointer;
 	/* 分属性过渡，背景色快速，transform 中速，阴影慢速 */
 	transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, font-weight 0.1s ease;
-	font-size: 13px;
+	font-size: 13px !important;
 	font-weight: 500;
 	min-width: 0;
+	/* 重置可能的主题样式 */
+	box-shadow: none !important;
+	text-shadow: none !important;
+	/* 防止主题设置背景图片 */
+	background-image: none !important;
 }
 
 /* 按钮内容容器 */
@@ -754,45 +759,72 @@ Author: sugar
 }
 
 /* 悬停状态 - 复用激活按钮的凸起效果 */
-.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn:hover:not(.gc-toolbar__view-selector-btn--active) {
+.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn:hover:not(.gc-toolbar__view-selector-btn--active) {
 	/* 使用强调色混合半透明背景，避免使用 opacity 实现平滑过渡 */
-	background-color: color-mix(in srgb, var(--interactive-accent) 70%, transparent);
+	background-color: color-mix(in srgb, var(--interactive-accent) 70%, transparent) !important;
 	/* 凸起阴影效果 */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 	/* 白色文字 */
-	color: var(--text-on-accent);
+	color: var(--text-on-accent) !important;
 	transform: translateY(-1px);
 }
 
 /* 激活状态 - 凸起效果 */
-/* 使用更高特异性的选择器，覆盖主题的 button 样式 */
-.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active {
+/* 使用 button 元素选择器提高特异性 (0,2,1)，并使用 !important 确保核心样式不被覆盖 */
+.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active {
 	/* 使用 Obsidian 强调色作为背景，使激活状态更明显 */
-	background-color: var(--interactive-accent);
+	background-color: var(--interactive-accent) !important;
 	/* 凸起阴影效果 */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 	/* 白色文字 */
-	color: var(--text-on-accent);
+	color: var(--text-on-accent) !important;
 	font-weight: 600;
 	transform: translateY(-1px);
 }
 
 /* ============================================
-   响应式适配 - 渐进式布局优化
+   响应式适配 - 基于容器宽度的响应式布局
    ============================================ */
 
+/* 紧凑模式 - 当中间区域文本溢出时，左侧视图按钮只显示图标 */
+.gc-toolbar--compact .gc-toolbar__view-selector-group .gc-toolbar__view-selector-label {
+	display: none !important;
+}
+
+.gc-toolbar--compact .gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
+	padding: 6px 10px;
+	min-width: 36px;
+}
+
+/* 按钮隐藏状态 - 用于响应式管理器动态隐藏 */
+.gc-toolbar__item--hidden {
+	display: none !important;
+}
+
+/* 右侧区域包装容器样式 */
+.gc-toolbar__right > div {
+	display: flex;
+	align-items: center;
+}
+
+/* 平滑过渡效果 */
+.gc-toolbar__right > div {
+	transition: opacity 0.15s ease;
+}
+
+/* 保持原有的媒体查询作为后备方案（针对窗口宽度的响应） */
 /* 中等屏幕 (< 900px) - 视图按钮只显示图标 */
 @media (max-width: 900px) {
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
-		padding: 6px 8px;
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn {
+		padding: 6px 8px !important;
 		min-width: 32px;
 	}
 
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn .gc-toolbar__view-selector-label {
 		display: none;
 	}
 
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
 		display: inline;
 	}
 }
@@ -818,7 +850,7 @@ Author: sugar
 /* 极小屏幕 (< 550px) - 进一步优化 */
 @media (max-width: 550px) {
 	/* 激活按钮也只显示图标 */
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
 		display: none;
 	}
 
