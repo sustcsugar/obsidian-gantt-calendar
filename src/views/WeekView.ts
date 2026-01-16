@@ -108,6 +108,8 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		const tasksGrid = weekGrid.createDiv(WeekViewClasses.elements.tasksGrid);
 		weekData.days.forEach((day) => {
 			const dayTasksColumn = tasksGrid.createDiv(WeekViewClasses.elements.tasksColumn);
+			// 添加日期标识，用于增量刷新时定位
+			dayTasksColumn.dataset.date = day.date.toISOString();
 			if (day.isToday) {
 				dayTasksColumn.addClass(WeekViewClasses.modifiers.tasksColumnToday);
 			}
@@ -117,6 +119,24 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 			// 设置拖拽目标
 			this.setupDragDropForColumn(dayTasksColumn, day.date);
+		});
+	}
+
+	/**
+	 * 增量刷新：只重新加载任务内容，不重建DOM
+	 */
+	public refreshTasks(): void {
+		const container = document.querySelector('.gc-view.gc-view--week') as HTMLElement;
+		if (!container) return;
+
+		// 获取所有任务列
+		const taskColumns = container.querySelectorAll('.gc-week-view__tasks-column');
+		taskColumns.forEach((column) => {
+			const dateStr = (column as HTMLElement).dataset.date;
+			if (dateStr) {
+				const date = new Date(dateStr);
+				this.loadWeekViewTasks(column as HTMLElement, date);
+			}
 		});
 	}
 
@@ -234,11 +254,8 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				// 隐藏 tooltip
 				const tooltipManager = TooltipManager.getInstance(this.plugin);
 				tooltipManager.hide();
-				// 刷新当前周视图 - 找到父级容器而不是当前的 view 元素
-				const viewContainer = container.closest('.calendar-content') as HTMLElement;
-				if (viewContainer) {
-					this.render(viewContainer, new Date());
-				}
+				// 增量刷新：只更新任务，不重建DOM
+				this.refreshTasks();
 			},
 		}).render();
 	}

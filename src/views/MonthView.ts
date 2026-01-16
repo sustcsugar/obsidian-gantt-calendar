@@ -139,32 +139,41 @@ export class MonthViewRenderer extends BaseViewRenderer {
 		const month = currentDate.getMonth() + 1;
 		const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));
 
+		// 使用单一Grid布局：7行8列（1行星期标题 + 6行周）
 		const monthContainer = container.createDiv('gc-view gc-view--month');
 
-		// 星期标签
-		const weekdaysDiv = monthContainer.createDiv(MonthViewClasses.elements.weekdays);
-		weekdaysDiv.createEl('div', { text: '', cls: MonthViewClasses.elements.weekday }); // 周编号列占位
+		// 星期标签 - 第一行
 		const startOnMonday = !!(this.plugin?.settings?.startOnMonday);
 		const labelsSunFirst = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 		const labelsMonFirst = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+		// 创建第一列的空占位（第1行第1列）
+		const emptyPlaceholder = monthContainer.createEl('div', { cls: MonthViewClasses.elements.weekday });
+		emptyPlaceholder.classList.add('gc-month-view__weekday--empty');
+
+		// 创建7个星期标签（第1行第2-8列）
 		(startOnMonday ? labelsMonFirst : labelsSunFirst).forEach((day) => {
-			weekdaysDiv.createEl('div', { text: day, cls: MonthViewClasses.elements.weekday });
+			monthContainer.createEl('div', { text: day, cls: MonthViewClasses.elements.weekday });
 		});
 
-		// 周行
-		const weeksDiv = monthContainer.createDiv(MonthViewClasses.elements.weeks);
-		monthData.weeks.forEach((week) => {
-			const weekDiv = weeksDiv.createDiv(MonthViewClasses.elements.weekRow);
-
-			// 周编号
-			const weekNum = weekDiv.createDiv(MonthViewClasses.elements.weekNumber);
+		// 展平渲染：6行周数据，每行包含1个周编号 + 7个日期格子
+		monthData.weeks.forEach((week, weekIndex) => {
+			// 周编号 - 每周的第1列
+			const weekNum = monthContainer.createDiv(MonthViewClasses.elements.weekNumber);
 			weekNum.createEl('span', { text: `W${week.weekNumber}` });
+			// 设置grid位置：第(weekIndex + 2)行，第1列
+			weekNum.style.gridRow = `${weekIndex + 2}`;
+			weekNum.style.gridColumn = '1';
 
-			// 一周的日期
-			const daysDiv = weekDiv.createDiv(MonthViewClasses.elements.weekDays);
-			week.days.forEach((day) => {
-				const dayEl = daysDiv.createEl('div');
+			// 一周的日期 - 直接放在容器中，设置grid位置
+			week.days.forEach((day, dayIndex) => {
+				const dayEl = monthContainer.createEl('div');
 				dayEl.addClass(MonthViewClasses.elements.dayCell);
+				// 添加日期标识，用于增量刷新时定位
+				dayEl.dataset.date = day.date.toISOString();
+				// 设置grid位置：第(weekIndex + 2)行，第(dayIndex + 2)列
+				dayEl.style.gridRow = `${weekIndex + 2}`;
+				dayEl.style.gridColumn = `${dayIndex + 2}`;
 
 				// 日期头部：包含日期数字和农历文本
 				const dayHeader = dayEl.createDiv(MonthViewClasses.elements.dayHeader);
@@ -219,6 +228,25 @@ export class MonthViewRenderer extends BaseViewRenderer {
 					}
 				};
 			});
+		});
+	}
+
+	/**
+	 * 增量刷新：只重新加载任务内容，不重建DOM
+	 */
+	public refreshTasks(): void {
+		const container = document.querySelector('.gc-view.gc-view--month') as HTMLElement;
+		if (!container) return;
+
+		// 获取所有日期格子的任务容器
+		const taskContainers = container.querySelectorAll('.gc-month-view__tasks');
+		taskContainers.forEach((tasksContainer) => {
+			const dayCell = tasksContainer.parentElement;
+			const dateStr = dayCell?.dataset.date;
+			if (dateStr) {
+				const date = new Date(dateStr);
+				this.loadMonthViewTasks(tasksContainer as HTMLElement, date);
+			}
 		});
 	}
 
@@ -287,11 +315,8 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				// 隐藏 tooltip
 				const tooltipManager = TooltipManager.getInstance(this.plugin);
 				tooltipManager.hide();
-				// 刷新当前月视图
-				const viewContainer = document.querySelector('.calendar-month-view-container');
-				if (viewContainer) {
-					this.render(viewContainer as HTMLElement, new Date());
-				}
+				// 增量刷新：只更新任务，不重建DOM
+				this.refreshTasks();
 			},
 		}).render();
 	}

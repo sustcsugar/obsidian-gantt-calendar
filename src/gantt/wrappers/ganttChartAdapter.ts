@@ -168,6 +168,25 @@ export class GanttChartAdapter {
 	}
 
 	/**
+	 * 获取滚动位置
+	 */
+	getScrollPosition(): { scrollLeft: number; scrollTop: number } {
+		if (this.renderer) {
+			return this.renderer.getScrollPosition();
+		}
+		return { scrollLeft: 0, scrollTop: 0 };
+	}
+
+	/**
+	 * 设置滚动位置
+	 */
+	setScrollPosition(scrollLeft: number, scrollTop: number): void {
+		if (this.renderer) {
+			this.renderer.setScrollPosition(scrollLeft, scrollTop);
+		}
+	}
+
+	/**
 	 * 增量更新任务（不完整重建视图）
 	 */
 	updateTasks(ganttTasks: GanttChartTask[]): void {

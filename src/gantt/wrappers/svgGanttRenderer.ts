@@ -1616,6 +1616,30 @@ export class SvgGanttRenderer {
 	}
 
 	/**
+	 * 获取滚动位置
+	 */
+	getScrollPosition(): { scrollLeft: number; scrollTop: number } {
+		return {
+			scrollLeft: this.ganttContainer?.scrollLeft ?? 0,
+			scrollTop: this.ganttContainer?.scrollTop ?? 0
+		};
+	}
+
+	/**
+	 * 设置滚动位置
+	 */
+	setScrollPosition(scrollLeft: number, scrollTop: number): void {
+		if (this.ganttContainer) {
+			requestAnimationFrame(() => {
+				if (this.ganttContainer) {
+					this.ganttContainer.scrollLeft = scrollLeft;
+					this.ganttContainer.scrollTop = scrollTop;
+				}
+			});
+		}
+	}
+
+	/**
 	 * 销毁渲染器
 	 */
 	destroy(): void {

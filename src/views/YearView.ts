@@ -150,6 +150,8 @@ export class YearViewRenderer extends BaseViewRenderer {
 			monthData.days.forEach((day) => {
 				const dayEl = daysDiv.createEl('div');
 				dayEl.addClass(YearViewClasses.elements.day);
+				// 添加日期标识，用于增量刷新时定位
+				dayEl.dataset.date = `${day.date.getFullYear()}-${(day.date.getMonth() + 1).toString().padStart(2, '0')}-${day.date.getDate().toString().padStart(2, '0')}`;
 
 				// 热力图：根据任务数量设置背景
 				const dayKey = `${day.date.getFullYear()}-${(day.date.getMonth() + 1).toString().padStart(2, '0')}-${day.date.getDate().toString().padStart(2, '0')}`;
@@ -198,6 +200,95 @@ export class YearViewRenderer extends BaseViewRenderer {
 
 		// 设置响应式布局
 		this.setupResponsiveLayout();
+	}
+
+	/**
+	 * 增量刷新：更新任务计数和热力图，不重建DOM
+	 */
+	public refreshTasks(): void {
+		if (!this.yearContainer) return;
+
+		// 重新计算任务数量
+		let tasks: GCTask[] = this.plugin.taskCache?.getAllTasks?.() || [];
+		tasks = this.applyTagFilter(tasks);
+		const dateField = this.plugin.settings.dateFilterField || 'dueDate';
+
+		// 获取当前年份
+		const yearGrid = this.yearContainer.querySelector('.gc-year-view__months');
+		if (!yearGrid) return;
+
+		// 获取第一个月份卡片的年份来确定当前年份
+		const firstMonthCard = yearGrid.querySelector('.gc-year-view__month-card');
+		if (!firstMonthCard) return;
+
+		// 重新计算任务计数
+		const countsMap: Map<string, number> = new Map();
+		const monthCards = yearGrid.querySelectorAll('.gc-year-view__month-card');
+
+		// 从DOM中获取年份信息
+		let currentYear = new Date().getFullYear();
+
+		for (const t of tasks) {
+			const d = (t as any)[dateField] as Date | undefined;
+			if (!d) continue;
+			const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+			countsMap.set(key, (countsMap.get(key) || 0) + 1);
+		}
+
+		// 更新每个日期格子的样式
+		monthCards.forEach((monthCard) => {
+			const days = monthCard.querySelectorAll('.gc-year-view__day');
+			days.forEach((dayEl: Element) => {
+				const dayNumberEl = dayEl.querySelector('.gc-year-view__day-number');
+				if (!dayNumberEl) return;
+
+				const dayNum = parseInt(dayNumberEl.textContent || '0');
+				if (isNaN(dayNum)) return;
+
+				// 从数据属性中获取完整的日期信息
+				const dateStr = (dayEl as HTMLElement).dataset.date;
+				let dayKey: string;
+				if (dateStr) {
+					dayKey = dateStr;
+				} else {
+					// 如果没有 data-date 属性，跳过
+					return;
+				}
+
+				const count = countsMap.get(dayKey) || 0;
+
+				// 移除旧的热力图类
+				(dayEl as HTMLElement).classList.remove(
+					'heatmap-blue-1', 'heatmap-blue-2', 'heatmap-blue-3', 'heatmap-blue-4', 'heatmap-blue-5',
+					'heatmap-green-1', 'heatmap-green-2', 'heatmap-green-3', 'heatmap-green-4', 'heatmap-green-5',
+					'heatmap-red-1', 'heatmap-red-2', 'heatmap-red-3', 'heatmap-red-4', 'heatmap-red-5'
+				);
+
+				// 添加新的热力图类
+				if (this.plugin.settings.yearHeatmapEnabled && count > 0) {
+					const palette = this.plugin.settings.yearHeatmapPalette || 'blue';
+					const level = count >= 20 ? 5 : count >= 10 ? 4 : count >= 5 ? 3 : count >= 2 ? 2 : 1;
+					(dayEl as HTMLElement).classList.add(`heatmap-${palette}-${level}`);
+				}
+
+				// 更新任务数量显示
+				let countEl = dayEl.querySelector('.gc-year-view__task-count');
+				if (this.plugin.settings.yearShowTaskCount && count > 0) {
+					if (!countEl) {
+						countEl = dayEl.ownerDocument?.createElement('div');
+						if (countEl) {
+							countEl.className = 'gc-year-view__task-count';
+							dayEl.appendChild(countEl);
+						}
+					}
+					if (countEl) {
+						countEl.textContent = `${count}`;
+					}
+				} else if (countEl) {
+					countEl.remove();
+				}
+			});
+		});
 	}
 
 	/**

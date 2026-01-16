@@ -30,7 +30,9 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	// 保存当前渲染容器的引用
 	private currentContainer: HTMLElement | null = null;
 
-
+	// 滚动位置保存
+	private scrollLeftPosition = 0;
+	private scrollTopPosition = 0;
 
 	// 时间字段配置
 	private startField: DateFieldType = 'startDate';
@@ -90,9 +92,42 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	 */
 	public jumpToToday(): void {
 		if (this.ganttWrapper) {
+			// 保存当前位置
+			this.saveScrollPosition();
 			// 滚动到今天的位置
 			this.ganttWrapper.scrollToToday();
 		}
+	}
+
+	/**
+	 * 保存滚动位置
+	 */
+	private saveScrollPosition(): void {
+		if (this.ganttWrapper) {
+			const pos = this.ganttWrapper.getScrollPosition();
+			this.scrollLeftPosition = pos.scrollLeft;
+			this.scrollTopPosition = pos.scrollTop;
+		}
+	}
+
+	/**
+	 * 恢复滚动位置
+	 */
+	private restoreScrollPosition(): void {
+		if (this.ganttWrapper) {
+			requestAnimationFrame(() => {
+				this.ganttWrapper?.setScrollPosition(this.scrollLeftPosition, this.scrollTopPosition);
+			});
+		}
+	}
+
+	/**
+	 * 增量刷新：甘特图已有 incrementallyUpdate 机制
+	 * 此方法为接口兼容，实际由 incrementallyUpdate 处理
+	 */
+	public refreshTasks(): void {
+		// 甘特图有自己独立的增量更新机制
+		// 不需要在这里做任何操作
 	}
 
 	/**
@@ -108,6 +143,9 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	 * 渲染甘特图视图
 	 */
 	render(container: HTMLElement, currentDate: Date): void {
+		// 保存当前滚动位置（如果有）
+		this.saveScrollPosition();
+
 		// 保存容器引用
 		this.currentContainer = container;
 
@@ -200,9 +238,9 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			// 10. 渲染甘特图
 			await this.ganttWrapper.init(ganttTasks);
 
-			// 11. 滚动到今天
+			// 11. 恢复滚动位置（而不是滚动到今天）
 			if (this.ganttWrapper) {
-				this.ganttWrapper.scrollToToday();
+				this.restoreScrollPosition();
 			}
 
 			// 12. 创建控制面板（可选）

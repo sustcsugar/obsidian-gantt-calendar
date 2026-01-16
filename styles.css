@@ -171,29 +171,19 @@ Author: sugar
 	/* 响应式布局由 TypeScript 控制，基于实际CSS值动态计算 */
 }
 
+/* ========================================
+   月视图单一Grid布局（7行8列）
+   ======================================== */
 .gc-view.gc-view--month {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	height: 100%;
-	overflow: hidden;
-}
-
-/* BEM类名: gc-month-view__week-row */
-.gc-month-view__week-row {
 	display: grid;
+	/* 7行: 第1行星期标题(自动高度) + 6行日期(均分空间) */
+	grid-template-rows: auto repeat(6, 1fr);
+	/* 8列: 第1列周数(40px固定) + 7列星期(均分) */
 	grid-template-columns: 40px repeat(7, 1fr);
-	gap: 8px;
+	gap: 0;
+	height: 100%;
 	padding: 8px;
-	background-color: var(--background-secondary);
-	border-radius: 4px;
-}
-
-/* BEM类名: gc-month-view__weeks */
-.gc-month-view__weeks {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
+	overflow: hidden;
 }
 
 /* Week/Day Layout */
@@ -1644,26 +1634,26 @@ Author: sugar
 }
 
 /* 6.4 Month View Components */
-/* BEM类名: gc-month-view__weekdays */
-.gc-month-view__weekdays {
-	display: grid !important;
-	grid-template-columns: 40px repeat(7, 1fr);
-	width: 100%;
-	gap: 8px;
-	margin-bottom: 8px;
-	border-bottom: 2px solid var(--divider-color);
-	padding-bottom: 8px;
-}
-
-/* BEM类名: gc-month-view__weekday */
+/* 星期标签 - 位于Grid第1行 */
 .gc-month-view__weekday {
-	font-size: 12px;
+	font-size: 16px;
 	font-weight: 600;
 	color: var(--text-muted);
 	text-align: center;
+	padding: 8px 4px;
+	/* 网格线：上右有边框 */
+	/*border-top: 2px solid var(--background-modifier-border);*/
+	border-right: 2px solid var(--background-modifier-border);
+	/* 确保在Grid第1行 */
+	grid-row: 1;
 }
 
-/* BEM类名: gc-month-view__week-number */
+/* 空占位 - 第1行第1列 */
+.gc-month-view__weekday--empty {
+	visibility: hidden;
+}
+
+/* 周编号 - 位于每周的第1列 */
 .gc-month-view__week-number {
 	display: flex;
 	align-items: center;
@@ -1671,11 +1661,10 @@ Author: sugar
 	font-size: 11px;
 	font-weight: 600;
 	color: var(--text-muted);
-}
-
-/* BEM类名: gc-month-view__week-days */
-.gc-month-view__week-days {
-	display: contents;
+	/* 网格线：上右有边框 */
+	border-top: 2px solid var(--background-modifier-border);
+	border-right: 2px solid var(--background-modifier-border);
+	/* grid位置由JavaScript内联样式设置 */
 }
 
 /* BEM类名: gc-month-view__day-cell */
@@ -1688,8 +1677,9 @@ Author: sugar
 	padding: 8px;
 	gap: 4px;
 	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
+	/* 网格线：上右有边框，左下由相邻单元格提供 */
+	border-top: 2px solid var(--background-modifier-border);
+	border-right: 2px solid var(--background-modifier-border);
 	cursor: pointer;
 	transition: all 0.15s ease;
 	overflow: hidden;

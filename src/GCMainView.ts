@@ -81,10 +81,37 @@ export class GCMainView extends ItemView {
 		// 订阅缓存更新事件
 		this.cacheUpdateListener = () => {
 			if (this.containerEl.isConnected) {
-				this.render();
+				this.incrementalRefresh();
 			}
 		};
 		this.plugin?.taskCache?.onUpdate(this.cacheUpdateListener);
+	}
+
+	/**
+	 * 增量刷新：根据当前视图类型调用对应的增量刷新方法
+	 */
+	private incrementalRefresh(): void {
+		switch (this.viewType) {
+			case 'month':
+				this.monthRenderer.refreshTasks();
+				break;
+			case 'week':
+				this.weekRenderer.refreshTasks();
+				break;
+			case 'day':
+				this.dayRenderer.refreshTasks();
+				break;
+			case 'task':
+				this.taskRenderer.refreshTasks();
+				break;
+			case 'year':
+				this.yearRenderer.refreshTasks();
+				break;
+			case 'gantt':
+				// 甘特图有自己独立的增量更新机制
+				// 不需要在这里做任何操作
+				break;
+		}
 	}
 
 	public refreshSettings(): void {

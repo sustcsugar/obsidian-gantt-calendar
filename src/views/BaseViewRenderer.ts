@@ -36,6 +36,14 @@ export abstract class BaseViewRenderer {
 	abstract render(container: HTMLElement, currentDate: Date): void;
 
 	/**
+	 * 增量刷新任务内容，子类可覆盖
+	 * 默认行为：什么都不做，子类实现具体的增量刷新逻辑
+	 */
+	public refreshTasks(): void {
+		// 默认行为：什么都不做，子类可以覆盖
+	}
+
+	/**
 	 * 获取优先级图标
 	 */
 	protected getPriorityIcon(priority?: string): string {

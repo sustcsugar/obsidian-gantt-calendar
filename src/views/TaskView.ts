@@ -168,6 +168,13 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	}
 
 	/**
+	 * 增量刷新：只重新加载任务内容，不重建DOM
+	 */
+	public refreshTasks(): void {
+		this.refreshTaskList();
+	}
+
+	/**
 	 * 只刷新任务列表，不重新创建整个视图
 	 * 用于筛选条件变化时更新显示
 	 */

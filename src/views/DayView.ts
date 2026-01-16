@@ -15,6 +15,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 	// 排序状态
 	private sortState: SortState = DEFAULT_SORT_STATE;
 
+	// 当前显示的日期
+	private currentDate: Date = new Date();
+
 	// 设置前缀
 	private readonly SETTINGS_PREFIX = 'dayView';
 
@@ -80,6 +83,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 	}
 
 	render(container: HTMLElement, currentDate: Date): void {
+		// 保存当前日期用于增量刷新
+		this.currentDate = new Date(currentDate);
+
 		const dayContainer = container.createDiv('gc-view gc-view--day');
 
 		// 检查是否显示 Daily Note
@@ -101,6 +107,20 @@ export class DayViewRenderer extends BaseViewRenderer {
 			const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
 			this.loadDayViewTasks(tasksList, new Date(currentDate));
+		}
+	}
+
+	/**
+	 * 增量刷新：只重新加载任务内容，不重建DOM
+	 */
+	public refreshTasks(): void {
+		const container = document.querySelector('.gc-view.gc-view--day') as HTMLElement;
+		if (!container) return;
+
+		// 获取任务列表容器
+		const tasksList = container.querySelector('.gc-day-view__task-list');
+		if (tasksList) {
+			this.loadDayViewTasks(tasksList as HTMLElement, this.currentDate);
 		}
 	}
 
