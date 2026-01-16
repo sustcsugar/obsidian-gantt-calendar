@@ -479,6 +479,12 @@ Author: sugar
 	box-shadow: none;
 }
 
+/* 导航按钮激活状态 */
+.gc-toolbar__nav-buttons .gc-toolbar__btn.active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
 .gc-toolbar__title-display {
 	font-weight: 600;
 	color: var(--text-normal);

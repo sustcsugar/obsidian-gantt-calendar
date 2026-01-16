@@ -56,6 +56,7 @@ npm run build           # 生产构建（运行 tsc + esbuild）
 
 ## 代码统一管理规范
 DOM类名统一使用 ./src/utils/bem.ts 进行管理, 新建类名需在此文件中进行定义并引用
+修改DOM结构或者样式之前,请先检查是否有相关的旧类未移除,移除未使用的旧类.
 正则表达式统一使用 ./src/utils/RegularExpression.ts 进行管理.
 全局任务悬浮窗统一复用 ./src/utils/tooltipManager.ts
 任务条目更新统一复用 updateTaskProperties函数进行.

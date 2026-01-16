@@ -14,22 +14,25 @@ export interface TimeGranularityOptions {
 
 /**
  * 渲染时间颗粒度选择按钮组
+ * 将"今"按钮和颗粒度选择按钮分为两个独立的下凹按钮组
  */
 export function renderTimeGranularity(
 	container: HTMLElement,
 	options: TimeGranularityOptions,
 	onToday?: () => void
 ): void {
-	const group = container.createDiv(ToolbarClasses.components.timeGranularity.groupGantt);
-
-	// 今天按钮
-	const todayBtn = group.createEl('button', {
-		cls: ToolbarClasses.components.timeGranularity.todayBtn,
+	// 1. "今"按钮独立容器（使用下凹样式）
+	const todayGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
+	const todayBtn = todayGroup.createEl('button', {
+		cls: ToolbarClasses.components.navButtons.btn,
 		text: '今',
 	});
 	todayBtn.addEventListener('click', () => {
 		onToday?.();
 	});
+
+	// 2. 颗粒度选择容器（日周月，使用下凹样式）
+	const granularityGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
 
 	const granularities: Array<{ value: TimeGranularity; label: string }> = [
 		{ value: 'day', label: '日' },
@@ -38,22 +41,22 @@ export function renderTimeGranularity(
 	];
 
 	granularities.forEach(({ value, label }) => {
-		const btn = group.createEl('button', {
-			cls: ToolbarClasses.components.timeGranularity.btn,
+		const btn = granularityGroup.createEl('button', {
+			cls: ToolbarClasses.components.navButtons.btn,
 			text: label,
 		});
 
 		if (value === options.current) {
-			btn.addClass(ToolbarClasses.components.timeGranularity.btnActive);
+			btn.classList.add('active');
 		}
 
 		btn.addEventListener('click', () => {
 			// 移除所有按钮的 active 状态
-			group.querySelectorAll(`.${ToolbarClasses.components.timeGranularity.btn}`).forEach((b) => {
-				b.removeClass(ToolbarClasses.components.timeGranularity.btnActive);
+			granularityGroup.querySelectorAll('.gc-toolbar__btn').forEach((b) => {
+				b.classList.remove('active');
 			});
 			// 添加当前按钮的 active 状态
-			btn.addClass(ToolbarClasses.components.timeGranularity.btnActive);
+			btn.classList.add('active');
 			// 触发回调
 			options.onChange(value);
 		});
