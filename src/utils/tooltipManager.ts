@@ -49,7 +49,7 @@ export class TooltipManager {
 
 	private constructor(private plugin: any, config: TooltipConfig = {}) {
 		this.config = {
-			showDelay: config.showDelay ?? 0,
+			showDelay: config.showDelay ?? 400,
 			hideDelay: config.hideDelay ?? 100
 		};
 	}
@@ -120,6 +120,20 @@ export class TooltipManager {
 				return;
 			}
 			// 如果tooltip不可见，继续执行显示逻辑
+		}
+
+		// 如果切换到不同的任务/卡片，且当前tooltip已显示，先立即隐藏
+		const isDifferentTask = this.currentTask !== task || this.currentCard !== card;
+		const isVisible = this.tooltip &&
+						 this.tooltip.classList.contains('gc-task-tooltip--visible') &&
+						 this.tooltip.style.opacity !== '0';
+
+		if (isDifferentTask && isVisible) {
+			// 立即隐藏当前tooltip（不使用延迟）
+			if (this.tooltip) {
+				this.tooltip.removeClass('gc-task-tooltip--visible');
+				this.tooltip.style.opacity = '0';
+			}
 		}
 
 		// 保存当前状态

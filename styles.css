@@ -270,8 +270,8 @@ Author: sugar
 	position: sticky;
 	top: 8px;
 	border-radius: 14px;
-	/* 玻璃效果核心 - 提高透明度从18%到65% */
-	background: color-mix(in srgb, var(--background-primary) 65%, transparent);
+	/* 玻璃效果核心 - 提高透明度 */
+	background: color-mix(in srgb, var(--background-primary) 15%, transparent);
 	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 50%, transparent);
 	/* 多层阴影营造深度 + 顶部高光 */
 	box-shadow:
@@ -330,7 +330,7 @@ Author: sugar
 	padding: 6px 12px;
 	border: 1px solid var(--background-modifier-border);
 	/* 玻璃效果 - 半透明背景 */
-	background-color: color-mix(in srgb, var(--background-primary) 50%, transparent);
+	background-color: color-mix(in srgb, var(--background-primary) 25%, transparent);
 	border-radius: 6px;
 	color: var(--text-normal);
 	cursor: pointer;
@@ -351,7 +351,7 @@ Author: sugar
 }
 
 .gc-toolbar__view-toggle-btn:hover {
-	background-color: color-mix(in srgb, var(--background-primary) 65%, transparent);
+	background-color: color-mix(in srgb, var(--background-primary) 35%, transparent);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -362,7 +362,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -419,7 +419,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -428,7 +428,7 @@ Author: sugar
 	padding: 2px 6px;
 	border: 1px solid var(--background-modifier-border);
 	/* 玻璃效果 */
-	background-color: color-mix(in srgb, var(--background-primary) 40%, transparent);
+	background-color: color-mix(in srgb, var(--background-primary) 20%, transparent);
 	border-radius: 4px;
 	cursor: pointer;
 	font-size: 12px;
@@ -442,7 +442,7 @@ Author: sugar
 }
 
 .gc-toolbar__btn:hover {
-	background-color: color-mix(in srgb, var(--background-primary) 55%, transparent);
+	background-color: color-mix(in srgb, var(--background-primary) 30%, transparent);
 	color: var(--text-normal);
 	border-color: var(--interactive-normal);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
@@ -510,7 +510,7 @@ Author: sugar
 	padding: 4px; /* p-1 */
 	border-radius: 8px; /* rounded-lg */
 	/* 与灰色混合，产生轻微差异的背景色 */
-	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
 	/* 轻微 inset 阴影产生凹陷效果 */
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -730,7 +730,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -820,7 +820,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 

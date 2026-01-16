@@ -18,6 +18,7 @@ export interface TaskUpdates {
 	cancelledDate?: Date | null;
 	completionDate?: Date | null;
 	content?: string;
+	tags?: string[];
 }
 
 /**
@@ -138,8 +139,8 @@ export function serializeTask(
 			? getPriorityEmoji(updates.priority)
 			: getPriorityEmoji((task.priority || 'normal') as any),
 		description: finalDescription,
-		// 保留标签
-		tags: task.tags,
+		// 保留标签，优先使用更新的标签
+		tags: updates.tags !== undefined ? updates.tags : task.tags,
 		// 处理日期字段：undefined 使用原始值，null 转为 undefined（表示清除）
 		createdDate: updates.createdDate !== undefined ? (updates.createdDate || undefined) : task.createdDate,
 		startDate: updates.startDate !== undefined ? (updates.startDate || undefined) : task.startDate,
