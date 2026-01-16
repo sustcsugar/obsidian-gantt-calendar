@@ -3,6 +3,7 @@
  * @module toolbar/components/tag-filter
  */
 
+import { setIcon } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { TagFilterState } from '../../types';
 import { ToolbarClasses } from '../../utils/bem';
@@ -73,41 +74,20 @@ export function renderTagFilterButton(
 	const { getCurrentState, onTagFilterChange, getAllTasks } = options;
 	const classes = ToolbarClasses.components.tagFilter;
 
-	// 创建按钮容器
-	const buttonContainer = container.createDiv(classes.containerWrapper);
+	// 创建下凹底座容器（与导航按钮组样式一致）
+	const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
+	// 添加响应式优先级类（第二优先级隐藏）
+	buttonGroup.addClass(ToolbarClasses.priority.priority2);
 
 	// 创建标签筛选按钮
-	const tagBtn = buttonContainer.createEl('button', {
-		cls: `calendar-view-compact-btn ${classes.btn}`,
+	const tagBtn = buttonGroup.createEl('button', {
+		cls: ToolbarClasses.components.navButtons.btn,
 		attr: { title: '标签筛选', 'aria-label': '标签筛选' }
 	});
 
-	// 按钮图标
+	// 按钮图标 - 使用线条风格的标签图标
 	const iconSpan = tagBtn.createSpan(classes.icon);
-	iconSpan.setText('🏷️');
-
-	// 选中数量徽章
-	const countBadge = tagBtn.createSpan(classes.count);
-	countBadge.setText('0');
-	countBadge.style.display = 'none';
-
-	// 更新按钮状态
-	const updateButtonState = () => {
-		const state = getCurrentState();
-		const count = state.selectedTags.length;
-
-		if (count > 0) {
-			countBadge.setText(String(count));
-			countBadge.style.display = 'inline';
-			tagBtn.addClass(classes.btnHasSelection);
-		} else {
-			countBadge.style.display = 'none';
-			tagBtn.removeClass(classes.btnHasSelection);
-		}
-	};
-
-	// 立即调用以初始化按钮状态
-	updateButtonState();
+	setIcon(iconSpan, 'tags');
 
 	// 创建标签选择窗格
 	const pane = document.createElement('div');
@@ -254,10 +234,16 @@ export function renderTagFilterButton(
 						newSelected.push(tag);
 					}
 
-					onTagFilterChange({ ...currentState, selectedTags: newSelected });
+					// 立即同步更新工具栏标签筛选器的选中样式类
+					// 通过 currentTarget 获取绑定事件的元素（即 TagPill 创建的元素）
+					const tagEl = e.currentTarget as HTMLElement;
+					if (idx >= 0) {
+						tagEl.removeClass(classes.tagItemSelected);
+					} else {
+						tagEl.addClass(classes.tagItemSelected);
+					}
 
-					// 更新按钮状态
-					updateButtonState();
+					onTagFilterChange({ ...currentState, selectedTags: newSelected });
 				},
 				ariaAttrs: {
 					role: 'button',

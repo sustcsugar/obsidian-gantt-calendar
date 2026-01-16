@@ -66,9 +66,11 @@ export class ToolbarRightCalendar {
 
 		// ===== 左侧：筛选和排序按钮 =====
 
-		// 状态筛选按钮（周视图和月视图）
-		if (currentViewType === 'week' || currentViewType === 'month') {
-			const renderer = currentViewType === 'week' ? this.weekRenderer : this.monthRenderer;
+		// 状态筛选按钮（日视图、周视图和月视图）
+		if (currentViewType === 'day' || currentViewType === 'week' || currentViewType === 'month') {
+			const renderer = currentViewType === 'day' ? this.dayRenderer
+				: currentViewType === 'week' ? this.weekRenderer
+				: this.monthRenderer;
 			if (renderer) {
 				renderStatusFilterButton(container, {
 					getCurrentState: () => renderer.getStatusFilterState(),
@@ -83,9 +85,11 @@ export class ToolbarRightCalendar {
 			}
 		}
 
-		// 排序按钮（仅在日视图和周视图显示）
-		if (currentViewType === 'day' || currentViewType === 'week') {
-			const getRenderer = () => currentViewType === 'day' ? this.dayRenderer : this.weekRenderer;
+		// 排序按钮（日视图、周视图和月视图）
+		if (currentViewType === 'day' || currentViewType === 'week' || currentViewType === 'month') {
+			const getRenderer = () => currentViewType === 'day' ? this.dayRenderer
+				: currentViewType === 'week' ? this.weekRenderer
+				: this.monthRenderer;
 			if (getRenderer()) {
 				renderSortButton(container, {
 					getCurrentState: () => getRenderer()?.getSortState() || { field: 'dueDate', order: 'asc' },
@@ -132,7 +136,10 @@ export class ToolbarRightCalendar {
 
 		// 创建任务按钮（所有视图共有）
 		if (plugin) {
-			renderCreateTaskButton(container, {
+			// 创建包装容器以便添加响应式优先级类
+			const createTaskWrapper = container.createDiv();
+			createTaskWrapper.addClass(ToolbarClasses.priority.priority3);
+			renderCreateTaskButton(createTaskWrapper, {
 				plugin: plugin,
 				buttonClass: ToolbarClasses.components.navButtons.btn
 			});

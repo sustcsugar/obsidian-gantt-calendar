@@ -1,23 +1,64 @@
 import { Notice, App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
-import type { GCTask, StatusFilterState, TagFilterState } from '../types';
+import type { GCTask, StatusFilterState, TagFilterState, SortState } from '../types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
 import { MonthViewClasses, TaskCardClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
 import { TooltipManager } from '../utils/tooltipManager';
 import { updateTaskDateField } from '../tasks/taskUpdater';
+import { sortTasks } from '../tasks/taskSorter';
+import { DEFAULT_SORT_STATE } from '../types';
 
 /**
  * 月视图渲染器
  */
 export class MonthViewRenderer extends BaseViewRenderer {
+	// 排序状态
+	private sortState: SortState = DEFAULT_SORT_STATE;
+
 	// 设置前缀
 	private readonly SETTINGS_PREFIX = 'monthView';
 
 	constructor(app: App, plugin: any) {
 		super(app, plugin);
 		this.initializeFilterStates(this.SETTINGS_PREFIX);
+		this.initializeSortState();
+	}
+
+	/**
+	 * 初始化排序状态
+	 */
+	private initializeSortState(): void {
+		const settings = this.plugin?.settings;
+		if (!settings) return;
+
+		const savedField = settings[`${this.SETTINGS_PREFIX}SortField`];
+		const savedOrder = settings[`${this.SETTINGS_PREFIX}SortOrder`];
+		if (savedField && savedOrder) {
+			this.sortState = { field: savedField, order: savedOrder };
+		}
+	}
+
+	/**
+	 * 保存排序状态
+	 */
+	private async saveSortState(): Promise<void> {
+		if (!this.plugin?.settings) return;
+		this.plugin.settings[`${this.SETTINGS_PREFIX}SortField`] = this.sortState.field;
+		this.plugin.settings[`${this.SETTINGS_PREFIX}SortOrder`] = this.sortState.order;
+		await this.plugin.saveSettings();
+	}
+
+	public getSortState(): SortState {
+		return this.sortState;
+	}
+
+	public setSortState(state: SortState): void {
+		this.sortState = state;
+		this.saveSortState().catch(err => {
+			Logger.error('MonthView', 'Failed to save sort state', err);
+		});
 	}
 
 	/**
@@ -199,7 +240,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			// 筛选当天任务
-			const currentDayTasks = tasks.filter(task => {
+			let currentDayTasks = tasks.filter(task => {
 				const dateValue = (task as any)[dateField];
 				if (!dateValue) return false;
 
@@ -209,6 +250,9 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 				return taskDate.getTime() === normalizedTarget.getTime();
 			});
+
+			// 应用排序
+			currentDayTasks = sortTasks(currentDayTasks, this.sortState);
 
 			if (currentDayTasks.length === 0) {
 				return;

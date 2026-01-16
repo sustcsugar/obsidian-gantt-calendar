@@ -2,11 +2,13 @@
  * 创建任务按钮组件
  *
  * 在工具栏渲染创建任务按钮，点击触发 CreateTaskModal
+ * 使用与导航按钮相同的下凹底座样式
  */
 
 import type GanttCalendarPlugin from '../../../main';
+import { setIcon } from 'obsidian';
 import { CreateTaskModal } from '../../modals/CreateTaskModal';
-import { CreateTaskButtonClasses } from '../../utils/bem';
+import { CreateTaskButtonClasses, ToolbarClasses } from '../../utils/bem';
 
 /**
  * 创建任务按钮选项
@@ -28,18 +30,23 @@ export function renderCreateTaskButton(
 	container: HTMLElement,
 	options: CreateTaskButtonOptions
 ): { cleanup: () => void } {
-	const { plugin, targetDate, buttonClass = 'calendar-nav-compact-btn' } = options;
+	const { plugin, targetDate } = options;
+
+	// 创建下凹底座容器（与导航按钮组样式一致）
+	const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
 
 	// 创建按钮
-	const createBtn = container.createEl('button', {
-		text: '➕',
-		attr: { title: '创建新任务' }
+	const createBtn = buttonGroup.createEl('button', {
+		cls: ToolbarClasses.components.navButtons.btn,
+		attr: { title: '创建新任务', 'aria-label': '创建新任务' }
 	});
 
 	// 添加样式类
-	createBtn.addClass(buttonClass);
 	createBtn.addClass(CreateTaskButtonClasses.block);
 	createBtn.addClass(CreateTaskButtonClasses.modifiers.toolbar);
+
+	// 使用图标
+	setIcon(createBtn, 'plus');
 
 	// 点击事件
 	createBtn.addEventListener('click', () => {
@@ -58,6 +65,6 @@ export function renderCreateTaskButton(
 	});
 
 	return {
-		cleanup: () => createBtn.remove()
+		cleanup: () => buttonGroup.remove()
 	};
 }

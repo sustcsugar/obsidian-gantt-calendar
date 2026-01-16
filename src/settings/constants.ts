@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	templaterTemplatePath: '', // 默认模板路径
 	defaultTaskPriority: 'medium', // 默认中等优先级
 	enableDebugMode: false, // 默认关闭开发者模式
+	showViewNavButtonText: true, // 默认显示视图导航按钮文本
 
 	// ========== 持久化筛选和排序状态默认值 ==========
 

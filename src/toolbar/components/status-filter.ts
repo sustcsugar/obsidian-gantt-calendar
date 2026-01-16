@@ -1,3 +1,4 @@
+import { setIcon } from 'obsidian';
 import type { StatusFilterState } from '../../types';
 import type { TaskStatus } from '../../tasks/taskStatus';
 import { ToolbarClasses } from '../../utils/bem';
@@ -19,42 +20,20 @@ export function renderStatusFilterButton(
 	const { getCurrentState, onStatusFilterChange, getAvailableStatuses } = options;
 	const classes = ToolbarClasses.components.statusFilter;
 
-	// 1. 创建按钮容器
-	const buttonContainer = container.createDiv(classes.container);
+	// 1. 创建下凹底座容器（与导航按钮组样式一致）
+	const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
+	// 添加响应式优先级类（第一优先级隐藏）
+	buttonGroup.addClass(ToolbarClasses.priority.priority1);
 
 	// 2. 创建筛选按钮
-	const statusBtn = buttonContainer.createEl('button', {
-		cls: classes.btn,
+	const statusBtn = buttonGroup.createEl('button', {
+		cls: ToolbarClasses.components.navButtons.btn,
 		attr: { title: '状态筛选', 'aria-label': '状态筛选', 'data-tooltip': '状态筛选' }
 	});
 
-	// 3. 按钮内容：图标 + 徽章
+	// 3. 按钮内容：图标 - 使用线条风格的复选框图标
 	const iconSpan = statusBtn.createSpan(classes.icon);
-	iconSpan.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-		<path d="M3 4.5h10a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5v-8a.5.5 0 0 1 .5-.5z"/>
-		<path d="M7 2h2a1 1 0 0 1 1 1v1H6V3a1 1 0 0 1 1-1z"/>
-	</svg>`;
-
-	const countBadge = statusBtn.createSpan(classes.count);
-	countBadge.style.display = 'none';
-
-	// 4. 更新按钮状态
-	const updateButtonState = () => {
-		const state = getCurrentState();
-		const count = state.selectedStatuses.length;
-
-		if (count > 0) {
-			countBadge.setText(String(count));
-			countBadge.style.display = 'inline-flex';
-			statusBtn.addClass(classes.btnHasSelection);
-		} else {
-			countBadge.style.display = 'none';
-			statusBtn.removeClass(classes.btnHasSelection);
-		}
-	};
-
-	// 立即调用以初始化按钮状态
-	updateButtonState();
+	setIcon(iconSpan, 'check-square');
 
 	// 5. 创建下拉面板
 	const dropdown = document.createElement('div');
@@ -121,7 +100,6 @@ export function renderStatusFilterButton(
 				}
 
 				onStatusFilterChange({ selectedStatuses: newSelected });
-				updateButtonState();
 				renderDropdown();
 			});
 		}

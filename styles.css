@@ -351,6 +351,7 @@ Author: sugar
 .gc-toolbar__right {
 	flex: 0 1 auto;
 	justify-content: flex-end;
+	gap: 6px;
 }
 
 .calendar-nav,
@@ -567,12 +568,22 @@ Author: sugar
 	color: white;
 }
 
-/* BEM: 导航按钮组 */
-.calendar-nav-buttons,
-.gc-toolbar__nav-buttons {
+/* BEM: 导航按钮组 - 旧样式保留用于日历视图 */
+.calendar-nav-buttons {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+/* BEM: 导航按钮组 - 工具栏凹陷底座效果 */
+.gc-toolbar__nav-buttons {
+	display: flex;
+	align-items: center;
+	gap: 1px;
+	padding: 1px;
+	border-radius: 8px;
+	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-nav-btn {
@@ -616,6 +627,37 @@ Author: sugar
 	color: var(--text-normal);
 	border-color: var(--interactive-normal);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* 导航按钮内的按钮 - 覆盖通用样式，适配凹陷底座 */
+.gc-toolbar__nav-buttons .gc-toolbar__btn {
+	padding: 4px 2px;
+	border: none;
+	background-color: transparent;
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 13px;
+	min-width: 20px;
+	text-align: center;
+	backdrop-filter: none;
+	box-shadow: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* 只含图标的按钮（左右箭头）- 稍大一点以容纳图标 */
+.gc-toolbar__nav-buttons .gc-toolbar__btn:has(svg) {
+	min-width: 24px;
+	padding: 4px 4px;
+}
+
+/* 导航按钮内的按钮 - 简单悬停效果 */
+.gc-toolbar__nav-buttons .gc-toolbar__btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	border-color: transparent;
+	box-shadow: none;
 }
 
 .calendar-view-btn {
@@ -710,24 +752,29 @@ Author: sugar
 }
 
 /* 单个按钮 */
-/* 使用更高特异性的选择器，覆盖主题的 button 样式 */
-.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
+/* 使用 button 元素选择器提高特异性 (0,2,1)，并使用 !important 确保核心样式不被覆盖 */
+.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
-	padding: 4px 8px;
-	border: none;
-	border-radius: 6px; /* rounded */
-	background-color: transparent;
-	/* text-gray-400 */
-	color: rgb(127, 133, 142);
+	padding: 4px 8px !important;
+	border: none !important;
+	border-radius: 6px !important; /* rounded */
+	background-color: transparent !important;
+	/* 使用 Obsidian 变量确保主题兼容性 */
+	color: var(--text-normal);
 	cursor: pointer;
 	/* 分属性过渡，背景色快速，transform 中速，阴影慢速 */
 	transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, font-weight 0.1s ease;
-	font-size: 13px;
+	font-size: 13px !important;
 	font-weight: 500;
 	min-width: 0;
+	/* 重置可能的主题样式 */
+	box-shadow: none !important;
+	text-shadow: none !important;
+	/* 防止主题设置背景图片 */
+	background-image: none !important;
 }
 
 /* 按钮内容容器 */
@@ -754,45 +801,82 @@ Author: sugar
 }
 
 /* 悬停状态 - 复用激活按钮的凸起效果 */
-.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn:hover:not(.gc-toolbar__view-selector-btn--active) {
+.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn:hover:not(.gc-toolbar__view-selector-btn--active) {
 	/* 使用强调色混合半透明背景，避免使用 opacity 实现平滑过渡 */
-	background-color: color-mix(in srgb, var(--interactive-accent) 70%, transparent);
+	background-color: color-mix(in srgb, var(--interactive-accent) 70%, transparent) !important;
 	/* 凸起阴影效果 */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 	/* 白色文字 */
-	color: var(--text-on-accent);
+	color: var(--text-on-accent) !important;
 	transform: translateY(-1px);
 }
 
 /* 激活状态 - 凸起效果 */
-/* 使用更高特异性的选择器，覆盖主题的 button 样式 */
-.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active {
+/* 使用 button 元素选择器提高特异性 (0,2,1)，并使用 !important 确保核心样式不被覆盖 */
+.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active {
 	/* 使用 Obsidian 强调色作为背景，使激活状态更明显 */
-	background-color: var(--interactive-accent);
+	background-color: var(--interactive-accent) !important;
 	/* 凸起阴影效果 */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 	/* 白色文字 */
-	color: var(--text-on-accent);
+	color: var(--text-on-accent) !important;
 	font-weight: 600;
 	transform: translateY(-1px);
 }
 
 /* ============================================
-   响应式适配 - 渐进式布局优化
+   响应式适配 - 基于容器宽度的响应式布局
    ============================================ */
 
+/* 紧凑模式 - 当中间区域文本溢出时，左侧视图按钮只显示图标 */
+.gc-toolbar--compact .gc-toolbar__view-selector-group .gc-toolbar__view-selector-label {
+	display: none !important;
+}
+
+.gc-toolbar--compact .gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
+	padding: 6px 10px;
+	min-width: 36px;
+}
+
+/* 仅图标模式 - 通过设置项控制 */
+.gc-toolbar__view-selector-group--icon-only .gc-toolbar__view-selector-label {
+	display: none !important;
+}
+
+.gc-toolbar__view-selector-group--icon-only .gc-toolbar__view-selector-btn {
+	padding: 6px 10px;
+	min-width: 36px;
+}
+
+/* 按钮隐藏状态 - 用于响应式管理器动态隐藏 */
+.gc-toolbar__item--hidden {
+	display: none !important;
+}
+
+/* 右侧区域包装容器样式 */
+.gc-toolbar__right > div {
+	display: flex;
+	align-items: center;
+}
+
+/* 平滑过渡效果 */
+.gc-toolbar__right > div {
+	transition: opacity 0.15s ease;
+}
+
+/* 保持原有的媒体查询作为后备方案（针对窗口宽度的响应） */
 /* 中等屏幕 (< 900px) - 视图按钮只显示图标 */
 @media (max-width: 900px) {
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
-		padding: 6px 8px;
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn {
+		padding: 6px 8px !important;
 		min-width: 32px;
 	}
 
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn .gc-toolbar__view-selector-label {
 		display: none;
 	}
 
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
 		display: inline;
 	}
 }
@@ -818,7 +902,7 @@ Author: sugar
 /* 极小屏幕 (< 550px) - 进一步优化 */
 @media (max-width: 550px) {
 	/* 激活按钮也只显示图标 */
-	.gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-label {
 		display: none;
 	}
 
@@ -894,10 +978,7 @@ Author: sugar
 }
 
 /* 通用按钮组样式 - 带边框的紧凑按钮组 */
-/* 通用包装样式 (--wrapper modifier，用于所有视图的带边框按钮组) */
 .gc-toolbar__time-granularity-group--gantt,
-.gc-toolbar__sort-container--wrapper,
-.gc-toolbar__tag-filter-container--wrapper,
 .gc-toolbar__field-selector-dual-wrapper--gantt {
 	display: inline-flex;
 	align-items: center;
@@ -909,12 +990,6 @@ Author: sugar
 	background-color: color-mix(in srgb, var(--background-secondary) 60%, transparent);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-}
-
-/* 向后兼容：旧的 --gantt 类名 */
-.gc-toolbar__sort-container--gantt,
-.gc-toolbar__tag-filter-container--gantt {
-	/* 样式与上面的 --wrapper 相同 */
 }
 
 /* 字段选择器组 */
@@ -1005,23 +1080,6 @@ Author: sugar
 
 .gc-toolbar__status-filter-icon svg {
 	display: block;
-}
-
-.gc-toolbar__status-filter-count {
-	display: none;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 5px;
-	border-radius: 9px;
-	background: rgba(255, 255, 255, 0.2);
-	font-size: 11px;
-	font-weight: 600;
-	line-height: 18px;
-	text-align: center;
-}
-
-.gc-toolbar__status-filter-btn--has-selection .gc-toolbar__status-filter-count {
-	background: rgba(255, 255, 255, 0.25);
 }
 
 /* ============================================
@@ -1169,17 +1227,28 @@ Author: sugar
 	color: var(--text-on-accent);
 }
 
+/* 标签筛选按钮图标 */
+.gc-toolbar__tag-filter-icon {
+	font-size: 12px;
+	line-height: 1;
+}
+
+/* 标签筛选数量徽章 */
 .gc-toolbar__tag-filter-count {
-	min-width: 16px;
-	height: 16px;
-	padding: 0 4px;
-	border-radius: 8px;
 	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	font-size: 11px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
+	color: white;
+	font-size: 9px;
+	font-weight: 600;
+	padding: 1px 4px;
+	border-radius: 6px;
+	min-width: 14px;
+	text-align: center;
+	line-height: 1.1;
+}
+
+.gc-toolbar__tag-filter-btn--has-selection .gc-toolbar__tag-filter-count {
+	background-color: white;
+	color: var(--interactive-accent);
 }
 
 /* 字段选择器 */
@@ -1357,9 +1426,9 @@ Author: sugar
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
-	padding: 6px 8px;
-	min-width: 180px;
-	max-width: 260px;
+	padding: 4px 6px;
+	min-width: 140px;
+	max-width: 180px;
 	max-height: 280px;
 	overflow-y: auto;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -1384,15 +1453,15 @@ Author: sugar
 
 .gc-toolbar__tag-filter-operators {
 	display: flex;
-	gap: 4px;
-	padding-bottom: 4px;
-	margin-bottom: 6px;
+	gap: 1px;
+	padding-bottom: 3px;
+	margin-bottom: 4px;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
 .gc-toolbar__tag-filter-operator-btn {
-	flex: 1;
-	padding: 2px 6px;
+	flex: 0 1 auto;
+	padding: 2px 3px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	border-radius: 3px;
@@ -1403,6 +1472,7 @@ Author: sugar
 	transition: all 0.12s ease;
 	text-align: center;
 	line-height: 1.4;
+	min-width: 24px;
 }
 
 .gc-toolbar__tag-filter-operator-btn:hover {
@@ -1418,7 +1488,7 @@ Author: sugar
 .gc-toolbar__tag-filter-tags-grid {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 4px;
+	gap: 3px;
 }
 
 .gc-toolbar__tag-filter-empty {
@@ -1431,10 +1501,10 @@ Author: sugar
 .gc-toolbar__tag-filter-tag-item {
 	display: inline-flex;
 	align-items: center;
-	gap: 3px;
-	padding: 3px 6px;
+	gap: 2px;
+	padding: 2px 5px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 12px;
+	border-radius: 10px;
 	background: var(--background-primary);
 	cursor: pointer;
 	transition: all 0.12s ease;
@@ -1447,10 +1517,16 @@ Author: sugar
 	border-color: var(--background-modifier-border-hover);
 }
 
+/* 选中状态 - 更显眼的样式 */
 .gc-toolbar__tag-filter-tag-item--selected {
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
-	color: white;
+	/* 使用深色渐变背景，确保白色文字清晰可见 */
+	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+	border-color: #7c3aed;
+	color: rgb(15, 14, 14);
+	/* 添加外发光效果 */
+	box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 2px 8px rgba(139, 92, 246, 0.4);
+	/* 轻微放大 */
+	transform: scale(1.05);
 }
 
 .gc-toolbar__tag-filter-tag-name {
@@ -1462,6 +1538,8 @@ Author: sugar
 
 .gc-toolbar__tag-filter-tag-item--selected .gc-toolbar__tag-filter-tag-name {
 	color: white;
+	font-weight: 600;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .gc-toolbar__tag-filter-tag-count {
@@ -1475,19 +1553,24 @@ Author: sugar
 }
 
 .gc-toolbar__tag-filter-tag-item--selected .gc-toolbar__tag-filter-tag-count {
-	background: rgba(255, 255, 255, 0.25);
-	color: white;
+	background: rgba(255, 255, 255, 0.9);
+	color: #7c3aed;
+	font-weight: 600;
 }
 
-.gc-toolbar__tag-filter-tag-item--selected .gc-toolbar__tag-filter-tag-name {
-	color: white !important;
+/* 选中状态的悬停 - 保持紫色效果 */
+.gc-toolbar__tag-filter-tag-item--selected:hover {
+	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+	border-color: #7c3aed;
+	box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 4px 12px rgba(139, 92, 246, 0.5);
+	transform: scale(1.08);
 }
 
 /* 响应式适配 */
 @media (max-width: 768px) {
 	.gc-toolbar__tag-filter-pane {
-		min-width: 160px;
-		max-width: 200px;
+		min-width: 120px;
+		max-width: 160px;
 	}
 
 	.gc-toolbar__tag-filter-tag-item {
@@ -1548,9 +1631,19 @@ Author: sugar
 
 .gc-task-card--week {
 	padding: 8px;
-	gap: 8px;
+	gap: 4px;
 	font-size: 13px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 周视图：给文本添加左侧间距，补偿复选框后的gap */
+.gc-task-card--week .gc-task-card__text {
+	margin-left: 4px;
+}
+
+/* 周视图：移除标签容器的额外左侧间距，避免与文本间距过大 */
+.gc-task-card--week .gc-task-card__tags {
+	margin-left: 0;
 }
 
 .gc-task-card--month {
@@ -1612,8 +1705,8 @@ Author: sugar
 	user-select: none;
 }
 
-/* Hover 状态 */
-.gc-tag:hover {
+/* Hover 状态 - 排除已选中状态 */
+.gc-tag:not(.gc-tag--selected):hover {
 	background-color: var(--background-modifier-hover);
 }
 
@@ -1626,20 +1719,33 @@ Author: sugar
 	transform: scale(0.96);
 }
 
-/* 选中状态 */
+/* 选中状态 - 紫色发光效果 */
 .gc-tag--selected {
-	background-color: var(--interactive-accent);
-	border-color: var(--interactive-accent);
-	color: var(--text-on-accent);
+	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+	border-color: #7c3aed;
+	color: white;
+	box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 2px 8px rgba(139, 92, 246, 0.4);
+	transform: scale(1.05);
 }
 
 .gc-tag--selected .gc-tag__label {
-	color: var(--text-on-accent);
+	color: white;
+	font-weight: 600;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .gc-tag--selected .gc-tag__suffix {
-	background-color: rgba(255, 255, 255, 0.25);
-	color: var(--text-on-accent);
+	background: rgba(255, 255, 255, 0.9);
+	color: #7c3aed;
+	font-weight: 600;
+}
+
+/* 选中状态的悬停 - 保持紫色效果 */
+.gc-tag--selected:hover {
+	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+	border-color: #7c3aed;
+	box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 4px 12px rgba(139, 92, 246, 0.5);
+	transform: scale(1.08);
 }
 
 /* Elements */
@@ -2099,57 +2205,6 @@ Author: sugar
 	font-size: 12px;
 }
 
-/* 6.6 Day View Components */
-.calendar-day-details {
-	background-color: var(--background-secondary);
-	border-radius: 6px;
-	padding: 16px;
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-}
-
-.calendar-info-group {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 8px;
-	background-color: var(--background-primary);
-	border-radius: 4px;
-}
-
-.calendar-info-group label {
-	font-weight: 600;
-	min-width: 120px;
-	color: var(--text-muted);
-}
-
-.calendar-info-group span {
-	color: var(--text-normal);
-	font-weight: 500;
-}
-
-.calendar-event-section {
-	margin-top: 8px;
-}
-
-.calendar-event-section h3 {
-	font-size: 14px;
-	font-weight: 600;
-	margin: 0 0 12px 0;
-	color: var(--text-normal);
-}
-
-.calendar-event-placeholder {
-	padding: 16px;
-	text-align: center;
-	color: var(--text-muted);
-	background-color: var(--background-primary);
-	border-radius: 4px;
-	border: 1px dashed var(--divider-color);
-	font-size: 13px;
-}
-
 /* ==================== Day View Sub-Components ==================== */
 /* BEM命名: gc-day-view Elements */
 .gc-day-view__task-list {
@@ -2189,7 +2244,6 @@ Author: sugar
 	min-height: 0;
 }
 
-.calendar-day-divider,
 .gc-day-view__divider {
 	width: 8px;
 	background-color: transparent;
@@ -2198,7 +2252,6 @@ Author: sugar
 	flex-shrink: 0;
 }
 
-.calendar-day-divider:hover,
 .gc-day-view__divider:hover {
 	background-color: var(--interactive-accent);
 }
@@ -2242,7 +2295,6 @@ Author: sugar
 	min-height: 0;
 }
 
-.calendar-day-divider-vertical,
 .gc-day-view__divider--vertical {
 	height: 8px;
 	background-color: transparent;
@@ -2251,28 +2303,6 @@ Author: sugar
 	flex-shrink: 0;
 }
 
-.calendar-day-divider-vertical:hover {
-	background-color: var(--interactive-accent);
-}
-
-.calendar-day-notes-title {
-	margin: 0 0 12px 0;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--text-normal);
-	flex-shrink: 0;
-}
-
-.calendar-day-notes-content {
-	flex: 1;
-	overflow-y: auto;
-	padding: 8px;
-	background-color: var(--background-primary);
-	border-radius: 4px;
-	min-height: 0;
-}
-
-.calendar-day-notes-markdown,
 .gc-day-view__notes-body {
 	font-size: 12px;
 	line-height: 1.6;
@@ -2281,14 +2311,12 @@ Author: sugar
 
 /* Priority badge inline */
 /* BEM命名: gc-task-card__priority, gc-task-card__priority-badge */
-.gantt-task-priority-inline,
 .gc-task-card__priority {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.gantt-priority-badge,
 .gc-task-card__priority-badge {
 	font-size: 16px;
 	display: inline-flex;
@@ -2300,34 +2328,28 @@ Author: sugar
 	flex-shrink: 0;
 }
 
-.gantt-priority-badge.priority-highest,
 .gc-task-card__priority-badge--highest {
 	background-color: rgba(239, 68, 68, 0.1);
 }
 
-.gantt-priority-badge.priority-high,
 .gc-task-card__priority-badge--high {
 	background-color: rgba(249, 115, 22, 0.1);
 }
 
-.gantt-priority-badge.priority-medium,
 .gc-task-card__priority-badge--medium {
 	background-color: rgba(234, 179, 8, 0.1);
 }
 
-.gantt-priority-badge.priority-low,
 .gc-task-card__priority-badge--low {
 	background-color: rgba(34, 197, 94, 0.1);
 }
 
-.gantt-priority-badge.priority-lowest,
 .gc-task-card__priority-badge--lowest {
 	background-color: rgba(59, 130, 246, 0.1);
 }
 
 /* Time properties inline */
 /* BEM命名: gc-task-card__times, gc-task-card__time-badge */
-.gantt-task-time-properties-inline,
 .gc-task-card__times {
 	display: flex;
 	flex-direction: row;
@@ -2336,7 +2358,6 @@ Author: sugar
 	flex-wrap: wrap;
 }
 
-.gantt-time-badge,
 .gc-task-card__time-badge {
 	display: flex;
 	align-items: center;
@@ -2349,14 +2370,12 @@ Author: sugar
 	white-space: nowrap;
 }
 
-.gantt-time-badge.gantt-overdue,
 .gc-task-card__time-badge--overdue {
 	color: #ef4444;
 	background-color: rgba(239, 68, 68, 0.1);
 	font-weight: 500;
 }
 
-.gantt-task-file,
 .gc-task-card__file {
 	display: flex;
 	align-items: center;
@@ -2369,7 +2388,6 @@ Author: sugar
 
 /* Warning Icon - 任务警告图标 */
 /* BEM命名: gc-task-card__warning */
-.gantt-task-warning-icon,
 .gc-task-card__warning {
 	display: inline-flex;
 	align-items: center;
@@ -2379,19 +2397,8 @@ Author: sugar
 	transition: transform 0.2s ease;
 }
 
-.gantt-task-warning-icon:hover,
 .gc-task-card__warning:hover {
 	transform: scale(1.2);
-}
-
-/* Ribbon Icon */
-.gantt-calendar-ribbon {
-	transition: all 0.2s ease;
-}
-
-.gantt-calendar-ribbon:hover {
-	transform: scale(1.1);
-	opacity: 0.8;
 }
 
 /* 6.9 Heatmap Components */
@@ -2514,87 +2521,6 @@ Author: sugar
 .heatmap-palette-label-text {
 	font-size: 12px;
 	color: var(--text-muted);
-}
-
-/* 6.10 Modal Components */
-.gantt-date-picker-modal {
-	padding: 20px;
-}
-
-.gantt-date-picker-modal h2 {
-	margin: 0 0 20px 0;
-	font-size: 18px;
-	font-weight: 600;
-	color: var(--text-normal);
-}
-
-.gantt-date-picker-modal .setting-item {
-	border: none;
-	padding: 10px 0;
-}
-
-.gantt-date-picker-modal .setting-item-name {
-	font-weight: 500;
-	margin-bottom: 8px;
-}
-
-.gantt-date-picker-modal input[type="date"] {
-	width: 100%;
-	padding: 8px 12px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	background: var(--background-primary);
-	color: var(--text-normal);
-	font-size: 14px;
-}
-
-.gantt-date-picker-modal input[type="date"]:focus {
-	border-color: var(--interactive-accent);
-	outline: none;
-	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
-}
-
-.gantt-date-picker-modal .setting-item-control {
-	display: flex;
-	gap: 10px;
-	justify-content: flex-end;
-	margin-top: 20px;
-}
-
-.gantt-date-picker-modal button {
-	padding: 8px 20px;
-	border-radius: 4px;
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.gantt-date-picker-modal button.mod-cta {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border: none;
-}
-
-.gantt-date-picker-modal button.mod-cta:hover {
-	background: var(--interactive-accent-hover);
-}
-
-.gantt-date-picker-modal button:not(.mod-cta) {
-	background: var(--background-secondary);
-	color: var(--text-normal);
-	border: 1px solid var(--background-modifier-border);
-}
-
-.gantt-date-picker-modal button:not(.mod-cta):hover {
-	background: var(--background-modifier-hover);
-}
-
-/* Task modal sizing */
-.gantt-task-modal.modal {
-	width: 640px;
-	max-width: 90vw;
-	max-height: 80vh;
 }
 
 /* Festival Color Settings */
@@ -2943,328 +2869,6 @@ Author: sugar
 /* No utility classes currently defined */
 /* Future utility classes can be added here as needed */
 
-/* ========================================
-   Task Sort Button Styles
-   ======================================== */
-
-/* 排序按钮容器 */
-.toolbar-sort-button-container {
-	display: inline-flex;
-	align-items: center;
-	margin-right: 4px;
-}
-
-/* 排序按钮 */
-.toolbar-sort-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 4px 8px;
-	min-width: 32px;
-}
-
-.toolbar-sort-icon {
-	font-size: 14px;
-}
-
-.toolbar-sort-dropdown-icon {
-	font-size: 10px;
-	opacity: 0.7;
-}
-
-/* 排序下拉菜单 */
-.toolbar-sort-dropdown {
-	position: fixed;
-	z-index: 1000;
-	background: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 4px 0;
-	min-width: 160px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.toolbar-sort-dropdown-header {
-	padding: 8px 12px;
-	font-size: 11px;
-	color: var(--text-muted);
-	border-bottom: 1px solid var(--background-modifier-border);
-	margin-bottom: 4px;
-}
-
-/* 排序菜单项 */
-.toolbar-sort-menu-item {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 8px 12px;
-	cursor: pointer;
-	transition: background 0.15s ease;
-}
-
-.toolbar-sort-menu-item:hover {
-	background: var(--background-modifier-hover);
-}
-
-.toolbar-sort-menu-item.active {
-	background: var(--background-modifier-border);
-}
-
-.toolbar-sort-option-icon {
-	font-size: 14px;
-	width: 20px;
-	text-align: center;
-}
-
-.toolbar-sort-option-label {
-	flex: 1;
-	font-size: 13px;
-}
-
-.toolbar-sort-option-indicator {
-	font-size: 12px;
-	width: 20px;
-	text-align: right;
-}
-
-/* ============================================
-   标签筛选器样式（紧凑版）
-   ============================================ */
-
-/* 标签筛选按钮容器 */
-.toolbar-tag-filter-container {
-	display: inline-flex;
-	align-items: center;
-}
-
-/* 标签筛选按钮 */
-.toolbar-tag-filter-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 4px 8px;
-	border: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary);
-	border-radius: 4px;
-	cursor: pointer;
-	transition: all 0.15s ease;
-	font-size: 12px;
-}
-
-.toolbar-tag-filter-btn:hover {
-	background-color: var(--background-modifier-hover);
-}
-
-.toolbar-tag-filter-btn:active {
-	transform: translateY(0);
-}
-
-/* 标签筛选按钮 - 有选中时的样式 */
-.toolbar-tag-filter-btn.has-selection {
-	background-color: var(--interactive-accent);
-	color: white;
-	border-color: var(--interactive-accent);
-}
-
-/* 标签图标 */
-.toolbar-tag-filter-icon {
-	font-size: 12px;
-	line-height: 1;
-}
-
-/* 标签数量徽章 */
-.toolbar-tag-filter-count {
-	background-color: var(--interactive-accent);
-	color: white;
-	font-size: 9px;
-	font-weight: 600;
-	padding: 1px 4px;
-	border-radius: 6px;
-	min-width: 14px;
-	text-align: center;
-	line-height: 1.1;
-}
-
-.toolbar-tag-filter-btn.has-selection .toolbar-tag-filter-count {
-	background-color: white;
-	color: var(--interactive-accent);
-}
-
-/* ============================================
-   标签选择窗格（紧凑版）
-   ============================================ */
-
-/* 窗格容器 - 更小更紧凑 */
-.tag-filter-pane {
-	position: fixed;
-	z-index: 1000;
-	background: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 6px 8px;
-	min-width: 180px;
-	max-width: 260px;
-	max-height: 280px;
-	overflow-y: auto;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* 窗格滚动条样式 */
-.tag-filter-pane::-webkit-scrollbar {
-	width: 4px;
-}
-
-.tag-filter-pane::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-.tag-filter-pane::-webkit-scrollbar-thumb {
-	background: var(--background-modifier-border);
-	border-radius: 2px;
-}
-
-.tag-filter-pane::-webkit-scrollbar-thumb:hover {
-	background: var(--text-muted);
-}
-
-/* 组合器区域 - 更紧凑 */
-.tag-filter-operators {
-	display: flex;
-	gap: 4px;
-	padding-bottom: 4px;
-	margin-bottom: 6px;
-	border-bottom: 1px solid var(--background-modifier-border);
-}
-
-/* 组合器按钮 - 更小更紧凑 */
-.tag-filter-operator-btn {
-	flex: 1;
-	padding: 2px 6px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
-	border-radius: 3px;
-	cursor: pointer;
-	font-size: 10px;
-	font-weight: 500;
-	color: var(--text-muted);
-	transition: all 0.12s ease;
-	text-align: center;
-	line-height: 1.4;
-}
-
-.tag-filter-operator-btn:hover {
-	background: var(--background-modifier-hover);
-}
-
-.tag-filter-operator-btn.active {
-	background: var(--interactive-accent);
-	color: white;
-	border-color: var(--interactive-accent);
-}
-
-/* 标签网格容器（平铺布局） - 更紧凑 */
-.tag-filter-tags-grid {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-}
-
-/* 空状态提示 - 更紧凑 */
-.tag-filter-empty {
-	padding: 12px;
-	text-align: center;
-	color: var(--text-muted);
-	font-size: 11px;
-}
-
-/* ============================================
-   胶囊样式标签项（紧凑版）
-   ============================================ */
-
-/* 标签项 - 胶囊样式单行布局 */
-.tag-filter-tag-item {
-	display: inline-flex;
-	align-items: center;
-	gap: 3px;
-	padding: 3px 6px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 12px;
-	background: var(--background-primary);
-	cursor: pointer;
-	transition: all 0.12s ease;
-	user-select: none;
-	font-size: 11px;
-}
-
-.tag-filter-tag-item:hover {
-	background: var(--background-modifier-hover);
-	border-color: var(--background-modifier-border-hover);
-}
-
-/* 选中状态 */
-.tag-filter-tag-item.selected {
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
-	color: white;
-}
-
-/* 标签名称 */
-.tag-filter-tag-name {
-	font-size: 11px;
-	font-weight: 500;
-	color: var(--text-normal);
-	line-height: 1.2;
-}
-
-.tag-filter-tag-item.selected .tag-filter-tag-name {
-	color: white;
-}
-
-/* 任务数量 - 小徽章 */
-.tag-filter-tag-count {
-	font-size: 9px;
-	color: var(--text-muted);
-	background: var(--background-modifier-border);
-	padding: 1px 4px;
-	border-radius: 6px;
-	font-weight: 500;
-	line-height: 1;
-}
-
-.tag-filter-tag-item.selected .tag-filter-tag-count {
-	background: rgba(255, 255, 255, 0.25);
-	color: white;
-}
-
-/* 选中状态下覆盖颜色为白色 */
-.tag-filter-tag-item.selected .tag-filter-tag-name {
-	color: white !important;
-}
-
-/* ============================================
-   响应式适配
-   ============================================ */
-
-@media (max-width: 768px) {
-	.tag-filter-pane {
-		min-width: 160px;
-		max-width: 200px;
-	}
-
-	.tag-filter-tag-item {
-		font-size: 10px;
-		padding: 2px 5px;
-	}
-
-	.tag-filter-tag-name {
-		font-size: 10px;
-	}
-
-	.tag-filter-tag-count {
-		font-size: 8px;
-		padding: 1px 3px;
-	}
-}
 
 /* ============================================
    ============================================

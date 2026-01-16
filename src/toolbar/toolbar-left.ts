@@ -32,22 +32,30 @@ export class ToolbarLeft {
 	 * @param container 左侧容器元素
 	 * @param currentViewType 当前视图类型
 	 * @param onViewSwitch 视图切换回调
+	 * @param showButtonText 是否显示按钮文本（默认为 true）
 	 */
 	render(
 		container: HTMLElement,
 		currentViewType: CalendarViewType,
-		onViewSwitch: (type: CalendarViewType) => void
+		onViewSwitch: (type: CalendarViewType) => void,
+		showButtonText: boolean = true
 	): void {
 		container.empty();
 
 		// 创建按钮组容器
 		const buttonGroup = container.createDiv(ToolbarClasses.components.viewSelectorGroup.group);
 
+		// 根据是否显示文本添加 modifier class
+		if (!showButtonText) {
+			buttonGroup.addClass(ToolbarClasses.components.viewSelectorGroup.iconOnly);
+		}
+
 		// 渲染6个视图按钮
 		VIEW_BUTTONS.forEach((config) => {
 			const btn = buttonGroup.createEl('button', {
 				attr: {
 					'data-view-type': config.type,
+					'aria-label': config.ariaLabel,
 				},
 			});
 
@@ -67,10 +75,12 @@ export class ToolbarLeft {
 			iconEl.addClass(ToolbarClasses.components.viewSelectorGroup.icon);
 			setIcon(iconEl, config.icon);
 
-			// 添加文字标签
-			const labelEl = contentContainer.createSpan();
-			labelEl.addClass(ToolbarClasses.components.viewSelectorGroup.label);
-			labelEl.setText(config.label);
+			// 添加文字标签（仅在 showButtonText 为 true 时显示）
+			if (showButtonText) {
+				const labelEl = contentContainer.createSpan();
+				labelEl.addClass(ToolbarClasses.components.viewSelectorGroup.label);
+				labelEl.setText(config.label);
+			}
 
 			// 绑定点击事件
 			btn.onclick = () => onViewSwitch(config.type);

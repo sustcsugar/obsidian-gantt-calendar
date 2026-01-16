@@ -52,9 +52,9 @@ export function renderNavButtons(
 		onNext,
 		containerClass,
 		buttonClass = ToolbarClasses.components.navButtons.btn,
-		todayText = '今天',
-		prevText = '◀',
-		nextText = '▶',
+		todayText = '今',
+		prevText = '',
+		nextText = '',
 		fullText = false
 	} = options;
 
@@ -64,9 +64,9 @@ export function renderNavButtons(
 
 	// 上一期按钮
 	const prevBtn = navButtons.createEl('button', {
-		text: fullText ? '上一期' : prevText,
-		attr: { title: fullText ? '上一个' : '上一个' }
+		attr: { title: '上一个', 'aria-label': '上一个' }
 	});
+	setIcon(prevBtn, 'chevron-left');
 	prevBtn.addClass(buttonClass);
 	prevBtn.onclick = onPrevious;
 
@@ -80,9 +80,9 @@ export function renderNavButtons(
 
 	// 下一期按钮
 	const nextBtn = navButtons.createEl('button', {
-		text: fullText ? '下一期' : nextText,
-		attr: { title: fullText ? '下一个' : '下一个' }
+		attr: { title: '下一个', 'aria-label': '下一个' }
 	});
+	setIcon(nextBtn, 'chevron-right');
 	nextBtn.addClass(buttonClass);
 	nextBtn.onclick = onNext;
 
@@ -138,16 +138,16 @@ export function renderNavButtonsFull(
 
 	// 上一期按钮
 	const prevBtn = navButtons.createEl('button', {
-		text: baseOptions.fullText ? '上一期' : '◀',
-		attr: { title: '上一个' }
+		attr: { title: '上一个', 'aria-label': '上一个' }
 	});
+	setIcon(prevBtn, 'chevron-left');
 	prevBtn.addClass(buttonClass);
 	prevBtn.onclick = baseOptions.onPrevious;
 	buttons.push(prevBtn);
 
 	// 今天按钮
 	const todayBtn = navButtons.createEl('button', {
-		text: baseOptions.todayText || '今天',
+		text: baseOptions.todayText || '今',
 		attr: { title: '回到今天' }
 	});
 	todayBtn.addClass(buttonClass);
@@ -156,9 +156,9 @@ export function renderNavButtonsFull(
 
 	// 下一期按钮
 	const nextBtn = navButtons.createEl('button', {
-		text: baseOptions.fullText ? '下一期' : '▶',
-		attr: { title: '下一个' }
+		attr: { title: '下一个', 'aria-label': '下一个' }
 	});
+	setIcon(nextBtn, 'chevron-right');
 	nextBtn.addClass(buttonClass);
 	nextBtn.onclick = baseOptions.onNext;
 	buttons.push(nextBtn);

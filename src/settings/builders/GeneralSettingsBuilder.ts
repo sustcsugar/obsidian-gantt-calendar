@@ -54,6 +54,18 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 							await this.saveAndRefresh();
 						}))
 			);
+
+			// 视图导航按钮显示文本
+			addSetting(setting =>
+				setting.setName('视图导航按钮显示文本')
+					.setDesc('工具栏左侧的视图导航按钮是否显示文字标签。关闭后仅显示图标')
+					.addToggle(toggle => toggle
+						.setValue(this.plugin.settings.showViewNavButtonText)
+						.onChange(async (value) => {
+							this.plugin.settings.showViewNavButtonText = value;
+							await this.saveAndRefresh();
+						}))
+			);
 		});
 	}
 }

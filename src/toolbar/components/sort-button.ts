@@ -37,12 +37,14 @@ export function renderSortButton(
 ): { cleanup: () => void } {
 	const { getCurrentState, onSortChange } = options;
 
-	// 创建按钮容器
-	const buttonContainer = container.createDiv(ToolbarClasses.components.sort.containerWrapper);
+	// 创建下凹底座容器（与导航按钮组样式一致）
+	const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
+	// 添加响应式优先级类（第一优先级隐藏）
+	buttonGroup.addClass(ToolbarClasses.priority.priority1);
 
 	// 创建排序按钮
-	const sortBtn = buttonContainer.createEl('button', {
-		cls: `calendar-view-compact-btn ${ToolbarClasses.components.sort.btn}`,
+	const sortBtn = buttonGroup.createEl('button', {
+		cls: ToolbarClasses.components.navButtons.btn,
 		attr: { title: '排序选项' }
 	});
 
