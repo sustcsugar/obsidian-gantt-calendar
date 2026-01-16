@@ -63,12 +63,6 @@ Author: sugar
 	min-height: 0;
 }
 
-.view-content.gantt-root {
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-}
-
 /* Calendar Grid Layouts */
 .gc-week-view__grid {
 	display: flex;
@@ -104,7 +98,6 @@ Author: sugar
 
 /* Gantt Layout Objects */
 /* BEM命名: gc-view--gantt */
-.calendar-gantt-view,
 .gc-view.gc-view--gantt {
 	display: flex;
 	flex-direction: column;
@@ -178,7 +171,6 @@ Author: sugar
 	/* 响应式布局由 TypeScript 控制，基于实际CSS值动态计算 */
 }
 
-.calendar-month-view,
 .gc-view.gc-view--month {
 	display: flex;
 	flex-direction: column;
@@ -258,8 +250,6 @@ Author: sugar
 
 /* ==================== Task View Layout ==================== */
 /* BEM命名: gc-view--task (Modifier) */
-.calendar-task-view,
-.task-view-list,
 .gc-view--task {
 	display: flex;
 	flex-direction: column;
@@ -304,8 +294,6 @@ Author: sugar
 	z-index: 100;
 }
 
-.calendar-toolbar-left,
-.calendar-toolbar-center,
 .gc-toolbar__left,
 .gc-toolbar__center,
 .gc-toolbar__right {
@@ -314,12 +302,10 @@ Author: sugar
 	gap: 10px;
 }
 
-.calendar-toolbar-left,
 .gc-toolbar__left {
 	flex: 0 1 auto;
 }
 
-.calendar-toolbar-center,
 .gc-toolbar__center {
 	flex: 1 1 auto;
 	display: flex;
@@ -336,7 +322,6 @@ Author: sugar
 	gap: 6px;
 }
 
-.calendar-nav,
 .gc-nav {
 	display: flex;
 	align-items: center;
@@ -344,7 +329,6 @@ Author: sugar
 	flex: 1;
 }
 
-.calendar-toggle-group,
 .gc-toggle-group,
 .gc-toolbar__view-toggle-group {
 	display: flex;
@@ -352,7 +336,6 @@ Author: sugar
 	gap: 8px;
 }
 
-.calendar-toggle-btn,
 .gc-toolbar__view-toggle-btn {
 	padding: 6px 12px;
 	border: 1px solid var(--background-modifier-border);
@@ -369,7 +352,6 @@ Author: sugar
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.calendar-toggle-btn.active,
 .gc-toolbar__view-toggle-btn--active {
 	background-color: var(--interactive-accent);
 	border-color: var(--interactive-accent);
@@ -378,126 +360,19 @@ Author: sugar
 	backdrop-filter: none;
 }
 
-.calendar-toggle-btn:hover,
 .gc-toolbar__view-toggle-btn:hover {
 	background-color: color-mix(in srgb, var(--background-primary) 65%, transparent);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.toolbar-right-task-refresh-btn {
-	padding: 6px;
-	width: 32px;
-	height: 32px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background-color: transparent;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	transition: all 0.15s ease;
-}
-
-.toolbar-right-task-refresh-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-}
-
-.toolbar-right-task-refresh-btn svg {
-	width: 18px;
-	height: 18px;
-}
-
-.toolbar-right-task {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	flex: 0 1 auto;
-	justify-content: flex-end;
-	flex-wrap: wrap;
-}
-
-.toolbar-right-task-field-select {
-	padding: 4px 8px;
-	border: 1px solid var(--input-border-color);
-	border-radius: 4px;
-	background-color: var(--background-secondary);
-	color: var(--text-normal);
-	font-size: 12px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.toolbar-right-task-field-select:hover {
-	border-color: var(--interactive-accent);
-}
-
-.toolbar-right-task-field-select:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 2px var(--interactive-accent-rgb, rgba(138, 109, 255, 0.1));
-}
-
-.toolbar-right-task-global-filter {
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--text-normal);
-	white-space: nowrap;
-}
-
-.toolbar-right-task-status-group {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.toolbar-right-task-status-label {
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--text-muted);
-	white-space: nowrap;
-	margin: 0 8px;
-}
-
-.toolbar-right-task-status-select {
-	padding: 4px 8px;
-	border: 1px solid var(--input-border-color);
-	border-radius: 4px;
-	background-color: var(--background-secondary);
-	color: var(--text-normal);
-	font-size: 12px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.toolbar-right-task-status-select:hover {
-	border-color: var(--interactive-accent);
-}
-
-.toolbar-right-task-status-select:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 2px var(--interactive-accent-rgb, rgba(138, 109, 255, 0.1));
-}
-
 /* 旧类名兼容 - toolbar-right-task-field-filter-group */
-.toolbar-right-task-field-filter-label,
 .gc-toolbar__field-filter-group {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 }
 
-.toolbar-right-task-field-filter-label {
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--text-muted);
-	white-space: nowrap;
-	margin: 0 8px;
-}
-
 /* 旧类名兼容 - toolbar-right-task-date-filter-group */
-.toolbar-right-task-date-filter-group,
 .gc-toolbar__date-filter-group {
 	display: inline-flex;
 	align-items: center;
@@ -506,7 +381,6 @@ Author: sugar
 }
 
 /* BEM: 日期筛选标签 */
-.toolbar-right-task-date-filter-label,
 .gc-toolbar__date-filter-label {
 	font-size: 14px;
 	color: var(--text-muted);
@@ -514,7 +388,6 @@ Author: sugar
 }
 
 /* BEM: 日期输入框 */
-.toolbar-right-task-date-input,
 .gc-toolbar__date-input {
 	padding: 4px 8px;
 	border: 1px solid var(--input-border-color);
@@ -525,7 +398,6 @@ Author: sugar
 }
 
 /* BEM: 日期模式按钮 */
-.toolbar-right-task-date-mode-btn,
 .gc-toolbar__date-mode-btn {
 	padding: 2px 6px;
 	border: 1px solid var(--background-modifier-border);
@@ -537,13 +409,11 @@ Author: sugar
 	transition: all 0.15s ease;
 }
 
-.toolbar-right-task-date-mode-btn:hover,
 .gc-toolbar__date-mode-btn:hover {
 	background-color: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.toolbar-right-task-date-mode-btn.active,
 .gc-toolbar__date-mode-btn.active {
 	background-color: #ff6b4a;
 	border-color: #ff6b4a;
@@ -561,24 +431,7 @@ Author: sugar
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.calendar-nav-btn {
-	padding: 4px 12px;
-	background-color: transparent;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 13px;
-	color: var(--text-muted);
-	transition: all 0.15s ease;
-}
-
-.calendar-nav-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-}
-
 /* BEM: 通用工具栏按钮 */
-.calendar-nav-compact-btn,
 .gc-toolbar__btn {
 	padding: 2px 6px;
 	border: 1px solid var(--background-modifier-border);
@@ -596,7 +449,6 @@ Author: sugar
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-.calendar-nav-compact-btn:hover,
 .gc-toolbar__btn:hover {
 	background-color: color-mix(in srgb, var(--background-primary) 55%, transparent);
 	color: var(--text-normal);
@@ -635,60 +487,6 @@ Author: sugar
 	box-shadow: none;
 }
 
-.calendar-view-btn {
-	padding: 6px 16px;
-	background-color: transparent;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 14px;
-	font-weight: 500;
-	color: var(--text-muted);
-	transition: all 0.15s ease;
-}
-
-.calendar-view-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-}
-
-.calendar-view-btn.active {
-	background-color: var(--background-modifier-border);
-	color: var(--text-normal);
-}
-
-.calendar-view-compact-btn {
-	padding: 2px 6px;
-	border: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary);
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 12px;
-	color: var(--text-muted);
-	transition: all 0.15s ease;
-	min-width: 28px;
-	text-align: center;
-}
-
-.calendar-view-compact-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-	border-color: var(--interactive-normal);
-}
-
-.calendar-view-compact-btn.active {
-	background-color: #ff6b4a;
-	border-color: #ff6b4a;
-	color: white;
-	font-weight: 500;
-}
-
-.calendar-view-compact-btn.icon-btn {
-	padding: 2px 6px;
-	min-width: auto;
-}
-
-.calendar-title-display,
 .gc-toolbar__title-display {
 	font-weight: 600;
 	color: var(--text-normal);
@@ -701,7 +499,6 @@ Author: sugar
 }
 
 /* BEM: 视图选择器 */
-.calendar-view-selector,
 .gc-toolbar__view-selector {
 	display: flex;
 	gap: 6px;
@@ -865,8 +662,6 @@ Author: sugar
 	}
 
 	/* 缩小按钮间距 */
-	.calendar-toolbar-left,
-	.calendar-toolbar-center,
 	.gc-toolbar__left,
 	.gc-toolbar__center,
 	.gc-toolbar__right {
@@ -882,25 +677,15 @@ Author: sugar
 	}
 
 	/* 标题字体缩小 */
-	.calendar-title-display,
 	.gc-toolbar__title-display {
 		font-size: 13px;
 	}
 
 	/* 导航按钮缩小 */
-	.calendar-nav-btn,
 	.gc-nav__btn {
 		padding: 4px 8px;
 		font-size: 12px;
 	}
-}
-
-/* Gantt Toolbar Components */
-.toolbar-right-gantt {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	flex-wrap: wrap;
 }
 
 /* ============================================
@@ -908,25 +693,21 @@ Author: sugar
    ============================================ */
 
 /* BEM: 通用按钮组样式 */
-.calendar-button-group,
 .gc-toolbar__button-group {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.calendar-button-group-horizontal,
 .gc-toolbar__button-group--horizontal {
 	flex-direction: row;
 }
 
-.calendar-button-group-vertical,
 .gc-toolbar__button-group--vertical {
 	flex-direction: column;
 }
 
 /* BEM: 输入组样式 */
-.calendar-input-group,
 .gc-toolbar__input-group {
 	display: inline-flex;
 	align-items: center;
@@ -934,19 +715,16 @@ Author: sugar
 }
 
 /* BEM: 模式切换组样式 */
-.calendar-mode-toggle-group,
 .gc-toolbar__mode-toggle-group {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.calendar-mode-icon,
 .gc-toolbar__mode-icon {
 	font-size: 12px;
 }
 
-.calendar-mode-label,
 .gc-toolbar__mode-label {
 	font-size: 13px;
 	color: var(--text-normal);
@@ -1240,87 +1018,6 @@ Author: sugar
 	color: var(--text-normal);
 	font-size: 12px;
 	cursor: pointer;
-}
-
-/* 向下兼容旧类名 */
-.toolbar-dual-field-selector-wrapper {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.toolbar-field-filter-group {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.toolbar-time-granularity-group {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 2px;
-	background-color: var(--background-secondary);
-}
-
-.time-today-btn {
-	padding: 4px 10px;
-	border: none;
-	border-radius: 4px;
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-	font-size: 13px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.time-today-btn:hover {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.time-granularity-btn {
-	padding: 4px 12px;
-	border: none;
-	border-radius: 4px;
-	background-color: transparent;
-	color: var(--text-muted);
-	font-size: 13px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.time-granularity-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-}
-
-.time-granularity-btn.active {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	font-weight: 600;
-}
-
-.toolbar-gantt-field-group {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.toolbar-gantt-field-label {
-	font-size: 13px;
-	color: var(--text-muted);
-}
-
-.toolbar-gantt-field-select {
-	padding: 4px 8px;
-	border: none;
-	border-radius: 4px;
-	background-color: transparent;
-	color: var(--text-normal);
-	font-size: 12px;
 }
 
 /* ============================================
@@ -1646,7 +1343,6 @@ Author: sugar
 /* BEM命名: gc-tag (独立Block), gc-task-card__tags (作为任务卡Element) */
 
 /* Tags inline container - 任务标签容器 */
-.gantt-task-tags-inline,
 .gc-task-card__tags {
 	display: flex;
 	flex-direction: row;
@@ -1776,7 +1472,6 @@ Author: sugar
 }
 
 /* Tooltip Tags */
-.tooltip-tags,
 .gc-task-tooltip__tags {
 	display: flex;
 	flex-direction: row;
@@ -1798,7 +1493,6 @@ Author: sugar
 		padding: 1px 6px;
 	}
 
-	.gantt-task-tags-inline,
 	.gc-task-card__tags {
 		gap: 3px;
 	}
@@ -3066,26 +2760,6 @@ Author: sugar
 	pointer-events: none;
 }
 
-/* 任务列表项 */
-.gantt-task-list-item {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	height: 100%;
-	font-size: 12px;
-	color: var(--text-normal);
-}
-
-.gantt-task-list-item__text {
-	flex: 1;
-	white-space: nowrap;
-	cursor: pointer;
-}
-
-.gantt-task-list-item__text:hover {
-	color: var(--interactive-accent);
-}
-
 /* 任务复选框 */
 .gc-gantt-view__task-checkbox {
 	flex-shrink: 0;
@@ -3106,14 +2780,6 @@ Author: sugar
 .gc-gantt-view__bar-group:hover .gc-gantt-view__handle-left,
 .gc-gantt-view__bar-group:hover .gc-gantt-view__handle-right {
 	opacity: 1;
-}
-
-/* 今天标记线 */
-.gantt-today-line {
-	stroke: var(--interactive-accent);
-	stroke-width: 2;
-	stroke-dasharray: 4 2;
-	pointer-events: none;
 }
 
 
@@ -3199,38 +2865,6 @@ Author: sugar
 	color: var(--tag-color);
 	border-radius: 4px;
 	font-size: 11px;
-}
-
-/* 日期头部样式 */
-.gantt-date-header {
-	font-size: 11px;
-	fill: var(--text-muted);
-}
-
-.gantt-date-header.today {
-	font-weight: 600;
-	fill: var(--interactive-accent);
-}
-
-/* 今天标记线 */
-.gantt-today-line {
-	stroke: var(--interactive-accent);
-	stroke-width: 2;
-	stroke-dasharray: 4 2;
-	pointer-events: none;
-}
-
-/* 依赖箭头 */
-.gantt-dependency-arrow {
-	stroke: var(--text-muted);
-	stroke-width: 1.5;
-	fill: none;
-	pointer-events: none;
-}
-
-.gantt-dependency-arrow:hover {
-	stroke: var(--interactive-accent);
-	stroke-width: 2;
 }
 
 /* 响应式适配 */
