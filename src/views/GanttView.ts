@@ -38,8 +38,8 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	private timeGranularity: GanttTimeGranularity = 'day';
 	private ganttViewMode: GanttChartConfig['view_mode'] = 'day';
 
-	// 排序状态（默认按截止时间降序）
-	private sortState: SortState = { field: 'dueDate', order: 'desc' };
+	// 排序状态（默认按截止时间升序）
+	private sortState: SortState = { field: 'dueDate', order: 'asc' };
 
 	// 甘特图 组件
 	private ganttWrapper: GanttChartAdapter | null = null;
@@ -310,6 +310,9 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			if (this.ganttWrapper) {
 				if (this.shouldScrollToTodayOnRefresh) {
 					// 用户主动刷新，滚动到今天
+					this.ganttWrapper.scrollToToday();
+				} else if (this.scrollLeftPosition === 0 && this.scrollTopPosition === 0) {
+					// 首次加载（滚动位置为初始值），滚动到今天
 					this.ganttWrapper.scrollToToday();
 				} else {
 					// 其他情况（如筛选、排序变更），恢复之前的滚动位置
