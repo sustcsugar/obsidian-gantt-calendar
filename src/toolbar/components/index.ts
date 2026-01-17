@@ -22,11 +22,9 @@ export {
 export {
 	renderModeToggleGroup,
 	renderViewSwitcher,
-	renderTimeGranularitySelector,
 	type ModeToggleGroupOptions,
 	type ModeOption,
-	type ViewSwitcherOptions,
-	type TimeGranularityOptions
+	type ViewSwitcherOptions
 } from './mode-toggle-group';
 
 // === 功能组件（移动后导出） ===

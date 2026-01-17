@@ -6,7 +6,7 @@
 
 import { Notice } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
-import type { GCTask, GanttTimeGranularity, SortState, TagFilterState } from '../types';
+import type { GCTask, SortState, TagFilterState } from '../types';
 import { DEFAULT_TAG_FILTER_STATE } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { GanttClasses } from '../utils/bem';
@@ -34,8 +34,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	private scrollLeftPosition = 0;
 	private scrollTopPosition = 0;
 
-	// 视图模式
-	private timeGranularity: GanttTimeGranularity = 'day';
+	// 视图模式（仅支持日视图）
 	private ganttViewMode: GanttChartConfig['view_mode'] = 'day';
 
 	// 排序状态（默认按截止时间升序）
@@ -65,14 +64,6 @@ export class GanttViewRenderer extends BaseViewRenderer {
 		this.refresh();
 	}
 
-
-
-	public getTimeGranularity(): GanttTimeGranularity { return this.timeGranularity; }
-	public setTimeGranularity(value: GanttTimeGranularity): void {
-		this.timeGranularity = value;
-		this.ganttViewMode = this.mapGranularityToViewMode(value);
-		this.refresh();  // refresh() 会重新渲染整个视图，使用新的颗粒度
-	}
 
 	public getSortState(): SortState { return this.sortState; }
 	public setSortState(state: SortState): void {
@@ -284,7 +275,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			// 8. 配置 甘特图
 			const config: GanttChartConfig = {
 				view_mode: this.ganttViewMode,
-				granularity: this.mapToTimeGranularity(this.timeGranularity),  // 添加颗粒度配置（转换为枚举）
+				granularity: TimeGranularity.DAY,  // 固定为日视图
 				language: 'zh',
 				header_height: 50,
 				column_width: 40,
@@ -421,30 +412,6 @@ export class GanttViewRenderer extends BaseViewRenderer {
 			progress,
 			this.currentGlobalTasks
 		);
-	}
-
-	/**
-	 * 映射时间颗粒度到 甘特图 视图模式
-	 */
-	private mapGranularityToViewMode(granularity: GanttTimeGranularity): GanttChartConfig['view_mode'] {
-		const modeMap: Record<GanttTimeGranularity, GanttChartConfig['view_mode']> = {
-			'day': 'day',
-			'week': 'week',
-			'month': 'month'
-		};
-		return modeMap[granularity] || 'day';
-	}
-
-	/**
-	 * 映射 UI 颗粒度到内部 TimeGranularity 枚举
-	 */
-	private mapToTimeGranularity(granularity: GanttTimeGranularity): TimeGranularity {
-		const granularityMap: Record<GanttTimeGranularity, TimeGranularity> = {
-			'day': TimeGranularity.DAY,
-			'week': TimeGranularity.WEEK,
-			'month': TimeGranularity.MONTH
-		};
-		return granularityMap[granularity] || TimeGranularity.DAY;
 	}
 
 	/**

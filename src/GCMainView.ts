@@ -341,7 +341,7 @@ export class GCMainView extends ItemView {
 			case 'task':
 				return '任务视图';
             case 'gantt':
-                return '甘特图视图(beta:周月颗粒度有问题)';
+                return '甘特图视图';
 		}
 	}
 }

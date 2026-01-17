@@ -2,7 +2,6 @@ import type { GanttViewRenderer } from '../views/GanttView';
 import { renderStatusFilterButton } from './components/status-filter';
 import { renderRefreshButton } from './components/refresh-button';
 import { renderGanttScrollButtons } from './components/gantt-scroll-buttons';
-import { renderTimeGranularity } from './components/time-granularity';
 import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderCreateTaskButton } from './components/create-task-button';
@@ -12,7 +11,7 @@ import { ToolbarClasses } from '../utils/bem';
  * 工具栏右侧区域 - 甘特视图功能区
  *
  * 按钮布局顺序：
- * 左侧（私有）：[滚动按钮] | [时间颗粒度] | [状态筛选]
+ * 左侧（私有）：[滚动按钮] | [状态筛选]
  * 右侧（共有）：[排序] | [标签筛选] | [刷新]
  *
  * 这样设计确保切换视图时共有按钮位置不变，避免跳动
@@ -36,18 +35,6 @@ export class ToolbarRightGantt {
 			onScrollToToday: () => ganttRenderer.jumpToToday(),
 			onScrollToRight: () => ganttRenderer.jumpToRight(),
 		});
-
-		// 时间颗粒度选择按钮
-		renderTimeGranularity(
-			container,
-			{
-				current: ganttRenderer.getTimeGranularity(),
-				onChange: (granularity) => {
-					ganttRenderer.setTimeGranularity(granularity);
-					onRefresh();
-				},
-			}
-		);
 
 		// 状态筛选
 		renderStatusFilterButton(container, {

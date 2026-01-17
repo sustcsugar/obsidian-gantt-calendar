@@ -13,7 +13,7 @@
  */
 
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
-import { TimeGranularity, GRANULARITY_CONFIGS, getWeekNumber } from '../types';
+import { TimeGranularity, GRANULARITY_CONFIGS } from '../types';
 import type { GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
@@ -936,7 +936,7 @@ export class SvgGanttRenderer {
 			text.setAttribute('font-weight', isCurrentUnit ? '600' : '400');
 
 			// 使用颗粒度配置的标签格式化器
-			const label = config.labelFormatter(unitDate, i, getWeekNumber);
+			const label = config.labelFormatter(unitDate, i);
 			if (label) {  // 只渲染非空标签
 				text.textContent = label;
 				svg.appendChild(text);
@@ -992,37 +992,21 @@ export class SvgGanttRenderer {
 	}
 
 	/**
-	 * 判断两个日期是否在同一颗粒度单元 - 辅助方法
+	 * 判断两个日期是否在同一颗粒度单元 - 辅助方法（仅日视图）
 	 */
-	private isSameUnit(date1: Date, date2: Date, granularity: TimeGranularity): boolean {
-		switch (granularity) {
-			case TimeGranularity.DAY:
-				return date1.getFullYear() === date2.getFullYear() &&
-					   date1.getMonth() === date2.getMonth() &&
-					   date1.getDate() === date2.getDate();
-			case TimeGranularity.WEEK:
-				return getWeekNumber(date1) === getWeekNumber(date2) &&
-					   date1.getFullYear() === date2.getFullYear();
-			case TimeGranularity.MONTH:
-				return date1.getFullYear() === date2.getFullYear() &&
-					   date1.getMonth() === date2.getMonth();
-		}
-		return false;
+	private isSameUnit(date1: Date, date2: Date, _granularity: TimeGranularity): boolean {
+		// 只支持日视图
+		return date1.getFullYear() === date2.getFullYear() &&
+			   date1.getMonth() === date2.getMonth() &&
+			   date1.getDate() === date2.getDate();
 	}
 
 	/**
-	 * 判断是否为主要网格线 - 辅助方法
+	 * 判断是否为主要网格线 - 辅助方法（仅日视图）
 	 */
-	private isMajorGridLine(unitIndex: number, granularity: TimeGranularity): boolean {
-		switch (granularity) {
-			case TimeGranularity.DAY:
-				return unitIndex % 7 === 0; // 每周加粗
-			case TimeGranularity.WEEK:
-				return unitIndex % 4 === 0; // 每月（约4周）加粗
-			case TimeGranularity.MONTH:
-				return unitIndex % 3 === 0; // 每季度加粗
-		}
-		return false;
+	private isMajorGridLine(unitIndex: number, _granularity: TimeGranularity): boolean {
+		// 只支持日视图，每7天（每周）加粗
+		return unitIndex % 7 === 0;
 	}
 
 	/**
