@@ -42,20 +42,6 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 年视图农历字号
-			addSetting(setting =>
-				setting.setName('年视图农历字号')
-					.setDesc('调整年视图月卡片内农历文字大小（8-18px）')
-					.addSlider(slider => slider
-						.setLimits(8, 18, 1)
-						.setValue(this.plugin.settings.yearLunarFontSize)
-						.setDynamicTooltip()
-						.onChange(async (value) => {
-							this.plugin.settings.yearLunarFontSize = value;
-							await this.saveAndRefresh();
-						}))
-			);
-
 			// 一周开始于
 			addSetting(setting => {
 				setting.setName('一周开始于:')
