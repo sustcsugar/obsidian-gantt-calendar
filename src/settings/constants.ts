@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	yearShowTaskCount: true,
 	yearHeatmapEnabled: true,
 	yearHeatmapPalette: 'blue',
-	yearHeatmap3DEnabled: true,
+	yearHeatmap3DEnabled: 2,
 	taskNotePath: 'Tasks', // 默认任务笔记文件夹路径
 	taskStatuses: DEFAULT_TASK_STATUSES, // 默认任务状态配置
 	taskSortField: 'dueDate', // 默认排序字段：截止日期

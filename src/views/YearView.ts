@@ -161,8 +161,10 @@ export class YearViewRenderer extends BaseViewRenderer {
 					const level = count >= 20 ? 5 : count >= 10 ? 4 : count >= 5 ? 3 : count >= 2 ? 2 : 1;
 					dayEl.addClass(`heatmap-${palette}-${level}`);
 					// 添加3D效果类
-					if (this.plugin.settings.yearHeatmap3DEnabled) {
-						dayEl.addClass('heatmap-3d');
+					if (this.plugin.settings.yearHeatmap3DEnabled === 1) {
+						dayEl.addClass('heatmap-3d-1');
+					} else if (this.plugin.settings.yearHeatmap3DEnabled === 2) {
+						dayEl.addClass('heatmap-3d-2');
 					}
 				}
 
@@ -271,7 +273,7 @@ export class YearViewRenderer extends BaseViewRenderer {
 					'heatmap-cyan-1', 'heatmap-cyan-2', 'heatmap-cyan-3', 'heatmap-cyan-4', 'heatmap-cyan-5',
 					'heatmap-pink-1', 'heatmap-pink-2', 'heatmap-pink-3', 'heatmap-pink-4', 'heatmap-pink-5',
 					'heatmap-yellow-1', 'heatmap-yellow-2', 'heatmap-yellow-3', 'heatmap-yellow-4', 'heatmap-yellow-5',
-					'heatmap-3d'
+					'heatmap-3d-1', 'heatmap-3d-2'
 				);
 
 				// 添加新的热力图类
@@ -280,8 +282,10 @@ export class YearViewRenderer extends BaseViewRenderer {
 					const level = count >= 20 ? 5 : count >= 10 ? 4 : count >= 5 ? 3 : count >= 2 ? 2 : 1;
 					(dayEl as HTMLElement).classList.add(`heatmap-${palette}-${level}`);
 					// 添加3D效果类
-					if (this.plugin.settings.yearHeatmap3DEnabled) {
-						(dayEl as HTMLElement).classList.add('heatmap-3d');
+					if (this.plugin.settings.yearHeatmap3DEnabled === 1) {
+						(dayEl as HTMLElement).classList.add('heatmap-3d-1');
+					} else if (this.plugin.settings.yearHeatmap3DEnabled === 2) {
+						(dayEl as HTMLElement).classList.add('heatmap-3d-2');
 					}
 				}
 

@@ -2179,8 +2179,34 @@ Author: sugar
 .gc-year-view__day:not(.outside-month).heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44) !important; }
 .gc-year-view__day:not(.outside-month).heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58) !important; }
 
-/* 热力图玻璃水珠质感效果（仅当启用3D效果时应用） */
-.gc-year-view__day:not(.outside-month).heatmap-3d[class*="heatmap-"] {
+/* 热力图3D效果 - 第一档：轻微突起 */
+.gc-year-view__day:not(.outside-month).heatmap-3d-1[class*="heatmap-"] {
+	box-shadow:
+		inset 0 1px 1px rgba(255, 255, 255, 0.4),
+		inset 0 -1px 1px rgba(0, 0, 0, 0.05),
+		0 2px 4px rgba(0, 0, 0, 0.08);
+	position: relative;
+}
+
+.gc-year-view__day:not(.outside-month).heatmap-3d-1[class*="heatmap-"]::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 10%;
+	right: 10%;
+	height: 40%;
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.25),
+		rgba(255, 255, 255, 0)
+	);
+	border-radius: 8px 8px 4px 4px;
+	pointer-events: none;
+	opacity: 0.7;
+}
+
+/* 热力图3D效果 - 第二档：明显突起 */
+.gc-year-view__day:not(.outside-month).heatmap-3d-2[class*="heatmap-"] {
 	/* 内阴影创造深度感，底部深色阴影避免白色边缘 */
 	box-shadow:
 		/* 内阴影 - 顶部高光 */
@@ -2196,8 +2222,8 @@ Author: sugar
 	position: relative;
 }
 
-/* 玻璃顶部高光反射 */
-.gc-year-view__day:not(.outside-month).heatmap-3d[class*="heatmap-"]::after {
+/* 玻璃顶部高光反射 - 第二档 */
+.gc-year-view__day:not(.outside-month).heatmap-3d-2[class*="heatmap-"]::after {
 	content: '';
 	position: absolute;
 	top: 2px;

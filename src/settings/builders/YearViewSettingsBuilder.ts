@@ -72,14 +72,17 @@ export class YearViewSettingsBuilder extends BaseBuilder {
 					heatmapPicker.render();
 				});
 
-				// 热力图3D效果开关
+				// 热力图3D效果选择
 				addSetting(setting =>
 					setting.setName('热力图3D效果')
 						.setDesc('为热力图颜色格子添加玻璃水珠质感效果')
-						.addToggle(toggle => toggle
-							.setValue(this.plugin.settings.yearHeatmap3DEnabled)
+						.addDropdown(dropdown => dropdown
+							.addOption('0', '关闭')
+							.addOption('1', '轻微突起')
+							.addOption('2', '明显突起')
+							.setValue(String(this.plugin.settings.yearHeatmap3DEnabled ?? 0))
 							.onChange(async (value) => {
-								this.plugin.settings.yearHeatmap3DEnabled = value;
+								this.plugin.settings.yearHeatmap3DEnabled = parseInt(value) as 0 | 1 | 2;
 								await this.saveAndRefresh();
 								this.plugin.refreshCalendarViews();
 							}))
