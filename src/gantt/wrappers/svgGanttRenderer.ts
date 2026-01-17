@@ -77,6 +77,13 @@ export class SvgGanttRenderer {
 	// 拖动状态
 	private isResizing = false;
 
+	// 行背景元素引用（用于鼠标悬停高亮）
+	private rowBgElements = {
+		taskList: [] as SVGRectElement[],
+		gantt: [] as SVGRectElement[],
+	};
+	private currentHighlightRow = -1;
+
 	// 事件回调
 	private onDateChange?: (task: GanttChartTask, start: Date, end: Date) => void;
 	private onProgressChange?: (task: GanttChartTask, progress: number) => void;
@@ -272,6 +279,9 @@ export class SvgGanttRenderer {
 
 		// 设置分隔条拖动
 		this.setupResizer();
+
+		// 设置行悬停高亮
+		this.setupRowHighlight();
 	}
 
 	/**
@@ -468,6 +478,133 @@ export class SvgGanttRenderer {
 	}
 
 	/**
+	 * 设置行悬停高亮
+	 * 监听任务列表和甘特图区域的鼠标移动，高亮对应的行
+	 */
+	private setupRowHighlight(): void {
+		if (!this.taskListContainer || !this.ganttContainer) return;
+
+		// 更新行高亮的辅助方法
+		const updateHighlight = (rowIndex: number) => {
+			// 如果行索引超出范围或没有变化，直接返回
+			if (rowIndex < 0 || rowIndex >= this.tasks.length || rowIndex === this.currentHighlightRow) {
+				return;
+			}
+
+			// 清除之前的高亮
+			if (this.currentHighlightRow >= 0) {
+				const oldTaskListRow = this.rowBgElements.taskList[this.currentHighlightRow];
+				const oldGanttRow = this.rowBgElements.gantt[this.currentHighlightRow];
+				if (oldTaskListRow) {
+					addSvgClass(oldTaskListRow, GanttClasses.elements.rowBg);
+					const classes = oldTaskListRow.getAttribute('class')?.split(' ') || [];
+					const newClasses = classes.filter(c => c !== GanttClasses.elements.rowHighlight);
+					oldTaskListRow.setAttribute('class', newClasses.join(' '));
+					// 恢复原始背景
+					if (this.currentHighlightRow % 2 === 0) {
+						oldTaskListRow.setAttribute('fill', 'var(--background-secondary)');
+						oldTaskListRow.setAttribute('opacity', '0.3');
+					} else {
+						oldTaskListRow.setAttribute('fill', 'transparent');
+					}
+				}
+				if (oldGanttRow) {
+					addSvgClass(oldGanttRow, GanttClasses.elements.rowBg);
+					const classes = oldGanttRow.getAttribute('class')?.split(' ') || [];
+					const newClasses = classes.filter(c => c !== GanttClasses.elements.rowHighlight);
+					oldGanttRow.setAttribute('class', newClasses.join(' '));
+					// 恢复原始背景
+					if (this.currentHighlightRow % 2 === 0) {
+						oldGanttRow.setAttribute('fill', 'var(--background-secondary)');
+						oldGanttRow.setAttribute('opacity', '0.3');
+					} else {
+						oldGanttRow.setAttribute('fill', 'transparent');
+					}
+				}
+			}
+
+			// 添加新的高亮
+			const newTaskListRow = this.rowBgElements.taskList[rowIndex];
+			const newGanttRow = this.rowBgElements.gantt[rowIndex];
+			if (newTaskListRow) {
+				const classes = newTaskListRow.getAttribute('class')?.split(' ') || [];
+				const newClasses = classes.filter(c => c !== GanttClasses.elements.rowBg);
+				newClasses.push(GanttClasses.elements.rowHighlight);
+				newTaskListRow.setAttribute('class', newClasses.join(' '));
+			}
+			if (newGanttRow) {
+				const classes = newGanttRow.getAttribute('class')?.split(' ') || [];
+				const newClasses = classes.filter(c => c !== GanttClasses.elements.rowBg);
+				newClasses.push(GanttClasses.elements.rowHighlight);
+				newGanttRow.setAttribute('class', newClasses.join(' '));
+			}
+
+			this.currentHighlightRow = rowIndex;
+		};
+
+		// 清除高亮的辅助方法
+		const clearHighlight = () => {
+			if (this.currentHighlightRow >= 0) {
+				const oldTaskListRow = this.rowBgElements.taskList[this.currentHighlightRow];
+				const oldGanttRow = this.rowBgElements.gantt[this.currentHighlightRow];
+				if (oldTaskListRow) {
+					addSvgClass(oldTaskListRow, GanttClasses.elements.rowBg);
+					const classes = oldTaskListRow.getAttribute('class')?.split(' ') || [];
+					const newClasses = classes.filter(c => c !== GanttClasses.elements.rowHighlight);
+					oldTaskListRow.setAttribute('class', newClasses.join(' '));
+					// 恢复原始背景
+					if (this.currentHighlightRow % 2 === 0) {
+						oldTaskListRow.setAttribute('fill', 'var(--background-secondary)');
+						oldTaskListRow.setAttribute('opacity', '0.3');
+					} else {
+						oldTaskListRow.setAttribute('fill', 'transparent');
+					}
+				}
+				if (oldGanttRow) {
+					addSvgClass(oldGanttRow, GanttClasses.elements.rowBg);
+					const classes = oldGanttRow.getAttribute('class')?.split(' ') || [];
+					const newClasses = classes.filter(c => c !== GanttClasses.elements.rowHighlight);
+					oldGanttRow.setAttribute('class', newClasses.join(' '));
+					// 恢复原始背景
+					if (this.currentHighlightRow % 2 === 0) {
+						oldGanttRow.setAttribute('fill', 'var(--background-secondary)');
+						oldGanttRow.setAttribute('opacity', '0.3');
+					} else {
+						oldGanttRow.setAttribute('fill', 'transparent');
+					}
+				}
+				this.currentHighlightRow = -1;
+			}
+		};
+
+		// 监听任务列表容器的鼠标移动
+		this.taskListContainer.addEventListener('mousemove', (e) => {
+			const rect = this.taskListContainer!.getBoundingClientRect();
+			const offsetY = e.clientY - rect.top + this.taskListContainer!.scrollTop;
+			const rowIndex = Math.floor(offsetY / this.rowHeight);
+			updateHighlight(rowIndex);
+		});
+
+		// 监听任务列表容器的鼠标离开
+		this.taskListContainer.addEventListener('mouseleave', () => {
+			clearHighlight();
+		});
+
+		// 监听甘特图容器的鼠标移动
+		this.ganttContainer.addEventListener('mousemove', (e) => {
+			const rect = this.ganttContainer!.getBoundingClientRect();
+			const offsetY = e.clientY - rect.top + this.ganttContainer!.scrollTop;
+			const rowIndex = Math.floor(offsetY / this.rowHeight);
+			updateHighlight(rowIndex);
+		});
+
+		// 监听甘特图容器的鼠标离开
+		this.ganttContainer.addEventListener('mouseleave', () => {
+			clearHighlight();
+		});
+	}
+
+	/**
 	 * 渲染左上角空白区域（包含序号和任务列标题）
 	 */
 	private renderCorner(svg: SVGSVGElement | null): void {
@@ -531,6 +668,9 @@ export class SvgGanttRenderer {
 		// 使用足够大的宽度来显示完整任务描述
 		const contentWidth = 2000;
 
+		// 清空行背景元素数组
+		this.rowBgElements.taskList = [];
+
 		// 背景 - 只需要任务区域的高度
 		const bg = document.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
@@ -548,17 +688,23 @@ export class SvgGanttRenderer {
 			// 直接从 GanttChartTask 获取信息（不需要查找 originalTask）
 			const isCompleted = task.completed || task.progress === 100;
 
-			// 行背景（偶数行添加背景色）
+			// 行背景（所有行都添加，用于悬停高亮）
+			const rowBg = document.createElementNS(ns, 'rect') as SVGRectElement;
+			rowBg.setAttribute('x', '0');
+			rowBg.setAttribute('y', String(y));
+			rowBg.setAttribute('width', String(contentWidth + numberWidth));
+			rowBg.setAttribute('height', String(this.rowHeight));
+			rowBg.setAttribute('data-row-index', String(index));
+			addSvgClass(rowBg, GanttClasses.elements.rowBg);
+			// 偶数行使用默认背景色
 			if (index % 2 === 0) {
-				const rowBg = document.createElementNS(ns, 'rect');
-				rowBg.setAttribute('x', '0');
-				rowBg.setAttribute('y', String(y));
-				rowBg.setAttribute('width', String(contentWidth + numberWidth));
-				rowBg.setAttribute('height', String(this.rowHeight));
 				rowBg.setAttribute('fill', 'var(--background-secondary)');
 				rowBg.setAttribute('opacity', '0.3');
-				svg.appendChild(rowBg);
+			} else {
+				rowBg.setAttribute('fill', 'transparent');
 			}
+			svg.appendChild(rowBg);
+			this.rowBgElements.taskList.push(rowBg);
 
 			// === 序号列 ===
 			const numberForeignObj = document.createElementNS(ns, 'foreignObject');
@@ -798,6 +944,9 @@ export class SvgGanttRenderer {
 		bg.setAttribute('fill', 'var(--background-primary)');
 		svg.appendChild(bg);
 
+		// 清空甘特图行背景元素数组
+		this.rowBgElements.gantt = [];
+
 		// 绘制网格线
 		this.renderGrid(ns, svg, minDate, totalUnits, width, height, granularity);
 
@@ -884,6 +1033,27 @@ export class SvgGanttRenderer {
 			line.setAttribute('stroke-dasharray', isMajorLine ? 'none' : '2 2');
 
 			gridGroup.appendChild(line);
+		}
+
+		// 行背景（在水平线之前添加，确保线在背景之上）
+		for (let i = 0; i < this.tasks.length; i++) {
+			const y = i * this.rowHeight;
+			const rowBg = document.createElementNS(ns, 'rect') as SVGRectElement;
+			rowBg.setAttribute('x', String(this.padding));
+			rowBg.setAttribute('y', String(y));
+			rowBg.setAttribute('width', String(width - this.padding * 2));
+			rowBg.setAttribute('height', String(this.rowHeight));
+			rowBg.setAttribute('data-row-index', String(i));
+			addSvgClass(rowBg, GanttClasses.elements.rowBg);
+			// 偶数行使用默认背景色
+			if (i % 2 === 0) {
+				rowBg.setAttribute('fill', 'var(--background-secondary)');
+				rowBg.setAttribute('opacity', '0.3');
+			} else {
+				rowBg.setAttribute('fill', 'transparent');
+			}
+			gridGroup.appendChild(rowBg);
+			this.rowBgElements.gantt.push(rowBg);
 		}
 
 		// 水平线（任务行分隔）- 保持不变

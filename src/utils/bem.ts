@@ -262,6 +262,8 @@ export const GanttClasses = {
 		barGroup: bem(BLOCKS.GANTT, 'bar-group'),
 		container: bem(BLOCKS.GANTT, 'container'),
 		root: bem(BLOCKS.GANTT, 'root'),
+		rowBg: bem(BLOCKS.GANTT, 'row-bg'),
+		rowHighlight: bem(BLOCKS.GANTT, 'row-highlight'),
 	},
 
 	/** Modifiers */

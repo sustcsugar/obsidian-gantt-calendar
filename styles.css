@@ -3029,3 +3029,17 @@ Author: sugar
 	min-width: 32px;
 }
 
+/* ============================================
+   甘特图行悬停高亮样式
+   ============================================ */
+
+/* 基础行背景 */
+.gc-gantt-view__row-bg {
+	transition: fill 0.15s ease, opacity 0.15s ease;
+}
+
+/* 行高亮状态 */
+.gc-gantt-view__row-highlight {
+	fill: var(--background-modifier-hover) !important;
+	opacity: 1 !important;
+}
