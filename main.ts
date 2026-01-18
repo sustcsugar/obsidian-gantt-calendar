@@ -5,16 +5,21 @@ import { TaskStore } from './src/TaskStore';
 import { registerAllCommands } from './src/commands/commandsIndex';
 import { TooltipManager } from './src/utils/tooltipManager';
 import { Logger } from './src/utils/logger';
+import { TaskStatus, ThemeColors } from './src/tasks/taskStatus';
 
 export default class GanttCalendarPlugin extends Plugin {
     settings: GanttCalendarSettings;
     taskCache: TaskStore;
+    private themeChangeUnregister?: () => void;
 
     async onload() {
         await this.loadSettings();
 
         // Initialize logger
         Logger.init(this);
+
+        // 监听主题变化，刷新视图以应用正确的颜色
+        this.registerThemeObserver();
 
         // Initialize task store
         this.taskCache = new TaskStore(this.app);
@@ -57,6 +62,11 @@ export default class GanttCalendarPlugin extends Plugin {
     }
 
     onunload() {
+        // 取消主题监听器
+        if (this.themeChangeUnregister) {
+            this.themeChangeUnregister();
+        }
+
         // Clear tooltip manager
         TooltipManager.reset();
 
@@ -87,6 +97,10 @@ export default class GanttCalendarPlugin extends Plugin {
 
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+        // 迁移旧的颜色格式到新的主题分离格式
+        await this.migrateTaskStatusColors();
+
         this.updateCSSVariables();
     }
 
@@ -117,6 +131,80 @@ export default class GanttCalendarPlugin extends Plugin {
                 view.refreshSettings();
             }
         });
+    }
+
+    /**
+     * 迁移任务状态颜色格式
+     * 将旧的 backgroundColor/textColor 迁移到 lightColors/darkColors
+     */
+    private async migrateTaskStatusColors(): Promise<void> {
+        let needsSave = false;
+
+        for (const status of this.settings.taskStatuses) {
+            // 如果有旧格式但没有新格式，进行迁移
+            if ((status.backgroundColor || status.textColor) &&
+                (!status.lightColors || !status.darkColors)) {
+
+                // 将旧颜色作为亮色主题的默认值
+                if (!status.lightColors) {
+                    status.lightColors = {
+                        backgroundColor: status.backgroundColor || '#FFFFFF',
+                        textColor: status.textColor || '#333333'
+                    };
+                }
+
+                // 为暗色主题生成默认值
+                if (!status.darkColors) {
+                    status.darkColors = this.generateDarkThemeColors(
+                        status.lightColors.backgroundColor,
+                        status.lightColors.textColor
+                    );
+                }
+
+                needsSave = true;
+            }
+        }
+
+        if (needsSave) {
+            await this.saveData(this.settings);
+        }
+    }
+
+    /**
+     * 根据亮色主题颜色生成暗色主题颜色
+     */
+    private generateDarkThemeColors(lightBg: string, lightText: string): ThemeColors {
+        // 简单的颜色反转逻辑
+        // 对于大多数情况，使用预设的暗色主题默认值
+        return {
+            backgroundColor: '#2d333b',
+            textColor: '#adbac7'
+        };
+    }
+
+    /**
+     * 注册主题变化监听器
+     * 当用户切换主题时，刷新所有视图以应用正确的颜色
+     */
+    private registerThemeObserver(): void {
+        // 使用 MutationObserver 监听 body classList 变化
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    // 主题切换时刷新所有视图
+                    this.refreshCalendarViews();
+                    break;
+                }
+            }
+        });
+
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        // 保存取消监听的函数
+        this.themeChangeUnregister = () => observer.disconnect();
     }
 
     // 仅保留日历视图刷新（任务子模式包含在 CalendarView 内）

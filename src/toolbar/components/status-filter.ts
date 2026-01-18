@@ -2,6 +2,7 @@ import { setIcon } from 'obsidian';
 import type { StatusFilterState } from '../../types';
 import type { TaskStatus } from '../../tasks/taskStatus';
 import { ToolbarClasses } from '../../utils/bem';
+import { getStatusColor } from '../../tasks/taskStatus';
 
 /** 状态筛选按钮选项 */
 export interface StatusFilterButtonOptions {
@@ -83,8 +84,11 @@ export function renderStatusFilterButton(
 			// 状态名称 - 应用背景色和文字颜色
 			const label = item.createEl('span', classes.statusLabel);
 			label.setText(statusConfig.name);
-			label.style.backgroundColor = statusConfig.backgroundColor;
-			label.style.color = statusConfig.textColor;
+			const colors = getStatusColor(statusConfig.key, [statusConfig]);
+			if (colors) {
+				label.style.backgroundColor = colors.bg;
+				label.style.color = colors.text;
+			}
 
 			// 点击事件 - 阻止冒泡，保持弹窗打开
 			item.addEventListener('click', (e) => {

@@ -28,6 +28,21 @@ export type DefaultTaskStatusType =
 export type TaskStatusType = DefaultTaskStatusType | string;
 
 /**
+ * 主题模式类型
+ */
+export type ThemeMode = 'light' | 'dark';
+
+/**
+ * 主题颜色配置
+ */
+export interface ThemeColors {
+    /** 卡片背景色 (hex) */
+    backgroundColor: string;
+    /** 文字颜色 (hex) */
+    textColor: string;
+}
+
+/**
  * 任务状态配置接口
  */
 export interface TaskStatus {
@@ -43,11 +58,17 @@ export interface TaskStatus {
     /** 描述 */
     description: string;
 
-    /** 卡片背景色 (hex) */
-    backgroundColor: string;
+    /** 亮色主题颜色配置 */
+    lightColors: ThemeColors;
 
-    /** 文字颜色 (hex) */
-    textColor: string;
+    /** 暗色主题颜色配置 */
+    darkColors: ThemeColors;
+
+    /** 卡片背景色 (hex) - @deprecated 向后兼容保留 */
+    backgroundColor?: string;
+
+    /** 文字颜色 (hex) - @deprecated 向后兼容保留 */
+    textColor?: string;
 
     /** 是否为默认状态 */
     isDefault: boolean;
@@ -67,8 +88,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: ' ',
         name: '待办',
         description: '待办任务',
-        backgroundColor: '#FFFFFF',
-        textColor: '#333333',
+        lightColors: {
+            backgroundColor: '#FFFFFF',
+            textColor: '#333333',
+        },
+        darkColors: {
+            backgroundColor: '#2d333b',
+            textColor: '#adbac7',
+        },
         isDefault: true,
     },
     {
@@ -76,8 +103,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: 'x',
         name: '已完成',
         description: '已完成任务',
-        backgroundColor: '#52c41a',
-        textColor: '#FFFFFF',
+        lightColors: {
+            backgroundColor: '#52c41a',
+            textColor: '#FFFFFF',
+        },
+        darkColors: {
+            backgroundColor: '#3c8524',
+            textColor: '#e6e6e6',
+        },
         isDefault: true,
     },
     {
@@ -85,8 +118,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: '!',
         name: '重要',
         description: '重要任务',
-        backgroundColor: '#ff4d4f',
-        textColor: '#FFFFFF',
+        lightColors: {
+            backgroundColor: '#ff4d4f',
+            textColor: '#FFFFFF',
+        },
+        darkColors: {
+            backgroundColor: '#cc3a3c',
+            textColor: '#ffe6e6',
+        },
         isDefault: true,
     },
     {
@@ -94,8 +133,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: '-',
         name: '已取消',
         description: '已取消任务',
-        backgroundColor: '#d9d9d9',
-        textColor: '#666666',
+        lightColors: {
+            backgroundColor: '#d9d9d9',
+            textColor: '#666666',
+        },
+        darkColors: {
+            backgroundColor: '#4a525c',
+            textColor: '#8b949e',
+        },
         isDefault: true,
     },
     {
@@ -103,8 +148,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: '/',
         name: '进行中',
         description: '进行中任务',
-        backgroundColor: '#faad14',
-        textColor: '#FFFFFF',
+        lightColors: {
+            backgroundColor: '#faad14',
+            textColor: '#FFFFFF',
+        },
+        darkColors: {
+            backgroundColor: '#c78a0f',
+            textColor: '#fff5e6',
+        },
         isDefault: true,
     },
     {
@@ -112,8 +163,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: '?',
         name: '有疑问',
         description: '有疑问任务',
-        backgroundColor: '#ffc069',
-        textColor: '#333333',
+        lightColors: {
+            backgroundColor: '#ffc069',
+            textColor: '#333333',
+        },
+        darkColors: {
+            backgroundColor: '#cc9a54',
+            textColor: '#ffe6cc',
+        },
         isDefault: true,
     },
     {
@@ -121,8 +178,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         symbol: 'n',
         name: '已开始',
         description: '已开始任务',
-        backgroundColor: '#40a9ff',
-        textColor: '#FFFFFF',
+        lightColors: {
+            backgroundColor: '#40a9ff',
+            textColor: '#FFFFFF',
+        },
+        darkColors: {
+            backgroundColor: '#3387cc',
+            textColor: '#e6f3ff',
+        },
         isDefault: true,
     },
 ];
@@ -254,25 +317,54 @@ export function validateStatusSymbol(
  *
  * @param statusKey - 状态 key
  * @param statuses - 状态配置列表
+ * @param themeMode - 主题模式 ('light' | 'dark')，默认自动检测
  * @returns 颜色配置对象，未找到则返回 undefined
  *
  * @example
  * ```ts
  * getStatusColor('done', DEFAULT_TASK_STATUSES)
  * // { bg: '#52c41a', text: '#FFFFFF' }
+ * getStatusColor('done', DEFAULT_TASK_STATUSES, 'dark')
+ * // { bg: '#3c8524', text: '#e6e6e6' }
  * ```
  */
 export function getStatusColor(
     statusKey: string,
-    statuses: TaskStatus[]
+    statuses: TaskStatus[],
+    themeMode?: ThemeMode
 ): { bg: string; text: string } | undefined {
     const status = statuses.find(s => s.key === statusKey);
     if (!status) return undefined;
 
-    return {
-        bg: status.backgroundColor,
-        text: status.textColor,
-    };
+    // 确定主题模式
+    const mode = themeMode ?? getCurrentThemeMode();
+
+    // 处理新旧数据格式兼容
+    if (status.lightColors && status.darkColors) {
+        // 新格式：使用主题分离颜色
+        const colors = mode === 'dark' ? status.darkColors : status.lightColors;
+        return {
+            bg: colors.backgroundColor,
+            text: colors.textColor,
+        };
+    } else if (status.backgroundColor && status.textColor) {
+        // 旧格式：使用单一颜色（向后兼容）
+        return {
+            bg: status.backgroundColor,
+            text: status.textColor,
+        };
+    }
+
+    return undefined;
+}
+
+/**
+ * 获取当前主题模式
+ *
+ * @returns 当前主题模式 ('light' | 'dark')
+ */
+export function getCurrentThemeMode(): ThemeMode {
+    return document.body.hasClass('theme-dark') ? 'dark' : 'light';
 }
 
 /**

@@ -1,5 +1,5 @@
 import type GanttCalendarPlugin from '../../../main';
-import { TaskStatus } from '../../tasks/taskStatus';
+import { TaskStatus, ThemeColors, getCurrentThemeMode } from '../../tasks/taskStatus';
 import { rgbToHex } from '../utils/color';
 import { MacaronColorPicker } from './MacaronColorPicker';
 
@@ -14,13 +14,21 @@ export interface TaskStatusCardConfig {
 }
 
 /**
+ * 主题颜色设置配置
+ */
+interface ThemeSectionConfig {
+	themeMode: 'light' | 'dark';
+	icon: string;
+	label: string;
+}
+
+/**
  * 任务状态卡片组件
- * 紧凑的卡片式布局，一个状态一个小卡片
+ * 支持亮色/暗色主题分离的颜色设置
  */
 export class TaskStatusCard {
 	private config: TaskStatusCardConfig;
-	private bgColorSwatch?: HTMLElement;
-	private textColorSwatch?: HTMLElement;
+	private iconDiv?: HTMLElement;
 
 	constructor(config: TaskStatusCardConfig) {
 		this.config = config;
@@ -55,21 +63,17 @@ export class TaskStatusCard {
 		header.style.marginBottom = '4px';
 
 		// 状态图标（复选框示例）
-		const iconDiv = header.createEl('div');
-		iconDiv.style.display = 'flex';
-		iconDiv.style.alignItems = 'center';
-		iconDiv.style.justifyContent = 'center';
-		iconDiv.style.width = '32px';
-		iconDiv.style.height = '24px';
-		iconDiv.style.border = '1px solid var(--background-modifier-border)';
-		iconDiv.style.borderRadius = '4px';
-		iconDiv.style.background = status.backgroundColor;
-		iconDiv.style.color = status.textColor;
-		iconDiv.style.fontSize = '10px';
-		iconDiv.style.fontWeight = 'bold';
-		iconDiv.textContent = `[${status.symbol}]`;
+		this.iconDiv = header.createEl('div');
+		this.iconDiv.style.display = 'flex';
+		this.iconDiv.style.alignItems = 'center';
+		this.iconDiv.style.justifyContent = 'center';
+		this.iconDiv.style.width = '32px';
+		this.iconDiv.style.height = '24px';
+		this.iconDiv.style.border = '1px solid var(--background-modifier-border)';
+		this.iconDiv.style.borderRadius = '4px';
+		this.updateIconPreview();
 
-		// 状态名称（只显示名称和 key，删除描述）
+		// 状态名称
 		const nameDiv = header.createEl('div', {
 			text: `${status.name} (${status.key})`,
 			cls: 'task-status-name'
@@ -106,166 +110,296 @@ export class TaskStatusCard {
 			});
 		}
 
-		// 颜色设置区域（背景色和文字色平行排列）
-		const colorSection = card.createDiv();
+		// ========== 主题分离的颜色设置区域 ==========
+		const themeSection = card.createDiv();
+		themeSection.style.display = 'flex';
+		themeSection.style.flexDirection = 'column';
+		themeSection.style.gap = '12px';
+
+		// 亮色主题区域
+		this.renderThemeSection({
+			container: themeSection,
+			plugin: plugin,
+			status: status,
+			themeMode: 'light',
+			icon: '☀️',
+			label: '亮色主题'
+		});
+
+		// 分隔线
+		const divider = themeSection.createEl('hr');
+		divider.style.border = 'none';
+		divider.style.borderTop = '1px solid var(--background-modifier-border)';
+		divider.style.margin = '0';
+
+		// 暗色主题区域
+		this.renderThemeSection({
+			container: themeSection,
+			plugin: plugin,
+			status: status,
+			themeMode: 'dark',
+			icon: '🌙',
+			label: '暗色主题'
+		});
+	}
+
+	/**
+	 * 更新图标预览颜色
+	 */
+	private updateIconPreview(): void {
+		if (!this.iconDiv) return;
+
+		const { status } = this.config;
+		const themeMode = getCurrentThemeMode();
+		const colors = this.getThemeColors(status, themeMode);
+		if (colors) {
+			this.iconDiv.style.background = colors.backgroundColor;
+			this.iconDiv.style.color = colors.textColor;
+		}
+		this.iconDiv.style.fontSize = '10px';
+		this.iconDiv.style.fontWeight = 'bold';
+		this.iconDiv.textContent = `[${status.symbol}]`;
+	}
+
+	/**
+	 * 获取指定主题的颜色配置
+	 */
+	private getThemeColors(status: TaskStatus, themeMode: 'light' | 'dark'): ThemeColors | null {
+		// 处理新旧数据格式兼容
+		if (status.lightColors && status.darkColors) {
+			return themeMode === 'dark' ? status.darkColors : status.lightColors;
+		} else if (status.backgroundColor && status.textColor) {
+			return { backgroundColor: status.backgroundColor, textColor: status.textColor };
+		}
+		return null;
+	}
+
+	/**
+	 * 渲染单个主题的颜色设置区域
+	 */
+	private renderThemeSection(options: {
+		container: HTMLElement;
+		plugin: GanttCalendarPlugin;
+		status: TaskStatus;
+		themeMode: 'light' | 'dark';
+		icon: string;
+		label: string;
+	}): void {
+		const { container, plugin, status, themeMode, icon, label } = options;
+
+		// 主题区域容器
+		const themeDiv = container.createDiv();
+		themeDiv.style.display = 'flex';
+		themeDiv.style.flexDirection = 'column';
+		themeDiv.style.gap = '8px';
+
+		// 主题标题（图标 + 标签）
+		const themeHeader = themeDiv.createDiv();
+		themeHeader.style.display = 'flex';
+		themeHeader.style.alignItems = 'center';
+		themeHeader.style.gap = '6px';
+		themeHeader.style.marginBottom = '2px';
+
+		themeHeader.createEl('span', { text: icon, cls: 'theme-icon' });
+		themeHeader.createEl('span', {
+			text: label,
+			cls: 'theme-label setting-item-description'
+		}).style.fontWeight = '500';
+
+		// 颜色设置行（背景色 + 文字色平行排列）
+		const colorRow = themeDiv.createDiv();
+		colorRow.style.display = 'flex';
+		colorRow.style.flexDirection = 'row';
+		colorRow.style.gap = '16px';
+
+		// 获取当前主题的颜色
+		const colors = this.getThemeColors(status, themeMode);
+
+		// 背景色区域
+		this.renderColorPicker({
+			container: colorRow,
+			plugin: plugin,
+			status: status,
+			themeMode: themeMode,
+			colorType: 'backgroundColor',
+			label: '背景色',
+			currentColor: colors?.backgroundColor || (themeMode === 'dark' ? '#2d333b' : '#FFFFFF')
+		});
+
+		// 文字色区域
+		this.renderColorPicker({
+			container: colorRow,
+			plugin: plugin,
+			status: status,
+			themeMode: themeMode,
+			colorType: 'textColor',
+			label: '文字色',
+			currentColor: colors?.textColor || (themeMode === 'dark' ? '#adbac7' : '#333333')
+		});
+	}
+
+	/**
+	 * 渲染单个颜色选择器
+	 */
+	private renderColorPicker(options: {
+		container: HTMLElement;
+		plugin: GanttCalendarPlugin;
+		status: TaskStatus;
+		themeMode: 'light' | 'dark';
+		colorType: 'backgroundColor' | 'textColor';
+		label: string;
+		currentColor: string;
+	}): void {
+		const { container, plugin, status, themeMode, colorType, label, currentColor } = options;
+
+		const colorSection = container.createDiv();
 		colorSection.style.display = 'flex';
-		colorSection.style.flexDirection = 'row';
-		colorSection.style.gap = '16px';
+		colorSection.style.flexDirection = 'column';
+		colorSection.style.gap = '6px';
+		colorSection.style.flex = '1';
 
-		// ========== 背景色区域 ==========
-		const bgSection = colorSection.createDiv();
-		bgSection.style.display = 'flex';
-		bgSection.style.flexDirection = 'column';
-		bgSection.style.gap = '6px';
-		bgSection.style.flex = '1';
+		// 标签行
+		const labelRow = colorSection.createDiv();
+		labelRow.style.display = 'flex';
+		labelRow.style.alignItems = 'center';
+		labelRow.style.gap = '6px';
+		labelRow.style.flexWrap = 'wrap';
 
-		// 背景色标签行（标签 + 颜色方块 + 预设色卡在同一行）
-		const bgLabelRow = bgSection.createDiv();
-		bgLabelRow.style.display = 'flex';
-		bgLabelRow.style.alignItems = 'center';
-		bgLabelRow.style.gap = '6px';
-		bgLabelRow.style.flexWrap = 'wrap';
-
-		const bgLabel = bgLabelRow.createEl('span', {
-			text: '背景色',
+		const labelEl = labelRow.createEl('span', {
+			text: label,
 			cls: 'setting-item-description'
 		});
-		bgLabel.style.fontSize = '11px';
-		bgLabel.style.fontWeight = '500';
+		labelEl.style.fontSize = '11px';
+		labelEl.style.fontWeight = '500';
 
-		// 背景色小方块（可点击弹出颜色选择器）
-		const bgHiddenInput = bgLabelRow.createEl('input', {
+		// 隐藏的颜色输入
+		const hiddenInput = labelRow.createEl('input', {
 			type: 'color',
 			cls: 'task-status-color-input'
 		}) as HTMLInputElement;
-		bgHiddenInput.value = status.backgroundColor;
-		bgHiddenInput.style.position = 'absolute';
-		bgHiddenInput.style.opacity = '0';
-		bgHiddenInput.style.pointerEvents = 'none';
+		hiddenInput.value = currentColor;
+		hiddenInput.style.position = 'absolute';
+		hiddenInput.style.opacity = '0';
+		hiddenInput.style.pointerEvents = 'none';
 
-		this.bgColorSwatch = bgLabelRow.createEl('div');
-		this.bgColorSwatch.style.width = '18px';
-		this.bgColorSwatch.style.height = '18px';
-		this.bgColorSwatch.style.borderRadius = '3px';
-		this.bgColorSwatch.style.backgroundColor = status.backgroundColor;
-		this.bgColorSwatch.style.border = '1px solid var(--background-modifier-border)';
-		this.bgColorSwatch.style.cursor = 'pointer';
-		this.bgColorSwatch.addEventListener('click', () => {
-			bgHiddenInput.click();
-		});
-		bgHiddenInput.addEventListener('change', async () => {
-			const statusIndex = plugin.settings.taskStatuses.findIndex((s: TaskStatus) => s.key === status.key);
-			if (statusIndex !== -1) {
-				plugin.settings.taskStatuses[statusIndex].backgroundColor = bgHiddenInput.value;
-				iconDiv.style.background = bgHiddenInput.value;
-				if (this.bgColorSwatch) {
-					this.bgColorSwatch.style.backgroundColor = bgHiddenInput.value;
-				}
-				await plugin.saveSettings();
-				plugin.refreshCalendarViews();
-			}
+		// 颜色方块
+		const swatch = labelRow.createEl('div');
+		swatch.style.width = '18px';
+		swatch.style.height = '18px';
+		swatch.style.borderRadius = '3px';
+		swatch.style.backgroundColor = currentColor;
+		swatch.style.border = '1px solid var(--background-modifier-border)';
+		swatch.style.cursor = 'pointer';
+		swatch.addEventListener('click', () => hiddenInput.click());
+
+		// 颜色变化处理
+		hiddenInput.addEventListener('change', async () => {
+			await this.updateStatusColor(
+				plugin,
+				status,
+				themeMode,
+				colorType,
+				hiddenInput.value,
+				swatch
+			);
 		});
 
-		// 马卡龙配色背景色（2行4列，共8个色卡）
-		const bgMacaronDiv = bgLabelRow.createEl('div');
-		const bgMacaronPicker = new MacaronColorPicker({
-			container: bgMacaronDiv,
-			currentColor: status.backgroundColor,
-			limit: 8, // 限制为8个色卡
-			rows: 2, // 2行排列
+		// 马卡龙色卡
+		const macaronDiv = labelRow.createEl('div');
+		const macaronPicker = new MacaronColorPicker({
+			container: macaronDiv,
+			currentColor: currentColor,
+			limit: 8,
+			rows: 2,
 			onColorChange: async (color) => {
-				const statusIndex = plugin.settings.taskStatuses.findIndex((s: TaskStatus) => s.key === status.key);
-				if (statusIndex !== -1) {
-					plugin.settings.taskStatuses[statusIndex].backgroundColor = color;
-					iconDiv.style.background = color;
-					if (this.bgColorSwatch) {
-						this.bgColorSwatch.style.backgroundColor = color;
-					}
-					await plugin.saveSettings();
-					plugin.refreshCalendarViews();
-					const hexColor = rgbToHex(color) || color;
-					bgHiddenInput.value = hexColor;
-				}
+				await this.updateStatusColor(
+					plugin,
+					status,
+					themeMode,
+					colorType,
+					color,
+					swatch
+				);
+				hiddenInput.value = rgbToHex(color) || color;
 			}
 		});
-		bgMacaronPicker.render();
+		macaronPicker.render();
+	}
 
-		// ========== 文字色区域 ==========
-		const textSection = colorSection.createDiv();
-		textSection.style.display = 'flex';
-		textSection.style.flexDirection = 'column';
-		textSection.style.gap = '6px';
-		textSection.style.flex = '1';
+	/**
+	 * 更新状态颜色
+	 */
+	private async updateStatusColor(
+		plugin: GanttCalendarPlugin,
+		status: TaskStatus,
+		themeMode: 'light' | 'dark',
+		colorType: 'backgroundColor' | 'textColor',
+		color: string,
+		swatch?: HTMLElement
+	): Promise<void> {
+		const statusIndex = plugin.settings.taskStatuses.findIndex(
+			(s: TaskStatus) => s.key === status.key
+		);
 
-		// 文字色标签行（标签 + 颜色方块 + 预设色卡在同一行）
-		const textLabelRow = textSection.createDiv();
-		textLabelRow.style.display = 'flex';
-		textLabelRow.style.alignItems = 'center';
-		textLabelRow.style.gap = '6px';
-		textLabelRow.style.flexWrap = 'wrap';
+		if (statusIndex !== -1) {
+			const targetStatus = plugin.settings.taskStatuses[statusIndex];
 
-		const textLabel = textLabelRow.createEl('span', {
-			text: '文字色',
-			cls: 'setting-item-description'
-		});
-		textLabel.style.fontSize = '11px';
-		textLabel.style.fontWeight = '500';
+			// 确保新格式颜色对象存在
+			this.ensureThemeColors(targetStatus);
 
-		// 文字色小方块（可点击弹出颜色选择器）
-		const textHiddenInput = textLabelRow.createEl('input', {
-			type: 'color',
-			cls: 'task-status-color-input'
-		}) as HTMLInputElement;
-		textHiddenInput.value = status.textColor;
-		textHiddenInput.style.position = 'absolute';
-		textHiddenInput.style.opacity = '0';
-		textHiddenInput.style.pointerEvents = 'none';
+			// 更新颜色
+			const colorKey = themeMode === 'dark' ? 'darkColors' : 'lightColors';
+			(targetStatus[colorKey] as ThemeColors)[colorType] = color;
 
-		this.textColorSwatch = textLabelRow.createEl('div');
-		this.textColorSwatch.style.width = '18px';
-		this.textColorSwatch.style.height = '18px';
-		this.textColorSwatch.style.borderRadius = '3px';
-		this.textColorSwatch.style.backgroundColor = status.textColor;
-		this.textColorSwatch.style.border = '1px solid var(--background-modifier-border)';
-		this.textColorSwatch.style.cursor = 'pointer';
-		this.textColorSwatch.addEventListener('click', () => {
-			textHiddenInput.click();
-		});
-		textHiddenInput.addEventListener('change', async () => {
-			const statusIndex = plugin.settings.taskStatuses.findIndex((s: TaskStatus) => s.key === status.key);
-			if (statusIndex !== -1) {
-				plugin.settings.taskStatuses[statusIndex].textColor = textHiddenInput.value;
-				iconDiv.style.color = textHiddenInput.value;
-				if (this.textColorSwatch) {
-					this.textColorSwatch.style.backgroundColor = textHiddenInput.value;
-				}
-				await plugin.saveSettings();
-				plugin.refreshCalendarViews();
+			// 更新色卡显示
+			if (swatch) {
+				swatch.style.backgroundColor = color;
 			}
-		});
 
-		// 马卡龙配色文字色（2行4列，共8个色卡）
-		const textMacaronDiv = textLabelRow.createEl('div');
-		const textMacaronPicker = new MacaronColorPicker({
-			container: textMacaronDiv,
-			currentColor: status.textColor,
-			limit: 8, // 限制为8个色卡
-			rows: 2, // 2行排列
-			onColorChange: async (color) => {
-				const statusIndex = plugin.settings.taskStatuses.findIndex((s: TaskStatus) => s.key === status.key);
-				if (statusIndex !== -1) {
-					plugin.settings.taskStatuses[statusIndex].textColor = color;
-					iconDiv.style.color = color;
-					if (this.textColorSwatch) {
-						this.textColorSwatch.style.backgroundColor = color;
-					}
-					await plugin.saveSettings();
-					plugin.refreshCalendarViews();
-					const hexColor = rgbToHex(color) || color;
-					textHiddenInput.value = hexColor;
-				}
+			// 更新图标预览
+			this.updateIconPreview();
+
+			await plugin.saveSettings();
+			plugin.refreshCalendarViews();
+		}
+	}
+
+	/**
+	 * 确保状态配置有主题颜色对象
+	 */
+	private ensureThemeColors(status: TaskStatus): void {
+		// 如果使用旧格式，迁移到新格式
+		if (status.backgroundColor && status.textColor) {
+			if (!status.lightColors) {
+				status.lightColors = {
+					backgroundColor: status.backgroundColor,
+					textColor: status.textColor
+				};
 			}
-		});
-		textMacaronPicker.render();
+			if (!status.darkColors) {
+				// 生成暗色主题默认值
+				status.darkColors = this.generateDarkColors(status.lightColors);
+			}
+		}
+
+		// 确保至少有默认值
+		if (!status.lightColors) {
+			status.lightColors = { backgroundColor: '#FFFFFF', textColor: '#333333' };
+		}
+		if (!status.darkColors) {
+			status.darkColors = { backgroundColor: '#2d333b', textColor: '#adbac7' };
+		}
+	}
+
+	/**
+	 * 根据亮色主题颜色生成暗色主题颜色
+	 */
+	private generateDarkColors(lightColors: ThemeColors): ThemeColors {
+		// 简单的颜色转换：使用预设的暗色主题配色
+		// 这里可以根据亮色颜色智能生成暗色版本
+		return {
+			backgroundColor: '#2d333b',
+			textColor: '#adbac7'
+		};
 	}
 }

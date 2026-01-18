@@ -5,7 +5,7 @@ import { TaskCardClasses, TimeBadgeClasses } from '../../utils/bem';
 import { registerTaskContextMenu } from '../../contextMenu/contextMenuIndex';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
 import { updateTaskCompletion } from '../../tasks/taskUpdater';
-import { getStatusColor, DEFAULT_TASK_STATUSES } from '../../tasks/taskStatus';
+import { getStatusColor, DEFAULT_TASK_STATUSES, getCurrentThemeMode } from '../../tasks/taskStatus';
 import { RegularExpressions } from '../../utils/RegularExpressions';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { TooltipManager } from '../../utils/tooltipManager';
@@ -67,8 +67,9 @@ export class TaskCardRenderer {
 	getStatusColors(task: GCTask): { bg: string; text: string } | null {
 		if (!task.status) return null;
 		const taskStatuses = this.plugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
-		// 简化的颜色获取逻辑
-		return getStatusColor(task.status, taskStatuses) || null;
+		// 根据当前主题获取对应的颜色配置
+		const themeMode = getCurrentThemeMode();
+		return getStatusColor(task.status, taskStatuses, themeMode) || null;
 	}
 
 	/**

@@ -1,10 +1,11 @@
 import { App, Modal } from 'obsidian';
 import type GanttCalendarPlugin from '../../../main';
 import { MacaronColorPicker } from '../components';
-import { TaskStatus, validateStatusSymbol } from '../../tasks/taskStatus';
+import { TaskStatus, validateStatusSymbol, ThemeColors } from '../../tasks/taskStatus';
 
 /**
  * 添加自定义状态模态框
+ * 支持设置亮色和暗色主题的颜色
  */
 export class AddCustomStatusModal extends Modal {
 	private plugin: GanttCalendarPlugin;
@@ -12,8 +13,19 @@ export class AddCustomStatusModal extends Modal {
 	private keyInput: HTMLInputElement;
 	private symbolInput: HTMLInputElement;
 	private descInput: HTMLTextAreaElement;
-	private bgColorInput: HTMLInputElement;
-	private textColorInput: HTMLInputElement;
+
+	// 亮色主题颜色输入
+	private lightBgColorInput: HTMLInputElement;
+	private lightTextColorInput: HTMLInputElement;
+	private lightBgSwatch?: HTMLElement;
+	private lightTextSwatch?: HTMLElement;
+
+	// 暗色主题颜色输入
+	private darkBgColorInput: HTMLInputElement;
+	private darkTextColorInput: HTMLInputElement;
+	private darkBgSwatch?: HTMLElement;
+	private darkTextSwatch?: HTMLElement;
+
 	private nameError?: HTMLElement;
 	private symbolError: HTMLElement;
 	private onStatusAdded?: () => void; // 添加状态后的回调
@@ -97,36 +109,122 @@ export class AddCustomStatusModal extends Modal {
 		this.descInput.style.border = '1px solid var(--background-modifier-border)';
 		this.descInput.rows = 2;
 
-		// 卡片颜色选择
-		const colorContainer = contentEl.createDiv();
-		colorContainer.style.marginBottom = '16px';
-		colorContainer.style.display = 'flex';
-		colorContainer.style.gap = '24px';
+		// ========== 亮色主题颜色设置 ==========
+		const lightSection = contentEl.createDiv();
+		lightSection.style.marginBottom = '16px';
+		lightSection.style.padding = '12px';
+		lightSection.style.background = 'var(--background-secondary)';
+		lightSection.style.borderRadius = '8px';
+		lightSection.style.border = '1px solid var(--background-modifier-border)';
 
-		// 背景色
-		const bgColorDiv = colorContainer.createDiv();
-		bgColorDiv.createEl('label', { text: '卡片背景颜色:' });
-		this.bgColorInput = bgColorDiv.createEl('input', { type: 'color', value: '#FFFFFF' });
-		this.bgColorInput.style.width = '60px';
-		this.bgColorInput.style.height = '36px';
-		this.bgColorInput.style.border = 'none';
-		this.bgColorInput.style.padding = '0';
-		this.bgColorInput.style.cursor = 'pointer';
+		const lightHeader = lightSection.createDiv();
+		lightHeader.style.display = 'flex';
+		lightHeader.style.alignItems = 'center';
+		lightHeader.style.gap = '6px';
+		lightHeader.style.marginBottom = '12px';
+		lightHeader.createEl('span', { text: '☀️' });
+		lightHeader.createEl('span', { text: '亮色主题' }).style.fontWeight = '500';
 
-		// 文字颜色
-		const textColorDiv = colorContainer.createDiv();
-		textColorDiv.createEl('label', { text: '卡片文字颜色:' });
-		this.textColorInput = textColorDiv.createEl('input', { type: 'color', value: '#333333' });
-		this.textColorInput.style.width = '60px';
-		this.textColorInput.style.height = '36px';
-		this.textColorInput.style.border = 'none';
-		this.textColorInput.style.padding = '0';
-		this.textColorInput.style.cursor = 'pointer';
+		const lightColorContainer = lightSection.createDiv();
+		lightColorContainer.style.display = 'flex';
+		lightColorContainer.style.gap = '24px';
 
-		// 马卡龙配色
+		// 亮色背景色
+		const lightBgDiv = lightColorContainer.createDiv();
+		lightBgDiv.style.display = 'flex';
+		lightBgDiv.style.flexDirection = 'column';
+		lightBgDiv.style.gap = '6px';
+		lightBgDiv.createEl('label', { text: '卡片背景颜色:' });
+		const lightBgLabelRow = lightBgDiv.createDiv();
+		lightBgLabelRow.style.display = 'flex';
+		lightBgLabelRow.style.alignItems = 'center';
+		lightBgLabelRow.style.gap = '8px';
+		this.lightBgColorInput = lightBgLabelRow.createEl('input', { type: 'color', value: '#FFFFFF' });
+		this.lightBgColorInput.style.width = '50px';
+		this.lightBgColorInput.style.height = '32px';
+		this.lightBgColorInput.style.border = 'none';
+		this.lightBgColorInput.style.padding = '0';
+		this.lightBgColorInput.style.cursor = 'pointer';
+		this.lightBgSwatch = this.createColorSwatch(lightBgLabelRow, '#FFFFFF', this.lightBgColorInput);
+
+		// 亮色文字颜色
+		const lightTextDiv = lightColorContainer.createDiv();
+		lightTextDiv.style.display = 'flex';
+		lightTextDiv.style.flexDirection = 'column';
+		lightTextDiv.style.gap = '6px';
+		lightTextDiv.createEl('label', { text: '卡片文字颜色:' });
+		const lightTextLabelRow = lightTextDiv.createDiv();
+		lightTextLabelRow.style.display = 'flex';
+		lightTextLabelRow.style.alignItems = 'center';
+		lightTextLabelRow.style.gap = '8px';
+		this.lightTextColorInput = lightTextLabelRow.createEl('input', { type: 'color', value: '#333333' });
+		this.lightTextColorInput.style.width = '50px';
+		this.lightTextColorInput.style.height = '32px';
+		this.lightTextColorInput.style.border = 'none';
+		this.lightTextColorInput.style.padding = '0';
+		this.lightTextColorInput.style.cursor = 'pointer';
+		this.lightTextSwatch = this.createColorSwatch(lightTextLabelRow, '#333333', this.lightTextColorInput);
+
+		// ========== 暗色主题颜色设置 ==========
+		const darkSection = contentEl.createDiv();
+		darkSection.style.marginBottom = '16px';
+		darkSection.style.padding = '12px';
+		darkSection.style.background = 'var(--background-secondary)';
+		darkSection.style.borderRadius = '8px';
+		darkSection.style.border = '1px solid var(--background-modifier-border)';
+
+		const darkHeader = darkSection.createDiv();
+		darkHeader.style.display = 'flex';
+		darkHeader.style.alignItems = 'center';
+		darkHeader.style.gap = '6px';
+		darkHeader.style.marginBottom = '12px';
+		darkHeader.createEl('span', { text: '🌙' });
+		darkHeader.createEl('span', { text: '暗色主题' }).style.fontWeight = '500';
+
+		const darkColorContainer = darkSection.createDiv();
+		darkColorContainer.style.display = 'flex';
+		darkColorContainer.style.gap = '24px';
+
+		// 暗色背景色
+		const darkBgDiv = darkColorContainer.createDiv();
+		darkBgDiv.style.display = 'flex';
+		darkBgDiv.style.flexDirection = 'column';
+		darkBgDiv.style.gap = '6px';
+		darkBgDiv.createEl('label', { text: '卡片背景颜色:' });
+		const darkBgLabelRow = darkBgDiv.createDiv();
+		darkBgLabelRow.style.display = 'flex';
+		darkBgLabelRow.style.alignItems = 'center';
+		darkBgLabelRow.style.gap = '8px';
+		this.darkBgColorInput = darkBgLabelRow.createEl('input', { type: 'color', value: '#2d333b' });
+		this.darkBgColorInput.style.width = '50px';
+		this.darkBgColorInput.style.height = '32px';
+		this.darkBgColorInput.style.border = 'none';
+		this.darkBgColorInput.style.padding = '0';
+		this.darkBgColorInput.style.cursor = 'pointer';
+		this.darkBgSwatch = this.createColorSwatch(darkBgLabelRow, '#2d333b', this.darkBgColorInput);
+
+		// 暗色文字颜色
+		const darkTextDiv = darkColorContainer.createDiv();
+		darkTextDiv.style.display = 'flex';
+		darkTextDiv.style.flexDirection = 'column';
+		darkTextDiv.style.gap = '6px';
+		darkTextDiv.createEl('label', { text: '卡片文字颜色:' });
+		const darkTextLabelRow = darkTextDiv.createDiv();
+		darkTextLabelRow.style.display = 'flex';
+		darkTextLabelRow.style.alignItems = 'center';
+		darkTextLabelRow.style.gap = '8px';
+		this.darkTextColorInput = darkTextLabelRow.createEl('input', { type: 'color', value: '#adbac7' });
+		this.darkTextColorInput.style.width = '50px';
+		this.darkTextColorInput.style.height = '32px';
+		this.darkTextColorInput.style.border = 'none';
+		this.darkTextColorInput.style.padding = '0';
+		this.darkTextColorInput.style.cursor = 'pointer';
+		this.darkTextSwatch = this.createColorSwatch(darkTextLabelRow, '#adbac7', this.darkTextColorInput);
+
+		// 马卡龙配色（仅用于亮色背景）
 		const macaronContainer = contentEl.createDiv();
 		macaronContainer.style.marginBottom = '16px';
-		macaronContainer.createEl('label', { text: '快速选择卡片背景颜色:' });
+		macaronContainer.createEl('label', { text: '快速选择亮色背景颜色:' });
 		const macaronGrid = macaronContainer.createDiv();
 		macaronGrid.style.display = 'grid';
 		macaronGrid.style.gridTemplateColumns = 'repeat(10, 1fr)';
@@ -135,9 +233,12 @@ export class AddCustomStatusModal extends Modal {
 
 		const macaronPicker = new MacaronColorPicker({
 			container: macaronGrid,
-			currentColor: this.bgColorInput.value,
+			currentColor: this.lightBgColorInput.value,
 			onColorChange: (color) => {
-				this.bgColorInput.value = color;
+				this.lightBgColorInput.value = color;
+				if (this.lightBgSwatch) {
+					this.lightBgSwatch.style.backgroundColor = color;
+				}
 			}
 		});
 		macaronPicker.render();
@@ -169,13 +270,29 @@ export class AddCustomStatusModal extends Modal {
 		addButton.addEventListener('click', () => this.addCustomStatus());
 	}
 
+	/**
+	 * 创建颜色方块
+	 */
+	private createColorSwatch(container: HTMLElement, color: string, input: HTMLInputElement): HTMLElement {
+		const swatch = container.createEl('div');
+		swatch.style.width = '32px';
+		swatch.style.height = '32px';
+		swatch.style.borderRadius = '4px';
+		swatch.style.backgroundColor = color;
+		swatch.style.border = '1px solid var(--background-modifier-border)';
+		swatch.style.cursor = 'pointer';
+		swatch.addEventListener('click', () => input.click());
+		input.addEventListener('input', () => {
+			swatch.style.backgroundColor = input.value;
+		});
+		return swatch;
+	}
+
 	private addCustomStatus() {
 		const name = this.nameInput.value.trim();
 		const key = this.keyInput.value.trim();
 		const symbol = this.symbolInput.value.trim();
 		const description = this.descInput.value.trim();
-		const backgroundColor = this.bgColorInput.value;
-		const textColor = this.textColorInput.value;
 
 		// 验证
 		if (!name) {
@@ -206,14 +323,20 @@ export class AddCustomStatusModal extends Modal {
 			return;
 		}
 
-		// 添加新状态
+		// 添加新状态（使用新的主题分离颜色格式）
 		const newStatus: TaskStatus = {
 			key,
 			symbol,
 			name,
 			description: description || '自定义状态',
-			backgroundColor,
-			textColor,
+			lightColors: {
+				backgroundColor: this.lightBgColorInput.value,
+				textColor: this.lightTextColorInput.value
+			},
+			darkColors: {
+				backgroundColor: this.darkBgColorInput.value,
+				textColor: this.darkTextColorInput.value
+			},
 			isDefault: false
 		};
 
