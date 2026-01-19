@@ -16,6 +16,7 @@ const AUTH_URL = 'https://accounts.feishu.cn/open-apis/authen/v1/authorize';
 const TOKEN_URL = 'https://open.feishu.cn/open-apis/authen/v1/oidc/access_token';
 const REFRESH_URL = 'https://open.feishu.cn/open-apis/authen/v1/oidc/refresh_access_token';
 const USER_INFO_URL = 'https://open.feishu.cn/open-apis/authen/v1/user_info';
+const CALENDAR_LIST_URL = 'https://open.feishu.cn/open-apis/calendar/v4/calendars';
 const DEFAULT_REDIRECT_URI = 'https://open.feishu.cn/api-explorer/loading';
 
 /**
@@ -104,6 +105,34 @@ export interface FeishuUserInfo {
 }
 
 /**
+ * 飞书日历信息
+ */
+export interface FeishuCalendar {
+    calendar_id: string;
+    summary: string;
+    summary_alias?: string;
+    description?: string;
+    color?: number;
+    timezone?: string;
+    permissions?: 'private' | 'show_only_free_busy' | 'show_details' | 'public';
+    role?: 'owner' | 'writer' | 'reader' | 'free_busy_reader';
+    type?: 'primary' | 'shared' | 'subscription';
+}
+
+/**
+ * 飞书日历列表响应
+ */
+export interface FeishuCalendarListResponse {
+    code: number;
+    msg: string;
+    data?: {
+        calendar_list?: FeishuCalendar[];
+        page_token?: string;
+        has_more?: boolean;
+    };
+}
+
+/**
  * 飞书 OAuth 辅助类
  */
 export class FeishuOAuth {
@@ -146,10 +175,14 @@ export class FeishuOAuth {
         params.append('redirect_uri', config.redirectUri || DEFAULT_REDIRECT_URI);
         params.append('state', state);
 
-        // scope 参数：如果未指定，则获取应用所有权限
-        // 常用权限：contact:user.base:readonly（查看用户基本信息）
-        if (config.scopes && config.scopes.length > 0) {
-            params.append('scope', config.scopes);
+        // scope 参数：设置需要的权限
+        // 如果配置中指定了 scopes，使用配置的；否则使用默认权限
+        const scopes = config.scopes && config.scopes.length > 0
+            ? config.scopes
+            : 'calendar:calendar:readonly';
+
+        if (scopes) {
+            params.append('scope', scopes);
         }
 
         return `${AUTH_URL}?${params.toString()}`;
@@ -339,6 +372,62 @@ export class FeishuOAuth {
             email: userInfo.email,
             avatar: userInfo.avatar_url || userInfo.avatar_middle || userInfo.avatar_thumb || '',
         };
+    }
+
+    /**
+     * 获取用户日历列表
+     * @param accessToken 访问令牌
+     * @param fetchFn 可选的请求函数（用于绕过 CORS）
+     * @returns 日历列表
+     */
+    static async getCalendarList(
+        accessToken: string,
+        fetchFn?: FetchFunction
+    ): Promise<FeishuCalendar[]> {
+        Logger.info('FeishuOAuth', 'Fetching calendar list');
+
+        // 构建 URL 参数
+        const url = new URL(CALENDAR_LIST_URL);
+        url.searchParams.append('page_size', '500');
+
+        // 打印请求信息
+        console.log('=== 飞书获取日历列表请求 ===');
+        console.log('URL:', url.toString());
+        console.log('Method: GET');
+        console.log('Headers:', { 'Authorization': `Bearer ${accessToken?.substring(0, 20)}...` });
+
+        const response = await this.fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        }, fetchFn);
+
+        // 打印响应信息
+        console.log('=== 飞书获取日历列表响应 ===');
+        console.log('Status:', response.status);
+        console.log('Response Body (原始):', response.text);
+        console.log('==========================');
+
+        const data = await this.parseResponse<FeishuCalendarListResponse>(response);
+
+        if (data.code !== 0) {
+            console.error('=== 获取日历列表失败 ===');
+            console.error('错误码:', data.code);
+            console.error('错误信息:', data.msg);
+            console.error('完整响应:', JSON.stringify(data, null, 2));
+            Logger.error('FeishuOAuth', 'Get calendar list failed', { code: data.code, msg: data.msg });
+            throw new Error(`获取日历列表失败: ${data.msg}`);
+        }
+
+        const calendarList = data.data?.calendar_list || [];
+        console.log(`=== 成功获取 ${calendarList.length} 个日历 ===`);
+        calendarList.forEach((cal, index) => {
+            const isPrimary = cal.type === 'primary';
+            console.log(`${index + 1}. ${cal.summary} (${cal.calendar_id})${isPrimary ? ' [主日历]' : ''}`);
+        });
+
+        return calendarList;
     }
 
     /**

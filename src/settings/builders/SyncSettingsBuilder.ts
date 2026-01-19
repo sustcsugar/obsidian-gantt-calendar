@@ -153,6 +153,95 @@ export class SyncSettingsBuilder extends BaseBuilder {
 							await this.testConnection();
 						}))
 			);
+
+			// 获取日历列表按钮（仅飞书）
+			if (provider === 'feishu') {
+				addSetting(setting =>
+					setting.setName('获取日历列表')
+						.setDesc('获取飞书账号中的所有日历')
+						.addButton(button => button
+							.setButtonText('获取日历列表')
+							.onClick(async () => {
+								await this.fetchFeishuCalendarList();
+							}))
+				);
+			}
+
+			// 日历列表展示区域（仅飞书，直接添加到容器中）
+			if (provider === 'feishu') {
+				const calendarList = syncConfig.api?.calendarList as Array<{
+					summary: string;
+					summary_alias?: string;
+					calendar_id: string;
+					type?: string;
+					description?: string;
+				}> || [];
+
+				if (calendarList.length > 0) {
+					const calendarListEl = document.createElement('div');
+					calendarListEl.className = 'feishu-calendar-list';
+					calendarListEl.style.marginTop = '18px';
+					calendarListEl.style.marginBottom = '18px';
+					calendarListEl.style.padding = '0';
+
+					const headerEl = document.createElement('div');
+					headerEl.style.fontWeight = 'bold';
+					headerEl.style.marginBottom = '12px';
+					headerEl.style.fontSize = '14px';
+					headerEl.textContent = `飞书日历列表 (${calendarList.length} 个)`;
+					calendarListEl.appendChild(headerEl);
+
+					const listEl = document.createElement('div');
+					listEl.style.display = 'flex';
+					listEl.style.flexWrap = 'wrap';
+					listEl.style.gap = '12px';
+					listEl.style.maxHeight = '300px';
+					listEl.style.overflowY = 'auto';
+
+					calendarList.forEach((cal) => {
+						const itemEl = document.createElement('div');
+						itemEl.style.padding = '12px';
+						itemEl.style.border = '1px solid var(--background-modifier-border)';
+						itemEl.style.borderRadius = '6px';
+						itemEl.style.backgroundColor = 'var(--background-secondary)';
+						itemEl.style.minWidth = '220px';
+						itemEl.style.flex = '0 0 auto';
+
+						const isPrimary = cal.type === 'primary';
+						const typeLabel = isPrimary ? '主日历' : (cal.type || '共享');
+						const typeColor = isPrimary ? 'var(--text-accent)' : 'var(--text-muted)';
+
+						itemEl.innerHTML = `
+							<div style="font-weight: 500">${cal.summary}${isPrimary ? ' <span style="color: var(--text-accent)">★</span>' : ''}</div>
+							<div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+								<span style="color: ${typeColor}">[${typeLabel}]</span>
+							</div>
+							<div style="font-size: 11px; font-family: monospace; color: var(--text-muted); margin-top: 4px; word-break: break-all;">
+								${cal.calendar_id.substring(0, 30)}...
+							</div>
+							${cal.description ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">${cal.description}</div>` : ''}
+						`;
+
+						// 添加选择按钮
+						const selectBtn = document.createElement('button');
+						selectBtn.textContent = '选择';
+						selectBtn.style.marginTop = '10px';
+						selectBtn.style.padding = '6px 16px';
+						selectBtn.style.fontSize = '12px';
+						selectBtn.className = 'mod-cta';
+						selectBtn.onclick = () => {
+							// TODO: 实现选择日历的逻辑
+							new Notice(`已选择日历：${cal.summary}`);
+						};
+						itemEl.appendChild(selectBtn);
+
+						listEl.appendChild(itemEl);
+					});
+
+					calendarListEl.appendChild(listEl);
+					this.containerEl.appendChild(calendarListEl);
+				}
+			}
 		});
 
 		// ===== CalDAV 日历同步设置 =====
@@ -1017,37 +1106,36 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			body?: string;
 			headers?: Record<string, string>;
 		}) => {
-			try {
-				const result = await requestUrl({
-					url,
-					method: options?.method || 'GET',
-					body: options?.body,
-					headers: options?.headers,
-				});
-				return {
-					status: result.status,
-					headers: result.headers || {},
-					text: result.text || '',
-				};
-			} catch (error: any) {
-				// Obsidian requestUrl 在 4xx/5xx 时会抛出错误
-				// 尝试从错误对象中提取响应信息
-				const status = error?.status || 0;
-				const headers = error?.headers || {};
-				const text = error?.text || error?.message || JSON.stringify(error);
-
-				console.error('=== requestUrl 错误详情 ===');
-				console.error('Status:', status);
-				console.error('Headers:', headers);
-				console.error('Text:', text);
-				console.error('========================');
-
-				return {
-					status,
-					headers,
-					text,
-				};
+			const method = options?.method || 'GET';
+			// Obsidian requestUrl: GET 请求不应传递 body 参数
+			const requestConfig: any = {
+				url,
+				method,
+				headers: options?.headers,
+				// 设置 throw 为 false，这样即使 HTTP 错误也不会抛出异常
+				throw: false,
+			};
+			// 只有非 GET 请求才传递 body
+			if (method !== 'GET' && options?.body) {
+				requestConfig.body = options.body;
 			}
+
+			const result = await requestUrl(requestConfig);
+
+			// 检查状态码，如果是 4xx/5xx，记录错误信息但不抛出异常
+			if (result.status >= 400) {
+				console.error('=== requestUrl HTTP 错误 ===');
+				console.error('Status:', result.status);
+				console.error('Headers:', result.headers);
+				console.error('Body:', result.text);
+				console.error('========================');
+			}
+
+			return {
+				status: result.status,
+				headers: result.headers || {},
+				text: result.text || '',
+			};
 		};
 	}
 
@@ -1256,6 +1344,86 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			}
 
 			console.error('飞书连接测试失败:', error);
+		}
+	}
+
+	/**
+	 * 获取飞书日历列表
+	 */
+	private async fetchFeishuCalendarList(): Promise<void> {
+		new Notice('正在获取飞书日历列表...');
+
+		try {
+			const config = this.getSyncConfiguration();
+			const accessToken = config.api?.accessToken;
+
+			// 检查是否已授权
+			if (!accessToken) {
+				new Notice('请先完成飞书授权');
+				return;
+			}
+
+			// 创建 requestUrl 包装函数以绕过 CORS
+			const requestFetch = this.createRequestFetch();
+
+			// 调用飞书 API 获取日历列表
+			const calendarList = await FeishuOAuth.getCalendarList(accessToken, requestFetch);
+
+			// 保存日历列表到配置
+			this.updateSyncConfig({
+				api: {
+					...config.api,
+					calendarList: calendarList,
+					calendarListFetchedAt: Date.now(),
+				}
+			});
+			await this.saveAndRefresh();
+			// 刷新设置面板以显示日历列表
+			this.refreshSettingsPanel();
+
+			// 显示成功信息
+			new Notice(`✅ 成功获取 ${calendarList.length} 个日历`);
+
+			// 打印详细信息到控制台
+			console.log('=== 飞书日历列表详情 ===');
+			calendarList.forEach((cal, index) => {
+				const isPrimary = cal.type === 'primary';
+				console.log(`\n${index + 1}. ${cal.summary}${isPrimary ? ' (主日历)' : ''}`);
+				console.log(`   ID: ${cal.calendar_id}`);
+				console.log(`   类型: ${cal.type || 'unknown'}`);
+				if (cal.summary_alias) {
+					console.log(`   别名: ${cal.summary_alias}`);
+				}
+				if (cal.description) {
+					console.log(`   描述: ${cal.description}`);
+				}
+				if (cal.permissions) {
+					console.log(`   权限: ${cal.permissions}`);
+				}
+				if (cal.role) {
+					console.log(`   角色: ${cal.role}`);
+				}
+				if (cal.color !== undefined) {
+					console.log(`   颜色: ${cal.color}`);
+				}
+				if (cal.timezone) {
+					console.log(`   时区: ${cal.timezone}`);
+				}
+			});
+			console.log('========================');
+		} catch (error) {
+			const errorMsg = error instanceof Error ? error.message : String(error);
+
+			// 区分错误类型
+			if (errorMsg.includes('401') || errorMsg.includes('403')) {
+				new Notice('❌ 认证失败：Access Token 无效或已过期，请重新授权');
+			} else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
+				new Notice('❌ 网络错误：请检查网络连接');
+			} else {
+				new Notice(`❌ 获取日历列表失败: ${errorMsg}`);
+			}
+
+			console.error('飞书日历列表获取失败:', error);
 		}
 	}
 
