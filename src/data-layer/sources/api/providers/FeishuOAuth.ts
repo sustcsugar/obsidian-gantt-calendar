@@ -29,10 +29,41 @@ const API_ENDPOINTS = {
     USER_INFO: 'https://open.feishu.cn/open-apis/authen/v1/user_info',
     /** 获取日历列表端点 */
     CALENDAR_LIST: 'https://open.feishu.cn/open-apis/calendar/v4/calendars',
+    /** 获取任务列表端点（已废弃，使用按清单获取任务） */
+    TASK_LIST: 'https://open.feishu.cn/open-apis/task/v2/tasks',
+    /** 获取任务清单列表端点 */
+    TASK_LISTS: 'https://open.feishu.cn/open-apis/task/v2/tasklists',
 } as const;
 
 /** 默认重定向 URI */
 const DEFAULT_REDIRECT_URI = 'https://open.feishu.cn/api-explorer/loading';
+
+// ==================== Scope 常量 ====================
+
+/**
+ * 飞书 OAuth Scope 常量
+ */
+export const FEISHU_SCOPES = {
+    /** 日历只读权限 */
+    CALENDAR_READONLY: 'calendar:calendar:readonly',
+    /** 任务读取权限 */
+    TASK_READ: 'task:task:read',
+    /** 任务写入权限 */
+    TASK_WRITE: 'task:task:write',
+    /** 任务清单读取权限 */
+    TASK_LIST_READ: 'task:tasklist:read',
+    /** 任务清单写入权限 */
+    TASK_LIST_WRITE: 'task:tasklist:write',
+} as const;
+
+/** 默认Scope组合（包含日历和任务权限） */
+const DEFAULT_SCOPES = [
+    FEISHU_SCOPES.CALENDAR_READONLY,
+    FEISHU_SCOPES.TASK_READ,
+    FEISHU_SCOPES.TASK_WRITE,
+    FEISHU_SCOPES.TASK_LIST_READ,
+    FEISHU_SCOPES.TASK_LIST_WRITE,
+].join(' ');
 
 // ==================== 类型定义 ====================
 
@@ -158,6 +189,170 @@ export interface FeishuCalendarListResponse {
     msg: string;
     data?: {
         calendar_list?: FeishuCalendar[];
+        page_token?: string;
+        has_more?: boolean;
+    };
+}
+
+// ==================== 任务清单相关类型 ====================
+
+/**
+ * 飞书任务清单成员
+ */
+export interface FeishuTaskListMember {
+    id: string;
+    name?: string;
+    role: string;
+    type: string;
+}
+
+/**
+ * 飞书任务清单
+ */
+export interface FeishuTaskList {
+    guid: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+    archive_msec: string;
+    creator?: { id: string; type: string; };
+    owner?: { id: string; role: string; type: string; };
+    members?: FeishuTaskListMember[];
+    url?: string;
+}
+
+/**
+ * 飞书任务清单响应
+ */
+export interface FeishuTaskListResponse {
+    code: number;
+    msg: string;
+    data?: {
+        items?: FeishuTaskList[];
+        page_token?: string;
+        has_more?: boolean;
+    };
+}
+
+// ==================== 任务相关类型 ====================
+
+/**
+ * 飞书任务用户信息
+ */
+export interface FeishuTaskUser {
+    user_id: string;
+    name: string;
+    avatar_url?: string;
+}
+
+/**
+ * 飞书任务字段值
+ */
+export interface FeishuTaskFieldValue {
+    id?: string;
+    type: string;
+    text?: string;
+    number?: number;
+    select?: { id: string; name: string; };
+    user?: FeishuTaskUser[];
+    date?: { timestamp?: number; };
+}
+
+/**
+ * 飞书任务成员（API返回格式）
+ */
+export interface FeishuTaskMember {
+    id: string;
+    name?: string;
+    role: string;
+    type: string;
+}
+
+/**
+ * 飞书任务（API原始返回格式）
+ *
+ * 注意：
+ * - 时间字段 create_time, update_time, completed_at 可能不返回或返回 "0"
+ * - start/due 中的 timestamp 是字符串格式的毫秒时间戳
+ */
+export interface FeishuTaskRaw {
+    guid: string;
+    summary: string;
+    description?: string;
+    completed?: boolean;
+    completed_at?: string;  // 字符串格式的毫秒时间戳，或 "0"
+    create_time?: string;   // 字符串格式的毫秒时间戳
+    update_time?: string;   // 字符串格式的毫秒时间戳
+    start?: FeishuTaskTime;
+    due?: FeishuTaskTime;
+    status?: string;
+    priority?: string;
+    assignee?: FeishuTaskMember;
+    members?: FeishuTaskMember[];
+    subtask_count?: number;
+    custom_fields?: Record<string, any>;
+}
+
+/**
+ * 飞书任务时间字段
+ */
+export interface FeishuTaskTime {
+    /** 时间戳（字符串格式的毫秒数，如 "1769040000000"） */
+    timestamp?: string;
+    /** 是否全天任务 */
+    is_all_day?: boolean;
+}
+
+/**
+ * 飞书任务
+ */
+export interface FeishuTask {
+    /** 任务GUID */
+    task_guid: string;
+    /** 任务标题/摘要 */
+    summary: string;
+    /** 任务描述 */
+    description?: string;
+    /** 是否已完成 */
+    completed?: boolean;
+    /** 完成时间 */
+    completed_at?: string;
+    /** 开始时间 */
+    start_time?: FeishuTaskTime;
+    /** 截止时间 */
+    due_time?: FeishuTaskTime;
+    /** 创建时间 */
+    created_at?: string;
+    /** 更新时间 */
+    updated_at?: string;
+    /** 任务状态 */
+    status?: string;
+    /** 优先级 */
+    priority?: string;
+    /** 负责人 */
+    assignee?: FeishuTaskUser;
+    /** 关注者列表 */
+    followers?: FeishuTaskUser[];
+    /** 任务所属任务列表 */
+    tasklist_guid?: string;
+    /** 任务列表名称 */
+    tasklist_name?: string;
+    /** 自定义字段 */
+    custom_fields?: Record<string, FeishuTaskFieldValue>;
+    /** 子任务数量 */
+    sub_task_count?: number;
+    /** 已完成子任务数量 */
+    sub_task_completed_count?: number;
+}
+
+/**
+ * 飞书任务列表响应
+ */
+export interface FeishuTaskResponse {
+    code: number;
+    msg: string;
+    data?: {
+        items?: FeishuTaskRaw[];
         page_token?: string;
         has_more?: boolean;
     };
@@ -305,7 +500,7 @@ export class FeishuOAuth {
         const state = generateState();
         const scopes = config.scopes && config.scopes.length > 0
             ? config.scopes
-            : 'calendar:calendar:readonly';
+            : DEFAULT_SCOPES;
         return buildAuthUrl(
             config.clientId,
             config.redirectUri || DEFAULT_REDIRECT_URI,
@@ -551,6 +746,304 @@ export class FeishuOAuth {
         });
 
         return calendarList;
+    }
+
+    /**
+     * 获取用户任务列表
+     * @param accessToken 访问令牌
+     * @param fetchFn 可选的请求函数（用于绕过 CORS）
+     * @param pageSize 每页数量，默认100
+     * @param pageToken 分页令牌
+     * @returns 任务列表
+     */
+    static async getTaskList(
+        accessToken: string,
+        fetchFn?: FetchFunction,
+        pageSize: number = 100,
+        pageToken?: string
+    ): Promise<{ tasks: FeishuTask[]; hasMore: boolean; nextPageToken?: string }> {
+        Logger.info('FeishuOAuth', 'Fetching task list');
+
+        // 构建 URL 参数
+        const url = new URL(API_ENDPOINTS.TASK_LIST);
+        url.searchParams.append('page_size', pageSize.toString());
+        if (pageToken) {
+            url.searchParams.append('page_token', pageToken);
+        }
+
+        console.log('=== 飞书获取任务列表请求 ===');
+        console.log('URL:', url.toString());
+
+        const response = await this.fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        }, fetchFn);
+
+        console.log('=== 飞书获取任务列表响应 ===');
+        console.log('Status:', response.status);
+        console.log('Response Body (原始):', response.text);
+        console.log('==========================');
+
+        const data = await this.parseResponse<FeishuTaskResponse>(response);
+
+        if (data.code !== 0) {
+            console.error('=== 获取任务列表失败 ===');
+            console.error('错误码:', data.code);
+            console.error('错误信息:', data.msg);
+            Logger.error('FeishuOAuth', 'Get task list failed', { code: data.code, msg: data.msg });
+            throw new Error(`获取任务列表失败: ${data.msg}`);
+        }
+
+        const rawTasks = data.data?.items || [];
+        const hasMore = data.data?.has_more || false;
+        const nextPageToken = data.data?.page_token;
+
+        // 映射字段：FeishuTaskRaw -> FeishuTask
+        // 注意：API 返回的时间戳是毫秒数字，需要转换为字符串
+        const tasks: FeishuTask[] = rawTasks.map(task => ({
+            task_guid: task.guid,
+            summary: task.summary,
+            description: task.description,
+            completed: task.completed,
+            completed_at: task.completed_at ? String(task.completed_at) : undefined,
+            created_at: task.create_time ? String(task.create_time) : undefined,
+            updated_at: task.update_time ? String(task.update_time) : undefined,
+            start_time: task.start,
+            due_time: task.due,
+            status: task.status,
+            priority: task.priority,
+            assignee: task.assignee ? { user_id: task.assignee.id, name: task.assignee.name || '' } : undefined,
+            followers: task.members?.filter(m => m.role === 'follower').map(m => ({ user_id: m.id, name: m.name || '' })),
+            sub_task_count: task.subtask_count,
+            sub_task_completed_count: 0,
+        }));
+
+        console.log(`=== 成功获取 ${tasks.length} 个任务 ===`);
+        tasks.forEach((task, index) => {
+            const status = task.completed ? '[已完成]' : '[未完成]';
+            console.log(`${index + 1}. ${task.summary} ${status}`);
+        });
+
+        return {
+            tasks,
+            hasMore,
+            nextPageToken,
+        };
+    }
+
+    /**
+     * 获取用户任务清单列表
+     * @param accessToken 访问令牌
+     * @param fetchFn 可选的请求函数（用于绕过 CORS）
+     * @param pageSize 每页数量，默认50
+     * @param pageToken 分页令牌
+     * @returns 任务清单列表
+     */
+    static async getTaskLists(
+        accessToken: string,
+        fetchFn?: FetchFunction,
+        pageSize: number = 50,
+        pageToken?: string
+    ): Promise<{ taskLists: FeishuTaskList[]; hasMore: boolean; nextPageToken?: string }> {
+        Logger.info('FeishuOAuth', 'Fetching task lists');
+
+        // 构建 URL 参数
+        const url = new URL(API_ENDPOINTS.TASK_LISTS);
+        url.searchParams.append('page_size', pageSize.toString());
+        url.searchParams.append('user_id_type', 'open_id');
+        if (pageToken) {
+            url.searchParams.append('page_token', pageToken);
+        }
+
+        console.log('=== 飞书获取任务清单请求 ===');
+        console.log('URL:', url.toString());
+
+        const response = await this.fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        }, fetchFn);
+
+        console.log('=== 飞书获取任务清单响应 ===');
+        console.log('Status:', response.status);
+        console.log('Response Body (原始):', response.text);
+        console.log('==========================');
+
+        const data = await this.parseResponse<FeishuTaskListResponse>(response);
+
+        if (data.code !== 0) {
+            console.error('=== 获取任务清单失败 ===');
+            console.error('错误码:', data.code);
+            console.error('错误信息:', data.msg);
+            Logger.error('FeishuOAuth', 'Get task lists failed', { code: data.code, msg: data.msg });
+            throw new Error(`获取任务清单失败: ${data.msg}`);
+        }
+
+        const taskLists = data.data?.items || [];
+        const hasMore = data.data?.has_more || false;
+        const nextPageToken = data.data?.page_token;
+
+        console.log(`=== 成功获取 ${taskLists.length} 个任务清单 ===`);
+        taskLists.forEach((list, index) => {
+            console.log(`${index + 1}. ${list.name} (${list.guid})`);
+        });
+
+        return {
+            taskLists,
+            hasMore,
+            nextPageToken,
+        };
+    }
+
+    /**
+     * 获取所有任务清单（自动分页）
+     * @param accessToken 访问令牌
+     * @param fetchFn 可选的请求函数（用于绕过 CORS）
+     * @returns 所有任务清单列表
+     */
+    static async getAllTaskLists(
+        accessToken: string,
+        fetchFn?: FetchFunction
+    ): Promise<FeishuTaskList[]> {
+        const allTaskLists: FeishuTaskList[] = [];
+        let pageToken: string | undefined = undefined;
+        let pageCount = 0;
+        const maxPages = 10; // 最多获取10页，防止无限循环
+
+        while (pageCount < maxPages) {
+            const result: Awaited<ReturnType<typeof FeishuOAuth.getTaskLists>> = await this.getTaskLists(accessToken, fetchFn, 50, pageToken);
+            allTaskLists.push(...result.taskLists);
+
+            if (!result.hasMore || !result.nextPageToken) {
+                break;
+            }
+
+            pageToken = result.nextPageToken;
+            pageCount++;
+        }
+
+        console.log(`=== 共获取 ${allTaskLists.length} 个任务清单 ===`);
+        return allTaskLists;
+    }
+
+    /**
+     * 获取指定任务清单中的任务
+     * @param accessToken 访问令牌
+     * @param tasklistGuid 任务清单GUID
+     * @param tasklistName 任务清单名称
+     * @param fetchFn 可选的请求函数（用于绕过 CORS）
+     * @returns 任务列表
+     */
+    static async getTasksByTaskList(
+        accessToken: string,
+        tasklistGuid: string,
+        tasklistName: string,
+        fetchFn?: FetchFunction
+    ): Promise<FeishuTask[]> {
+        Logger.info('FeishuOAuth', `Fetching tasks for task list: ${tasklistName}`);
+
+        // 构建请求 URL
+        const url = `${API_ENDPOINTS.TASK_LISTS}/${tasklistGuid}/tasks`;
+
+        console.log('=== 飞书获取清单任务请求 ===');
+        console.log('Task List:', tasklistName);
+        console.log('URL:', url);
+
+        const response = await this.fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        }, fetchFn);
+
+        console.log('=== 飞书获取清单任务响应 ===');
+        console.log('Status:', response.status);
+        console.log('Response Body (原始):', response.text);
+        console.log('==========================');
+
+        const data = await this.parseResponse<FeishuTaskResponse>(response);
+
+        if (data.code !== 0) {
+            console.error('=== 获取清单任务失败 ===');
+            console.error('错误码:', data.code);
+            console.error('错误信息:', data.msg);
+            Logger.error('FeishuOAuth', 'Get tasks by task list failed', { code: data.code, msg: data.msg });
+            throw new Error(`获取清单任务失败: ${data.msg}`);
+        }
+
+        const tasks = data.data?.items || [];
+
+        // 调试：打印第一个任务的原始数据
+        if (tasks.length > 0) {
+            console.log('=== 第一个任务的原始数据 ===');
+            console.log(JSON.stringify(tasks[0], null, 2));
+            console.log('==============================');
+        }
+
+        // 将 API 返回的原始任务数据转换为我们需要的格式
+        // 注意：API 返回的时间戳是毫秒数字，需要转换为字符串
+        const tasksWithListInfo: FeishuTask[] = tasks.map(task => ({
+            task_guid: task.guid,
+            summary: task.summary,
+            description: task.description,
+            completed: task.completed,
+            completed_at: task.completed_at ? String(task.completed_at) : undefined,
+            created_at: task.create_time ? String(task.create_time) : undefined,
+            updated_at: task.update_time ? String(task.update_time) : undefined,
+            start_time: task.start,
+            due_time: task.due,
+            status: task.status,
+            priority: task.priority,
+            assignee: task.assignee ? { user_id: task.assignee.id, name: task.assignee.name || '' } : undefined,
+            followers: task.members?.filter(m => m.role === 'follower').map(m => ({ user_id: m.id, name: m.name || '' })),
+            tasklist_guid: tasklistGuid,
+            tasklist_name: tasklistName,
+            sub_task_count: task.subtask_count,
+            sub_task_completed_count: 0,
+        }));
+
+        console.log(`=== 成功获取清单 "${tasklistName}" 中的 ${tasks.length} 个任务 ===`);
+
+        return tasksWithListInfo;
+    }
+
+    /**
+     * 获取所有任务（通过任务清单获取）
+     * @param accessToken 访问令牌
+     * @param fetchFn 可选的请求函数（用于绕过 CORS）
+     * @returns 所有任务列表
+     */
+    static async getAllTasks(
+        accessToken: string,
+        fetchFn?: FetchFunction
+    ): Promise<FeishuTask[]> {
+        console.log('=== 开始获取所有任务（通过任务清单） ===');
+
+        // 1. 获取所有任务清单
+        const taskLists = await this.getAllTaskLists(accessToken, fetchFn);
+
+        if (taskLists.length === 0) {
+            console.log('=== 未找到任何任务清单 ===');
+            return [];
+        }
+
+        // 2. 获取每个任务清单中的任务
+        const allTasks: FeishuTask[] = [];
+        for (const taskList of taskLists) {
+            const tasks = await this.getTasksByTaskList(
+                accessToken,
+                taskList.guid,
+                taskList.name,
+                fetchFn
+            );
+            allTasks.push(...tasks);
+        }
+
+        console.log(`=== 共获取 ${allTasks.length} 个任务（来自 ${taskLists.length} 个任务清单） ===`);
+        return allTasks;
     }
 
     /**
