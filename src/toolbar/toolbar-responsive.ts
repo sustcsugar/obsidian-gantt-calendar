@@ -11,6 +11,7 @@
  */
 
 import { ToolbarClasses } from '../utils/bem';
+import { Logger } from '../utils/logger';
 
 /**
  * 滞后阈值配置（硬编码版本）
@@ -62,7 +63,7 @@ export class ToolbarResponsiveManager {
 			});
 			this.resizeObserver.observe(toolbarEl);
 		} catch (e) {
-			console.warn('ResizeObserver not supported, responsive toolbar disabled', e);
+			Logger.warn('ToolbarResponsive', 'ResizeObserver not supported, responsive toolbar disabled', e);
 		}
 	}
 

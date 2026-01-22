@@ -6,6 +6,7 @@ import { FeishuHttpClient } from '../../data-layer/sources/api/providers/feishu/
 import { FeishuUserApi } from '../../data-layer/sources/api/providers/feishu/FeishuUserApi';
 import { FeishuCalendarApi } from '../../data-layer/sources/api/providers/feishu/FeishuCalendarApi';
 import type { FeishuCalendar } from '../../data-layer/sources/api/providers/feishu/FeishuTypes';
+import { Logger } from '../../utils/logger';
 
 /**
  * 同步设置构建器
@@ -967,7 +968,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			this.refreshSettingsPanel();
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			console.error('授权失败详情:', error);
+			Logger.error('SyncSettingsBuilder', 'Authorization failed', error);
 			new Notice(`授权失败: ${errorMsg}`);
 		}
 	}
@@ -1126,9 +1127,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 		// 打印调试信息
 		if (updates.api) {
-			console.log('=== updateSyncConfig ===');
-			console.log('currentConfig.api:', currentConfig.api);
-			console.log('updates.api:', updates.api);
+			Logger.debug('SyncSettingsBuilder', 'updateSyncConfig', {
+				currentApi: currentConfig.api,
+				updatesApi: updates.api,
+			});
 		}
 
 		this.plugin.settings.syncConfiguration = {
@@ -1150,8 +1152,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 		// 打印合并后的结果
 		if (updates.api) {
-			console.log('merged syncConfiguration.api:', this.plugin.settings.syncConfiguration?.api ?? 'undefined');
-			console.log('=====================');
+			Logger.debug('SyncSettingsBuilder', 'Merged syncConfiguration.api', this.plugin.settings.syncConfiguration?.api ?? 'undefined');
 		}
 	}
 
@@ -1233,12 +1234,12 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			new Notice(`✅ 飞书连接成功！用户: ${userInfo.name} (${userInfo.userId})`);
 
 			// 打印详细信息到控制台
-			console.log('=== 飞书连接测试成功 ===');
-			console.log('用户 ID:', userInfo.userId);
-			console.log('用户名:', userInfo.name);
-			console.log('英文名:', userInfo.enName);
-			console.log('邮箱:', userInfo.email);
-			console.log('========================');
+			Logger.info('SyncSettingsBuilder', 'Feishu connection test successful', {
+				userId: userInfo.userId,
+				name: userInfo.name,
+				enName: userInfo.enName,
+				email: userInfo.email,
+			});
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 
@@ -1251,7 +1252,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				new Notice(`❌ 连接失败: ${errorMsg}`);
 			}
 
-			console.error('飞书连接测试失败:', error);
+			Logger.error('SyncSettingsBuilder', 'Feishu connection test failed', error);
 		}
 	}
 
@@ -1293,32 +1294,23 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			new Notice(`✅ 成功获取 ${calendarList.length} 个日历`);
 
 			// 打印详细信息到控制台
-			console.log('=== 飞书日历列表详情 ===');
-			calendarList.forEach((cal, index) => {
-				const isPrimary = cal.type === 'primary';
-				console.log(`\n${index + 1}. ${cal.summary}${isPrimary ? ' (主日历)' : ''}`);
-				console.log(`   ID: ${cal.calendar_id}`);
-				console.log(`   类型: ${cal.type || 'unknown'}`);
-				if (cal.summary_alias) {
-					console.log(`   别名: ${cal.summary_alias}`);
-				}
-				if (cal.description) {
-					console.log(`   描述: ${cal.description}`);
-				}
-				if (cal.permissions) {
-					console.log(`   权限: ${cal.permissions}`);
-				}
-				if (cal.role) {
-					console.log(`   角色: ${cal.role}`);
-				}
-				if (cal.color !== undefined) {
-					console.log(`   颜色: ${cal.color}`);
-				}
-				if (cal.timezone) {
-					console.log(`   时区: ${cal.timezone}`);
-				}
-			});
-			console.log('========================');
+			Logger.debug('SyncSettingsBuilder', 'Feishu calendar list details',
+				calendarList.map((cal, index) => {
+					const isPrimary = cal.type === 'primary';
+					return {
+						index: index + 1,
+						summary: cal.summary + (isPrimary ? ' (主日历)' : ''),
+						id: cal.calendar_id,
+						type: cal.type || 'unknown',
+						alias: cal.summary_alias,
+						description: cal.description,
+						permissions: cal.permissions,
+						role: cal.role,
+						color: cal.color,
+						timezone: cal.timezone,
+					};
+				})
+			);
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 
@@ -1331,7 +1323,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				new Notice(`❌ 获取日历列表失败: ${errorMsg}`);
 			}
 
-			console.error('飞书日历列表获取失败:', error);
+			Logger.error('SyncSettingsBuilder', 'Failed to fetch Feishu calendar list', error);
 		}
 	}
 

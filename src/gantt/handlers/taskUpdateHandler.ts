@@ -130,7 +130,7 @@ export class TaskUpdateHandler {
 	handleTaskClick(ganttTask: GanttChartTask, _allTasks: GCTask[]): void {
 		// 直接从 GanttChartTask 获取任务信息
 		if (!ganttTask.filePath || !ganttTask.fileName) {
-			console.error('[TaskUpdateHandler] Missing task information:', ganttTask);
+			Logger.error('TaskUpdateHandler', 'Missing task information', ganttTask);
 			return;
 		}
 
