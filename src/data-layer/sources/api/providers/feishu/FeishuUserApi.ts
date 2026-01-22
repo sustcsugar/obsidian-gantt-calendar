@@ -26,10 +26,6 @@ export class FeishuUserApi {
     ): Promise<FeishuUserInfo> {
         Logger.info('FeishuUserApi', 'Fetching user info');
 
-        console.log('=== 飞书获取用户信息请求 ===');
-        console.log('URL:', API_ENDPOINTS.USER_INFO);
-        console.log('Method: GET');
-
         const response = await FeishuHttpClient.fetch(API_ENDPOINTS.USER_INFO, {
             method: 'GET',
             headers: {
@@ -37,17 +33,14 @@ export class FeishuUserApi {
             },
         }, fetchFn);
 
-        console.log('=== 飞书获取用户信息响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuUserApi', 'User info response', {
+            status: response.status,
+            body: response.text,
+        });
 
         const data = await FeishuHttpClient.parseResponse<FeishuUserInfoResponse>(response);
 
         if (data.code !== 0 || !data.data) {
-            console.error('=== 获取用户信息失败 ===');
-            console.error('错误码:', data.code);
-            console.error('错误信息:', data.msg);
             Logger.error('FeishuUserApi', 'Get user info failed', { code: data.code, msg: data.msg });
             throw new Error(`获取用户信息失败: ${data.msg}`);
         }

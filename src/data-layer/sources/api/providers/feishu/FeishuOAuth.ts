@@ -140,14 +140,14 @@ export class FeishuOAuth {
         const redirectUri = config.redirectUri || DEFAULT_REDIRECT_URI;
         const requestBodyStr = buildTokenRequestBody(config.clientId, config.clientSecret, code, redirectUri);
 
-        // 打印完整请求信息用于调试
-        console.log('=== 飞书 OAuth Token 交换请求 ===');
-        console.log('URL:', API_ENDPOINTS.TOKEN);
-        console.log('Method: POST');
-        console.log('Content-Type: application/x-www-form-urlencoded');
-        console.log('Request Body (完整):', requestBodyStr);
-        console.log('App ID:', config.clientId);
-        console.log('Authorization Code:', code);
+        Logger.debug('FeishuOAuth', 'Token exchange request', {
+            url: API_ENDPOINTS.TOKEN,
+            method: 'POST',
+            contentType: 'application/x-www-form-urlencoded',
+            body: requestBodyStr,
+            appId: config.clientId,
+            code: code,
+        });
 
         const response = await FeishuHttpClient.fetch(API_ENDPOINTS.TOKEN, {
             method: 'POST',
@@ -157,11 +157,10 @@ export class FeishuOAuth {
             },
         }, fetchFn);
 
-        // 打印完整响应信息
-        console.log('=== 飞书 OAuth Token 交换响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuOAuth', 'Token exchange response', {
+            status: response.status,
+            body: response.text,
+        });
 
         // v2 API 响应格式直接包含 access_token，无 data 包裹层
         const data = await FeishuHttpClient.parseResponse<FeishuTokenResponseV2>(response);
@@ -170,16 +169,11 @@ export class FeishuOAuth {
         if (data.error || (data.code !== undefined && data.code !== 0)) {
             const errorMsg = data.error_description || data.error || '未知错误';
             const errorCode = data.code || -1;
-            console.error('=== Token 交换失败 ===');
-            console.error('错误码:', errorCode);
-            console.error('错误信息:', errorMsg);
             Logger.error('FeishuOAuth', 'Token exchange failed', { code: errorCode, msg: errorMsg });
             throw new Error(`飞书 OAuth 错误: ${errorMsg} (错误码: ${errorCode})`);
         }
 
         if (!data.access_token) {
-            console.error('=== Token 交换失败 ===');
-            console.error('响应中缺少 access_token');
             Logger.error('FeishuOAuth', 'Token response missing access_token');
             throw new Error('飞书 OAuth 错误: 响应中缺少 access_token');
         }
@@ -216,12 +210,12 @@ export class FeishuOAuth {
             config.refreshToken
         );
 
-        // 打印完整请求信息用于调试
-        console.log('=== 飞书 OAuth Token 刷新请求 ===');
-        console.log('URL:', API_ENDPOINTS.REFRESH);
-        console.log('Method: POST');
-        console.log('Content-Type: application/x-www-form-urlencoded');
-        console.log('Request Body (完整):', requestBodyStr);
+        Logger.debug('FeishuOAuth', 'Token refresh request', {
+            url: API_ENDPOINTS.REFRESH,
+            method: 'POST',
+            contentType: 'application/x-www-form-urlencoded',
+            body: requestBodyStr,
+        });
 
         const response = await FeishuHttpClient.fetch(API_ENDPOINTS.REFRESH, {
             method: 'POST',
@@ -231,11 +225,10 @@ export class FeishuOAuth {
             },
         }, fetchFn);
 
-        // 打印完整响应信息
-        console.log('=== 飞书 OAuth Token 刷新响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuOAuth', 'Token refresh response', {
+            status: response.status,
+            body: response.text,
+        });
 
         // v2 API 响应格式直接包含 access_token，无 data 包裹层
         const data = await FeishuHttpClient.parseResponse<FeishuTokenResponseV2>(response);
@@ -244,16 +237,11 @@ export class FeishuOAuth {
         if (data.error || (data.code !== undefined && data.code !== 0)) {
             const errorMsg = data.error_description || data.error || '未知错误';
             const errorCode = data.code || -1;
-            console.error('=== Token 刷新失败 ===');
-            console.error('错误码:', errorCode);
-            console.error('错误信息:', errorMsg);
             Logger.error('FeishuOAuth', 'Token refresh failed', { code: errorCode, msg: errorMsg });
             throw new Error(`飞书刷新令牌错误: ${errorMsg} (错误码: ${errorCode})`);
         }
 
         if (!data.access_token) {
-            console.error('=== Token 刷新失败 ===');
-            console.error('响应中缺少 access_token');
             Logger.error('FeishuOAuth', 'Token refresh response missing access_token');
             throw new Error('飞书刷新令牌错误: 响应中缺少 access_token');
         }

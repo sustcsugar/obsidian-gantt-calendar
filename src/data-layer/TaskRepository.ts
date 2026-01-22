@@ -247,7 +247,7 @@ export class TaskRepository {
 		}
 
 		const elapsed = performance.now() - startTime;
-		Logger.stats('TaskRepository', `Changes processed in ${elapsed.toFixed(2)}ms`);
+		Logger.debug('TaskRepository', `Changes processed in ${elapsed.toFixed(2)}ms`);
 	}
 
 	/**

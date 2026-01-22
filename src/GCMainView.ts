@@ -225,7 +225,7 @@ export class GCMainView extends ItemView {
 		}
 
 		const elapsed = performance.now() - startTime;
-		Logger.stats('GCMainView', `render() completed in ${elapsed.toFixed(2)}ms`);
+		Logger.debug('GCMainView', `render() completed in ${elapsed.toFixed(2)}ms`);
 	}
 
 	private renderCalendarContent(content: HTMLElement): void {

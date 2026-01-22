@@ -38,9 +38,6 @@ export class FeishuTaskApi {
             url.searchParams.append('page_token', pageToken);
         }
 
-        console.log('=== 飞书获取任务列表请求 ===');
-        console.log('URL:', url.toString());
-
         const response = await FeishuHttpClient.fetch(url.toString(), {
             method: 'GET',
             headers: {
@@ -48,17 +45,14 @@ export class FeishuTaskApi {
             },
         }, fetchFn);
 
-        console.log('=== 飞书获取任务列表响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuTaskApi', 'Task list response', {
+            status: response.status,
+            body: response.text,
+        });
 
         const data = await FeishuHttpClient.parseResponse<FeishuTaskResponse>(response);
 
         if (data.code !== 0) {
-            console.error('=== 获取任务列表失败 ===');
-            console.error('错误码:', data.code);
-            console.error('错误信息:', data.msg);
             Logger.error('FeishuTaskApi', 'Get task list failed', { code: data.code, msg: data.msg });
             throw new Error(`获取任务列表失败: ${data.msg}`);
         }
@@ -86,11 +80,12 @@ export class FeishuTaskApi {
             sub_task_completed_count: 0,
         }));
 
-        console.log(`=== 成功获取 ${tasks.length} 个任务 ===`);
-        tasks.forEach((task, index) => {
-            const status = task.completed ? '[已完成]' : '[未完成]';
-            console.log(`${index + 1}. ${task.summary} ${status}`);
-        });
+        Logger.debug('FeishuTaskApi', `Fetched ${tasks.length} tasks`,
+            tasks.map((task, index) => {
+                const status = task.completed ? '[已完成]' : '[未完成]';
+                return `${index + 1}. ${task.summary} ${status}`;
+            })
+        );
 
         return {
             tasks,
@@ -123,9 +118,6 @@ export class FeishuTaskApi {
             url.searchParams.append('page_token', pageToken);
         }
 
-        console.log('=== 飞书获取任务清单请求 ===');
-        console.log('URL:', url.toString());
-
         const response = await FeishuHttpClient.fetch(url.toString(), {
             method: 'GET',
             headers: {
@@ -133,17 +125,14 @@ export class FeishuTaskApi {
             },
         }, fetchFn);
 
-        console.log('=== 飞书获取任务清单响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuTaskApi', 'Task lists response', {
+            status: response.status,
+            body: response.text,
+        });
 
         const data = await FeishuHttpClient.parseResponse<FeishuTaskListResponse>(response);
 
         if (data.code !== 0) {
-            console.error('=== 获取任务清单失败 ===');
-            console.error('错误码:', data.code);
-            console.error('错误信息:', data.msg);
             Logger.error('FeishuTaskApi', 'Get task lists failed', { code: data.code, msg: data.msg });
             throw new Error(`获取任务清单失败: ${data.msg}`);
         }
@@ -152,10 +141,9 @@ export class FeishuTaskApi {
         const hasMore = data.data?.has_more || false;
         const nextPageToken = data.data?.page_token;
 
-        console.log(`=== 成功获取 ${taskLists.length} 个任务清单 ===`);
-        taskLists.forEach((list, index) => {
-            console.log(`${index + 1}. ${list.name} (${list.guid})`);
-        });
+        Logger.debug('FeishuTaskApi', `Fetched ${taskLists.length} task lists`,
+            taskLists.map((list, index) => `${index + 1}. ${list.name} (${list.guid})`)
+        );
 
         return {
             taskLists,
@@ -191,7 +179,7 @@ export class FeishuTaskApi {
             pageCount++;
         }
 
-        console.log(`=== 共获取 ${allTaskLists.length} 个任务清单 ===`);
+        Logger.info('FeishuTaskApi', `Fetched ${allTaskLists.length} task lists total`);
         return allTaskLists;
     }
 
@@ -214,10 +202,6 @@ export class FeishuTaskApi {
         // 构建请求 URL
         const url = `${API_ENDPOINTS.TASK_LISTS}/${tasklistGuid}/tasks`;
 
-        console.log('=== 飞书获取清单任务请求 ===');
-        console.log('Task List:', tasklistName);
-        console.log('URL:', url);
-
         const response = await FeishuHttpClient.fetch(url, {
             method: 'GET',
             headers: {
@@ -225,17 +209,14 @@ export class FeishuTaskApi {
             },
         }, fetchFn);
 
-        console.log('=== 飞书获取清单任务响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuTaskApi', `Tasks response for "${tasklistName}"`, {
+            status: response.status,
+            body: response.text,
+        });
 
         const data = await FeishuHttpClient.parseResponse<FeishuTaskResponse>(response);
 
         if (data.code !== 0) {
-            console.error('=== 获取清单任务失败 ===');
-            console.error('错误码:', data.code);
-            console.error('错误信息:', data.msg);
             Logger.error('FeishuTaskApi', 'Get tasks by task list failed', { code: data.code, msg: data.msg });
             throw new Error(`获取清单任务失败: ${data.msg}`);
         }
@@ -244,9 +225,7 @@ export class FeishuTaskApi {
 
         // 调试：打印第一个任务的原始数据
         if (tasks.length > 0) {
-            console.log('=== 第一个任务的原始数据 ===');
-            console.log(JSON.stringify(tasks[0], null, 2));
-            console.log('==============================');
+            Logger.debug('FeishuTaskApi', `First task raw data for "${tasklistName}"`, tasks[0]);
         }
 
         // 将 API 返回的原始任务数据转换为我们需要的格式
@@ -270,7 +249,7 @@ export class FeishuTaskApi {
             sub_task_completed_count: 0,
         }));
 
-        console.log(`=== 成功获取清单 "${tasklistName}" 中的 ${tasks.length} 个任务 ===`);
+        Logger.stats('FeishuTaskApi', `Fetched ${tasks.length} tasks from "${tasklistName}"`);
 
         return tasksWithListInfo;
     }
@@ -285,13 +264,13 @@ export class FeishuTaskApi {
         accessToken: string,
         fetchFn?: FetchFunction
     ): Promise<FeishuTask[]> {
-        console.log('=== 开始获取所有任务（通过任务清单） ===');
+        Logger.info('FeishuTaskApi', 'Starting to fetch all tasks via task lists');
 
         // 1. 获取所有任务清单
         const taskLists = await this.getAllTaskLists(accessToken, fetchFn);
 
         if (taskLists.length === 0) {
-            console.log('=== 未找到任何任务清单 ===');
+            Logger.warn('FeishuTaskApi', 'No task lists found');
             return [];
         }
 
@@ -307,7 +286,7 @@ export class FeishuTaskApi {
             allTasks.push(...tasks);
         }
 
-        console.log(`=== 共获取 ${allTasks.length} 个任务（来自 ${taskLists.length} 个任务清单） ===`);
+        Logger.stats('FeishuTaskApi', `Fetched ${allTasks.length} tasks from ${taskLists.length} task lists`);
         return allTasks;
     }
 }

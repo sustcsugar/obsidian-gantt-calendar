@@ -83,11 +83,11 @@ export class FeishuHttpClient {
 
             // 检查状态码，如果是 4xx/5xx，记录错误信息
             if (result.status >= 400) {
-                console.error('=== requestUrl HTTP 错误 ===');
-                console.error('Status:', result.status);
-                console.error('Headers:', result.headers);
-                console.error('Body:', result.text);
-                console.error('========================');
+                Logger.error('FeishuHttpClient', 'HTTP error', {
+                    status: result.status,
+                    headers: result.headers,
+                    body: result.text,
+                });
             }
 
             return {

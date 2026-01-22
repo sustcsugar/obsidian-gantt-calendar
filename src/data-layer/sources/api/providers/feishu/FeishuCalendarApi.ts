@@ -30,9 +30,6 @@ export class FeishuCalendarApi {
         const url = new URL(API_ENDPOINTS.CALENDAR_LIST);
         url.searchParams.append('page_size', '500');
 
-        console.log('=== 飞书获取日历列表请求 ===');
-        console.log('URL:', url.toString());
-
         const response = await FeishuHttpClient.fetch(url.toString(), {
             method: 'GET',
             headers: {
@@ -40,27 +37,25 @@ export class FeishuCalendarApi {
             },
         }, fetchFn);
 
-        console.log('=== 飞书获取日历列表响应 ===');
-        console.log('Status:', response.status);
-        console.log('Response Body (原始):', response.text);
-        console.log('==========================');
+        Logger.debug('FeishuCalendarApi', 'Calendar list response', {
+            status: response.status,
+            body: response.text,
+        });
 
         const data = await FeishuHttpClient.parseResponse<FeishuCalendarListResponse>(response);
 
         if (data.code !== 0) {
-            console.error('=== 获取日历列表失败 ===');
-            console.error('错误码:', data.code);
-            console.error('错误信息:', data.msg);
             Logger.error('FeishuCalendarApi', 'Get calendar list failed', { code: data.code, msg: data.msg });
             throw new Error(`获取日历列表失败: ${data.msg}`);
         }
 
         const calendarList = data.data?.calendar_list || [];
-        console.log(`=== 成功获取 ${calendarList.length} 个日历 ===`);
-        calendarList.forEach((cal, index) => {
-            const isPrimary = cal.type === 'primary';
-            console.log(`${index + 1}. ${cal.summary} (${cal.calendar_id})${isPrimary ? ' [主日历]' : ''}`);
-        });
+        Logger.debug('FeishuCalendarApi', `Fetched ${calendarList.length} calendars`,
+            calendarList.map((cal, index) => {
+                const isPrimary = cal.type === 'primary';
+                return `${index + 1}. ${cal.summary} (${cal.calendar_id})${isPrimary ? ' [主日历]' : ''}`;
+            })
+        );
 
         return calendarList;
     }

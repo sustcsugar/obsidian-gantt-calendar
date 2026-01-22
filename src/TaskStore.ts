@@ -194,7 +194,7 @@ export class TaskStore {
 		this.cacheValid = true;
 
 		const elapsed = performance.now() - startTime;
-		Logger.stats('TaskStore', `Cache rebuilt in ${elapsed.toFixed(2)}ms (${allTasks.length} tasks)`);
+		Logger.debug('TaskStore', `Cache rebuilt in ${elapsed.toFixed(2)}ms (${allTasks.length} tasks)`);
 
 		return allTasks;
 	}
