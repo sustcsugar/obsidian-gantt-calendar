@@ -7,6 +7,7 @@ import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardClasses, DayViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, DayViewConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
+import { findDailyNoteRecursive } from '../utils/dailyNoteHelper';
 
 /**
  * 日视图渲染器
@@ -320,6 +321,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 	/**
 	 * 加载 Daily Note 内容
+	 * 支持递归搜索指定文件夹及其子文件夹
 	 */
 	private async loadDayViewNotes(contentContainer: HTMLElement, targetDate: Date): Promise<void> {
 		contentContainer.empty();
@@ -329,16 +331,17 @@ export class DayViewRenderer extends BaseViewRenderer {
 			const folderPath = this.plugin.settings.dailyNotePath || 'DailyNotes';
 			const nameFormat = this.plugin.settings.dailyNoteNameFormat || 'yyyy-MM-dd';
 			const fileName = formatDate(targetDate, nameFormat) + '.md';
-			const filePath = `${folderPath}/${fileName}`;
 
-			const file = this.app.vault.getAbstractFileByPath(filePath);
+			// 使用递归搜索查找 Daily Note（包括子文件夹）
+			const searchResult = findDailyNoteRecursive(this.app, folderPath, fileName);
 
-			if (!file || !(file instanceof TFile)) {
+			if (!searchResult) {
 				contentContainer.empty();
 				contentContainer.createEl('div', { text: '未找到 Daily Note', cls: 'gantt-task-empty' });
 				return;
 			}
 
+			const { file, relativePath } = searchResult;
 			const content = await this.app.vault.read(file);
 			contentContainer.empty();
 

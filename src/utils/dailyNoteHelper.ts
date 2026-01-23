@@ -5,10 +5,71 @@
  * 支持 Templater 插件集成
  */
 
-import { App, Notice, Modal, TFile, TFolder } from 'obsidian';
+import { App, Notice, Modal, TFile, TFolder, TAbstractFile } from 'obsidian';
 import type { GanttCalendarSettings } from '../settings';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { Logger } from './logger';
+
+/**
+ * 搜索结果接口
+ */
+export interface DailyNoteSearchResult {
+	file: TFile;
+	relativePath: string; // 相对于指定根文件夹的路径
+}
+
+/**
+ * 递归搜索指定文件夹及其子文件夹中的 Daily Note 文件
+ *
+ * @param app Obsidian App 实例
+ * @param rootFolderPath 根文件夹路径
+ * @param fileName 目标文件名（如 '2026-01-23.md'）
+ * @returns 找到的文件信息，如果未找到则返回 null
+ */
+export function findDailyNoteRecursive(
+	app: App,
+	rootFolderPath: string,
+	fileName: string
+): DailyNoteSearchResult | null {
+	const rootFolder = app.vault.getAbstractFileByPath(rootFolderPath);
+
+	if (!rootFolder || !(rootFolder instanceof TFolder)) {
+		return null;
+	}
+
+	// 使用深度优先搜索递归查找
+	return searchFolderRecursive(rootFolder, fileName, rootFolderPath);
+}
+
+/**
+ * 递归搜索文件夹
+ */
+function searchFolderRecursive(
+	folder: TFolder,
+	targetFileName: string,
+	rootPath: string
+): DailyNoteSearchResult | null {
+	// 检查文件夹中的所有子文件
+	for (const child of folder.children) {
+		// 如果是目标文件，直接返回
+		if (child instanceof TFile && child.name === targetFileName) {
+			return {
+				file: child,
+				relativePath: child.path.substring(rootPath.length + 1)
+			};
+		}
+
+		// 如果是子文件夹，递归搜索
+		if (child instanceof TFolder) {
+			const result = searchFolderRecursive(child, targetFileName, rootPath);
+			if (result) {
+				return result;
+			}
+		}
+	}
+
+	return null;
+}
 
 /**
  * 新任务数据接口
@@ -28,6 +89,7 @@ export interface CreateTaskData {
 
 /**
  * 在 Daily Note 中创建任务
+ * 支持递归搜索指定文件夹及其子文件夹中的现有 Daily Note
  *
  * @param app Obsidian App 实例
  * @param taskData 任务数据
@@ -40,19 +102,19 @@ export async function createTaskInDailyNote(
 ): Promise<void> {
 	const { dailyNotePath, dailyNoteNameFormat, newTaskHeading } = settings;
 
-	// 1. 构建 Daily Note 路径
+	// 1. 构建文件名
 	const fileName = formatDate(new Date(), dailyNoteNameFormat) + '.md';
-	const filePath = `${dailyNotePath}/${fileName}`;
 
-	// 2. 检查文件是否存在
-	const file = app.vault.getAbstractFileByPath(filePath);
+	// 2. 使用递归搜索查找现有文件
+	const searchResult = findDailyNoteRecursive(app, dailyNotePath, fileName);
 
-	if (!file || !(file instanceof TFile)) {
-		// Daily Note 不存在，询问用户是否创建
-		await handleMissingDailyNote(app, filePath, taskData, settings);
+	if (searchResult) {
+		// 找到现有文件，直接插入任务
+		await insertTaskToFile(app, searchResult.file, taskData, newTaskHeading);
 	} else {
-		// Daily Note 存在，直接插入任务
-		await insertTaskToFile(app, file, taskData, newTaskHeading);
+		// 未找到文件，在根路径创建新文件
+		const filePath = `${dailyNotePath}/${fileName}`;
+		await handleMissingDailyNote(app, filePath, taskData, settings);
 	}
 }
 
