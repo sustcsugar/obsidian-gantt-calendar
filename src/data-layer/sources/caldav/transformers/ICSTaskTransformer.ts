@@ -360,7 +360,7 @@ function escapeICSText(text: string): string {
  * 生成 UID
  */
 function generateUID(): string {
-    return `${Date.now()}@obsidian-gantt-calendar`;
+    return `${Date.now()}@gantt-calendar`;
 }
 
 /**

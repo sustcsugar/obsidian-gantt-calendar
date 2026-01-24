@@ -415,7 +415,7 @@ export class CalDAVClient {
      * 生成唯一 UID
      */
     private generateUID(): string {
-        return `${Date.now()}@obsidian-gantt-calendar`;
+        return `${Date.now()}@gantt-calendar`;
     }
 
     /**

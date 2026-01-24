@@ -201,8 +201,9 @@ export class FeishuTaskStorage {
         Logger.info('FeishuTaskStorage', `Saving ${tasks.length} tasks to ${filePath}`);
 
         // 检查文件是否已存在
-        let existingFile = app.vault.getAbstractFileByPath(filePath) as TFile;
-        let isNew = !existingFile;
+        const abstractFile = app.vault.getAbstractFileByPath(filePath);
+        let existingFile = abstractFile instanceof TFile ? abstractFile : null;
+        const isNew = !existingFile;
 
         // 生成Markdown内容
         const content = this.tasksToMarkdown(tasks);
@@ -218,7 +219,7 @@ export class FeishuTaskStorage {
         }
 
         return {
-            file: existingFile,
+            file: existingFile || undefined,
             taskCount: tasks.length,
             isNew,
         };
@@ -240,7 +241,8 @@ export class FeishuTaskStorage {
 
         Logger.info('FeishuTaskStorage', `Appending ${tasks.length} tasks to ${filePath}`);
 
-        let existingFile = app.vault.getAbstractFileByPath(filePath) as TFile;
+        const abstractFile = app.vault.getAbstractFileByPath(filePath);
+        const existingFile = abstractFile instanceof TFile ? abstractFile : null;
 
         if (!existingFile) {
             // 文件不存在，创建新文件

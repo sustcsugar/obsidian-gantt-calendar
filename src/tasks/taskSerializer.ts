@@ -151,10 +151,10 @@ export function serializeTask(
 		completionDate: updates.completionDate !== undefined ? (updates.completionDate || undefined) : task.completionDate,
 	};
 
-	// 2. 从插件设置中获取全局过滤器（唯一信源）
-	const plugin = (app as any).plugins?.plugins['obsidian-gantt-calendar'];
-	const globalFilter = plugin?.settings?.globalTaskFilter || '';
-	const taskStatuses = plugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
+	// 2. 从插件设置中获取全局过滤器和任务状态配置（官方 API）
+	const ganttPlugin = (app as any).plugins?.getPlugin?.('gantt-calendar');
+	const globalFilter = ganttPlugin?.settings?.globalTaskFilter || '';
+	const taskStatuses = ganttPlugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
 
 	// 3. 构建任务行的各个部分
 	const parts: string[] = [];

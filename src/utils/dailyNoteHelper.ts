@@ -155,9 +155,9 @@ async function handleMissingDailyNote(
 		}
 
 		// 创建后插入任务
-		const file = app.vault.getAbstractFileByPath(filePath) as TFile;
-		if (file) {
-			await insertTaskToFile(app, file, taskData, settings.newTaskHeading);
+		const abstractFile = app.vault.getAbstractFileByPath(filePath);
+		if (abstractFile instanceof TFile) {
+			await insertTaskToFile(app, abstractFile, taskData, settings.newTaskHeading);
 			new Notice('已创建 Daily Note 并添加任务');
 		}
 	} catch (error) {
@@ -196,7 +196,10 @@ async function createWithTemplater(
 	}
 
 	// 使用 Templater 创建笔记
-	await tp.file.create_new_note_from_template(templateFile, folder as TFolder);
+	const abstractFolder = app.vault.getAbstractFileByPath(folderPath);
+	if (abstractFolder instanceof TFolder) {
+		await tp.file.create_new_note_from_template(templateFile, abstractFolder);
+	}
 }
 
 /**
@@ -258,7 +261,7 @@ async function insertTaskToFile(
  * 序列化新任务为文本行
  */
 function serializeNewTask(taskData: CreateTaskData, app: App): string {
-	const plugin = (app as any).plugins.plugins['obsidian-gantt-calendar'];
+	const plugin = (app as any).plugins.plugins['gantt-calendar'];
 	const globalFilter = plugin?.settings?.globalTaskFilter || '';
 	const enabledFormats = plugin?.settings?.enabledTaskFormats || ['tasks'];
 	const format = enabledFormats.includes('dataview') ? 'dataview' : 'tasks';

@@ -64,10 +64,16 @@ export interface TaskStatus {
     /** 暗色主题颜色配置 */
     darkColors: ThemeColors;
 
-    /** 卡片背景色 (hex) - @deprecated 向后兼容保留 */
+    /** 
+     * 卡片背景色 (hex)
+     * @deprecated 向后兼容保留。请使用 lightColors.backgroundColor 代替
+     */
     backgroundColor?: string;
 
-    /** 文字颜色 (hex) - @deprecated 向后兼容保留 */
+    /** 
+     * 文字颜色 (hex)
+     * @deprecated 向后兼容保留。请使用 lightColors.textColor 代替
+     */
     textColor?: string;
 
     /** 是否为默认状态 */

@@ -210,10 +210,10 @@ export class FeishuTaskBase {
         Logger.info('FeishuTaskBase', `Creating base file: ${filePath}`);
 
         // 检查文件是否已存在
-        const existingFile = app.vault.getAbstractFileByPath(filePath) as TFile;
-        if (existingFile) {
+        const abstractFile = app.vault.getAbstractFileByPath(filePath);
+        if (abstractFile instanceof TFile) {
             Logger.info('FeishuTaskBase', `Base file already exists: ${filePath}`);
-            return existingFile;
+            return abstractFile;
         }
 
         // 生成Base内容
@@ -243,8 +243,8 @@ export class FeishuTaskBase {
         Logger.info('FeishuTaskBase', `Updating base file: ${filePath}`);
 
         // 检查文件是否存在
-        const existingFile = app.vault.getAbstractFileByPath(filePath) as TFile;
-        if (!existingFile) {
+        const abstractFile = app.vault.getAbstractFileByPath(filePath);
+        if (!(abstractFile instanceof TFile)) {
             return this.createBaseFile(app, options);
         }
 
@@ -252,9 +252,9 @@ export class FeishuTaskBase {
         const content = this.generateBaseYaml(taskFileName);
 
         // 更新文件
-        await app.vault.modify(existingFile, content);
+        await app.vault.modify(abstractFile, content);
         Logger.info('FeishuTaskBase', `Updated base file: ${filePath}`);
 
-        return existingFile;
+        return abstractFile;
     }
 }

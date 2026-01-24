@@ -310,7 +310,7 @@ export default class GanttCalendarPlugin extends Plugin {
 	private registerSyncCommands(): void {
 		// 手动同步命令
 		this.addCommand({
-			id: 'gantt-calendar-sync-now',
+			id: 'sync-now',
 			name: '立即同步',
 			callback: async () => {
 				await this.runManualSync();

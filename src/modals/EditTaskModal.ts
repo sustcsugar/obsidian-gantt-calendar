@@ -766,7 +766,7 @@ class EditTaskModal extends BaseTaskModal {
 	 * 获取所有任务（用于推荐标签）
 	 */
 	private getAllTasks(): GCTask[] {
-		const plugin = (this.app as any).plugins.plugins['obsidian-gantt-calendar'];
+		const plugin = (this.app as any).plugins.plugins['gantt-calendar'];
 		if (plugin?.taskCache) {
 			return plugin.taskCache.getAllTasks();
 		}

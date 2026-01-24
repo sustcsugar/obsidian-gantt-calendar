@@ -456,7 +456,7 @@ export class MarkdownDataSource implements IDataSource {
 		// 【开发模式】监听 metadataCache 变化
 		// 用于调试和验证问题，避免生产环境性能开销
 		// 通过设置插件实例的 __dev_mode__ 属性为 true 来启用
-		const isDev = (this.app as any).plugins?.plugins?.['obsidian-gantt-calendar']?.['__dev_mode__'] === true;
+		const isDev = (this.app as any).plugins?.plugins?.['gantt-calendar']?.['__dev_mode__'] === true;
 
 		if (isDev) {
 			Logger.debug('MarkdownDataSource', 'Dev mode: Adding metadataCache listener');

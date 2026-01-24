@@ -358,7 +358,7 @@ export class CalDAVDataSource implements IDataSource {
      * 生成 syncId
      */
     protected generateSyncId(): string {
-        return `${this.sourceId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return `${this.sourceId}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     }
 
     /**

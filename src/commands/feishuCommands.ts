@@ -18,7 +18,7 @@ import { Logger } from '../utils/logger';
 export function registerFeishuCommands(plugin: GanttCalendarPlugin): void {
     // 从飞书获取任务命令
     plugin.addCommand({
-        id: 'gantt-calendar-fetch-feishu-tasks',
+        id: 'fetch-feishu-tasks',
         name: '从飞书获取任务',
         callback: async () => {
             await fetchFeishuTasks(plugin);

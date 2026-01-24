@@ -8,7 +8,7 @@ import type GanttCalendarPlugin from '../../main';
 export function registerCommonCommands(plugin: GanttCalendarPlugin): void {
 	// 打开日历视图
 	plugin.addCommand({
-		id: 'gantt-calendar-open-calendar-view',
+		id: 'open-calendar-view',
 		name: '打开日历视图',
 		callback: async () => {
 			await plugin.activateView();
@@ -22,7 +22,7 @@ export function registerCommonCommands(plugin: GanttCalendarPlugin): void {
 
 	// 打开任务视图
 	plugin.addCommand({
-		id: 'gantt-calendar-open-task-view',
+		id: 'open-task-view',
 		name: '打开任务视图',
 		callback: async () => {
 			await plugin.activateView();

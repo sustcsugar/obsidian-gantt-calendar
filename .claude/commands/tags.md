@@ -3,7 +3,8 @@ description: 根据版本为项目添加tag并生成对应的信息
 allowed-tools: Bash(git status:*),Bash(git diff:*),Bash(git tag:*),Bash(git log:*)
 ---
 
-请为 commit $2 添加 tag $1, 如果 $2 为空, 则为当前最新的 commit 添加 tag
+请为 commit $2 添加 tag $1, 如果 $2 为空, 则为当前最新的 commit 添加 tag.
+标签命名示例:1.5.13, 不要添加任何前缀.
 
 请遵循以下要求:
 1. 使用 !`git tag` 获取当前所有的tag列表

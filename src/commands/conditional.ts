@@ -27,7 +27,7 @@ class SampleModal extends Modal {
 export function registerConditionalCommands(plugin: GanttCalendarPlugin): void {
 	// 简单命令示例
 	plugin.addCommand({
-		id: 'gantt-calendar-common',
+		id: 'open-sample-modal',
 		name: 'Open sample modal (simple)',
 		callback: () => {
 			new SampleModal(plugin.app).open();
@@ -36,7 +36,7 @@ export function registerConditionalCommands(plugin: GanttCalendarPlugin): void {
 
 	// 条件命令示例：仅在活跃视图为 MarkdownView 时可用
 	plugin.addCommand({
-		id: 'gantt-calendar-conditional',
+		id: 'open-sample-modal-conditional',
 		name: 'Open sample modal (complex)',
 		checkCallback: (checking: boolean) => {
 			const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
