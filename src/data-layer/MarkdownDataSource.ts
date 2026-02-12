@@ -211,8 +211,12 @@ export class MarkdownDataSource implements IDataSource {
 				this.cache.delete(filePath);
 			}
 
-			if (this.changeHandler && oldCache) {
-				const changes = this.detectChangesByIds(oldTaskIds, parseResult?.tasks || []);
+			if (this.changeHandler) {
+				// 当旧缓存不存在时，将旧任务ID列表视为空数组
+				// 这样可以正确处理"从无任务到有任务"的场景
+				const oldTaskIdsToCompare = oldCache?.taskIds || [];
+				const changes = this.detectChangesByIds(oldTaskIdsToCompare, parseResult?.tasks || []);
+
 				if (changes) {
 					Logger.debug('MarkdownDataSource', `Changes detected for ${filePath}:`, {
 						created: changes.created.length,
