@@ -51,6 +51,9 @@ export const BLOCKS = {
 	/** 编辑任务弹窗 */
 	EDIT_TASK_MODAL: 'edit-task-modal',
 
+	/** 嵌入式编辑器 */
+	EMBEDDED_EDITOR: 'embedded-editor',
+
 } as const;
 
 /**
@@ -208,6 +211,13 @@ export const DayViewClasses = {
 		divider: bem(BLOCKS.DAY_VIEW, 'divider'),
 		dividerVertical: bem(BLOCKS.DAY_VIEW, 'divider', 'vertical'),
 	},
+};
+
+/**
+ * 嵌入式编辑器类名常量
+ */
+export const EmbeddedEditorClasses = {
+    block: bem(BLOCKS.EMBEDDED_EDITOR),
 };
 
 /**

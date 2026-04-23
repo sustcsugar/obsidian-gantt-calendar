@@ -2036,6 +2036,63 @@ Author: sugar
 	color: var(--text-normal);
 }
 
+/* ==================== Embedded Note Editor ==================== */
+/* 嵌入式编辑器 - 在 DayView 的笔记区域中嵌入完整的 Obsidian 编辑器 */
+
+/* 嵌入式 leaf 容器 */
+.gc-embedded-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* 隐藏 MarkdownView 的顶部标题栏和导航栏 */
+.gc-embedded-editor .view-header,
+.gc-embedded-editor .nav-header {
+    display: none;
+}
+
+/* 隐藏 MarkdownView 的 nav 区域 */
+.gc-embedded-editor .workspace-leaf-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 编辑器区域填满 */
+.gc-embedded-editor .markdown-source-view,
+.gc-embedded-editor .markdown-reading-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+/* 移除 leaf 的默认边框和阴影 */
+.gc-embedded-editor .workspace-leaf-content[data-mode="source"] .cm-editor,
+.gc-embedded-editor .workspace-leaf-content[data-mode="preview"] .markdown-preview-view {
+    height: 100%;
+}
+
+/* 确保 CodeMirror 填满编辑区 */
+.gc-embedded-editor .cm-editor {
+    height: 100%;
+}
+
+.gc-embedded-editor .cm-scroller {
+    overflow-y: auto;
+}
+
+/* 日视图笔记区内容容器调整 */
+.gc-day-view__notes-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
 /* Priority badge inline */
 /* BEM命名: gc-task-card__priority, gc-task-card__priority-badge */
 .gc-task-card__priority {

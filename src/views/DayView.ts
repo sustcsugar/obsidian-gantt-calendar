@@ -1,4 +1,4 @@
-import { TFile, MarkdownRenderer, App } from 'obsidian';
+import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import type { GCTask, SortState, StatusFilterState, TagFilterState } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
@@ -6,8 +6,8 @@ import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardClasses, DayViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, DayViewConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
-import { findDailyNoteForDate } from '../utils/dailyNoteSettingsBridge';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
+import { EmbeddedNoteEditor } from './EmbeddedNoteEditor';
 
 /**
  * 日视图渲染器
@@ -18,6 +18,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 	// 当前显示的日期
 	private currentDate: Date = new Date();
+
+	// 嵌入式编辑器实例
+	private embeddedEditor: EmbeddedNoteEditor | null = null;
 
 	// 设置前缀
 	private readonly SETTINGS_PREFIX = 'dayView';
@@ -327,41 +330,25 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 	/**
 	 * 加载 Daily Note 内容
+	 * 使用嵌入式编辑器实现所见即所得的编辑体验
 	 * 支持 Obsidian 核心日记插件、Periodic Notes 插件和手动配置
 	 */
 	private async loadDayViewNotes(contentContainer: HTMLElement, targetDate: Date): Promise<void> {
-		contentContainer.empty();
-		contentContainer.createEl('div', { text: '加载中...', cls: 'gantt-task-empty' });
-
-		try {
-			const file = findDailyNoteForDate(
-				targetDate,
-				this.plugin.dailyNoteIndex,
-				this.app,
-				this.plugin.settings
-			);
-
-			if (!file) {
-				contentContainer.empty();
-				contentContainer.createEl('div', { text: '未找到 Daily Note', cls: 'gantt-task-empty' });
-				return;
-			}
-
-			const content = await this.app.vault.read(file);
-			contentContainer.empty();
-
-			if (!content.trim()) {
-				contentContainer.createEl('div', { text: '无内容', cls: 'gantt-task-empty' });
-				return;
-			}
-
-			// 渲染 Markdown 内容
-			const noteContent = contentContainer.createDiv(DayViewClasses.elements.notesBody);
-			await MarkdownRenderer.render(this.app, content, noteContent, file.path, this.plugin.calendarView);
-		} catch (error) {
-			Logger.error('DayView', 'Error loading daily note', error);
-			contentContainer.empty();
-			contentContainer.createEl('div', { text: '加载 Daily Note 时出错', cls: 'gantt-task-empty' });
+		// 懒初始化 EmbeddedNoteEditor
+		if (!this.embeddedEditor) {
+			this.embeddedEditor = new EmbeddedNoteEditor(this.app, contentContainer);
+			// 注册清理回调，视图切换时自动关闭
+			this.registerDomCleanup(() => {
+				this.embeddedEditor?.close();
+				this.embeddedEditor = null;
+			});
 		}
+
+		await this.embeddedEditor.openDate(
+			targetDate,
+			this.plugin.dailyNoteIndex,
+			this.plugin.settings,
+			this.plugin.calendarView
+		);
 	}
 }
