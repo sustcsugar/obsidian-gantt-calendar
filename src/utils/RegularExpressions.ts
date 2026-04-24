@@ -11,6 +11,11 @@ export class RegularExpressions {
     /** 日期时间格式：YYYY-MM-DD HH:mm */
     public static readonly dateTimeFormat = 'YYYY-MM-DD HH:mm';
 
+    // ==================== 时间精度复用片段 ====================
+
+    /** 可选的时间部分正则片段（空格 + HH:mm），用于组合日期正则 */
+    private static readonly OPTIONAL_TIME = '(?: \\d{2}:\\d{2})?';
+
     // ==================== 基础正则表达式 ====================
 
     /**
@@ -166,7 +171,7 @@ export class RegularExpressions {
          * "➕ 2024-01-15" -> 匹配，捕获 "2024-01-15"
          * "任务 ➕2024-01-15" -> 匹配，捕获 "2024-01-15"
          */
-        createdDateRegex: /➕\s*(\d{4}-\d{2}-\d{2})/g,
+        createdDateRegex: /➕\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 开始日期正则
@@ -176,7 +181,7 @@ export class RegularExpressions {
          * @example
          * "🛫 2024-01-15" -> 匹配，捕获 "2024-01-15"
          */
-        startDateRegex: /🛫\s*(\d{4}-\d{2}-\d{2})/g,
+        startDateRegex: /🛫\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 计划日期正则
@@ -188,7 +193,7 @@ export class RegularExpressions {
          * "⏳ 2024-01-15" -> 匹配，捕获 "2024-01-15"
          * "⌛ 2024-01-15" -> 匹配，捕获 "2024-01-15"
          */
-        scheduledDateRegex: /(?:⏳|⌛)\s*(\d{4}-\d{2}-\d{2})/g,
+        scheduledDateRegex: /(?:⏳|⌛)\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 截止日期正则
@@ -200,7 +205,7 @@ export class RegularExpressions {
          * "📅 2024-01-15" -> 匹配，捕获 "2024-01-15"
          * "📆2024-01-15" -> 匹配，捕获 "2024-01-15"
          */
-        dueDateRegex: /(?:📅|📆|🗓)\s*(\d{4}-\d{2}-\d{2})/g,
+        dueDateRegex: /(?:📅|📆|🗓)\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 取消日期正则
@@ -210,7 +215,7 @@ export class RegularExpressions {
          * @example
          * "❌ 2024-01-15" -> 匹配，捕获 "2024-01-15"
          */
-        cancelledDateRegex: /❌\s*(\d{4}-\d{2}-\d{2})/g,
+        cancelledDateRegex: /❌\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 完成日期正则
@@ -220,7 +225,7 @@ export class RegularExpressions {
          * @example
          * "✅ 2024-01-15" -> 匹配，捕获 "2024-01-15"
          */
-        completionDateRegex: /✅\s*(\d{4}-\d{2}-\d{2})/g,
+        completionDateRegex: /✅\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 周期任务规则正则
@@ -244,7 +249,7 @@ export class RegularExpressions {
          * "任务 📅 2024-01-15" -> 匹配
          * "任务 ➕2024-01-15 ✅2024-01-20" -> 可多次匹配
          */
-        anyDateFieldRegex: /(➕|🛫|⏳|📅|❌|✅)\s*(\d{4}-\d{2}-\d{2})/g,
+        anyDateFieldRegex: /(➕|🛫|⏳|📅|❌|✅)\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)/g,
 
         /**
          * 任意优先级正则
@@ -267,7 +272,7 @@ export class RegularExpressions {
          * "- [ ] 任务 🔁 every day" -> 匹配（Tasks 格式）
          * "- [ ] 普通任务" -> 不匹配
          */
-        formatDetectionRegex: /([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}|[🔺⏫🔼🔽⏬]|🔁\s+every/,
+        formatDetectionRegex: /([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?|[🔺⏫🔼🔽⏬]|🔁\s+every/,
     } as const;
 
     // ==================== Dataview 格式正则表达式 ====================
@@ -324,7 +329,7 @@ export class RegularExpressions {
          * "[created:: 2024-01-15]" -> 匹配，捕获 "2024-01-15"
          * "[created::2024-01-15]" -> 匹配，捕获 "2024-01-15"
          */
-        createdDateRegex: /\[created::\s*(\d{4}-\d{2}-\d{2})\]/gi,
+        createdDateRegex: /\[created::\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)\]/gi,
 
         /**
          * 开始日期正则
@@ -334,7 +339,7 @@ export class RegularExpressions {
          * @example
          * "[start:: 2024-01-15]" -> 匹配，捕获 "2024-01-15"
          */
-        startDateRegex: /\[start::\s*(\d{4}-\d{2}-\d{2})\]/gi,
+        startDateRegex: /\[start::\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)\]/gi,
 
         /**
          * 计划日期正则
@@ -344,7 +349,7 @@ export class RegularExpressions {
          * @example
          * "[scheduled:: 2024-01-15]" -> 匹配，捕获 "2024-01-15"
          */
-        scheduledDateRegex: /\[scheduled::\s*(\d{4}-\d{2}-\d{2})\]/gi,
+        scheduledDateRegex: /\[scheduled::\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)\]/gi,
 
         /**
          * 截止日期正则
@@ -354,7 +359,7 @@ export class RegularExpressions {
          * @example
          * "[due:: 2024-01-15]" -> 匹配，捕获 "2024-01-15"
          */
-        dueDateRegex: /\[due::\s*(\d{4}-\d{2}-\d{2})\]/gi,
+        dueDateRegex: /\[due::\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)\]/gi,
 
         /**
          * 取消日期正则
@@ -364,7 +369,7 @@ export class RegularExpressions {
          * @example
          * "[cancelled:: 2024-01-15]" -> 匹配，捕获 "2024-01-15"
          */
-        cancelledDateRegex: /\[cancelled::\s*(\d{4}-\d{2}-\d{2})\]/gi,
+        cancelledDateRegex: /\[cancelled::\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)\]/gi,
 
         /**
          * 完成日期正则
@@ -374,7 +379,7 @@ export class RegularExpressions {
          * @example
          * "[completion:: 2024-01-15]" -> 匹配，捕获 "2024-01-15"
          */
-        completionDateRegex: /\[completion::\s*(\d{4}-\d{2}-\d{2})\]/gi,
+        completionDateRegex: /\[completion::\s*(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?)\]/gi,
 
         /**
          * 周期任务字段正则
@@ -435,7 +440,7 @@ export class RegularExpressions {
          * "任务 📅 2024-01-15 内容" -> "任务  内容"
          * "➕2024-01-15" -> ""
          */
-        removeTasksDate: /\s*(➕|🛫|⏳|📅|❌|✅)\s*\d{4}-\d{2}-\d{2}\s*/g,
+        removeTasksDate: /\s*(➕|🛫|⏳|📅|❌|✅)\s*\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?\s*/g,
 
         /**
          * 移除 Dataview 字段

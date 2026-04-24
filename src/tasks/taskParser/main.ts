@@ -108,7 +108,7 @@ export function parseTasksFromListItems(
 
         // 如果检测到有效格式，解析任务属性
         if (format && enabledFormats.includes(format)) {
-            const { priority, dates, hasCancelledDate, repeat } = parseTaskAttributes(
+            const { priority, dates, datePrecisions, hasCancelledDate, repeat } = parseTaskAttributes(
                 contentWithoutFilter,
                 format
             );
@@ -122,6 +122,7 @@ export function parseTasksFromListItems(
             task.cancelledDate = dates.cancelledDate;
             task.completionDate = dates.completionDate;
             task.repeat = repeat;
+            task.datePrecision = datePrecisions;
 
             // 如果存在取消日期且任务未完成，确保取消状态被设置
             if (hasCancelledDate && !task.completed) {
@@ -302,7 +303,7 @@ export function parseSingleTaskLine(
     }
 
     if (format && enabledFormats.includes(format)) {
-        const { priority, dates, hasCancelledDate, repeat } = parseTaskAttributes(
+        const { priority, dates, datePrecisions, hasCancelledDate, repeat } = parseTaskAttributes(
             contentWithoutFilter,
             format
         );
@@ -311,6 +312,7 @@ export function parseSingleTaskLine(
         task.priority = priority || 'normal'; // 确保有默认优先级
         Object.assign(task, dates);
         task.repeat = repeat;
+        task.datePrecision = datePrecisions;
 
         if (hasCancelledDate && !task.completed) {
             task.cancelled = true;

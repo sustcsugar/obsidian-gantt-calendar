@@ -43,19 +43,28 @@ export function getEffectiveTimezoneOffset(): number {
 // ==================== 日期创建 ====================
 
 /**
- * 从 YYYY-MM-DD 字符串创建本地午夜 Date
+ * 从日期字符串创建本地 Date 对象
+ *
+ * 支持两种格式：
+ * - `YYYY-MM-DD` → 本地午夜 00:00:00（全天任务）
+ * - `YYYY-MM-DD HH:mm` → 本地指定时间（定时任务）
  *
  * 替代 `new Date("2024-01-15")`，后者会创建 UTC 午夜，
  * 在 UTC- 时区下 `.getDate()` 返回前一天。
  *
- * @param dateStr - 日期字符串，格式 YYYY-MM-DD
- * @returns 本地午夜的 Date 对象
+ * @param dateStr - 日期字符串，格式 YYYY-MM-DD 或 YYYY-MM-DD HH:mm
+ * @returns 本地 Date 对象
  */
 export function createDate(dateStr: string): Date {
-	const parts = dateStr.split('-');
+	const [datePart, timePart] = dateStr.split(' ');
+	const parts = datePart.split('-');
 	const y = parseInt(parts[0], 10);
 	const m = parseInt(parts[1], 10);
 	const d = parseInt(parts[2], 10);
+	if (timePart) {
+		const [h, min] = timePart.split(':').map(Number);
+		return new Date(y, m - 1, d, h, min, 0, 0);
+	}
 	return new Date(y, m - 1, d);
 }
 

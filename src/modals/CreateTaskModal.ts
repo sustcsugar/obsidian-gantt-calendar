@@ -125,7 +125,8 @@ export class CreateTaskModal extends BaseTaskModal {
 				dueDate: this.dueDate!,
 				completionDate: this.completionDate,
 				cancelledDate: this.cancelledDate,
-				tags: this.selectedTags.length > 0 ? this.selectedTags : undefined
+				tags: this.selectedTags.length > 0 ? this.selectedTags : undefined,
+				datePrecision: Object.keys(this.datePrecision).length > 0 ? this.datePrecision : undefined
 			};
 
 			await createTaskInDailyNote(this.app, taskData, this.plugin.settings, this.plugin.dailyNoteIndex);

@@ -36,7 +36,8 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	enableDebugMode: false, // 默认关闭开发者模式
 	showViewNavButtonText: true, // 默认显示视图导航按钮文本
 	timezoneOffset: null, // 默认跟随系统时区
-		recurringTaskDisplayLimit: 5, // 默认显示5个虚拟实例
+	timeFormat: '24h', // 默认24小时制
+			recurringTaskDisplayLimit: 5, // 默认显示5个虚拟实例
 
 	// ========== 持久化筛选和排序状态默认值 ==========
 

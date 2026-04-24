@@ -45,6 +45,18 @@ export interface CheckboxStatus {
 export type ParsedDates = Partial<Record<DateFieldType, Date>>;
 
 /**
+ * 日期精度类型
+ * 'day' = 全天（仅 YYYY-MM-DD），'time' = 定时（YYYY-MM-DD HH:mm）
+ */
+export type DatePrecision = 'day' | 'time';
+
+/**
+ * 日期字段精度映射
+ * 记录每个解析出的日期字段是否包含时间信息
+ */
+export type ParsedDatePrecisions = Partial<Record<DateFieldType, DatePrecision>>;
+
+/**
  * 任务属性解析结果
  * 包含所有可解析的任务属性
  */
@@ -54,6 +66,9 @@ export interface ParsedTaskAttributes {
 
     /** 解析出的日期字段 */
     dates: ParsedDates;
+
+    /** 日期字段精度映射（'day' 或 'time'） */
+    datePrecisions: ParsedDatePrecisions;
 
     /** 是否存在取消日期（用于设置 cancelled 状态） */
     hasCancelledDate: boolean;
@@ -211,8 +226,9 @@ export function parseTasksPriority(content: string): PriorityLevel | undefined {
  * // }
  * ```
  */
-export function parseTasksDates(content: string): ParsedDates {
+export function parseTasksDates(content: string): { dates: ParsedDates; precisions: ParsedDatePrecisions } {
     const dates: ParsedDates = {};
+    const precisions: ParsedDatePrecisions = {};
     const { TASKS_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     const config = TASKS_FORMAT_CONFIG as { regex: { dates: Record<string, RegExp> } };
 
@@ -221,10 +237,11 @@ export function parseTasksDates(content: string): ParsedDates {
         const match = regex.exec(content);
         if (match && match[1]) {
             dates[field as DateFieldType] = createDate(match[1]);
+            precisions[field as DateFieldType] = match[1].includes(' ') ? 'time' : 'day';
         }
     }
 
-    return dates;
+    return { dates, precisions };
 }
 
 /**
@@ -250,12 +267,13 @@ export function parseTasksDates(content: string): ParsedDates {
  */
 export function parseTasksAttributes(content: string): ParsedTaskAttributes {
     const priority = parseTasksPriority(content) || 'normal'; // 未指定优先级时默认为 normal
-    const dates = parseTasksDates(content);
+    const { dates, precisions } = parseTasksDates(content);
     const repeat = parseTasksRepeat(content);
 
     return {
         priority,
         dates,
+        datePrecisions: precisions,
         hasCancelledDate: !!dates.cancelledDate,
         repeat,
     };
@@ -310,8 +328,9 @@ export function parseDataviewPriority(content: string): PriorityLevel | undefine
  * // }
  * ```
  */
-export function parseDataviewDates(content: string): ParsedDates {
+export function parseDataviewDates(content: string): { dates: ParsedDates; precisions: ParsedDatePrecisions } {
     const dates: ParsedDates = {};
+    const precisions: ParsedDatePrecisions = {};
     const { DATAVIEW_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     const config = DATAVIEW_FORMAT_CONFIG as { regex: { dates: Record<string, RegExp> } };
 
@@ -323,11 +342,12 @@ export function parseDataviewDates(content: string): ParsedDates {
             // 验证日期有效性
             if (!isNaN(date.getTime())) {
                 dates[field as DateFieldType] = date;
+                precisions[field as DateFieldType] = match[1].includes(' ') ? 'time' : 'day';
             }
         }
     }
 
-    return dates;
+    return { dates, precisions };
 }
 
 /**
@@ -353,12 +373,13 @@ export function parseDataviewDates(content: string): ParsedDates {
  */
 export function parseDataviewAttributes(content: string): ParsedTaskAttributes {
     const priority = parseDataviewPriority(content) || 'normal'; // 未指定优先级时默认为 normal
-    const dates = parseDataviewDates(content);
+    const { dates, precisions } = parseDataviewDates(content);
     const repeat = parseDataviewRepeat(content);
 
     return {
         priority,
         dates,
+        datePrecisions: precisions,
         hasCancelledDate: !!dates.cancelledDate,
         repeat,
     };
@@ -400,6 +421,7 @@ export function parseTaskAttributes(
     return {
         priority: 'normal',
         dates: {},
+        datePrecisions: {},
         hasCancelledDate: false,
     };
 }

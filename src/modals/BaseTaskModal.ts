@@ -55,6 +55,7 @@ export abstract class BaseTaskModal extends Modal {
 	protected dueDate: Date | null = null;
 	protected cancelledDate: Date | null = null;
 	protected completionDate: Date | null = null;
+	protected datePrecision: Record<string, 'day' | 'time'> = {};
 	protected selectedTags: string[] = [];
 	protected tagSelector: TagSelector;
 
@@ -111,6 +112,15 @@ export abstract class BaseTaskModal extends Modal {
 		const month = String(date.getMonth() + 1).padStart(2, '0');
 		const day = String(date.getDate()).padStart(2, '0');
 		return `${year}-${month}-${day}`;
+	}
+
+	/**
+	 * Format time for input[type="time"] (HH:mm)
+	 */
+	protected formatTimeForInput(date: Date): string {
+		const hours = String(date.getHours()).padStart(2, '0');
+		const minutes = String(date.getMinutes()).padStart(2, '0');
+		return `${hours}:${minutes}`;
 	}
 
 	// ==================== 生命周期方法 ====================
@@ -219,12 +229,12 @@ export abstract class BaseTaskModal extends Modal {
 
 		const datesGrid = dateContainer.createDiv(EditTaskModalClasses.elements.datesGrid);
 
-		this.renderDateField(datesGrid, '➕ 创建', this.createdDate, (d) => this.createdDate = d);
-		this.renderDateField(datesGrid, '🛫 开始', this.startDate, (d) => this.startDate = d);
-		this.renderDateField(datesGrid, '⏳ 计划', this.scheduledDate, (d) => this.scheduledDate = d);
-		this.renderDateField(datesGrid, '📅 截止', this.dueDate, (d) => this.dueDate = d);
-		this.renderDateField(datesGrid, '✅ 完成', this.completionDate, (d) => this.completionDate = d);
-		this.renderDateField(datesGrid, '❌ 取消', this.cancelledDate, (d) => this.cancelledDate = d);
+		this.renderDateField(datesGrid, '➕ 创建', this.createdDate, (d) => this.createdDate = d, 'createdDate');
+		this.renderDateField(datesGrid, '🛫 开始', this.startDate, (d) => this.startDate = d, 'startDate');
+		this.renderDateField(datesGrid, '⏳ 计划', this.scheduledDate, (d) => this.scheduledDate = d, 'scheduledDate');
+		this.renderDateField(datesGrid, '📅 截止', this.dueDate, (d) => this.dueDate = d, 'dueDate');
+		this.renderDateField(datesGrid, '✅ 完成', this.completionDate, (d) => this.completionDate = d, 'completionDate');
+		this.renderDateField(datesGrid, '❌ 取消', this.cancelledDate, (d) => this.cancelledDate = d, 'cancelledDate');
 	}
 
 	/**
@@ -234,7 +244,8 @@ export abstract class BaseTaskModal extends Modal {
 		container: HTMLElement,
 		label: string,
 		current: Date | null,
-		onChange: (d: Date | null) => void
+		onChange: (d: Date | null) => void,
+		fieldKey?: string
 	): void {
 		const dateItem = container.createDiv(EditTaskModalClasses.elements.dateItem);
 		const labelEl = dateItem.createEl('label', {
@@ -251,13 +262,63 @@ export abstract class BaseTaskModal extends Modal {
 		const initStr = current ? this.formatDateForInput(current) : '';
 		if (initStr) input.value = initStr;
 
+		// 时间输入框
+		const timeInput = inputContainer.createEl('input', {
+			type: 'time',
+			cls: EditTaskModalClasses.elements.dateInput
+		});
+		timeInput.style.width = '90px';
+		timeInput.style.marginLeft = '4px';
+
+		// 初始化时间值：如果精度为 'time' 且 Date 非午夜，则显示时间
+		const initialPrecision = fieldKey ? (this.datePrecision[fieldKey] || 'day') : 'day';
+		if (current && initialPrecision === 'time') {
+			timeInput.value = this.formatTimeForInput(current);
+		}
+
+		// 日期变更处理
 		input.addEventListener('change', () => {
 			if (!input.value) {
 				onChange(null);
+				if (fieldKey) this.datePrecision[fieldKey] = 'day';
+				timeInput.value = '';
 				return;
 			}
 			const parsed = this.parseDate(input.value);
-			if (parsed) onChange(parsed);
+			if (parsed) {
+				// 保留已有的时间信息
+				if (timeInput.value && fieldKey) {
+					const [h, m] = timeInput.value.split(':').map(Number);
+					parsed.setHours(h, m, 0, 0);
+					this.datePrecision[fieldKey] = 'time';
+				}
+				onChange(parsed);
+			}
+		});
+
+		// 时间变更处理
+		timeInput.addEventListener('change', () => {
+			if (fieldKey) {
+				if (timeInput.value) {
+					this.datePrecision[fieldKey] = 'time';
+					// 更新现有 Date 对象的时间
+					if (input.value) {
+						const parsed = this.parseDate(input.value);
+						if (parsed) {
+							const [h, m] = timeInput.value.split(':').map(Number);
+							parsed.setHours(h, m, 0, 0);
+							onChange(parsed);
+						}
+					}
+				} else {
+					this.datePrecision[fieldKey] = 'day';
+					// 重置时间为午夜
+					if (input.value) {
+						const parsed = this.parseDate(input.value);
+						if (parsed) onChange(parsed);
+					}
+				}
+			}
 		});
 
 		const clearBtn = inputContainer.createEl('button', {
@@ -266,7 +327,9 @@ export abstract class BaseTaskModal extends Modal {
 		});
 		clearBtn.addEventListener('click', () => {
 			input.value = '';
+			timeInput.value = '';
 			onChange(null);
+			if (fieldKey) this.datePrecision[fieldKey] = 'day';
 		});
 	}
 

@@ -86,6 +86,7 @@ export interface CreateTaskData {
 	completionDate?: Date | null;
 	cancelledDate?: Date | null;
 	tags?: string[];
+	datePrecision?: Record<string, 'day' | 'time'>;
 }
 
 /**
@@ -334,7 +335,8 @@ function serializeNewTask(taskData: CreateTaskData, app: App): string {
 	}
 
 	// 创建日期
-	const createdStr = formatDate(taskData.createdDate, 'yyyy-MM-dd');
+	const createdPrecision = taskData.datePrecision?.['createdDate'];
+		const createdStr = formatDate(taskData.createdDate, createdPrecision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
 	if (format === 'tasks') {
 		parts.push(`➕ ${createdStr}`);
 	} else {
@@ -343,7 +345,8 @@ function serializeNewTask(taskData: CreateTaskData, app: App): string {
 
 	// 开始日期
 	if (taskData.startDate) {
-		const startStr = formatDate(taskData.startDate, 'yyyy-MM-dd');
+		const startPrecision = taskData.datePrecision?.['startDate'];
+		const startStr = formatDate(taskData.startDate, startPrecision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
 		if (format === 'tasks') {
 			parts.push(`🛫 ${startStr}`);
 		} else {
@@ -353,7 +356,8 @@ function serializeNewTask(taskData: CreateTaskData, app: App): string {
 
 	// 计划日期
 	if (taskData.scheduledDate) {
-		const scheduledStr = formatDate(taskData.scheduledDate, 'yyyy-MM-dd');
+		const scheduledPrecision = taskData.datePrecision?.['scheduledDate'];
+		const scheduledStr = formatDate(taskData.scheduledDate, scheduledPrecision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
 		if (format === 'tasks') {
 			parts.push(`⏳ ${scheduledStr}`);
 		} else {
@@ -362,7 +366,8 @@ function serializeNewTask(taskData: CreateTaskData, app: App): string {
 	}
 
 	// 截止日期
-	const dueStr = formatDate(taskData.dueDate, 'yyyy-MM-dd');
+	const duePrecision = taskData.datePrecision?.['dueDate'];
+		const dueStr = formatDate(taskData.dueDate, duePrecision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
 	if (format === 'tasks') {
 		parts.push(`📅 ${dueStr}`);
 	} else {
@@ -371,7 +376,8 @@ function serializeNewTask(taskData: CreateTaskData, app: App): string {
 
 	// 完成日期
 	if (taskData.completionDate) {
-		const completionStr = formatDate(taskData.completionDate, 'yyyy-MM-dd');
+		const completionPrecision = taskData.datePrecision?.['completionDate'];
+		const completionStr = formatDate(taskData.completionDate, completionPrecision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
 		if (format === 'tasks') {
 			parts.push(`✅ ${completionStr}`);
 		} else {
@@ -381,7 +387,8 @@ function serializeNewTask(taskData: CreateTaskData, app: App): string {
 
 	// 取消日期
 	if (taskData.cancelledDate) {
-		const cancelledStr = formatDate(taskData.cancelledDate, 'yyyy-MM-dd');
+		const cancelledPrecision = taskData.datePrecision?.['cancelledDate'];
+		const cancelledStr = formatDate(taskData.cancelledDate, cancelledPrecision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
 		if (format === 'tasks') {
 			parts.push(`❌ ${cancelledStr}`);
 		} else {

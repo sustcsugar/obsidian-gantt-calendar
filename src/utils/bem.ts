@@ -210,6 +210,15 @@ export const DayViewClasses = {
 		notesBody: bem(BLOCKS.DAY_VIEW, 'notes-body'),
 		divider: bem(BLOCKS.DAY_VIEW, 'divider'),
 		dividerVertical: bem(BLOCKS.DAY_VIEW, 'divider', 'vertical'),
+			// 时间轴相关
+			timeline: bem(BLOCKS.DAY_VIEW, 'timeline'),
+			alldaySection: bem(BLOCKS.DAY_VIEW, 'allday'),
+			alldayLabel: bem(BLOCKS.DAY_VIEW, 'allday-label'),
+			alldayTasks: bem(BLOCKS.DAY_VIEW, 'allday-tasks'),
+			timeGrid: bem(BLOCKS.DAY_VIEW, 'time-grid'),
+			timeSlot: bem(BLOCKS.DAY_VIEW, 'time-slot'),
+			timeLabel: bem(BLOCKS.DAY_VIEW, 'time-label'),
+			timeTasks: bem(BLOCKS.DAY_VIEW, 'time-tasks'),
 	},
 };
 

@@ -4,10 +4,12 @@ import type { GCTask, SortState, StatusFilterState, TagFilterState } from '../ty
 import { sortTasks } from '../tasks/taskSorter';
 import { DEFAULT_SORT_STATE } from '../types';
 import { TaskCardClasses, DayViewClasses, withModifiers } from '../utils/bem';
-import { TaskCardComponent, DayViewConfig } from '../components/TaskCard';
+import { TaskCardComponent, DayViewConfig, type TaskCardConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
 import { EmbeddedNoteEditor } from './EmbeddedNoteEditor';
+import { updateTaskDateField } from '../tasks/taskUpdater';
+import { Notice } from 'obsidian';
 
 /**
  * 日视图渲染器
@@ -189,7 +191,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 	}
 
 	/**
-	 * 加载日视图任务
+	 * 加载日视图任务（支持时间轴布局）
 	 */
 	private async loadDayViewTasks(listContainer: HTMLElement, targetDate: Date): Promise<void> {
 		listContainer.empty();
@@ -197,34 +199,24 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 		try {
 			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
-			// 应用状态筛选
 			tasks = this.applyStatusFilter(tasks);
-			// 应用标签筛选
 			tasks = this.applyTagFilter(tasks);
 			const dateField = this.plugin.settings.dateFilterField || 'dueDate';
 
 			const normalizedTarget = new Date(targetDate);
 			normalizedTarget.setHours(0, 0, 0, 0);
 
-			// 筛选当天任务
 			let currentDayTasks = tasks.filter(task => {
 				const dateValue = (task as any)[dateField];
 				if (!dateValue) return false;
-
 				const taskDate = new Date(dateValue);
 				if (isNaN(taskDate.getTime())) return false;
 				taskDate.setHours(0, 0, 0, 0);
-
 				return taskDate.getTime() === normalizedTarget.getTime();
 			});
 
-			// 应用排序
-			// 生成虚拟周期实例（单日范围）
 			const virtualInstances = generateVirtualInstances(tasks, normalizedTarget, normalizedTarget, dateField, this.plugin.settings.recurringTaskDisplayLimit ?? 5);
-
-			// 合并真实任务和虚拟实例
 			currentDayTasks = [...currentDayTasks, ...virtualInstances];
-
 			currentDayTasks = sortTasks(currentDayTasks, this.sortState);
 
 			listContainer.empty();
@@ -234,7 +226,24 @@ export class DayViewRenderer extends BaseViewRenderer {
 				return;
 			}
 
-			currentDayTasks.forEach(task => this.renderTaskItem(task, listContainer, normalizedTarget));
+			// 分离全天任务和定时任务
+			const alldayTasks: GCTask[] = [];
+			const timedTasks: GCTask[] = [];
+			for (const task of currentDayTasks) {
+				const precision = task.datePrecision?.[dateField as keyof NonNullable<typeof task.datePrecision>];
+				if (precision === 'time') {
+					timedTasks.push(task);
+				} else {
+					alldayTasks.push(task);
+				}
+			}
+
+			// 有定时任务时使用时间轴布局，否则保持原有列表
+			if (timedTasks.length > 0) {
+				this.renderTimelineLayout(listContainer, alldayTasks, timedTasks, normalizedTarget);
+			} else {
+				currentDayTasks.forEach(task => this.renderTaskItem(task, listContainer, normalizedTarget));
+			}
 		} catch (error) {
 			Logger.error('DayView', 'Error loading day view tasks', error);
 			listContainer.empty();
@@ -243,9 +252,140 @@ export class DayViewRenderer extends BaseViewRenderer {
 	}
 
 	/**
-	 * 渲染日视图任务项（使用统一组件）
+	 * 渲染时间轴布局
 	 */
-	private renderTaskItem(task: GCTask, listContainer: HTMLElement, targetDate: Date): void {
+	private renderTimelineLayout(
+		container: HTMLElement,
+		alldayTasks: GCTask[],
+		timedTasks: GCTask[],
+		targetDate: Date
+	): void {
+		const D = DayViewClasses.elements;
+		const timeline = container.createDiv(D.timeline);
+		const timeGrid = timeline.createDiv(D.timeGrid);
+		const dateField = this.plugin.settings.dateFilterField || 'dueDate';
+
+		// 将全天任务作为 0 时任务，与定时任务统一分组
+		const tasksByHour: Map<number, GCTask[]> = new Map();
+		for (const task of alldayTasks) {
+			if (!tasksByHour.has(0)) tasksByHour.set(0, []);
+			tasksByHour.get(0)!.push(task);
+		}
+		for (const task of timedTasks) {
+			const dateValue = (task as any)[dateField];
+			if (dateValue instanceof Date) {
+				const hour = dateValue.getHours();
+				if (!tasksByHour.has(hour)) tasksByHour.set(hour, []);
+				tasksByHour.get(hour)!.push(task);
+			}
+		}
+
+		// 时间网格 (0:00 - 23:00)
+		for (let h = 0; h <= 23; h++) {
+			const slot = timeGrid.createDiv(D.timeSlot);
+			const label = slot.createDiv(D.timeLabel);
+			label.setText(`${String(h).padStart(2, '0')}:00`);
+			const tasksContainer = slot.createDiv(D.timeTasks);
+			const hourTasks = tasksByHour.get(h) || [];
+			hourTasks.forEach(task => this.renderTimelineTaskItem(task, tasksContainer, targetDate));
+
+			// 设置时间格的拖放功能
+			this.setupDragDropForTimeSlot(slot, h, targetDate, container);
+		}
+	}
+
+	
+	// 时间轴专用配置（启用拖拽）
+	private timelineTaskConfig: TaskCardConfig = {
+		...DayViewConfig,
+		enableDrag: true,
+	};
+
+	/**
+	 * 渲染日视图时间轴任务项（启用拖拽）
+	 */
+	private renderTimelineTaskItem(task: GCTask, listContainer: HTMLElement, targetDate: Date): void {
+		new TaskCardComponent({
+			task,
+			config: this.timelineTaskConfig,
+			container: listContainer,
+			app: this.app,
+			plugin: this.plugin,
+			targetDate,
+			onClick: (task) => {
+				this.loadDayViewTasks(
+					listContainer.closest('.gc-day-view__timeline')?.parentElement as HTMLElement
+						|| listContainer,
+					targetDate
+				);
+			},
+		}).render();
+	}
+
+	/**
+	 * 设置时间格的拖放功能
+	 */
+	private setupDragDropForTimeSlot(slot: HTMLElement, hour: number, targetDate: Date, listContainer: HTMLElement): void {
+		slot.addEventListener('dragover', (e: DragEvent) => {
+			e.preventDefault();
+			if (e.dataTransfer) {
+				e.dataTransfer.dropEffect = 'move';
+			}
+			slot.addClass('gc-day-view__time-slot--drag-over');
+		});
+
+		slot.addEventListener('dragleave', (e: DragEvent) => {
+			if (e.target === slot) {
+				slot.removeClass('gc-day-view__time-slot--drag-over');
+			}
+		});
+
+		slot.addEventListener('drop', async (e: DragEvent) => {
+			e.preventDefault();
+			slot.removeClass('gc-day-view__time-slot--drag-over');
+
+			const taskId = e.dataTransfer?.getData('taskId');
+			if (!taskId) return;
+
+			const [filePath, lineNum] = taskId.split(':');
+			const lineNumber = parseInt(lineNum, 10);
+
+			// 查找源任务
+			const allTasks = this.plugin.taskCache.getAllTasks();
+			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
+			if (!sourceTask) {
+				Logger.error('DayView', 'Source task not found:', taskId);
+				return;
+			}
+
+			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
+
+			try {
+				// 构建新的日期时间：保持目标日期 + 新的小时
+				const newDate = new Date(targetDate);
+				newDate.setHours(hour, 0, 0, 0);
+
+				// 更新 datePrecision 为 time（拖拽到时间格表示设定了时间）
+				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'time' };
+
+				// 更新任务的日期字段（带时间）
+				await updateTaskDateField(
+					this.app,
+					sourceTask,
+					dateFieldName,
+					newDate,
+					this.plugin.settings.enabledTaskFormats
+				);
+
+				Logger.debug('DayView', 'Task time updated via drag-drop', { taskId, hour });
+			} catch (error) {
+				Logger.error('DayView', 'Error updating task time:', error);
+				new Notice('更新任务时间失败');
+			}
+		});
+	}
+
+		private renderTaskItem(task: GCTask, listContainer: HTMLElement, targetDate: Date): void {
 		new TaskCardComponent({
 			task,
 			config: DayViewConfig,

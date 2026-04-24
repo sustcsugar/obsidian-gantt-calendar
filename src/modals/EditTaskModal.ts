@@ -61,6 +61,7 @@ class EditTaskModal extends BaseTaskModal {
 		this.dueDate = task.dueDate || null;
 		this.cancelledDate = task.cancelledDate || null;
 		this.completionDate = task.completionDate || null;
+		this.datePrecision = task.datePrecision ? { ...task.datePrecision } : {};
 		this.selectedTags = task.tags || [];
 	}
 
@@ -146,6 +147,10 @@ class EditTaskModal extends BaseTaskModal {
 				return;
 			}
 
+			// 合并 datePrecision 到原始任务对象，以便序列化时知道是否输出时间
+			if (this.datesChanged) {
+				this.task.datePrecision = { ...this.datePrecision };
+			}
 			await updateTaskProperties(this.app, this.task, updates, this.enabledFormats);
 			this.onSuccess();
 			this.close();
@@ -225,7 +230,8 @@ class EditTaskModal extends BaseTaskModal {
 		container: HTMLElement,
 		label: string,
 		current: Date | null,
-		onChange: (d: Date | null) => void
+		onChange: (d: Date | null) => void,
+		fieldKey?: string
 	): void {
 		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
 		const dateItem = container.createDiv(EditTaskModalClasses.elements.dateItem);
@@ -243,16 +249,65 @@ class EditTaskModal extends BaseTaskModal {
 		const initStr = current ? this.formatDateForInput(current) : '';
 		if (initStr) input.value = initStr;
 
+		// 时间输入框
+		const timeInput = inputContainer.createEl('input', {
+			type: 'time',
+			cls: EditTaskModalClasses.elements.dateInput
+		});
+		timeInput.style.width = '90px';
+		timeInput.style.marginLeft = '4px';
+
+		// 初始化时间值
+		const initialPrecision = fieldKey ? (this.datePrecision[fieldKey] || 'day') : 'day';
+		if (current && initialPrecision === 'time') {
+			timeInput.value = this.formatTimeForInput(current);
+		}
+
+		// 日期变更
 		input.addEventListener('change', () => {
 			if (!input.value) {
 				onChange(null);
 				this.datesChanged = true;
+				if (fieldKey) this.datePrecision[fieldKey] = 'day';
+				timeInput.value = '';
 				return;
 			}
 			const parsed = this.parseDate(input.value);
 			if (parsed) {
+				if (timeInput.value && fieldKey) {
+					const [h, m] = timeInput.value.split(':').map(Number);
+					parsed.setHours(h, m, 0, 0);
+					this.datePrecision[fieldKey] = 'time';
+				}
 				onChange(parsed);
 				this.datesChanged = true;
+			}
+		});
+
+		// 时间变更
+		timeInput.addEventListener('change', () => {
+			if (fieldKey) {
+				if (timeInput.value) {
+					this.datePrecision[fieldKey] = 'time';
+					if (input.value) {
+						const parsed = this.parseDate(input.value);
+						if (parsed) {
+							const [h, m] = timeInput.value.split(':').map(Number);
+							parsed.setHours(h, m, 0, 0);
+							onChange(parsed);
+							this.datesChanged = true;
+						}
+					}
+				} else {
+					this.datePrecision[fieldKey] = 'day';
+					if (input.value) {
+						const parsed = this.parseDate(input.value);
+						if (parsed) {
+							onChange(parsed);
+							this.datesChanged = true;
+						}
+					}
+				}
 			}
 		});
 
@@ -262,8 +317,10 @@ class EditTaskModal extends BaseTaskModal {
 		});
 		clearBtn.addEventListener('click', () => {
 			input.value = '';
+			timeInput.value = '';
 			onChange(null);
 			this.datesChanged = true;
+			if (fieldKey) this.datePrecision[fieldKey] = 'day';
 		});
 	}
 

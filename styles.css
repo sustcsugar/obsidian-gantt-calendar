@@ -1945,6 +1945,78 @@ Author: sugar
 	min-height: 0;
 }
 
+/* ==================== Day View Timeline ==================== */
+.gc-day-view__timeline {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.gc-day-view__allday {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.gc-day-view__allday-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	padding: 2px 4px;
+	flex-shrink: 0;
+}
+
+.gc-day-view__allday-tasks {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.gc-day-view__time-grid {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.gc-day-view__time-slot {
+	display: flex;
+	min-height: 48px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.gc-day-view__time-slot:first-child {
+	border-top: none;
+}
+
+.gc-day-view__time-label {
+	width: 50px;
+	flex-shrink: 0;
+	font-size: 11px;
+	color: var(--text-muted);
+	padding: 4px 6px 0 0;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.gc-day-view__time-tasks {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 0;
+	min-height: 0;
+}
+
+.gc-day-view__time-slot--drag-over {
+	background-color: var(--background-modifier-hover);
+	transition: background-color 0.15s ease;
+}
+
+
+
 .gc-day-view--horizontal .gc-day-view__section--tasks {
 	flex: 1 1 50%;
 	display: flex;
