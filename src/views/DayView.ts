@@ -22,6 +22,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 	// 嵌入式编辑器实例
 	private embeddedEditor: EmbeddedNoteEditor | null = null;
 
+	// 笔记区标题元素引用
+	private notesTitleEl: HTMLElement | null = null;
+
 	// 设置前缀
 	private readonly SETTINGS_PREFIX = 'dayView';
 
@@ -147,6 +150,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		const notesSection = splitContainer.createDiv(DayViewClasses.elements.sectionNotes);
 		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
 		notesTitle.addClass(DayViewClasses.elements.title);
+		this.notesTitleEl = notesTitle;
 		const notesContent = notesSection.createDiv(DayViewClasses.elements.notesContent);
 
 		// 设置可调整大小的分割线
@@ -175,6 +179,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		const notesSection = splitContainer.createDiv(DayViewClasses.elements.sectionNotes);
 		const notesTitle = notesSection.createEl('h3', { text: 'Daily Note' });
 		notesTitle.addClass(DayViewClasses.elements.title);
+		this.notesTitleEl = notesTitle;
 		const notesContent = notesSection.createDiv(DayViewClasses.elements.notesContent);
 
 		this.setupDayViewDividerVertical(divider, tasksSection, notesSection);
@@ -350,5 +355,23 @@ export class DayViewRenderer extends BaseViewRenderer {
 			this.plugin.settings,
 			this.plugin.calendarView
 		);
+
+		// 更新笔记区标题为当前打开的文件名
+		this.updateNotesTitle();
+	}
+
+	/**
+	 * 更新笔记区标题为当前打开的文件名
+	 */
+	private updateNotesTitle(): void {
+		if (!this.notesTitleEl || !this.embeddedEditor) return;
+
+		const filePath = this.embeddedEditor.getCurrentFilePath();
+		if (filePath) {
+			const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') || 'Daily Note';
+			this.notesTitleEl.setText(fileName);
+		} else {
+			this.notesTitleEl.setText('Daily Note');
+		}
 	}
 }

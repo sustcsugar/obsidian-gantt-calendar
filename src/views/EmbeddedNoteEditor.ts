@@ -1,34 +1,53 @@
-import { App, WorkspaceLeaf, TFile, MarkdownRenderer, Component } from 'obsidian';
+import { App, WorkspaceLeaf, WorkspaceSplit, WorkspaceTabs, TFile, MarkdownRenderer, Component } from 'obsidian';
 import { findDailyNoteForDate, DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import type { GanttCalendarSettings } from '../settings/types';
 import { Logger } from '../utils/logger';
 import { EmbeddedEditorClasses, DayViewClasses } from '../utils/bem';
 
 /**
- * WorkspaceLeaf 内部接口
- *
- * Obsidian 的类型定义未暴露 containerEl，但运行时实际存在。
- * 通过此接口安全访问内部属性。
+ * WorkspaceLeaf / WorkspaceSplit 内部接口
+ * Obsidian 类型定义未暴露 containerEl，但运行时实际存在
  */
 interface InternalWorkspaceLeaf extends WorkspaceLeaf {
     containerEl: HTMLElement;
 }
 
+interface InternalWorkspaceSplit extends WorkspaceSplit {
+    containerEl: HTMLElement;
+    getRoot: () => any;
+    getContainer: () => any;
+    children: any[];
+    replaceChild: (index: number, child: any) => void;
+}
+
+type ConstructableWorkspaceSplit = new (ws: App['workspace'], dir: 'horizontal' | 'vertical') => WorkspaceSplit;
+
+/**
+ * 临时屏蔽 setActiveLeaf 的工具函数
+ * Obsidian 1.8.7+ 在 createLeafInParent 时会激活新 leaf，需要阻止
+ */
+function suppressSetActiveLeaf(app: App): () => void {
+    const original = app.workspace.setActiveLeaf.bind(app.workspace);
+    app.workspace.setActiveLeaf = () => {};
+    return () => {
+        app.workspace.setActiveLeaf = original;
+    };
+}
+
 /**
  * 嵌入式笔记编辑器
  *
- * 通过创建 detached WorkspaceLeaf 并将其 DOM 挂载到自定义容器中，
- * 实现完整的 Obsidian 编辑体验（Live Preview / Source 模式）。
- *
- * 核心原理：
- * 1. new WorkspaceLeaf(workspace) 创建一个不挂在 workspace 布局树中的 leaf
- * 2. 将 leaf.containerEl 挂载到 DayView 的笔记区域 div
- * 3. leaf.openFile(file) 加载完整的 MarkdownView 编辑器
- * 4. 清理时调用 leaf.detach() 从 workspace 注销
+ * 参照 Hover Editor 插件的实现方式：
+ * 1. 创建独立的 WorkspaceSplit（不挂在 workspace tab 系统中）
+ * 2. 将 split.containerEl 挂载到 DayView 的笔记区域 div
+ * 3. 通过 workspace.createLeafInParent(split, 0) 在 split 中创建 leaf
+ * 4. leaf.openFile(file) 加载完整的 MarkdownView 编辑器
+ * 5. 清理时 leaf.detach() 移除 leaf
  */
 export class EmbeddedNoteEditor {
     private app: App;
     private container: HTMLElement;
+    private rootSplit: InternalWorkspaceSplit | null = null;
     private leaf: InternalWorkspaceLeaf | null = null;
     private currentFilePath: string | null = null;
     private fallbackComponent: Component | null = null;
@@ -72,21 +91,37 @@ export class EmbeddedNoteEditor {
         this.currentFilePath = file.path;
 
         try {
-            // 显示加载状态
+            // 1. 创建独立的 WorkspaceSplit（参照 Hover Editor）
+            this.rootSplit = new (WorkspaceSplit as unknown as ConstructableWorkspaceSplit)(
+                this.app.workspace,
+                'vertical'
+            ) as InternalWorkspaceSplit;
+
+            // 让 split 能找到正确的 rootSplit 和 container
+            this.rootSplit.getRoot = () => this.app.workspace.rootSplit!;
+            this.rootSplit.getContainer = () => this.app.workspace.rootSplit!;
+
+            // 2. 将 split 的 DOM 挂载到我们的容器中
             this.container.empty();
-            this.container.createEl('div', { text: '加载编辑器...', cls: 'gantt-task-empty' });
+            this.container.appendChild(this.rootSplit.containerEl);
 
-            // 创建 detached leaf（不挂在 workspace 布局树中）
-            this.leaf = new (WorkspaceLeaf as any)(this.app.workspace) as InternalWorkspaceLeaf;
+            // 3. 屏蔽 setActiveLeaf，防止 Obsidian 激活新 leaf（参照 Hover Editor）
+            const restore = suppressSetActiveLeaf(this.app);
+            let rawLeaf: WorkspaceLeaf;
+            try {
+                rawLeaf = this.app.workspace.createLeafInParent(this.rootSplit, 0);
+            } finally {
+                restore();
+            }
+            this.leaf = rawLeaf as InternalWorkspaceLeaf;
 
-            // 将 leaf 的 DOM 挂载到我们的容器中
-            this.container.empty();
-            this.container.appendChild(this.leaf.containerEl);
+            // 4. 展开 WorkspaceTabs（createLeafInParent 可能把 leaf 包在 tabs 里）
+            this.unwrapTabs();
 
-            // 在 leaf 中打开文件（触发 MarkdownView 创建）
+            // 5. 在 leaf 中打开文件
             await this.leaf.openFile(file);
 
-            // 应用嵌入样式
+            // 6. 应用嵌入样式
             this.applyEmbeddedStyles();
 
             Logger.debug('EmbeddedNoteEditor', `Opened file: ${file.path}`);
@@ -95,7 +130,26 @@ export class EmbeddedNoteEditor {
 
             // 降级到只读预览模式
             this.leaf = null;
+            this.rootSplit = null;
             await this.fallbackToPreview(file, parentComponent);
+        }
+    }
+
+    /**
+     * 展开 WorkspaceTabs
+     * createLeafInParent 可能将 leaf 包裹在 WorkspaceTabs 中，
+     * 需要将其展开为直接子节点以避免显示标签栏
+     */
+    private unwrapTabs(): void {
+        if (!this.rootSplit) return;
+        try {
+            this.rootSplit.children.forEach((item: any, index: number) => {
+                if (item instanceof WorkspaceTabs && (item as any).children?.length > 0) {
+                    this.rootSplit!.replaceChild(index, (item as any).children[0]);
+                }
+            });
+        } catch (e) {
+            Logger.debug('EmbeddedNoteEditor', 'unwrapTabs failed (non-critical)', e);
         }
     }
 
@@ -109,17 +163,26 @@ export class EmbeddedNoteEditor {
             this.fallbackComponent = null;
         }
 
-        // 清理 embedded leaf
+        // 清理 leaf
         if (this.leaf) {
             try {
-                if (this.leaf.containerEl.parentNode) {
-                    this.leaf.containerEl.parentNode.removeChild(this.leaf.containerEl);
-                }
                 this.leaf.detach();
             } catch (e) {
                 Logger.error('EmbeddedNoteEditor', 'Error closing leaf', e);
             }
             this.leaf = null;
+        }
+
+        // 清理 rootSplit 的 DOM
+        if (this.rootSplit) {
+            try {
+                if (this.rootSplit.containerEl?.parentNode) {
+                    this.rootSplit.containerEl.parentNode.removeChild(this.rootSplit.containerEl);
+                }
+            } catch (e) {
+                Logger.error('EmbeddedNoteEditor', 'Error closing rootSplit', e);
+            }
+            this.rootSplit = null;
         }
 
         this.currentFilePath = null;
@@ -167,19 +230,21 @@ export class EmbeddedNoteEditor {
     }
 
     /**
-     * 应用嵌入样式（隐藏不需要的 UI 元素，调整尺寸）
+     * 应用嵌入样式
      */
     private applyEmbeddedStyles(): void {
-        if (!this.leaf?.view) return;
+        if (!this.rootSplit || !this.leaf) return;
 
-        const containerEl = this.leaf.containerEl;
+        // rootSplit 容器填满
+        const splitEl = this.rootSplit.containerEl;
+        splitEl.style.height = '100%';
+        splitEl.style.width = '100%';
 
-        // 确保 leaf 容器填满父容器
-        containerEl.style.height = '100%';
-        containerEl.style.width = '100%';
-        containerEl.style.overflow = 'hidden';
-
-        // 添加自定义 class 以便 CSS 选择器生效
-        containerEl.classList.add(EmbeddedEditorClasses.block);
+        // leaf 容器填满并添加自定义 class
+        const leafEl = this.leaf.containerEl;
+        leafEl.style.height = '100%';
+        leafEl.style.width = '100%';
+        leafEl.style.overflow = 'hidden';
+        leafEl.classList.add(EmbeddedEditorClasses.block);
     }
 }

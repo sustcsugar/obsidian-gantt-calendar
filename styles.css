@@ -48,6 +48,8 @@ Author: sugar
 /* Main Container */
 .calendar-content {
 	padding: 12px;
+	height: 100%;
+	box-sizing: border-box;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -2091,6 +2093,19 @@ Author: sugar
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+/* WorkspaceSplit 容器填满 notes-content */
+.gc-day-view__notes-content .workspace-split {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* WorkspaceSplit 内的 leaf 容器填满 */
+.gc-day-view__notes-content .workspace-split .workspace-leaf {
+    flex: 1;
+    min-height: 0;
 }
 
 /* Priority badge inline */
