@@ -32,7 +32,10 @@ export class TaskCardRenderer {
 	/**
 	 * 格式化日期显示
 	 */
-	formatDateForDisplay(date: Date): string {
+	formatDateForDisplay(date: Date, precision?: 'day' | 'time'): string {
+		if (precision === 'time') {
+			return formatDate(date, 'yyyy-MM-dd HH:mm');
+		}
 		return formatDate(date, 'yyyy-MM-dd');
 	}
 
@@ -242,24 +245,25 @@ export class TaskCardRenderer {
 
 		const container = card.createDiv(TaskCardClasses.elements.times);
 
+		const dp = task.datePrecision || {};
 		if (config.showCreated && task.createdDate) {
-			this.renderTimeBadge(container, '创建', task.createdDate, TimeBadgeClasses.created);
+			this.renderTimeBadge(container, '创建', task.createdDate, TimeBadgeClasses.created, false, dp.createdDate);
 		}
 		if (config.showStart && task.startDate) {
-			this.renderTimeBadge(container, '开始', task.startDate, TimeBadgeClasses.start);
+			this.renderTimeBadge(container, '开始', task.startDate, TimeBadgeClasses.start, false, dp.startDate);
 		}
 		if (config.showScheduled && task.scheduledDate) {
-			this.renderTimeBadge(container, '计划', task.scheduledDate, TimeBadgeClasses.scheduled);
+			this.renderTimeBadge(container, '计划', task.scheduledDate, TimeBadgeClasses.scheduled, false, dp.scheduledDate);
 		}
 		if (config.showDue && task.dueDate) {
 			const isOverdue = config.showOverdueIndicator && task.dueDate < new Date() && !task.completed;
-			this.renderTimeBadge(container, '截止', task.dueDate, TimeBadgeClasses.due, isOverdue);
+			this.renderTimeBadge(container, '截止', task.dueDate, TimeBadgeClasses.due, isOverdue, dp.dueDate);
 		}
 		if (config.showCancelled && task.cancelledDate) {
-			this.renderTimeBadge(container, '取消', task.cancelledDate, TimeBadgeClasses.cancelled);
+			this.renderTimeBadge(container, '取消', task.cancelledDate, TimeBadgeClasses.cancelled, false, dp.cancelledDate);
 		}
 		if (config.showCompletion && task.completionDate) {
-			this.renderTimeBadge(container, '完成', task.completionDate, TimeBadgeClasses.completion);
+			this.renderTimeBadge(container, '完成', task.completionDate, TimeBadgeClasses.completion, false, dp.completionDate);
 		}
 	}
 
@@ -268,10 +272,11 @@ export class TaskCardRenderer {
 		label: string,
 		date: Date,
 		className: string,
-		isOverdue = false
+		isOverdue = false,
+		precision?: 'day' | 'time'
 	): void {
 		const badge = container.createEl('span', {
-			text: `${label}:${this.formatDateForDisplay(date)}`,
+			text: `${label}:${this.formatDateForDisplay(date, precision)}`,
 			cls: `${TaskCardClasses.elements.timeBadge} ${className}`
 		});
 		if (isOverdue) {

@@ -653,18 +653,27 @@ export const WeekViewClasses = {
 		grid: bem(BLOCKS.WEEK_VIEW, 'grid'),
 		headerRow: bem(BLOCKS.WEEK_VIEW, 'header-row'),
 		headerCell: bem(BLOCKS.WEEK_VIEW, 'header-cell'),
+	headerSpacer: bem(BLOCKS.WEEK_VIEW, 'header-spacer'),
 		dayName: bem(BLOCKS.WEEK_VIEW, 'day-name'),
 		dayNumber: bem(BLOCKS.WEEK_VIEW, 'day-number'),
 		lunarText: bem(BLOCKS.WEEK_VIEW, 'lunar-text'),
 		tasksGrid: bem(BLOCKS.WEEK_VIEW, 'tasks-grid'),
 		tasksColumn: bem(BLOCKS.WEEK_VIEW, 'tasks-column'),
 		empty: bem(BLOCKS.WEEK_VIEW, 'empty'),
+		// 时间轴相关
+		timeGutter: bem(BLOCKS.WEEK_VIEW, 'time-gutter'),
+		timeGutterSlot: bem(BLOCKS.WEEK_VIEW, 'time-gutter-slot'),
+		timeGutterLabel: bem(BLOCKS.WEEK_VIEW, 'time-gutter-label'),
+		timeSlot: bem(BLOCKS.WEEK_VIEW, 'time-slot'),
+		timeTasks: bem(BLOCKS.WEEK_VIEW, 'time-tasks'),
 	},
 
 	/** Modifiers */
 	modifiers: {
 		today: bem(BLOCKS.WEEK_VIEW, 'header-cell', 'today'),
 		tasksColumnToday: bem(BLOCKS.WEEK_VIEW, 'tasks-column', 'today'),
+		timeline: bem(BLOCKS.WEEK_VIEW, undefined, 'timeline'),
+		dragOver: bem(BLOCKS.WEEK_VIEW, 'time-slot', 'drag-over'),
 	},
 };
 
