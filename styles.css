@@ -58,11 +58,15 @@ Author: sugar
 }
 
 .calendar-content.gantt-mode {
-	overflow: hidden;
+	overflow: auto;
 	display: flex;
 	flex-direction: column;
 	flex: 1;
 	min-height: 0;
+}
+
+.view-content.gantt-root {
+	overflow: hidden;
 }
 
 /* Calendar Grid Layouts */
@@ -3006,7 +3010,6 @@ Author: sugar
 /* 甘特图根容器 */
 .gc-gantt-view__root {
 	flex: 1 1 auto;
-	min-height: 500px;
 	min-width: 100%;
 	position: relative;
 	overflow: visible;
@@ -3035,10 +3038,10 @@ Author: sugar
 	grid-template-areas:
 		"corner resizer header"
 		"tasklist resizer chart";
-	grid-template-rows: 50px 1fr;
+	grid-template-rows: 50px auto;
 
 	width: 100%;
-	min-height: 400px;
+	min-width: 0;
 	gap: 0;
 	position: relative;
 }
@@ -3046,9 +3049,6 @@ Author: sugar
 /* 左上角空白区域（sticky） */
 .gc-gantt-view__corner {
 	grid-area: corner;
-	position: sticky;
-	top: 8px;
-	z-index: 50;
 	height: 50px;
 	overflow: hidden;
 	border-right: 1px solid var(--background-modifier-border);
@@ -3062,12 +3062,9 @@ Author: sugar
 	display: block;
 }
 
-/* 顶部时间轴容器（sticky，可水平滚动） */
+/* 顶部时间轴容器 */
 .gc-gantt-view__header {
 	grid-area: header;
-	position: sticky;
-	top: 8px;
-	z-index: 50;
 	height: 50px;
 	overflow-x: auto;
 	overflow-y: hidden;
@@ -3091,11 +3088,11 @@ Author: sugar
 /* 左侧任务列表容器 */
 .gc-gantt-view__tasklist {
 	grid-area: tasklist;
-	overflow-x: hidden;
-	overflow-y: auto;
+	overflow: hidden;
+	min-width: 0;
+	min-height: 0;
 	border-right: 1px solid var(--background-modifier-border);
 	background-color: var(--background-primary);
-	min-height: 0;
 	/* 隐藏滚动条但保留滚动功能 */
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE 10+ */
@@ -3107,14 +3104,17 @@ Author: sugar
 
 .gc-gantt-view__tasklist-svg {
 	display: block;
+	overflow: hidden;
 }
 
-/* 右侧甘特图容器（双向滚动） */
+/* 右侧甘特图容器（水平滚动，不撑开 grid） */
 .gc-gantt-view__chart {
 	grid-area: chart;
-	overflow: auto;
-	background-color: var(--background-primary);
+	overflow-x: auto;
+	overflow-y: visible;
+	min-width: 0;
 	min-height: 0;
+	background-color: var(--background-primary);
 }
 
 .gc-gantt-view__chart::-webkit-scrollbar {
@@ -3178,7 +3178,6 @@ Author: sugar
 /* 甘特图根容器 */
 .gc-gantt-view__root {
 	flex: 1 1 auto;
-	min-height: 500px;
 	min-width: 100%;
 	position: relative;
 	overflow: visible;
@@ -3236,24 +3235,15 @@ Author: sugar
 
 .gc-gantt-view__tasklist-container {
 	grid-area: tasklist;
-	overflow-x: hidden;
-	overflow-y: auto;
+	overflow: visible;
 	border-right: 1px solid var(--background-modifier-border);
 	background-color: var(--background-primary);
-	min-height: 0;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
-}
-
-.gc-gantt-view__tasklist-container::-webkit-scrollbar {
-	display: none;
 }
 
 .gc-gantt-view__chart-container {
 	grid-area: chart;
-	overflow: auto;
+	overflow: visible;
 	background-color: var(--background-primary);
-	min-height: 0;
 }
 
 /* ============================================
@@ -3430,7 +3420,6 @@ Author: sugar
 /* 响应式适配 */
 @media (max-width: 768px) {
 	.gc-gantt-view__root {
-		min-height: 300px;
 		padding: 8px;
 	}
 

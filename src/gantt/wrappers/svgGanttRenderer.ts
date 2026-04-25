@@ -240,8 +240,6 @@ export class SvgGanttRenderer {
 		// 计算尺寸
 		const ganttWidth = totalUnits * this.columnWidth + this.padding * 2;
 		const ganttHeight = this.headerHeight + this.tasks.length * this.rowHeight;
-		// 任务列表使用足够大的宽度来显示完整任务描述
-		const taskListWidth = 2040; // taskNumberColumnWidth (40) + contentWidth (2000)
 		const taskListHeight = ganttHeight;
 
 		// 创建单个 Grid 容器
@@ -249,7 +247,7 @@ export class SvgGanttRenderer {
 		// 设置 CSS 变量用于控制任务列宽度
 		this.mainGrid.style.setProperty('--task-column-width', `${this.taskColumnWidth}px`);
 
-		// 1. 左上角空白区域（sticky）
+		// 1. 左上角空白区域
 		this.cornerContainer = this.mainGrid.createDiv(GanttClasses.elements.corner);
 		this.cornerSvg = this.createSvgElement(
 			this.cornerContainer,
@@ -259,7 +257,7 @@ export class SvgGanttRenderer {
 		);
 		this.renderCorner(this.cornerSvg);
 
-		// 2. 顶部时间轴容器（sticky，可水平滚动）
+		// 2. 顶部时间轴容器（可水平滚动）
 		this.headerContainer = this.mainGrid.createDiv(GanttClasses.elements.header);
 		this.headerSvg = this.createSvgElement(
 			this.headerContainer,
@@ -269,11 +267,13 @@ export class SvgGanttRenderer {
 		);
 		this.renderHeader(this.headerSvg, minDate, totalUnits, granularity);
 
-		// 3. 左侧任务列表容器（可垂直滚动）
+		// 3. 左侧任务列表容器（冻结窗格，不随甘特图横向滚动）
 		this.taskListContainer = this.mainGrid.createDiv(GanttClasses.elements.tasklist);
+		// 使用容器实际宽度（受 grid 约束）作为 SVG 宽度
+		const actualTaskListWidth = this.taskListContainer.offsetWidth || this.taskColumnWidth;
 		this.taskListSvg = this.createSvgElement(
 			this.taskListContainer,
-			taskListWidth,
+			actualTaskListWidth,
 			taskListHeight,
 			GanttClasses.elements.tasklistSvg
 		);
@@ -482,7 +482,10 @@ export class SvgGanttRenderer {
 					}
 				}
 
-				// tasklist SVG 保持固定大宽度以显示完整任务描述，不随拖动改变
+				// tasklist SVG 宽度随拖动同步更新（被 grid 容器裁剪）
+				if (this.taskListSvg) {
+					this.taskListSvg.setAttribute('width', String(newWidth));
+				}
 			}
 		});
 
