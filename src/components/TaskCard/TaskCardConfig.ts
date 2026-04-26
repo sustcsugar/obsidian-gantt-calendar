@@ -3,7 +3,7 @@ import type { GCTask } from '../../types';
 /**
  * 视图修饰符类型
  */
-export type ViewModifier = 'task' | 'day' | 'week' | 'month' | 'gantt';
+export type ViewModifier = 'task' | 'day' | 'week' | 'month' | 'gantt' | 'sidebar';
 
 /**
  * 时间字段显示配置

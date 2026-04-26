@@ -300,6 +300,9 @@ export class SvgGanttRenderer {
 
 		// 设置行悬停高亮
 		this.setupRowHighlight();
+
+		// 设置从侧边栏拖拽任务到甘特图的接收
+		this.setupDropReceiver();
 	}
 
 	/**
@@ -623,6 +626,67 @@ export class SvgGanttRenderer {
 		// 监听甘特图容器的鼠标离开
 		this.ganttContainer.addEventListener('mouseleave', () => {
 			clearHighlight();
+		});
+	}
+
+	/**
+	 * 设置从侧边栏拖拽任务到甘特图的 drop 接收
+	 */
+	private setupDropReceiver(): void {
+		if (!this.ganttContainer) return;
+
+		const container = this.ganttContainer;
+
+		container.addEventListener('dragover', (e: DragEvent) => {
+			e.preventDefault();
+			if (e.dataTransfer) {
+				e.dataTransfer.dropEffect = 'move';
+			}
+			container.addClass('gc-gantt-view__chart--drop-target');
+		});
+
+		container.addEventListener('dragleave', () => {
+			container.removeClass('gc-gantt-view__chart--drop-target');
+		});
+
+		container.addEventListener('drop', async (e: DragEvent) => {
+			e.preventDefault();
+			container.removeClass('gc-gantt-view__chart--drop-target');
+
+			if (!e.dataTransfer) return;
+			const taskId = e.dataTransfer.getData('taskId');
+			if (!taskId) return;
+
+			// taskId 格式: "filePath:lineNumber"
+			const colonIndex = taskId.lastIndexOf(':');
+			if (colonIndex === -1) return;
+			const filePath = taskId.substring(0, colonIndex);
+			const lineNumber = parseInt(taskId.substring(colonIndex + 1), 10);
+
+			// 在甘特图任务列表中找到匹配的任务
+			const ganttTask = this.tasks.find(t =>
+				t.filePath === filePath && t.lineNumber === lineNumber
+			);
+
+			if (!ganttTask || !this.onDateChange || !this.minDate) return;
+
+			// 根据 drop 的 x 坐标计算目标日期
+			const rect = container.getBoundingClientRect();
+			const dropX = e.clientX - rect.left + container.scrollLeft;
+			const unitIndex = Math.max(0, Math.floor((dropX - this.padding) / this.columnWidth));
+			const targetDate = this.getDateForUnit(this.minDate, unitIndex, this.granularity);
+
+			// 保持任务原有持续天数
+			const originalStart = new Date(ganttTask.start);
+			const originalEnd = new Date(ganttTask.end);
+			const durationDays = Math.max(1, Math.round(
+				(originalEnd.getTime() - originalStart.getTime()) / 86400000
+			));
+
+			const newStart = targetDate;
+			const newEnd = new Date(targetDate.getTime() + durationDays * 86400000);
+
+			await this.onDateChange(ganttTask, newStart, newEnd);
 		});
 	}
 

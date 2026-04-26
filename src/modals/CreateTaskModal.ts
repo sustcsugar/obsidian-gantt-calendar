@@ -22,6 +22,7 @@ export interface CreateTaskModalOptions {
 	app: App;
 	plugin: GanttCalendarPlugin;
 	targetDate?: Date;
+	targetHour?: number;
 	onSuccess: () => void;
 }
 
@@ -51,6 +52,12 @@ export class CreateTaskModal extends BaseTaskModal {
 		this.scheduledDate = null;
 		this.cancelledDate = null;
 		this.completionDate = null;
+
+		// 如果指定了目标小时，预填时间和精度
+		if (options.targetHour !== undefined) {
+			this.dueDate.setHours(options.targetHour, 0, 0, 0);
+			this.datePrecision = { dueDate: 'time' };
+		}
 
 		// 默认优先级
 		this.priority = this.plugin.settings.defaultTaskPriority || 'normal';

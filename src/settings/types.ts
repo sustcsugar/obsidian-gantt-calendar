@@ -89,6 +89,14 @@ export interface GanttCalendarSettings {
 	yearViewSelectedTags: string[];
 	yearViewTagOperator: TagFilterOperator;
 
+	// ========== 侧边栏设置 ==========
+	sidebarShowCheckbox: boolean;
+	sidebarShowTags: boolean;
+	sidebarShowPriority: boolean;
+	sidebarShowTicktick: boolean;
+	sidebarShowFileLocation: boolean;
+	sidebarShowDueDate: boolean;
+
 	// ========== 甘特图设置 ==========
 
 	ganttStartField: DateFieldType;  // 甘特图开始时间字段

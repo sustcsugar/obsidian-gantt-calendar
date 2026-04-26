@@ -54,6 +54,9 @@ export const BLOCKS = {
 	/** 嵌入式编辑器 */
 	EMBEDDED_EDITOR: 'embedded-editor',
 
+	/** 侧边栏视图 */
+	SIDEBAR: 'sidebar',
+
 } as const;
 
 /**
@@ -678,6 +681,44 @@ export const WeekViewClasses = {
 		tasksColumnToday: bem(BLOCKS.WEEK_VIEW, 'tasks-column', 'today'),
 		timeline: bem(BLOCKS.WEEK_VIEW, undefined, 'timeline'),
 		dragOver: bem(BLOCKS.WEEK_VIEW, 'row', 'drag-over'),
+	},
+};
+
+/**
+ * 侧边栏视图类名常量
+ */
+export const SidebarClasses = {
+	block: bem(BLOCKS.SIDEBAR),
+
+	/** Elements */
+	elements: {
+		tabBar: bem(BLOCKS.SIDEBAR, 'tab-bar'),
+		tabBtn: bem(BLOCKS.SIDEBAR, 'tab-btn'),
+		tabBtnActive: bem(BLOCKS.SIDEBAR, 'tab-btn', 'active'),
+		content: bem(BLOCKS.SIDEBAR, 'content'),
+		// 任务列表
+		searchInput: bem(BLOCKS.SIDEBAR, 'search-input'),
+		filterBar: bem(BLOCKS.SIDEBAR, 'filter-bar'),
+		taskList: bem(BLOCKS.SIDEBAR, 'task-list'),
+		taskItem: bem(BLOCKS.SIDEBAR, 'task-item'),
+		emptyState: bem(BLOCKS.SIDEBAR, 'empty-state'),
+		// 今日时间线
+		timeline: bem(BLOCKS.SIDEBAR, 'timeline'),
+		timelineHeader: bem(BLOCKS.SIDEBAR, 'timeline-header'),
+		timelineAllDay: bem(BLOCKS.SIDEBAR, 'timeline-allday'),
+		timelineAllDayLabel: bem(BLOCKS.SIDEBAR, 'timeline-allday-label'),
+		timelineAllDayTasks: bem(BLOCKS.SIDEBAR, 'timeline-allday-tasks'),
+		timelineTimeSlot: bem(BLOCKS.SIDEBAR, 'timeline-time-slot'),
+		timelineTimeLabel: bem(BLOCKS.SIDEBAR, 'timeline-time-label'),
+		timelineTimeTasks: bem(BLOCKS.SIDEBAR, 'timeline-time-tasks'),
+		timelineSlotCreate: bem(BLOCKS.SIDEBAR, 'timeline-slot-create'),
+		timelineCurrentTime: bem(BLOCKS.SIDEBAR, 'timeline-current-time'),
+	},
+
+	/** Modifiers */
+	modifiers: {
+		taskListTab: bem(BLOCKS.SIDEBAR, undefined, 'task-list'),
+		timelineTab: bem(BLOCKS.SIDEBAR, undefined, 'timeline'),
 	},
 };
 

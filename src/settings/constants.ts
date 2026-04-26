@@ -79,6 +79,14 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	monthViewShowPriority: false,  // 月视图空间有限，默认不显示优先级
 	monthViewShowTicktick: true,
 
+	// 侧边栏卡片显示控制
+	sidebarShowCheckbox: true,
+	sidebarShowTags: true,
+	sidebarShowPriority: true,
+	sidebarShowTicktick: false,
+	sidebarShowFileLocation: false,
+	sidebarShowDueDate: true,
+
 	// YearView
 	yearViewSelectedTags: [],
 	yearViewTagOperator: 'OR',

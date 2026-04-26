@@ -35,3 +35,4 @@ export { DayViewConfig } from './presets/DayView.config';
 export { WeekViewConfig } from './presets/WeekView.config';
 export { MonthViewConfig } from './presets/MonthView.config';
 export { GanttViewConfig } from './presets/GanttView.config';
+export { SidebarViewConfig, buildSidebarConfig } from './presets/SidebarView.config';

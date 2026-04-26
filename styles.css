@@ -3111,7 +3111,7 @@ Author: sugar
 .gc-gantt-view__chart {
 	grid-area: chart;
 	overflow-x: auto;
-	overflow-y: visible;
+	overflow-y: hidden;
 	min-width: 0;
 	min-height: 0;
 	background-color: var(--background-primary);
@@ -3561,4 +3561,329 @@ Author: sugar
 .gc-gantt-view__row-highlight {
 	fill: var(--background-modifier-hover) !important;
 	opacity: 1 !important;
+}
+
+/* 甘特图 drop 目标高亮 */
+.gc-gantt-view__chart--drop-target {
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: -2px;
+	background-color: var(--background-modifier-hover);
+}
+
+/* ============================================
+   侧边栏视图样式
+   ============================================ */
+
+.gc-sidebar {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* Tab 切换栏 */
+.gc-sidebar__tab-bar {
+	display: flex;
+	gap: 2px;
+	padding: 8px 8px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.gc-sidebar__tab-btn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 6px 12px;
+	font-size: 12px;
+	color: var(--text-muted);
+	cursor: pointer;
+	border-radius: 6px 6px 0 0;
+	transition: color 0.15s, background-color 0.15s;
+	white-space: nowrap;
+}
+
+.gc-sidebar__tab-btn:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-sidebar__tab-btn--active {
+	color: var(--text-accent);
+	background-color: var(--background-secondary);
+	font-weight: 600;
+}
+
+/* 内容区域 */
+.gc-sidebar__content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px;
+}
+
+/* 搜索框 */
+.gc-sidebar__search-input {
+	margin-bottom: 8px;
+}
+
+.gc-sidebar__search-input input {
+	width: 100%;
+	padding: 6px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	outline: none;
+}
+
+.gc-sidebar__search-input input:focus {
+	border-color: var(--interactive-accent);
+}
+
+.gc-sidebar__search-input input::placeholder {
+	color: var(--text-muted);
+}
+
+/* 筛选栏 */
+.gc-sidebar__filter-bar {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 8px;
+	position: relative;
+}
+
+.gc-sidebar__filter-bar .clickable-icon {
+	padding: 4px;
+	border-radius: 4px;
+}
+
+.gc-sidebar__filter-bar .has-active-filter {
+	color: var(--interactive-accent);
+	background-color: var(--background-modifier-hover);
+}
+
+/* 下拉菜单 */
+.sidebar-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	z-index: 100;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	min-width: 120px;
+}
+
+.sidebar-dropdown-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px;
+	cursor: pointer;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+.sidebar-dropdown-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.sidebar-dropdown-item.is-selected {
+	background-color: var(--background-modifier-active-hover);
+	color: var(--text-accent);
+}
+
+.sidebar-dropdown-item button.is-selected {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 4px;
+}
+
+/* 任务列表 */
+.gc-sidebar__task-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* 任务项在侧边栏中更紧凑 */
+.gc-sidebar__task-item {
+	padding: 6px 8px;
+	border-radius: 6px;
+	cursor: grab;
+}
+
+.gc-sidebar__task-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* 空状态 */
+.gc-sidebar__empty-state {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px 12px;
+	color: var(--text-muted);
+	font-size: 13px;
+}
+
+/* 任务卡片侧边栏修饰符 */
+.gc-task-card--sidebar {
+	padding: 6px 8px;
+	font-size: 12px;
+	border-radius: 6px;
+	border: 1px solid transparent;
+	transition: background-color 0.15s, border-color 0.15s;
+}
+
+.gc-task-card--sidebar:hover {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border);
+}
+
+.gc-task-card--sidebar .gc-task-card__text {
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.gc-task-card--sidebar .gc-task-card__time-badge {
+	font-size: 10px;
+	padding: 1px 4px;
+}
+
+/* ============================================
+   今日时间线样式
+   ============================================ */
+
+.gc-sidebar__timeline-header {
+	padding: 8px 4px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 8px;
+}
+
+/* 全天区域 */
+.gc-sidebar__timeline-allday {
+	margin-bottom: 12px;
+}
+
+.gc-sidebar__timeline-allday-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	font-weight: 600;
+	margin-bottom: 4px;
+	padding-left: 4px;
+}
+
+.gc-sidebar__timeline-allday-tasks {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* 时间线 */
+.gc-sidebar__timeline {
+	display: flex;
+	flex-direction: column;
+	position: relative;
+}
+
+.gc-sidebar__timeline-time-slot {
+	display: flex;
+	gap: 8px;
+	min-height: 40px;
+	border-top: 1px solid var(--background-modifier-border);
+	padding: 4px 0;
+	position: relative;
+}
+
+.gc-sidebar__timeline-time-slot.is-current-hour {
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-sidebar__timeline-time-label {
+	width: 44px;
+	flex-shrink: 0;
+	font-size: 11px;
+	color: var(--text-muted);
+	text-align: right;
+	padding-top: 2px;
+}
+
+.gc-sidebar__timeline-time-tasks {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+/* 当前时间指示线 */
+.gc-sidebar__timeline-current-time {
+	position: absolute;
+	left: 44px;
+	right: 0;
+	height: 2px;
+	background-color: var(--interactive-accent);
+	z-index: 5;
+	pointer-events: none;
+}
+
+.gc-sidebar__timeline-current-time::before {
+	content: '';
+	position: absolute;
+	left: -5px;
+	top: -3px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: var(--interactive-accent);
+}
+
+/* 时间格拖放高亮 */
+.gc-sidebar__timeline-time-slot.gc-sidebar__time-slot--drag-over {
+	background-color: var(--background-modifier-hover);
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: -2px;
+}
+
+/* 全天区域拖放高亮 */
+.gc-sidebar__timeline-allday.gc-sidebar__all-day--drag-over {
+	background-color: var(--background-modifier-hover);
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: -2px;
+	border-radius: 4px;
+}
+
+/* 空时间格 "+" 创建按钮 */
+.gc-sidebar__timeline-slot-create {
+	flex: 1;
+	min-height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: background-color 0.15s;
+}
+
+.gc-sidebar__timeline-slot-create:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-sidebar__timeline-slot-create .lucide-plus {
+	width: 16px;
+	height: 16px;
+	color: var(--text-muted);
+	opacity: 0.6;
+}
+
+.gc-sidebar__timeline-slot-create:hover .lucide-plus {
+	opacity: 1;
+	color: var(--interactive-accent);
 }

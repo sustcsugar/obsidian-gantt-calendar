@@ -9,6 +9,7 @@ import { WeekViewSettingsBuilder } from './builders/WeekViewSettingsBuilder';
 import { MonthViewSettingsBuilder } from './builders/MonthViewSettingsBuilder';
 import { YearViewSettingsBuilder } from './builders/YearViewSettingsBuilder';
 import { GanttViewSettingsBuilder } from './builders/GanttViewSettingsBuilder';
+import { SidebarViewSettingsBuilder } from './builders/SidebarViewSettingsBuilder';
 import { SyncSettingsBuilder } from './builders/SyncSettingsBuilder';
 import type { BuilderConfig } from './types';
 
@@ -110,6 +111,14 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 			onRefreshSettings: refreshCallback
 		});
 		ganttViewBuilder.render();
+
+		// ===== 侧边栏设置 =====
+		const sidebarViewBuilder = new SidebarViewSettingsBuilder({
+			containerEl,
+			plugin: this.plugin,
+			onRefreshSettings: refreshCallback
+		});
+		sidebarViewBuilder.render();
 
 		// ===== 同步设置 =====
 		const syncSettingsBuilder = new SyncSettingsBuilder({

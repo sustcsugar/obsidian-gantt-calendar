@@ -1,4 +1,6 @@
 import { GC_VIEW_ID, GCMainView } from '../GCMainView';
+import { GC_SIDEBAR_VIEW_ID } from '../GCSidebarView';
+import { activateSidebarView } from '../managers/ViewManager';
 import type GanttCalendarPlugin from '../../main';
 
 /**
@@ -31,6 +33,15 @@ export function registerCommonCommands(plugin: GanttCalendarPlugin): void {
 			if (view) {
 				view.switchView('task');
 			}
+		}
+	});
+
+	// 打开侧边栏视图
+	plugin.addCommand({
+		id: 'open-sidebar-view',
+		name: '打开侧边栏',
+		callback: async () => {
+			await activateSidebarView(plugin.app);
 		}
 	});
 

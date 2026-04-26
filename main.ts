@@ -1,5 +1,6 @@
 import { App, Plugin, Notice } from 'obsidian';
 import { GCMainView, GC_VIEW_ID } from './src/GCMainView';
+import { GCSidebarView, GC_SIDEBAR_VIEW_ID } from './src/GCSidebarView';
 import { GanttCalendarSettingTab } from './src/settings';
 import type { GanttCalendarSettings } from './src/settings/types';
 import { TaskStore } from './src/TaskStore';
@@ -55,6 +56,7 @@ export default class GanttCalendarPlugin extends Plugin {
 
 		// 6. 注册视图
 		this.registerView(GC_VIEW_ID, (leaf) => new GCMainView(leaf, this));
+		this.registerView(GC_SIDEBAR_VIEW_ID, (leaf) => new GCSidebarView(leaf, this));
 
 		// 7. 添加功能区（ribbon 图标和状态栏）
 		this.registerUIElements();
@@ -78,6 +80,7 @@ export default class GanttCalendarPlugin extends Plugin {
 		this.taskCache?.clear();
 		TooltipManager.reset();
 		this.app.workspace.getLeavesOfType(GC_VIEW_ID).forEach(leaf => leaf.detach());
+		this.app.workspace.getLeavesOfType(GC_SIDEBAR_VIEW_ID).forEach(leaf => leaf.detach());
 	}
 
 	// ===== 公共方法（保持向后兼容） =====
@@ -145,7 +148,7 @@ export default class GanttCalendarPlugin extends Plugin {
 	 */
 	private registerUIElements(): void {
 		// 丝带图标
-		const ribbonIconEl = this.addRibbonIcon('calendar-days', '甘特日历', () => {
+		const ribbonIconEl = this.addRibbonIcon('goal', '甘特日历', () => {
 			this.activateView();
 		});
 		ribbonIconEl.addClass('gantt-calendar-ribbon');
