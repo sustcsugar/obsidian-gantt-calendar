@@ -12,6 +12,7 @@ import { deleteTask } from './commands/deleteTask';
 import { cancelTask } from './commands/cancelTask';
 import { restoreTask } from './commands/restoreTask';
 import { setTaskPriority } from './commands/setPriority';
+import { setTaskStatus } from './commands/setTaskStatus';
 import { postponeTask } from './commands/postponeTask';
 
 /**
@@ -92,6 +93,21 @@ export function registerTaskContextMenu(
 				item.setTitle(`${p.icon} ${p.label}`).onClick(() => {
 					setTaskPriority(app, task, p.value, enabledFormats, onRefresh);
 				});
+			});
+		});
+
+		// 分隔线
+		menu.addSeparator();
+
+		// 设置任务状态
+		menu.addItem((item) => {
+			item.setTitle('🔴 重要').onClick(() => {
+				setTaskStatus(app, task, 'important', enabledFormats, onRefresh);
+			});
+		});
+		menu.addItem((item) => {
+			item.setTitle('🟠 有疑问').onClick(() => {
+				setTaskStatus(app, task, 'question', enabledFormats, onRefresh);
 			});
 		});
 
