@@ -28,6 +28,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	// 当前渲染日期（供 refreshTasks 使用）
 	private currentDate: Date = new Date();
 
+	// 当前拖拽悬停行的行元素数组（用于清除上一行的高亮）
+	private dragOverRowEls: HTMLElement[] | null = null;
+
 	// 时间轴专用配置（启用拖拽）
 	private timelineTaskConfig: TaskCardConfig = {
 		...WeekViewConfig,
@@ -407,32 +410,35 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	 * 设置时间格的拖放功能
 	 */
 	private setupDragDropForTimeSlot(slot: HTMLElement, hour: number, targetDate: Date, rowEls: HTMLElement[]): void {
-		let highlighted = false;
-
 		slot.addEventListener('dragover', (e: DragEvent) => {
 			e.preventDefault();
 			if (e.dataTransfer) {
 				e.dataTransfer.dropEffect = 'move';
 			}
-			if (!highlighted) {
+			// 切换高亮：先清除旧的，再设置新的
+			if (this.dragOverRowEls !== rowEls) {
+				if (this.dragOverRowEls) {
+					this.dragOverRowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
+				}
 				rowEls.forEach(el => el.addClass(WeekViewClasses.modifiers.dragOver));
-				highlighted = true;
+				this.dragOverRowEls = rowEls;
 			}
 		});
 
 		slot.addEventListener('dragleave', (e: DragEvent) => {
-			if (e.target === slot) {
+			const related = e.relatedTarget as HTMLElement | null;
+			if (related && !slot.contains(related)) {
 				rowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
-				highlighted = false;
+				if (this.dragOverRowEls === rowEls) {
+					this.dragOverRowEls = null;
+				}
 			}
 		});
 
 		slot.addEventListener('drop', async (e: DragEvent) => {
 			e.preventDefault();
-			if (highlighted) {
-				rowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
-				highlighted = false;
-			}
+			rowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
+			this.dragOverRowEls = null;
 
 			const taskId = e.dataTransfer?.getData('taskId');
 			if (!taskId) return;
