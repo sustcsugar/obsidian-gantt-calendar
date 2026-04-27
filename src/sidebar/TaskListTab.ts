@@ -146,29 +146,35 @@ export class TaskListTab {
 		const dropdown = container.createDiv('sidebar-dropdown');
 		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
 
-		for (const status of DEFAULT_TASK_STATUSES) {
-			const isSelected = this.statusFilter.selectedStatuses.includes(status.key);
-			const item = dropdown.createDiv('sidebar-dropdown-item');
-			item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
-			item.toggleClass('is-selected', isSelected);
+		const renderStatusItems = () => {
+			dropdown.empty();
+			for (const status of DEFAULT_TASK_STATUSES) {
+				const isSelected = this.statusFilter.selectedStatuses.includes(status.key);
+				const item = dropdown.createDiv('sidebar-dropdown-item');
+				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.toggleClass('is-selected', isSelected);
 
-			const checkbox = item.createEl('input', { type: 'checkbox' });
-			checkbox.checked = isSelected;
-			checkbox.style.margin = '0';
+				const checkbox = item.createEl('input', { type: 'checkbox' });
+				checkbox.checked = isSelected;
+				checkbox.style.margin = '0';
 
-			const label = item.createSpan({ text: status.name });
-			label.style.cssText = 'font-size:13px;';
+				const label = item.createSpan({ text: status.name });
+				label.style.cssText = 'font-size:13px;';
 
-			item.addEventListener('click', () => {
-				if (isSelected) {
-					this.statusFilter.selectedStatuses = this.statusFilter.selectedStatuses.filter(s => s !== status.key);
-				} else {
-					this.statusFilter.selectedStatuses.push(status.key);
-				}
-				this.renderTaskList();
-				dropdown.remove();
-			});
-		}
+				item.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if (isSelected) {
+						this.statusFilter.selectedStatuses = this.statusFilter.selectedStatuses.filter(s => s !== status.key);
+					} else {
+						this.statusFilter.selectedStatuses.push(status.key);
+					}
+					this.renderTaskList();
+					renderStatusItems();
+				});
+			}
+		};
+
+		renderStatusItems();
 
 		// 点击外部关闭
 		const closeHandler = (e: MouseEvent) => {
@@ -197,24 +203,30 @@ export class TaskListTab {
 		const dropdown = container.createDiv('sidebar-dropdown');
 		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
 
-		for (const p of priorities) {
-			const item = dropdown.createDiv('sidebar-dropdown-item');
-			item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
-			item.toggleClass('is-selected', this.priorityFilter === p.key);
+		const renderPriorityItems = () => {
+			dropdown.empty();
+			for (const p of priorities) {
+				const item = dropdown.createDiv('sidebar-dropdown-item');
+				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.toggleClass('is-selected', this.priorityFilter === p.key);
 
-			const icon = item.createSpan();
-			if (p.key !== 'all') setIcon(icon, 'flame');
-			icon.style.width = '16px';
+				const icon = item.createSpan();
+				if (p.key !== 'all') setIcon(icon, 'flame');
+				icon.style.width = '16px';
 
-			const label = item.createSpan({ text: p.label });
-			label.style.cssText = 'font-size:13px;';
+				const label = item.createSpan({ text: p.label });
+				label.style.cssText = 'font-size:13px;';
 
-			item.addEventListener('click', () => {
-				this.priorityFilter = p.key;
-				this.renderTaskList();
-				dropdown.remove();
-			});
-		}
+				item.addEventListener('click', (e) => {
+					e.stopPropagation();
+					this.priorityFilter = p.key;
+					this.renderTaskList();
+					renderPriorityItems();
+				});
+			}
+		};
+
+		renderPriorityItems();
 
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
@@ -385,24 +397,30 @@ export class TaskListTab {
 		const dropdown = container.createDiv('sidebar-dropdown');
 		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
 
-		for (const opt of options) {
-			const item = dropdown.createDiv('sidebar-dropdown-item');
-			item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
-			item.toggleClass('is-selected', this.dateFilter === opt.key);
+		const renderDateItems = () => {
+			dropdown.empty();
+			for (const opt of options) {
+				const item = dropdown.createDiv('sidebar-dropdown-item');
+				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.toggleClass('is-selected', this.dateFilter === opt.key);
 
-			const icon = item.createSpan();
-			setIcon(icon, opt.icon);
-			icon.style.width = '16px';
+				const icon = item.createSpan();
+				setIcon(icon, opt.icon);
+				icon.style.width = '16px';
 
-			const label = item.createSpan({ text: opt.label });
-			label.style.cssText = 'font-size:13px;';
+				const label = item.createSpan({ text: opt.label });
+				label.style.cssText = 'font-size:13px;';
 
-			item.addEventListener('click', () => {
-				this.dateFilter = opt.key;
-				this.renderTaskList();
-				dropdown.remove();
-			});
-		}
+				item.addEventListener('click', (e) => {
+					e.stopPropagation();
+					this.dateFilter = opt.key;
+					this.renderTaskList();
+					renderDateItems();
+				});
+			}
+		};
+
+		renderDateItems();
 
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
@@ -498,13 +516,29 @@ export class TaskListTab {
 				: this.dateFilter === 'week' ? (d: Date) => isThisWeek(d)
 				: isThisMonth;
 			result = result.filter(t => {
-				const dates = [t.dueDate, t.scheduledDate, t.startDate, t.createdDate];
+				const dates = [t.dueDate, t.scheduledDate, t.startDate, t.createdDate, t.completionDate];
 				return dates.some(d => d && matchFn(d));
 			});
 		}
 
-		// 排除已完成和已取消的任务（默认）
-		result = result.filter(t => !t.completed && !t.cancelled);
+		// 排除已完成和已取消的任务（但如果其完成/取消日期匹配当前日期筛选则保留）
+		// 当状态筛选明确选中了 done/canceled 时，不排除已完成/已取消的任务
+		const showCompleted = this.statusFilter.selectedStatuses.includes('done');
+		const showCanceled = this.statusFilter.selectedStatuses.includes('canceled');
+		if (!showCompleted && !showCanceled) {
+			const dateMatchFn = this.dateFilter !== 'all'
+				? (this.dateFilter === 'today' ? isToday
+					: this.dateFilter === 'week' ? (d: Date) => isThisWeek(d)
+					: isThisMonth)
+				: null;
+			result = result.filter(t => {
+				if (!t.completed && !t.cancelled) return true;
+				if (!dateMatchFn) return false;
+				if (t.completed && t.completionDate && dateMatchFn(t.completionDate)) return true;
+				if (t.cancelled && t.cancelledDate && dateMatchFn(t.cancelledDate)) return true;
+				return false;
+			});
+		}
 
 		return result;
 	}
