@@ -13,7 +13,10 @@ export type DateFieldType = 'createdDate' | 'startDate' | 'scheduledDate' | 'due
 export interface GanttCalendarSettings {
 	mySetting: string;
 	startOnMonday: boolean;
+	showLunar: boolean;
+	showFestivals: boolean;
 	yearLunarFontSize: number;
+	monthLunarFontSize: number;
 	solarFestivalColor: string;
 	lunarFestivalColor: string;
 	solarTermColor: string;

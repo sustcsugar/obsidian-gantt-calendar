@@ -128,8 +128,9 @@ export class YearViewRenderer extends BaseViewRenderer {
 			const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));
 			const monthDiv = monthsGrid.createDiv(YearViewClasses.elements.monthCard);
 
-			// 始终显示农历
-			monthDiv.addClass('gc-year-view__month-card--show-lunar');
+			if (this.plugin.settings.showLunar) {
+				monthDiv.addClass('gc-year-view__month-card--show-lunar');
+			}
 
 			// 月份标题
 			const monthHeader = monthDiv.createDiv(YearViewClasses.elements.monthHeader);
@@ -171,10 +172,10 @@ export class YearViewRenderer extends BaseViewRenderer {
 				const dateNum = dayEl.createEl('div', { text: day.day.toString() });
 				dateNum.addClass(YearViewClasses.elements.dayNumber);
 
-				if (day.lunarText) {
+				if (day.lunarText && this.plugin.settings.showLunar) {
 					const lunarEl = dayEl.createEl('div', { text: day.lunarText });
 					lunarEl.addClass(YearViewClasses.elements.lunarText);
-					if (day.festival || day.festivalType) {
+					if ((day.festival || day.festivalType) && this.plugin.settings.showFestivals) {
 						lunarEl.addClass('festival');
 						if (day.festivalType) {
 							lunarEl.addClass(`festival-${day.festivalType}`);

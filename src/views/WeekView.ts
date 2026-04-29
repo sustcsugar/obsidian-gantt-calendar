@@ -188,7 +188,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			dayHeader.style.gridRow = '1';
 			dayHeader.createEl('div', { text: dayNames[day.weekday], cls: W.elements.dayName });
 			dayHeader.createEl('div', { text: day.day.toString(), cls: W.elements.dayNumber });
-			if (day.lunarText) {
+			if (day.lunarText && this.plugin.settings.showLunar) {
 				dayHeader.createEl('div', { text: day.lunarText, cls: W.elements.lunarText });
 			}
 			if (day.isToday) {
@@ -263,7 +263,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			const dayHeader = headerRow.createDiv(W.elements.headerCell);
 			dayHeader.createEl('div', { text: dayNames[day.weekday], cls: W.elements.dayName });
 			dayHeader.createEl('div', { text: day.day.toString(), cls: W.elements.dayNumber });
-			if (day.lunarText) {
+			if (day.lunarText && this.plugin.settings.showLunar) {
 				dayHeader.createEl('div', { text: day.lunarText, cls: W.elements.lunarText });
 			}
 			if (day.isToday) {

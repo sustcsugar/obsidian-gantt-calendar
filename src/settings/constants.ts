@@ -7,7 +7,10 @@ import { DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	mySetting: 'default',
 	startOnMonday: true,
+	showLunar: true,
+	showFestivals: true,
 	yearLunarFontSize: 10,
+	monthLunarFontSize: 10,
 	solarFestivalColor: '#e74c3c',  // 阳历节日 - 红色
 	lunarFestivalColor: '#e8a041',  // 农历节日 - 橙色
 	solarTermColor: '#52c41a',      // 节气 - 绿色

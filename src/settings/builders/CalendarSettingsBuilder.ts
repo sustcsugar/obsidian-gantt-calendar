@@ -14,7 +14,7 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('Daily Notes 设置', (group) => {
+		this.createSettingGroup('Daily Notes', (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -28,8 +28,8 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 			const manualSection = this.containerEl.createDiv();
 
 			const updateVisibility = () => {
-				obsidianSection.style.display = this.plugin.settings.followObsidianDailyNote ? '' : 'none';
-				manualSection.style.display = this.plugin.settings.followObsidianDailyNote ? 'none' : '';
+				obsidianSection.classList.toggle('gc-settings-section-hidden', !this.plugin.settings.followObsidianDailyNote);
+				manualSection.classList.toggle('gc-settings-section-hidden', this.plugin.settings.followObsidianDailyNote);
 			};
 
 			// 使用 Obsidian 日记设置开关
@@ -40,8 +40,7 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.followObsidianDailyNote)
 						.onChange(async (value) => {
 							this.plugin.settings.followObsidianDailyNote = value;
-							await this.plugin.saveSettings();
-							this.plugin.refreshCalendarViews();
+							await this.saveAndRefreshViews();
 							updateVisibility();
 						}))
 			);
@@ -85,7 +84,7 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 						.onChange(async (value) => {
 							const trimmed = value.trim().replace(/\/$/, '');
 							this.plugin.settings.dailyNotePath = trimmed;
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						});
 				});
 
@@ -97,7 +96,7 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 					.setValue(this.plugin.settings.dailyNoteNameFormat)
 					.onChange(async (value) => {
 						this.plugin.settings.dailyNoteNameFormat = value;
-						await this.saveAndRefresh();
+						await this.saveAndRefreshViews();
 					}));
 
 			new Setting(manualSection)
@@ -109,7 +108,7 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.dailyNoteTemplatePath)
 						.onChange(async (value) => {
 							this.plugin.settings.dailyNoteTemplatePath = value.trim();
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						});
 				});
 

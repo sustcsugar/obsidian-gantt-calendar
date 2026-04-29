@@ -2,130 +2,107 @@ import { App, PluginSettingTab, type IconName } from 'obsidian';
 import type GanttCalendarPlugin from '../../main';
 import { GeneralSettingsBuilder } from './builders/GeneralSettingsBuilder';
 import { CalendarSettingsBuilder } from './builders/CalendarSettingsBuilder';
-import { TaskSettingsBuilder } from './builders/TaskSettingsBuilder';
+import { CardDisplaySettingsBuilder } from './builders/CardDisplaySettingsBuilder';
 import { CalendarViewSettingsBuilder } from './builders/CalendarViewSettingsBuilder';
 import { DayViewSettingsBuilder } from './builders/DayViewSettingsBuilder';
-import { WeekViewSettingsBuilder } from './builders/WeekViewSettingsBuilder';
 import { MonthViewSettingsBuilder } from './builders/MonthViewSettingsBuilder';
 import { YearViewSettingsBuilder } from './builders/YearViewSettingsBuilder';
 import { GanttViewSettingsBuilder } from './builders/GanttViewSettingsBuilder';
-import { SidebarViewSettingsBuilder } from './builders/SidebarViewSettingsBuilder';
+import { TaskSettingsBuilder } from './builders/TaskSettingsBuilder';
+import { TaskStatusSettingsBuilder } from './builders/TaskStatusSettingsBuilder';
+import { FestivalColorBuilder } from './builders/FestivalColorBuilder';
 import { SyncSettingsBuilder } from './builders/SyncSettingsBuilder';
 import type { BuilderConfig } from './types';
 
 /**
  * Gantt Calendar Plugin Settings Tab
  *
- * 重构后的设置标签类，使用构建器模式管理各个设置区域
+ * 5 个水平 Tab 页签：通用 | 日历 | 视图 | 任务 | 同步
+ * 每个 Tab 内使用构建器模式组织设置区域
  */
 export class GanttCalendarSettingTab extends PluginSettingTab {
 	plugin: GanttCalendarPlugin;
+	private activeTabIndex = 0;
 
 	constructor(app: App, plugin: GanttCalendarPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
-	/**
-	 * 设置标签页图标（Obsidian 1.11+）
-	 */
 	override icon: IconName = 'calendar-days';
 
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// 创建刷新回调
-		const refreshCallback = () => {
-			this.display();
-		};
+		// —— Tab 导航栏 ——
+		const tabNav = containerEl.createDiv('gc-settings-tab-nav');
+		const tabs = ['通用', '日历', '视图', '任务', '同步'];
+		const contentContainers: HTMLElement[] = [];
 
-		// ===== 通用设置 =====
-		const generalBuilder = new GeneralSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		generalBuilder.render();
+		tabs.forEach((name, i) => {
+			const btn = tabNav.createEl('button', {
+				text: name,
+				cls: 'gc-settings-tab-button',
+			});
+			if (i === this.activeTabIndex) {
+				btn.addClass('gc-settings-tab-button--active');
+			}
+			btn.addEventListener('click', () => {
+				this.activeTabIndex = i;
+				this.display();
+			});
 
-		// ===== 日历设置 =====
-		const calendarBuilder = new CalendarSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
+			const content = containerEl.createDiv('gc-settings-tab-content');
+			if (i === this.activeTabIndex) {
+				content.addClass('gc-settings-tab-content--active');
+			}
+			contentContainers.push(content);
 		});
-		calendarBuilder.render();
 
-		// ===== 任务设置 =====
-		const taskSettingsBuilder = new TaskSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		taskSettingsBuilder.render();
+		const refresh = () => this.display();
 
-		// ===== 日历视图设置 =====
-		const calendarViewBuilder = new CalendarViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		calendarViewBuilder.render();
+		// —— 各 Tab 渲染 ——
+		this.renderGeneralTab(contentContainers[0], refresh);
+		this.renderCalendarTab(contentContainers[1], refresh);
+		this.renderViewsTab(contentContainers[2], refresh);
+		this.renderTasksTab(contentContainers[3], refresh);
+		this.renderSyncTab(contentContainers[4], refresh);
+	}
 
-		// ===== 日视图设置 =====
-		const dayViewBuilder = new DayViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		dayViewBuilder.render();
+	private cfg(containerEl: HTMLElement, refresh: () => void): BuilderConfig {
+		return { containerEl, plugin: this.plugin, onRefreshSettings: refresh };
+	}
 
-		// ===== 周视图设置 =====
-		const weekViewBuilder = new WeekViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		weekViewBuilder.render();
+	// Tab 0: 通用
+	private renderGeneralTab(el: HTMLElement, refresh: () => void): void {
+		new GeneralSettingsBuilder(this.cfg(el, refresh)).render();
+	}
 
-		// ===== 月视图设置 =====
-		const monthViewBuilder = new MonthViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		monthViewBuilder.render();
+	// Tab 1: 日历 (Daily Notes + 日历视图 + 节日颜色)
+	private renderCalendarTab(el: HTMLElement, refresh: () => void): void {
+		new CalendarSettingsBuilder(this.cfg(el, refresh)).render();
+		new CalendarViewSettingsBuilder(this.cfg(el, refresh)).render();
+		new FestivalColorBuilder(this.cfg(el, refresh)).render();
+	}
 
-		// ===== 年视图设置 =====
-		const yearViewBuilder = new YearViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		yearViewBuilder.render();
+	// Tab 2: 视图 (日/周/月/年/甘特图/侧边栏)
+	private renderViewsTab(el: HTMLElement, refresh: () => void): void {
+		new CardDisplaySettingsBuilder(this.cfg(el, refresh)).render();
+		new DayViewSettingsBuilder(this.cfg(el, refresh)).render();
+		new MonthViewSettingsBuilder(this.cfg(el, refresh)).render();
+		new YearViewSettingsBuilder(this.cfg(el, refresh)).render();
+		new GanttViewSettingsBuilder(this.cfg(el, refresh)).render();
+	}
 
-		// ===== 甘特图设置 =====
-		const ganttViewBuilder = new GanttViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		ganttViewBuilder.render();
+	// Tab 3: 任务
+	private renderTasksTab(el: HTMLElement, refresh: () => void): void {
+		new TaskSettingsBuilder(this.cfg(el, refresh)).render();
+		new TaskStatusSettingsBuilder(this.cfg(el, refresh)).render();
+	}
 
-		// ===== 侧边栏设置 =====
-		const sidebarViewBuilder = new SidebarViewSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		sidebarViewBuilder.render();
-
-		// ===== 同步设置 =====
-		const syncSettingsBuilder = new SyncSettingsBuilder({
-			containerEl,
-			plugin: this.plugin,
-			onRefreshSettings: refreshCallback
-		});
-		syncSettingsBuilder.render();
+	// Tab 4: 同步
+	private renderSyncTab(el: HTMLElement, refresh: () => void): void {
+		new SyncSettingsBuilder(this.cfg(el, refresh)).render();
 	}
 }

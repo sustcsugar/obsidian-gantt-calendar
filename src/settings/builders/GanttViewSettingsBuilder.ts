@@ -3,7 +3,7 @@ import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig, DateFieldType } from '../types';
 
 /**
- * 甘特图设置构建器
+ * 甘特图构建器
  */
 export class GanttViewSettingsBuilder extends BaseBuilder {
 	constructor(config: BuilderConfig) {
@@ -11,7 +11,7 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('甘特图设置', (group) => {
+		this.createSettingGroup('甘特图', (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -36,7 +36,7 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.ganttStartField)
 						.onChange(async (value) => {
 							this.plugin.settings.ganttStartField = value as DateFieldType;
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -56,7 +56,7 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.ganttEndField)
 						.onChange(async (value) => {
 							this.plugin.settings.ganttEndField = value as DateFieldType;
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 		});

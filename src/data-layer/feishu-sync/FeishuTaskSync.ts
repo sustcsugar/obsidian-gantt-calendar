@@ -140,7 +140,10 @@ export class FeishuTaskSync {
                 }
             }
 
-            // 5. 保存状态
+            // 5. 清理僵尸记录
+            this.purgeStaleRecords(feishuTasks);
+
+            // 6. 保存状态
             onProgress?.('🔄 飞书同步: 保存状态...');
             await this.state.save();
 
@@ -242,7 +245,10 @@ export class FeishuTaskSync {
                 }
             }
 
-            // 6. 保存状态
+            // 6. 清理僵尸记录
+            this.purgeStaleRecords(feishuTasks);
+
+            // 7. 保存状态
             onProgress?.('🧪 测试同步: 保存状态...');
             await this.state.save();
 
@@ -707,6 +713,18 @@ export class FeishuTaskSync {
 
         result.conflicted++;
         Logger.info('FeishuTaskSync', `Conflict resolved via ${this.options.conflictStrategy}: ${task.description}`);
+    }
+
+    /** 清除飞书侧已不存在的僵尸同步记录 */
+    private purgeStaleRecords(feishuTasks: FeishuTaskRaw[]): void {
+        const feishuGuids = new Set(feishuTasks.map(t => t.guid));
+        const staleGuids = this.state.getAllGuids().filter(g => !feishuGuids.has(g));
+        if (staleGuids.length > 0) {
+            for (const guid of staleGuids) {
+                this.state.removeRecord(guid);
+            }
+            Logger.info('FeishuTaskSync', `Purged ${staleGuids.length} stale sync state records`);
+        }
     }
 
     /** 清理飞书侧已删除的残留 GUID */

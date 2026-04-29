@@ -2,6 +2,7 @@ import { formatDate } from '../dateUtils/dateUtilsIndex';
 import type { TaskViewRenderer } from '../views/TaskView';
 import { renderStatusFilterButton } from './components/status-filter';
 import { renderRefreshButton } from './components/refresh-button';
+import { renderSettingsButton } from './components/settings-button';
 import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderFieldSelector } from './components/field-selector';
@@ -124,6 +125,11 @@ export class ToolbarRightTask {
 				plugin: plugin,
 				buttonClass: ToolbarClasses.components.navButtons.btn
 			});
+		}
+
+		// 设置按钮
+		if (plugin) {
+			renderSettingsButton(container, plugin);
 		}
 
 		// 刷新按钮（所有视图共有，始终在最右边）

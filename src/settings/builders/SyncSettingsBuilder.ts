@@ -76,7 +76,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 							.setValue(syncConfig.feishuSyncTargetFile || 'gantt-calendar-feishu-sync.md')
 							.onChange(async (value: string) => {
 								this.updateSyncConfig({ feishuSyncTargetFile: value || 'gantt-calendar-feishu-sync.md' });
-								await this.saveAndRefresh();
+								await this.saveAndRefreshViews();
 							});
 					})
 			);
@@ -94,7 +94,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						.setValue(syncConfig.syncDirection)
 						.onChange(async (value) => {
 							this.updateSyncConfig({ syncDirection: value as 'bidirectional' | 'import-only' | 'export-only' });
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -111,7 +111,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						.setValue(syncConfig.conflictResolution)
 						.onChange(async (value) => {
 							this.updateSyncConfig({ conflictResolution: value as 'local-win' | 'remote-win' | 'newest-win' });
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -125,7 +125,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						.setDynamicTooltip()
 						.onChange(async (value: number) => {
 							this.updateSyncConfig({ syncInterval: value });
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -136,12 +136,14 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					.addButton(button => button
 						.setButtonText('立即同步')
 						.setClass('mod-cta')
+						.setDisabled(!syncConfig.api?.tasklistGuid)
 						.onClick(async () => {
 							await this.runManualSync();
 						}))
 					.addButton(button => button
 						.setButtonText('测试同步')
 						.setTooltip('双向同步截止时间最新的 5 条真实任务，用于调试')
+						.setDisabled(!syncConfig.api?.tasklistGuid)
 						.onClick(async () => {
 							await this.runTestSync();
 						}))
@@ -160,139 +162,108 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 		// 未获取清单时的提示
 		if (taskLists.length === 0) {
-			const hintEl = document.createElement('div');
-			hintEl.style.marginTop = '12px';
-			hintEl.style.padding = '10px 14px';
-			hintEl.style.borderRadius = '6px';
-			hintEl.style.backgroundColor = 'var(--background-secondary)';
-			hintEl.style.color = 'var(--text-muted)';
-			hintEl.style.fontSize = '13px';
+			const hintEl = container.createDiv('gc-sync-hint');
 			hintEl.setText('↑ 请先点击上方「获取任务清单」按钮获取清单列表，然后选择同步目标清单。');
-			container.appendChild(hintEl);
 			return;
 		}
 
-		// 已获取清单但未选择时的提示
+		// 清单选择状态提示
 		if (!selectedGuid) {
-			const hintEl = document.createElement('div');
-			hintEl.style.marginTop = '12px';
-			hintEl.style.padding = '10px 14px';
-			hintEl.style.borderRadius = '6px';
-			hintEl.style.border = '1px solid var(--interactive-accent)';
-			hintEl.style.backgroundColor = 'var(--interactive-accent-hover)';
-			hintEl.style.color = 'var(--text-on-accent)';
-			hintEl.style.fontSize = '13px';
-			hintEl.style.fontWeight = '500';
-			hintEl.setText('⚠ 请在下方选择一个任务清单作为同步目标。未选择清单时无法使用同步功能。');
-			container.appendChild(hintEl);
+			const hintEl = container.createDiv('gc-sync-hint gc-sync-hint--warning');
+			hintEl.setText('⚠ 未选择任务清单，无法执行任务同步功能。请在下方选择一个任务清单作为同步目标。');
+		} else {
+			const selectedList = taskLists.find((tl: FeishuTaskList) => tl.guid === selectedGuid);
+			const hintEl = container.createDiv('gc-sync-hint gc-sync-hint--success');
+			const listName = selectedList?.name || selectedGuid;
+			const prefix = hintEl.createSpan();
+			prefix.setText('✓ 已选择任务清单，可以执行任务同步功能。选择任务清单「');
+			const nameSpan = hintEl.createSpan('gc-sync-hint__list-name');
+			nameSpan.setText(listName);
+			const suffix = hintEl.createSpan();
+			suffix.setText('」作为同步目标。');
 		}
 
 		// 清单卡片列表
-		const taskListEl = document.createElement('div');
-		taskListEl.className = 'feishu-task-list';
-		taskListEl.style.marginTop = '18px';
-		taskListEl.style.marginBottom = '18px';
+		const taskListEl = container.createDiv('gc-sync-tasklist');
 
-		const headerEl = document.createElement('div');
-		headerEl.style.fontWeight = 'bold';
-		headerEl.style.marginBottom = '12px';
-		headerEl.style.fontSize = '14px';
+		const headerEl = taskListEl.createDiv('gc-sync-tasklist__header');
 		headerEl.textContent = '飞书任务清单列表 (' + taskLists.length + ' 个)';
-		taskListEl.appendChild(headerEl);
 
-		const listEl = document.createElement('div');
-		listEl.style.display = 'flex';
-		listEl.style.flexWrap = 'wrap';
-		listEl.style.gap = '12px';
-		listEl.style.maxHeight = '300px';
-		listEl.style.overflowY = 'auto';
+		const listEl = taskListEl.createDiv('gc-sync-tasklist__grid');
 
 		taskLists.forEach((tl) => {
 			const isSelected = tl.guid === selectedGuid;
-			const itemEl = document.createElement('div');
-			itemEl.style.padding = '12px';
-			itemEl.style.border = isSelected
-				? '2px solid var(--interactive-accent)'
-				: '1px solid var(--background-modifier-border)';
-			itemEl.style.borderRadius = '6px';
-			itemEl.style.backgroundColor = isSelected
-				? 'var(--interactive-accent-hover)'
-				: 'var(--background-secondary)';
-			itemEl.style.minWidth = '220px';
-			itemEl.style.flex = '0 0 auto';
+			const itemEl = listEl.createDiv('gc-sync-tasklist-card');
+			if (isSelected) {
+				itemEl.addClass('gc-sync-tasklist-card--selected');
+			}
 
 			// 标题
-			const titleDiv = itemEl.createDiv();
-			titleDiv.style.fontWeight = '500';
+			const titleDiv = itemEl.createDiv('gc-sync-tasklist-card__name');
 			titleDiv.setText((isSelected ? '✓ ' : '') + tl.name);
 
 			// GUID
-			const idDiv = itemEl.createDiv();
-			idDiv.style.fontSize = '11px';
-			idDiv.style.fontFamily = 'monospace';
-			idDiv.style.color = 'var(--text-muted)';
-			idDiv.style.marginTop = '4px';
-			idDiv.style.wordBreak = 'break-all';
+			const idDiv = itemEl.createDiv('gc-sync-tasklist-card__guid');
 			idDiv.setText(tl.guid);
 
 			// 创建者
 			if (tl.creator) {
-				const creatorDiv = itemEl.createDiv();
-				creatorDiv.style.fontSize = '12px';
-				creatorDiv.style.color = 'var(--text-muted)';
-				creatorDiv.style.marginTop = '4px';
+				const creatorDiv = itemEl.createDiv('gc-sync-tasklist-card__meta');
 				creatorDiv.setText('创建者: ' + tl.creator.id);
 			}
 
 			// 成员数
 			if (tl.members && tl.members.length > 0) {
-				const memberDiv = itemEl.createDiv();
-				memberDiv.style.fontSize = '12px';
-				memberDiv.style.color = 'var(--text-muted)';
-				memberDiv.style.marginTop = '4px';
+				const memberDiv = itemEl.createDiv('gc-sync-tasklist-card__meta');
 				memberDiv.setText('成员: ' + tl.members.length + ' 人');
 			}
 
 			// 按钮行
-			const btnRow = document.createElement('div');
-			btnRow.style.marginTop = '10px';
-			btnRow.style.display = 'flex';
-			btnRow.style.gap = '8px';
-			btnRow.style.alignItems = 'center';
+			const btnRow = itemEl.createDiv('gc-sync-tasklist-card__actions');
 
-			// 选择 / 已选择
-			const selectBtn = document.createElement('button');
-			selectBtn.textContent = isSelected ? '已选择' : '选择';
-			selectBtn.style.padding = '6px 16px';
-			selectBtn.style.fontSize = '12px';
-			selectBtn.className = isSelected ? 'mod-cta' : '';
-			selectBtn.onclick = async () => {
-				if (!syncConfig.api) syncConfig.api = {} as any;
-				syncConfig.api.tasklistGuid = tl.guid;
-				await this.plugin.saveSettings();
-				new Notice('已选择任务清单：' + tl.name);
-				this.refreshSettingsPanel();
-			};
-			btnRow.appendChild(selectBtn);
+			// 选择/取消选择按钮
+			const selectBtn = btnRow.createEl('button');
+			if (isSelected) {
+				selectBtn.textContent = '取消选择';
+				selectBtn.onclick = async () => {
+					if (!syncConfig.api) syncConfig.api = {} as any;
+					syncConfig.api.tasklistGuid = '';
+					await this.saveAndRefreshAll();
+					new Notice('已取消任务清单选择，同步功能已暂停。');
+				};
+			} else {
+				selectBtn.textContent = '选择';
+				selectBtn.onclick = async () => {
+					const switching = !!selectedGuid;
+					if (switching) {
+						const confirmed = confirm(
+							'⚠️ 切换任务清单将触发全量同步\n\n' +
+							'为方便管理，Obsidian 中的任务仅会同步到当前选中的目标清单中，\n' +
+							'不会与飞书中其他清单的任务混淆。\n\n' +
+							'确定切换到清单「' + tl.name + '」吗？'
+						);
+						if (!confirmed) return;
+					}
+					if (!syncConfig.api) syncConfig.api = {} as any;
+					syncConfig.api.tasklistGuid = tl.guid;
+					await this.saveAndRefreshAll();
+					new Notice('已切换任务清单：' + tl.name + (switching ? '（将执行全量同步）' : ''));
+				};
+			}
 
 			// 测试写入
-			const testBtn = document.createElement('button');
+			const testBtn = btnRow.createEl('button');
 			testBtn.textContent = '测试写入';
 			testBtn.title = '向该清单写入 5 条虚拟任务，仅验证 API 连通性';
-			testBtn.style.padding = '6px 16px';
-			testBtn.style.fontSize = '12px';
 			testBtn.onclick = async () => {
 				await this.testSyncToTasklist(tl.guid, tl.name);
 			};
-			btnRow.appendChild(testBtn);
 
 			// 清除任务
-			const clearBtn = document.createElement('button');
+			const clearBtn = btnRow.createEl('button');
 			clearBtn.textContent = '清除任务';
 			clearBtn.title = '删除该清单中的所有飞书任务（不可恢复）';
 			clearBtn.className = 'mod-warning';
-			clearBtn.style.padding = '6px 16px';
-			clearBtn.style.fontSize = '12px';
 			clearBtn.onclick = async () => {
 				const confirmed = confirm(
 					'确定要清除清单「' + tl.name + '」中的所有任务吗？\n\n此操作将删除该清单下的所有飞书任务，不可恢复！'
@@ -300,14 +271,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				if (!confirmed) return;
 				await this.clearFeishuTasklistTasks(tl.guid, tl.name);
 			};
-			btnRow.appendChild(clearBtn);
-
-			itemEl.appendChild(btnRow);
-			listEl.appendChild(itemEl);
 		});
-
-		taskListEl.appendChild(listEl);
-		container.appendChild(taskListEl);
 	}
 
 	// ==================== 飞书账号设置 ====================
@@ -348,7 +312,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						this.updateSyncConfig({
 							api: { ...syncConfig.api, clientId: value, appId: value }
 						});
-						await this.saveAndRefresh();
+						await this.saveAndRefreshViews();
 					}))
 		);
 
@@ -363,7 +327,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						this.updateSyncConfig({
 							api: { ...syncConfig.api, clientSecret: value, appSecret: value }
 						});
-						await this.saveAndRefresh();
+						await this.saveAndRefreshViews();
 					}))
 				.then(setting => {
 					const inputEl = setting.controlEl.querySelector('input');
@@ -384,7 +348,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						this.updateSyncConfig({
 							api: { ...syncConfig.api, redirectUri: value }
 						});
-						await this.saveAndRefresh();
+						await this.saveAndRefreshViews();
 					}))
 		);
 
@@ -483,8 +447,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 									userName: undefined,
 								}
 							});
-							await this.saveAndRefresh();
-							this.refreshSettingsPanel();
+							await this.saveAndRefreshViews();
+							await this.saveAndRefreshAll();
 							new Notice('已取消飞书授权');
 						}))
 			);
@@ -560,9 +524,9 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			}
 
 			this.updateSyncConfig({ api: updateData });
-			await this.saveAndRefresh();
+			await this.saveAndRefreshViews();
 			new Notice('飞书授权成功！');
-			this.refreshSettingsPanel();
+			await this.saveAndRefreshAll();
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 			Logger.error('SyncSettingsBuilder', 'Authorization failed', error);
@@ -614,9 +578,9 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				}
 			});
 
-			await this.saveAndRefresh();
+			await this.saveAndRefreshViews();
 			new Notice('令牌刷新成功！');
-			this.refreshSettingsPanel();
+			await this.saveAndRefreshAll();
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 			new Notice('刷新失败: ' + errorMsg + '，请重新授权');
@@ -925,8 +889,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					taskListsFetchedAt: Date.now(),
 				}
 			});
-			await this.saveAndRefresh();
-			this.refreshSettingsPanel();
+			await this.saveAndRefreshViews();
+			await this.saveAndRefreshAll();
 
 			if (taskLists.length === 0) {
 				new Notice('未找到任务清单，请先在飞书中创建至少一个任务清单，然后重新获取');

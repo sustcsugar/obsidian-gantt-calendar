@@ -201,10 +201,10 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				const separator = dayHeader.createEl('span');
 				separator.addClass(MonthViewClasses.elements.dayHeaderSeparator);
 
-				if (day.lunarText) {
+				if (day.lunarText && this.plugin.settings.showLunar) {
 					const lunarEl = dayHeader.createEl('div', { text: day.lunarText });
 					lunarEl.addClass(MonthViewClasses.elements.lunarText);
-					if (day.festival || day.festivalType) {
+					if ((day.festival || day.festivalType) && this.plugin.settings.showFestivals) {
 						lunarEl.addClass(MonthViewClasses.modifiers.festival);
 						if (day.festivalType) {
 							// 根据节日类型添加对应的修饰符类名
@@ -370,5 +370,14 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				this.refreshTasks();
 			},
 		}).render();
+	}
+
+	public applyLunarFontSize(container: HTMLElement): void {
+		const fontSize = this.plugin.settings.monthLunarFontSize || 10;
+		const selector = "." + MonthViewClasses.elements.lunarText;
+		const texts = container.querySelectorAll(selector);
+		texts.forEach((el: Element) => {
+			(el as HTMLElement).style.fontSize = fontSize + "px";
+		});
 	}
 }

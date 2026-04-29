@@ -5,7 +5,6 @@ import { TIMEZONE_OPTIONS } from '../../dateUtils/timezone';
 
 /**
  * 通用设置构建器
- * 包含默认视图设置
  */
 export class GeneralSettingsBuilder extends BaseBuilder {
 	constructor(config: BuilderConfig) {
@@ -13,9 +12,8 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		// 使用 SettingGroup 替代 h1 标题（兼容旧版本）
-		this.createSettingGroup('通用设置', (group) => {
-			// 统一添加设置项的方法
+		// ===== 通用 =====
+		this.createSettingGroup('通用', (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -40,7 +38,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.defaultView)
 						.onChange(async (value) => {
 							this.plugin.settings.defaultView = value as 'day' | 'week' | 'month' | 'year' | 'task' | 'gantt';
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -52,7 +50,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.enableDebugMode)
 						.onChange(async (value) => {
 							this.plugin.settings.enableDebugMode = value;
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -64,40 +62,51 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.showViewNavButtonText)
 						.onChange(async (value) => {
 							this.plugin.settings.showViewNavButtonText = value;
-							await this.saveAndRefresh();
+							await this.saveAndRefreshViews();
 						}))
 			);
-		// 时区设置
-				addSetting(setting =>
-					setting.setName('时区')
-						.setDesc('选择日历视图使用的时区。影响"今天"的判定和日历高亮')
-						.addDropdown(drop => {
-							// 添加选项
-							for (const [key, label] of Object.entries(TIMEZONE_OPTIONS)) {
-								drop.addOption(key, label);
-							}
-							// 设置当前值
-							const currentValue = this.plugin.settings.timezoneOffset;
-							drop.setValue(currentValue === null ? 'null' : String(currentValue));
-							drop.onChange(async (value) => {
-								this.plugin.settings.timezoneOffset = value === 'null' ? null : parseInt(value, 10);
-								await this.saveAndRefresh();
-							});
-						})
-				);
-				// 时间格式
-				addSetting(setting =>
-					setting.setName('时间格式')
-						.setDesc('任务时间的显示格式，影响弹窗和视图中时间的展示方式')
-						.addDropdown(drop => drop
-							.addOption('24h', '24 小时制 (14:30)')
-							.addOption('12h', '12 小时制 (2:30 PM)')
-							.setValue(this.plugin.settings.timeFormat || '24h')
-							.onChange(async (value) => {
-								this.plugin.settings.timeFormat = value as '24h' | '12h';
-								await this.saveAndRefresh();
-							}))
-				);
-			});
+		});
+
+		// ===== 时区与格式 =====
+		this.createSettingGroup('时区与格式', (group) => {
+			const addSetting = (cb: (setting: Setting) => void) => {
+				if (this.isSettingGroupAvailable()) {
+					(group as SettingGroup).addSetting(cb);
+				} else {
+					cb(new Setting(this.containerEl));
+				}
+			};
+
+			// 时区设置
+			addSetting(setting =>
+				setting.setName('时区')
+					.setDesc('选择日历视图使用的时区。影响"今天"的判定和日历高亮')
+					.addDropdown(drop => {
+						for (const [key, label] of Object.entries(TIMEZONE_OPTIONS)) {
+							drop.addOption(key, label);
+						}
+						const currentValue = this.plugin.settings.timezoneOffset;
+						drop.setValue(currentValue === null ? 'null' : String(currentValue));
+						drop.onChange(async (value) => {
+							this.plugin.settings.timezoneOffset = value === 'null' ? null : parseInt(value, 10);
+							await this.saveAndRefreshViews();
+						});
+					})
+			);
+
+			// 时间格式
+			addSetting(setting =>
+				setting.setName('时间格式')
+					.setDesc('任务时间的显示格式，影响弹窗和视图中时间的展示方式')
+					.addDropdown(drop => drop
+						.addOption('24h', '24 小时制 (14:30)')
+						.addOption('12h', '12 小时制 (2:30 PM)')
+						.setValue(this.plugin.settings.timeFormat || '24h')
+						.onChange(async (value) => {
+							this.plugin.settings.timeFormat = value as '24h' | '12h';
+							await this.saveAndRefreshViews();
+						}))
+			);
+		});
 	}
 }

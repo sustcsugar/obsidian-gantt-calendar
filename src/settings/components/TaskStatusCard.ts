@@ -11,6 +11,7 @@ export interface TaskStatusCardConfig {
 	plugin: GanttCalendarPlugin;
 	status: TaskStatus;
 	onDelete?: () => Promise<void> | void;
+	onColorChange?: () => Promise<void> | void;
 }
 
 /**
@@ -42,79 +43,30 @@ export class TaskStatusCard {
 		const isCustom = !status.isDefault;
 
 		// 卡片容器
-		const card = container.createDiv();
-		card.addClass('task-status-card');
-		card.style.display = 'flex';
-		card.style.flexDirection = 'column';
-		card.style.gap = '12px';
-		card.style.padding = '16px';
-		card.style.background = 'var(--background-secondary)';
-		card.style.borderRadius = '8px';
-		card.style.border = '1px solid var(--background-modifier-border)';
-		card.style.minWidth = '200px';
-		card.style.flex = '1';
-		card.style.maxWidth = 'none';
+		const card = container.createDiv('task-status-card');
 
 		// 顶部：状态图标和名称
-		const header = card.createDiv();
-		header.style.display = 'flex';
-		header.style.alignItems = 'center';
-		header.style.gap = '10px';
-		header.style.marginBottom = '4px';
+		const header = card.createDiv('gc-tsc-header');
 
 		// 状态图标（复选框示例）
-		this.iconDiv = header.createEl('div');
-		this.iconDiv.style.display = 'flex';
-		this.iconDiv.style.alignItems = 'center';
-		this.iconDiv.style.justifyContent = 'center';
-		this.iconDiv.style.width = '32px';
-		this.iconDiv.style.height = '24px';
-		this.iconDiv.style.border = '1px solid var(--background-modifier-border)';
-		this.iconDiv.style.borderRadius = '4px';
+		this.iconDiv = header.createEl('div', 'gc-tsc-icon');
 		this.updateIconPreview();
 
 		// 状态名称
 		const nameDiv = header.createEl('div', {
 			text: `${status.name} (${status.key})`,
-			cls: 'task-status-name'
+			cls: 'task-status-name gc-tsc-name'
 		});
-		nameDiv.style.fontWeight = '500';
-		nameDiv.style.fontSize = '14px';
 
 		// 删除按钮（仅自定义状态）
 		if (isCustom && onDelete) {
-			const deleteButton = header.createEl('button');
+			const deleteButton = header.createEl('button', 'gc-tsc-delete');
 			deleteButton.setText('×');
-			deleteButton.style.marginLeft = 'auto';
-			deleteButton.style.width = '24px';
-			deleteButton.style.height = '24px';
-			deleteButton.style.padding = '0';
-			deleteButton.style.fontSize = '18px';
-			deleteButton.style.lineHeight = '1';
-			deleteButton.style.borderRadius = '4px';
-			deleteButton.style.border = 'none';
-			deleteButton.style.background = 'transparent';
-			deleteButton.style.color = 'var(--text-muted)';
-			deleteButton.style.cursor = 'pointer';
-			deleteButton.style.display = 'flex';
-			deleteButton.style.alignItems = 'center';
-			deleteButton.style.justifyContent = 'center';
 			deleteButton.addEventListener('click', onDelete);
-			deleteButton.addEventListener('mouseenter', () => {
-				deleteButton.style.background = 'var(--interactive-accent-hover)';
-				deleteButton.style.color = 'var(--text-on-accent)';
-			});
-			deleteButton.addEventListener('mouseleave', () => {
-				deleteButton.style.background = 'transparent';
-				deleteButton.style.color = 'var(--text-muted)';
-			});
 		}
 
 		// ========== 主题分离的颜色设置区域 ==========
-		const themeSection = card.createDiv();
-		themeSection.style.display = 'flex';
-		themeSection.style.flexDirection = 'column';
-		themeSection.style.gap = '12px';
+		const themeSection = card.createDiv('gc-tsc-theme');
 
 		// 亮色主题区域
 		this.renderThemeSection({
@@ -127,10 +79,7 @@ export class TaskStatusCard {
 		});
 
 		// 分隔线
-		const divider = themeSection.createEl('hr');
-		divider.style.border = 'none';
-		divider.style.borderTop = '1px solid var(--background-modifier-border)';
-		divider.style.margin = '0';
+		const divider = themeSection.createEl('hr', 'gc-tsc-divider');
 
 		// 暗色主题区域
 		this.renderThemeSection({
@@ -156,8 +105,6 @@ export class TaskStatusCard {
 			this.iconDiv.style.background = colors.backgroundColor;
 			this.iconDiv.style.color = colors.textColor;
 		}
-		this.iconDiv.style.fontSize = '10px';
-		this.iconDiv.style.fontWeight = 'bold';
 		this.iconDiv.textContent = `[${status.symbol}]`;
 	}
 
@@ -165,10 +112,8 @@ export class TaskStatusCard {
 	 * 获取指定主题的颜色配置
 	 */
 	private getThemeColors(status: TaskStatus, themeMode: 'light' | 'dark'): ThemeColors | null {
-		// 确保状态有颜色配置
 		this.ensureThemeColors(status);
 
-		// 处理新旧数据格式兼容
 		if (status.lightColors && status.darkColors) {
 			return themeMode === 'dark' ? status.darkColors : status.lightColors;
 		} else if (status.backgroundColor && status.textColor) {
@@ -190,30 +135,18 @@ export class TaskStatusCard {
 	}): void {
 		const { container, plugin, status, themeMode, icon, label } = options;
 
-		// 主题区域容器
-		const themeDiv = container.createDiv();
-		themeDiv.style.display = 'flex';
-		themeDiv.style.flexDirection = 'column';
-		themeDiv.style.gap = '8px';
+		const themeDiv = container.createDiv('gc-tsc-theme-section');
 
 		// 主题标题（图标 + 标签）
-		const themeHeader = themeDiv.createDiv();
-		themeHeader.style.display = 'flex';
-		themeHeader.style.alignItems = 'center';
-		themeHeader.style.gap = '6px';
-		themeHeader.style.marginBottom = '2px';
-
+		const themeHeader = themeDiv.createDiv('gc-tsc-theme-header');
 		themeHeader.createEl('span', { text: icon, cls: 'theme-icon' });
 		themeHeader.createEl('span', {
 			text: label,
-			cls: 'theme-label setting-item-description'
-		}).style.fontWeight = '500';
+			cls: 'theme-label setting-item-description gc-tsc-theme-label'
+		});
 
 		// 颜色设置行（背景色 + 文字色平行排列）
-		const colorRow = themeDiv.createDiv();
-		colorRow.style.display = 'flex';
-		colorRow.style.flexDirection = 'row';
-		colorRow.style.gap = '16px';
+		const colorRow = themeDiv.createDiv('gc-tsc-color-row');
 
 		// 获取当前主题的颜色
 		const colors = this.getThemeColors(status, themeMode);
@@ -255,53 +188,29 @@ export class TaskStatusCard {
 	}): void {
 		const { container, plugin, status, themeMode, colorType, label, currentColor } = options;
 
-		const colorSection = container.createDiv();
-		colorSection.style.display = 'flex';
-		colorSection.style.flexDirection = 'column';
-		colorSection.style.gap = '6px';
-		colorSection.style.flex = '1';
+		const colorSection = container.createDiv('gc-tsc-color-section');
 
 		// 标签行
-		const labelRow = colorSection.createDiv();
-		labelRow.style.display = 'flex';
-		labelRow.style.alignItems = 'center';
-		labelRow.style.gap = '6px';
-		labelRow.style.flexWrap = 'wrap';
+		const labelRow = colorSection.createDiv('gc-tsc-label-row');
 
 		const labelEl = labelRow.createEl('span', {
 			text: label,
-			cls: 'setting-item-description'
+			cls: 'setting-item-description gc-tsc-label-text'
 		});
-		labelEl.style.fontSize = '11px';
-		labelEl.style.fontWeight = '500';
 
 		// 创建一个包装容器来放置颜色输入和方块
-		const swatchWrapper = labelRow.createEl('div');
-		swatchWrapper.style.position = 'relative';
-		swatchWrapper.style.display = 'inline-block';
+		const swatchWrapper = labelRow.createEl('div', 'gc-tsc-swatch-wrapper');
 
-		// 隐藏的颜色输入（使用 visibility 而非 absolute 定位）
+		// 隐藏的颜色输入
 		const hiddenInput = swatchWrapper.createEl('input', {
 			type: 'color',
-			cls: 'task-status-color-input'
+			cls: 'task-status-color-input gc-tsc-hidden-input'
 		}) as HTMLInputElement;
 		hiddenInput.value = currentColor;
-		hiddenInput.style.position = 'absolute';
-		hiddenInput.style.width = '18px';
-		hiddenInput.style.height = '18px';
-		hiddenInput.style.opacity = '0';
-		hiddenInput.style.cursor = 'pointer';
-		hiddenInput.style.zIndex = '1';
 
 		// 颜色方块（视觉显示）
-		const swatch = swatchWrapper.createEl('div');
-		swatch.style.width = '18px';
-		swatch.style.height = '18px';
-		swatch.style.borderRadius = '3px';
+		const swatch = swatchWrapper.createEl('div', 'gc-tsc-swatch');
 		swatch.style.backgroundColor = currentColor;
-		swatch.style.border = '1px solid var(--background-modifier-border)';
-		swatch.style.cursor = 'pointer';
-		swatch.style.pointerEvents = 'none'; // 让点击事件穿透到 input
 
 		// 颜色变化处理
 		hiddenInput.addEventListener('change', async () => {
@@ -355,37 +264,34 @@ export class TaskStatusCard {
 		if (statusIndex !== -1) {
 			const targetStatus = plugin.settings.taskStatuses[statusIndex];
 
-			// 确保新格式颜色对象存在
 			this.ensureThemeColors(targetStatus);
 
-			// 更新颜色
 			const colorKey = themeMode === 'dark' ? 'darkColors' : 'lightColors';
 			(targetStatus[colorKey] as ThemeColors)[colorType] = color;
 
-			// 更新色卡显示
 			if (swatch) {
 				swatch.style.backgroundColor = color;
 			}
 
-			// 更新图标预览
 			this.updateIconPreview();
 
-			await plugin.saveSettings();
-			plugin.refreshCalendarViews();
+			if (this.config.onColorChange) {
+				await this.config.onColorChange();
+			} else {
+				await plugin.saveSettings();
+				plugin.refreshCalendarViews();
+			}
 		}
 	}
 
 	/**
 	 * 确保状态配置有主题颜色对象
-	 * 这个方法确保所有状态都有有效的 lightColors 和 darkColors
 	 */
 	private ensureThemeColors(status: TaskStatus): void {
-		// 如果已经有新格式且完整，就不需要做任何事
 		if (status.lightColors && status.darkColors) {
 			return;
 		}
 
-		// 如果使用旧格式，迁移到新格式
 		if (status.backgroundColor && status.textColor) {
 			if (!status.lightColors) {
 				status.lightColors = {
@@ -394,24 +300,21 @@ export class TaskStatusCard {
 				};
 			}
 			if (!status.darkColors) {
-				// 生成暗色主题默认值
 				status.darkColors = this.generateDarkColors(status.lightColors);
 			}
 			return;
 		}
 
-		// 如果没有任何颜色配置，初始化默认值
-		// 提供合理的默认值以确保总是有可用的颜色
 		if (!status.lightColors) {
-			status.lightColors = { 
-				backgroundColor: '#FFFFFF', 
-				textColor: '#333333' 
+			status.lightColors = {
+				backgroundColor: '#FFFFFF',
+				textColor: '#333333'
 			};
 		}
 		if (!status.darkColors) {
-			status.darkColors = { 
-				backgroundColor: '#2d333b', 
-				textColor: '#adbac7' 
+			status.darkColors = {
+				backgroundColor: '#2d333b',
+				textColor: '#adbac7'
 			};
 		}
 	}
@@ -420,8 +323,6 @@ export class TaskStatusCard {
 	 * 根据亮色主题颜色生成暗色主题颜色
 	 */
 	private generateDarkColors(lightColors: ThemeColors): ThemeColors {
-		// 简单的颜色转换：使用预设的暗色主题配色
-		// 这里可以根据亮色颜色智能生成暗色版本
 		return {
 			backgroundColor: '#2d333b',
 			textColor: '#adbac7'

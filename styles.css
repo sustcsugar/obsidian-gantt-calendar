@@ -2656,6 +2656,20 @@ Author: sugar
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
+/* Macaron color picker */
+.macaron-color-picker {
+	display: grid;
+	gap: 3px;
+}
+
+.task-macaron-swatch {
+	width: 14px;
+	height: 14px;
+	border-radius: 3px;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
 /* Task Status Setting */
 .task-status-setting {
 	margin-top: 12px;
@@ -2675,6 +2689,511 @@ Author: sugar
 .task-status-desc {
 	font-size: 12px;
 	color: var(--text-muted);
+}
+
+/* ========================================
+   Settings Tab Navigation (设置页 Tab 导航)
+   ======================================== */
+
+.gc-settings-tab-nav {
+	display: flex;
+	gap: 0;
+	border-bottom: 2px solid var(--background-modifier-border);
+	margin-bottom: var(--size-4-6);
+	padding: 0 var(--size-4-4);
+}
+
+.gc-settings-tab-button {
+	padding: var(--size-2-3) var(--size-4-4);
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-medium);
+	color: var(--text-muted);
+	cursor: pointer;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -2px;
+	transition: color 0.15s ease, border-color 0.15s ease;
+	white-space: nowrap;
+	background: none;
+	border-top: none;
+	border-left: none;
+	border-right: none;
+}
+
+.gc-settings-tab-button:hover {
+	color: var(--text-normal);
+}
+
+.gc-settings-tab-button--active {
+	color: var(--text-accent);
+	border-bottom-color: var(--interactive-accent);
+}
+
+.gc-settings-tab-content {
+	display: none;
+}
+
+.gc-settings-tab-content--active {
+	display: block;
+}
+
+/* ========================================
+   Settings: Task Status Card (设置页: 任务状态卡片)
+   ======================================== */
+
+.gc-task-status-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+	padding: var(--size-4-4);
+	background: var(--background-secondary);
+	border-radius: var(--radius-m);
+	border: 1px solid var(--background-modifier-border);
+	min-width: 200px;
+	flex: 1;
+	max-width: none;
+}
+
+.gc-task-status-card__header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-3);
+	margin-bottom: var(--size-2-1);
+}
+
+.gc-task-status-card__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 24px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	font-size: 10px;
+	font-weight: bold;
+}
+
+.gc-task-status-card__name {
+	font-weight: var(--font-medium);
+	font-size: var(--font-ui-medium);
+}
+
+.gc-task-status-card__delete-btn {
+	margin-left: auto;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	font-size: 18px;
+	line-height: 1;
+	border-radius: var(--radius-s);
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.gc-task-status-card__delete-btn:hover {
+	background: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+.gc-task-status-card__colors {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+}
+
+.gc-task-status-card__divider {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 0;
+}
+
+/* Theme Section (亮色/暗色 主题区域) */
+
+.gc-task-status-card__theme-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-2);
+}
+
+.gc-task-status-card__theme-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	margin-bottom: 2px;
+}
+
+.gc-task-status-card__theme-header span:last-child {
+	font-weight: var(--font-medium);
+}
+
+.gc-task-status-card__color-row {
+	display: flex;
+	flex-direction: row;
+	gap: var(--size-4-4);
+}
+
+.gc-task-status-card__color-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+	flex: 1;
+}
+
+.gc-task-status-card__color-label {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	flex-wrap: wrap;
+}
+
+.gc-task-status-card__color-label-text {
+	font-size: 11px;
+	font-weight: var(--font-medium);
+	color: var(--text-muted);
+}
+
+.gc-task-status-card__swatch-wrapper {
+	position: relative;
+	display: inline-block;
+}
+
+.gc-task-status-card__swatch-hidden-input {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	opacity: 0;
+	cursor: pointer;
+	z-index: 1;
+}
+
+.gc-task-status-card__swatch {
+	width: 18px;
+	height: 18px;
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+	pointer-events: none;
+}
+
+/* ========================================
+   Settings: Sync (设置页: 飞书同步)
+   ======================================== */
+
+.gc-sync-hint {
+	margin-top: var(--size-4-3);
+	padding: var(--size-2-3) var(--size-4-3);
+	border-radius: var(--radius-m);
+	background-color: var(--background-secondary);
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.gc-sync-hint--warning {
+	border: 1px solid var(--interactive-accent);
+	background-color: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+	font-weight: var(--font-medium);
+}
+
+.gc-sync-hint--success {
+	border: 1px solid var(--color-green);
+	background-color: hsla(var(--color-green-hsl), 0.15);
+	color: var(--color-green);
+	font-weight: var(--font-medium);
+}
+
+.gc-sync-hint__list-name {
+	font-weight: var(--font-bold);
+	color: var(--interactive-accent);
+}
+
+.gc-sync-tasklist {
+	margin-top: 18px;
+	margin-bottom: 18px;
+}
+
+.gc-sync-tasklist__header {
+	font-weight: var(--font-semibold);
+	margin-bottom: var(--size-4-3);
+	font-size: var(--font-ui-medium);
+}
+
+.gc-sync-tasklist__grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-3);
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.gc-sync-tasklist-card {
+	padding: var(--size-4-3);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background-color: var(--background-secondary);
+	min-width: 220px;
+	flex: 0 0 auto;
+}
+
+.gc-sync-tasklist-card--selected {
+	border: 2px solid var(--interactive-accent);
+	background-color: var(--interactive-accent-hover);
+}
+
+.gc-sync-tasklist-card__name {
+	font-weight: var(--font-medium);
+}
+
+.gc-sync-tasklist-card__guid {
+	font-size: 11px;
+	font-family: var(--font-monospace);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+	word-break: break-all;
+}
+
+.gc-sync-tasklist-card__meta {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+}
+
+.gc-sync-tasklist-card__actions {
+	margin-top: var(--size-2-3);
+	display: flex;
+	gap: var(--size-2-2);
+	align-items: center;
+}
+
+.gc-sync-tasklist-card__actions button {
+	padding: 6px 16px;
+	font-size: var(--font-ui-smaller);
+}
+
+/* 同步清单选中行 */
+.gc-sync-tasklist-selection {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 12px;
+	padding: 10px 14px;
+	border-radius: var(--radius-m);
+	background-color: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+.gc-sync-tasklist-selection span {
+	font-weight: var(--font-medium);
+	font-size: var(--font-ui-medium);
+}
+
+.gc-sync-tasklist-cancel-btn {
+	padding: 4px 12px;
+	font-size: var(--font-ui-smaller);
+}
+
+/* ========================================
+   Settings: Task Subsetting Container
+   ======================================== */
+
+.gc-task-subsetting {
+	margin-top: var(--size-4-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+}
+
+/* Settings utility classes */
+.gc-settings-section-hidden {
+	display: none;
+}
+
+.gc-settings-info-compact {
+	flex: 0;
+	min-width: 0;
+	padding: 0;
+}
+
+/* Card display compact toggle grid */
+.gc-card-toggle-row {
+	display: flex;
+	gap: var(--size-4-3);
+	align-items: center;
+}
+
+.gc-card-toggle-cell {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	min-width: 52px;
+}
+
+.gc-card-toggle-cell-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.gc-card-toggle-spacer {
+	min-width: 52px;
+}
+
+.gc-card-toggle-divider {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 0;
+	width: 100%;
+}
+
+.gc-task-status-desc {
+	margin-bottom: 16px;
+}
+
+/* Task status cards grid */
+.task-status-cards-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+/* Task Status Card component */
+.task-status-card {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-l);
+	border: 1px solid var(--background-modifier-border);
+	min-width: 200px;
+	flex: 1;
+	max-width: none;
+}
+
+.gc-tsc-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 4px;
+}
+
+.gc-tsc-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 24px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	font-size: 10px;
+	font-weight: var(--font-bold);
+}
+
+.gc-tsc-name {
+	font-weight: var(--font-medium);
+	font-size: var(--font-ui-medium);
+}
+
+.gc-tsc-delete {
+	margin-left: auto;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	font-size: 18px;
+	line-height: 1;
+	border-radius: var(--radius-s);
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.gc-tsc-delete:hover {
+	background: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+.gc-tsc-theme {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.gc-tsc-divider {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 0;
+}
+
+.gc-tsc-theme-section {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.gc-tsc-theme-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 2px;
+}
+
+.gc-tsc-theme-label {
+	font-weight: var(--font-medium);
+}
+
+.gc-tsc-color-row {
+	display: flex;
+	flex-direction: row;
+	gap: 16px;
+}
+
+.gc-tsc-color-section {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
+}
+
+.gc-tsc-label-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.gc-tsc-label-text {
+	font-size: 11px;
+	font-weight: var(--font-medium);
+}
+
+.gc-tsc-swatch-wrapper {
+	position: relative;
+	display: inline-block;
+}
+
+.gc-tsc-hidden-input {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	opacity: 0;
+	cursor: pointer;
+	z-index: 1;
+}
+
+.gc-tsc-swatch {
+	width: 18px;
+	height: 18px;
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+	pointer-events: none;
 }
 
 /* ========================================

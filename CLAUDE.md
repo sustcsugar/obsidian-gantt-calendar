@@ -1,105 +1,80 @@
 # CLAUDE.md
 
-本文件为 Claude Code (claude.ai/code) 在此代码库中工作时提供指导。
+本文件为 Claude Code 在此代码库中工作时提供指导。
 
-## 构建命令
+## 构建
 
 ```bash
-npm install              # 安装依赖
-npm run dev             # 开发构建，支持热重载
-npm run build           # 生产构建（运行 tsc + esbuild）
+npm run dev          # esbuild watch 模式
+npm run build        # tsc 类型检查 + esbuild 生产打包 + 同步到 example vault
 ```
 
-**重要**：构建完成后，需将 `main.js`、`manifest.json` 和 `styles.css` 复制到 `<Vault>/.obsidian/plugins/obsidian-gantt-calendar/`，然后重新加载 Obsidian 进行测试。
+构建产物为 `main.js`（单文件 CJS bundle，外部依赖 `obsidian`、`electron`）。
 
-## 项目概述
-
-这是一个 Obsidian 插件，提供带有甘特图功能的日历视图和任务管理。支持 Tasks 插件（emoji 格式）和 Dataview 插件（field 格式）两种任务格式。
+**测试**：`src/data-layer/__tests__/` 下有少量 Jest 测试，`package.json` 未配置 test 脚本，直接 `npx jest` 运行。
 
 ## 架构
 
-### 入口点
-- `main.ts` - 插件生命周期（onload/onunload），注册视图、命令和事件监听器
-- `GCMainView.ts` - 主视图容器，管理所有子视图
+### 视图层级
 
-### 视图系统
-插件使用基类模式构建视图：
-- `BaseViewRenderer` - 所有视图的共享方法（任务渲染、工具提示、链接解析）
-- 各视图继承此基类：`YearView`、`MonthView`、`WeekView`、`DayView`、`TaskView`、`GanttView`
+- `main.ts` 注册 2 个 Obsidian ItemView：`GCMainView`（主日历视图）和 `GCSidebarView`（右侧栏）
+- `GCMainView` 持有 6 个渲染器，均继承抽象类 `BaseViewRenderer`：`YearView`、`MonthView`、`WeekView`、`DayView`、`TaskView`、`GanttView`
+- `GCSidebarView` 持有 `TaskListTab`（搜索筛选排序）和 `DailyTimelineTab`（今日时间轴+拖拽）
+- `BaseViewRenderer` 提供过滤状态管理、DOM 清理注册、优先级/状态颜色渲染、工具提示复用
 
-### 工具栏系统
-`src/toolbar/` 中的三区域布局：
-- **左侧**：视图切换（日历 ↔ 任务）
-- **中间**：日期范围/标题显示
-- **右侧**：导航按钮（因视图而异）
+### 数据层（分层架构）
 
-### 任务管理
-- `src/tasks/taskParser.ts` - 解析 Tasks（emoji）和 Dataview（field）格式
-- `src/tasks/taskSearch.ts` - 按日期/状态过滤任务
-- `src/data-layer` - 负责任务缓存的管理
-
-### 任务格式兼容性
-
-**Tasks 格式（emoji）**：
 ```
-- [x] 🎯  任务全格式 🔺 🔁 every day ➕ 2026-01-15 🛫 2026-01-19 ⏳ 2026-01-17 📅 2026-01-21 ✅ 2026-01-15
+TaskStore（门面，供视图使用）
+  ├── EventBus（发布-订阅事件系统）
+  ├── TaskRepository（仓库模式，内存 Map 缓存 + 文件索引）
+  │   └── MarkdownDataSource（扫描 vault 文件，50 个一批，metadataCache 解析）
+  └── SyncManager（可选，通过 SyncManagerBridge 连接）
 ```
 
-**Dataview 格式（field）**：
-```
-- [x] 🎯  dataview任务格式  [priority:: highest]  [repeat:: every day]  [created:: 2026-01-15]  [start:: 2026-01-16]  [scheduled:: 2026-01-16]  [due:: 2026-01-15]  [completion:: 2026-01-15]
-```
+- `TaskStore.getAllTasks()` 返回缓存结果，缓存通过防抖（75ms）失效
+- `MarkdownDataSource` 文件修改事件防抖 50ms，处理 create/modify/delete/rename
+- 任务解析采用四步流水线：`step1` 正则匹配 → `step2` 全局筛选符 → `step3` 格式检测 → `step4` 属性解析
 
-优先级：`🔺`（最高）、`⏫`（高）、`🔼`（中）、`🔽`（低）、`⏬`（最低）
-日期 emoji：`➕`（创建日期）、`🛫`（开始日期）、`⏳`（计划日期）、`📅`（到期日期）、`✅`（完成日期）、`❌`（取消日期）
-重复任务: `🔁` every day
+### 同步系统
 
-## 代码统一管理规范
-DOM类名统一使用 ./src/utils/bem.ts 进行管理, 新建类名需在此文件中进行定义并引用
-修改DOM结构或者样式之前,请先检查是否有相关的旧类未移除,移除未使用的旧类.
-正则表达式统一使用 ./src/utils/RegularExpression.ts 进行管理.
-全局任务悬浮窗统一复用 ./src/utils/tooltipManager.ts
-任务条目更新统一复用 updateTaskProperties函数进行.
+支持飞书双向任务同步，CalDAV 基础设施已搭建：
+- `src/data-layer/feishu-sync/FeishuTaskSync.ts` — 自包含双向同步引擎
+- `src/data-layer/sources/api/providers/feishu/` — 完整飞书 API 客户端（OAuth、Task、Calendar、User API）
+- `src/data-layer/sync/SyncManager.ts` — 多源同步编排（拉取→匹配→冲突检测→解决→本地应用→推送 共 6 阶段）
+- `src/data-layer/sources/caldav/` — Google/Apple/Outlook CalDAV 提供者基础设施
+- 同步配置位于 `plugin.syncConfiguration`，飞书状态持久化于 `.feishu-sync-state.json`
 
-## Git 提交规范
+### 甘特图
 
-**重要规则**：
-- ❌ **禁止自动提交**：完成代码修改后，不要自动执行 `git commit` 或 `git push`
-- ✅ **等待用户指示**：仅当用户明确要求提交时，才执行 Git 提交操作
-- ✅ **可以运行构建**：修改代码后可以运行 `npm run build` 进行验证
-- ✅ **可以查看状态**：可以使用 `git status`、`git diff` 等命令查看修改状态
+**`frappe-gantt` npm 依赖已不再使用**。实际实现是自定义 SVG 渲染引擎 `src/gantt/wrappers/svgGanttRenderer.ts`，支持拖动整体/端点、导航按钮、增量刷新。
 
-## Windows 特殊文件名注意事项
+### 设置系统
 
-**避免创建保留设备名文件**：
+`SettingTab.ts` 使用 Builder 模式，14 个 builder 各负责一个设置区域。`FestivalColorBuilder` 和 `TaskStatusSettingsBuilder` 已创建但**未接入**设置面板。
 
-在 Windows 环境下，以下名称是系统保留的设备名，不应作为文件名使用：
-- `NUL` - 空设备
-- `CON` - 控制台
-- `PRN` - 打印机
-- `AUX` - 辅助设备
-- `COM1-9` - 串口
-- `LPT1-9` - 并口
+## 关键约定
 
-**问题原因**：
-在 Git Bash 环境下，使用 `2>nul` 或类似的输出重定向语法时，可能会意外创建名为 `nul` 的文件，而不是重定向到空设备。
+**ALWAYS 遵守：**
+- **DOM 类名**：在 `src/utils/bem.ts` 中定义 BEM 块常量并引用，禁止硬编码字符串
+- **正则表达式**：在 `src/utils/RegularExpressions.ts` 中定义并引用，禁止内联正则
+- **任务悬浮窗**：复用 `src/utils/tooltipManager.ts`，禁止自行实现
+- **任务条目更新**：使用 `updateTaskProperties()` 函数，禁止直接操作 markdown 文本
+- **修改 DOM/样式前**：先检查并移除已废弃的旧类名
 
-**避免方式**：
-```bash
-# ❌ 错误：可能在 Windows Git Bash 中创建 nul 文件
-dir "path" 2>nul | findstr "pattern"
+**代码模式：**
+- 各视图在 `src/components/TaskCard/presets/` 下有对应配置 preset
+- 右键菜单命令在 `src/contextMenu/commands/`，通过 `contextMenuIndex.ts` 统一注册
+- 视图过滤状态按键名 `${viewName}SelectedStatuses`/`${viewName}SelectedTags` 持久化
 
-# ✅ 正确：使用 /dev/null（Git Bash 兼容）
-dir "path" 2>/dev/null | findstr "pattern"
+## 注意事项
 
-# ✅ 正确：直接使用 Bash 原生命令
-find "path" -name "*pattern*"
+- **Windows 环境**：Git Bash 中 `2>nul` 会创建实体文件而非重定向，始终使用 `2>/dev/null` 或专用工具（Glob/Grep）
+- **TypeScript**：`strictNullChecks: true`、`noImplicitAny: true`、`importHelpers: true`、target ES6
+- **ESLint**：`no-unused-vars` 为 error（允许 `args` 前缀），`ban-ts-comment` 关闭
 
-# ✅ 正确：使用 Glob 工具代替 bash 命令
-```
+## Git 规则
 
-**如果意外创建了此类文件**：
-```bash
-# 使用 Git Bash 的 rm 命令删除
-rm -f nul
-```
+- **NEVER 自动 commit 或 push** — 仅当用户明确要求时执行
+- 允许 `npm run build`、`git status`、`git diff` 等验证性操作
+- `npm run version` 用于 bump manifest.json + versions.json

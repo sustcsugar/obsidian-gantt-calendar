@@ -227,6 +227,10 @@ export class GCMainView extends ItemView {
 		if (this.viewType === 'year') {
 			this.yearRenderer.applyLunarFontSize(content);
 		}
+		// 月视图应用农历字号
+		if (this.viewType === 'month') {
+			this.monthRenderer.applyLunarFontSize(content);
+		}
 
 		const elapsed = performance.now() - startTime;
 		Logger.debug('GCMainView', `render() completed in ${elapsed.toFixed(2)}ms`);

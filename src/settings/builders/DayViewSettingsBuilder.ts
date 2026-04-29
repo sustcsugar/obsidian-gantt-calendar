@@ -3,7 +3,7 @@ import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
 
 /**
- * 日视图设置构建器
+ * 日视图构建器
  */
 export class DayViewSettingsBuilder extends BaseBuilder {
 	constructor(config: BuilderConfig) {
@@ -11,7 +11,7 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('日视图设置', (group) => {
+		this.createSettingGroup('日视图', (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -28,8 +28,7 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 						.setValue(this.plugin.settings.enableDailyNote)
 						.onChange(async (value) => {
 							this.plugin.settings.enableDailyNote = value;
-							await this.plugin.saveSettings();
-							this.plugin.refreshCalendarViews();
+							await this.saveAndRefreshViews();
 						}))
 			);
 
@@ -46,7 +45,7 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 							.setValue(this.plugin.settings.dayViewLayout)
 							.onChange(async (value) => {
 								this.plugin.settings.dayViewLayout = value as 'horizontal' | 'vertical';
-								await this.saveAndRefresh();
+								await this.saveAndRefreshViews();
 							}))
 				);
 			}
