@@ -4,6 +4,8 @@
 **重构类型**: 完全重构 (方案B)
 **状态**: ✅ 已完成并构建成功
 
+> **当前状态 (2026-04-29)**: 本文档中引用的旧类名（`calendar-week-task-item`、`calendar-month-task-item`、`calendar-day-task-item`、`gantt-task-card` 等）已全部替换为 `gc-task-card` BEM 类名系统。文档中记录的 CSS 特指性问题及其解决方案是 BEM 迁移的历史基础，当前代码已统一使用 `bem.ts` 管理类名。
+
 ---
 
 ## 重构概述

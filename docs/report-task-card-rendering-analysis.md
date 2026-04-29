@@ -1,5 +1,7 @@
 # Task Card Rendering Analysis
 
+> **当前状态 (2026-04-29)**: 本文档中的 `TaskCacheManager` 已重构为分层数据架构：`TaskStore` (Facade) → `EventBus` (Pub/Sub) → `TaskRepository` (Repository) → `MarkdownDataSource`。任务卡片类名已统一为 `gc-task-card` BEM 系统。核心渲染逻辑仍在 `BaseViewRenderer`（原 `BaseCalendarRenderer`）中。
+
 ## Overview
 
 This document provides a comprehensive analysis of how task cards are rendered across different views in the obsidian-gantt-calendar plugin, with a focus on task description sources and rendering differences.

@@ -1,5 +1,7 @@
 # 任务卡片样式系统重构计划
 
+> **当前状态 (2026-04-29)**: 方案B（完全重构）已实施完成。所有旧类名（`calendar-week-task-item`、`calendar-month-task-item`、`gantt-task-card` 等）已替换为统一的 `gc-task-card` BEM 类名系统。CSS 特指性问题已通过 BEM 架构彻底解决。`src/utils/bem.ts` 管理约 18 个 BEM block。本文档保留作为历史设计参考。
+
 ## 问题概述
 
 ### 当前问题

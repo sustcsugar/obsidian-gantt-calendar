@@ -1,8 +1,11 @@
 # 任务卡片文本渲染逻辑分析报告
 
 **生成时间**: 2025-12-26
+**更新日期**: 2026-04-29
 **插件版本**: obsidian-gantt-calendar
 **作者**: Claude Code Analysis
+
+> **当前状态**: `BaseCalendarRenderer` 已重命名为 `BaseViewRenderer`（`src/views/BaseViewRenderer.ts`）。本文档中的类名引用已相应更新。任务卡片类名已统一为 `gc-task-card` BEM 系统。
 
 ---
 

@@ -1,13 +1,15 @@
-# BaseCalendarRenderer 架构分析报告
+# BaseViewRenderer 架构分析报告
+
+> **当前状态 (2026-04-29)**: `BaseCalendarRenderer` 已重命名为 `BaseViewRenderer`（`src/views/BaseViewRenderer.ts`）。本文档中所有类名和文件路径已相应更新。任务卡片类名已统一为 `gc-task-card` BEM 系统。
 
 ## 1. 概述
 
-`BaseCalendarRenderer` 是一个抽象基类，位于 `src/views/BaseCalendarRenderer.ts`，为插件中所有日历子视图提供共享的工具方法和状态管理。它是日历视图系统的核心基础设施。
+`BaseViewRenderer` 是一个抽象基类，位于 `src/views/BaseViewRenderer.ts`，为插件中所有日历子视图提供共享的工具方法和状态管理。它是日历视图系统的核心基础设施。
 
 ### 继承关系
 
 ```
-BaseCalendarRenderer (抽象基类)
+BaseViewRenderer (抽象基类)
 ├── YearView    (年视图)
 ├── MonthView   (月视图)
 ├── WeekView    (周视图)
@@ -24,7 +26,7 @@ BaseCalendarRenderer (抽象基类)
 
 ```mermaid
 classDiagram
-    class BaseCalendarRenderer {
+    class BaseViewRenderer {
         <<abstract>>
         #app: App
         #plugin: any
@@ -71,19 +73,19 @@ classDiagram
         +render(container, currentDate) void
     }
 
-    BaseCalendarRenderer <|-- YearView
-    BaseCalendarRenderer <|-- MonthView
-    BaseCalendarRenderer <|-- WeekView
-    BaseCalendarRenderer <|-- DayView
-    BaseCalendarRenderer <|-- TaskView
-    BaseCalendarRenderer <|-- GanttView
+    BaseViewRenderer <|-- YearView
+    BaseViewRenderer <|-- MonthView
+    BaseViewRenderer <|-- WeekView
+    BaseViewRenderer <|-- DayView
+    BaseViewRenderer <|-- TaskView
+    BaseViewRenderer <|-- GanttView
 ```
 
 ### 2.2 模块依赖图
 
 ```mermaid
 graph TD
-    A[BaseCalendarRenderer] --> B[Obsidian API]
+    A[BaseViewRenderer] --> B[Obsidian API]
     A --> C[taskStatus]
     A --> D[dateUtils]
     A --> E[fileOpener]
@@ -416,7 +418,7 @@ flowchart TD
 
 ```mermaid
 classDiagram
-    class BaseCalendarRenderer {
+    class BaseViewRenderer {
         <<abstract>>
         +render()*
         #cleanTaskDescription()
@@ -428,9 +430,9 @@ classDiagram
         +render()
     }
 
-    BaseCalendarRenderer <|-- ConcreteView
+    BaseViewRenderer <|-- ConcreteView
 
-    note for BaseCalendarRenderer "定义算法骨架，子类实现 render()"
+    note for BaseViewRenderer "定义算法骨架，子类实现 render()"
     note for ConcreteView "实现具体的渲染逻辑，复用基类工具方法"
 ```
 
@@ -465,7 +467,7 @@ flowchart LR
         A3[plugin.settings]
     end
 
-    subgraph Process["BaseCalendarRenderer"]
+    subgraph Process["BaseViewRenderer"]
         B1[applyTagFilter]
         B2[cleanTaskDescription]
         B3[renderTaskTags]
@@ -517,7 +519,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[创建新视图类] --> B[继承 BaseCalendarRenderer]
+    A[创建新视图类] --> B[继承 BaseViewRenderer]
     B --> C[实现 render 方法]
     C --> D[调用基类工具方法]
     D --> E[在 CalendarView.ts 注册]
@@ -541,7 +543,7 @@ flowchart TD
 
 ## 10. 总结
 
-`BaseCalendarRenderer` 是一个设计良好的抽象基类，体现了以下设计原则：
+`BaseViewRenderer` 是一个设计良好的抽象基类，体现了以下设计原则：
 
 1. **单一职责**：专注于视图渲染的基础设施
 2. **开闭原则**：对扩展开放（新增视图），对修改封闭

@@ -1,7 +1,9 @@
-# Frappe Gantt 集成实施总结
+# SVG 甘特图渲染器实施总结
+
+> **当前状态 (2026-04-29)**: Frappe Gantt 库从未实际集成到项目中（纯 ESM 模块在 Obsidian 环境存在兼容问题）。最终方案是自研 SVG 甘特图渲染器 `src/gantt/wrappers/svgGanttRenderer.ts`（2000+ 行），完全替代了 frappe-gantt。项目代码中不存在任何 `FrappeTask`、`frappeGanttWrapper` 引用，类型系统使用 `GCTask`。`src/gantt/` 目录结构：`types.ts`、`index.ts`、`adapters/taskDataAdapter.ts`、`wrappers/svgGanttRenderer.ts`、`handlers/taskUpdateHandler.ts`。本文档保留作为架构演进记录。
 
 > 完成日期: 2025-12-29
-> 状态: ✅ 全部完成，构建成功
+> 状态: ✅ 全部完成，构建成功（注：最终采用自研 SVG 方案替代 Frappe Gantt）
 
 ---
 

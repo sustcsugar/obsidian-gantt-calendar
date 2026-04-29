@@ -1,5 +1,14 @@
 # TaskCacheManager Architecture Documentation
 
+> **当前状态 (2026-04-29)**: `TaskCacheManager`（`src/taskManager.ts`）已被重构为分层数据架构：
+> ```
+> TaskStore (Facade, 对外统一接口)
+>   → EventBus (Pub/Sub 事件总线)
+>     → TaskRepository (Repository, 缓存+查询)
+>       → MarkdownDataSource (Markdown 文件数据源)
+> ```
+> 新架构位于 `src/data-layer/`。本文档中描述的缓存策略（批量处理、深度比较、静默模式）在新架构中保留，但类名和文件路径已变更。`GanttTask` 类型已重命名为 `GCTask`。本文档保留作为原始架构设计参考。
+
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
