@@ -1,10 +1,9 @@
 import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { isToday, isThisWeek, isThisMonth } from '../dateUtils/dateUtilsIndex';
-import type { GCTask, SortState, StatusFilterState, TagFilterState } from '../types';
+import type { IPluginContext,  GCTask, TagFilterState } from '../types';
 import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
 import { sortTasks } from '../tasks/taskSorter';
-import { DEFAULT_SORT_STATE } from '../types';
 import { ViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, TaskViewConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
@@ -22,37 +21,21 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	// 日期范围模式：全部/当天/当周/当月/自定义日期
 	private dateRangeMode: 'all' | 'day' | 'week' | 'month' | 'custom' = 'week';
 
-	// 排序状态
-	private sortState: SortState = DEFAULT_SORT_STATE;
-
 	// 任务列表容器缓存
 	private taskListContainer: HTMLElement | null = null;
 
-	// 设置前缀
-	private readonly SETTINGS_PREFIX = 'taskView';
-
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		super(app, plugin);
 		// 从设置加载初始状态
-		this.initializeFilterStates(this.SETTINGS_PREFIX);
-		this.initializeSortState();
+		this.settingsPrefix = 'taskView';
+		this.initializeFilterStates(this.settingsPrefix);
+		this.initializeSortState({ field: 'dueDate', order: 'asc' });
 		this.initializeTaskViewSpecificStates();
 	}
 
 	/**
 	 * 初始化排序状态
 	 */
-	private initializeSortState(): void {
-		const settings = this.plugin?.settings;
-		if (!settings) return;
-
-		const savedField = settings[`${this.SETTINGS_PREFIX}SortField`];
-		const savedOrder = settings[`${this.SETTINGS_PREFIX}SortOrder`];
-		if (savedField && savedOrder) {
-			this.sortState = { field: savedField, order: savedOrder };
-		}
-	}
-
 	/**
 	 * 初始化 TaskView 特有状态
 	 */
@@ -71,13 +54,6 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	/**
 	 * 保存排序状态
 	 */
-	private async saveSortState(): Promise<void> {
-		if (!this.plugin?.settings) return;
-		this.plugin.settings[`${this.SETTINGS_PREFIX}SortField`] = this.sortState.field;
-		this.plugin.settings[`${this.SETTINGS_PREFIX}SortOrder`] = this.sortState.order;
-		await this.plugin.saveSettings();
-	}
-
 	/**
 	 * 保存时间字段筛选
 	 */
@@ -128,37 +104,12 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		});
 	}
 
-	public getSortState(): SortState {
-		return this.sortState;
-	}
-
-	public setSortState(state: SortState): void {
-		this.sortState = state;
-		this.saveSortState().catch(err => {
-			Logger.error('TaskView', 'Failed to save sort state', err);
-		});
-	}
-
 	/**
 	 * 重写状态筛选 setter 以支持持久化
 	 */
-	public setStatusFilterState(state: StatusFilterState): void {
-		super.setStatusFilterState(state);
-		this.saveStatusFilterState(this.SETTINGS_PREFIX).catch(err => {
-			Logger.error('TaskView', 'Failed to save status filter', err);
-		});
-	}
-
 	/**
 	 * 重写标签筛选 setter 以支持持久化
 	 */
-	public setTagFilterState(state: TagFilterState): void {
-		super.setTagFilterState(state);
-		this.saveTagFilterState(this.SETTINGS_PREFIX).catch(err => {
-			Logger.error('TaskView', 'Failed to save tag filter', err);
-		});
-	}
-
 	render(container: HTMLElement, currentDate: Date): void {
 		// 创建任务视图容器
 		const taskRoot = container.createDiv(withModifiers(ViewClasses.block, ViewClasses.modifiers.task));

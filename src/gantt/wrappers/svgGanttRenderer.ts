@@ -14,7 +14,7 @@
 
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
 import { TimeGranularity, GRANULARITY_CONFIGS } from '../types';
-import type { GCTask } from '../../types';
+import type { IPluginContext,  GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
 import { Logger } from '../../utils/logger';
@@ -48,7 +48,7 @@ export class SvgGanttRenderer {
 	private config: GanttChartConfig;
 	private tasks: GanttChartTask[] = [];
 	private container: HTMLElement;
-	private plugin: any;
+	private plugin: IPluginContext;
 	private app: any;  // Obsidian App 实例
 
 	// 时间颗粒度
@@ -94,12 +94,11 @@ export class SvgGanttRenderer {
 	constructor(
 		container: HTMLElement,
 		config: GanttChartConfig,
-		plugin: any,
+		plugin: IPluginContext,
 		_originalTasks: GCTask[] = [],
 		app: any = null,
 		startField: DateFieldType = 'startDate',
 		endField: DateFieldType = 'dueDate',
-		_stickyHeader: HTMLElement | null = null  // 保留参数以兼容，但不使用
 	) {
 		this.container = container;
 		this.config = config;

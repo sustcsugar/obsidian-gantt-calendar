@@ -11,7 +11,6 @@ export type DateFieldType = 'createdDate' | 'startDate' | 'scheduledDate' | 'due
  * Gantt Calendar Plugin Settings Interface
  */
 export interface GanttCalendarSettings {
-	mySetting: string;
 	startOnMonday: boolean;
 	showLunar: boolean;
 	showFestivals: boolean;

@@ -1,6 +1,6 @@
 import { App, Notice } from 'obsidian';
-import type { GCTask } from '../types';
-import { DEFAULT_TAG_FILTER_STATE, DEFAULT_STATUS_FILTER_STATE, type TagFilterState, type StatusFilterState } from '../types';
+import type { IPluginContext,  GCTask } from '../types';
+import { DEFAULT_SORT_STATE, DEFAULT_TAG_FILTER_STATE, DEFAULT_STATUS_FILTER_STATE, type SortState, type TagFilterState, type StatusFilterState } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { openFileInExistingLeaf } from '../utils/fileOpener';
 import { getStatusColor, DEFAULT_TASK_STATUSES, getStatusByKey } from '../tasks/taskStatus';
@@ -16,8 +16,14 @@ import { LinkRenderer } from '../utils/linkRenderer';
  */
 export abstract class BaseViewRenderer {
 	protected app: App;
-	protected plugin: any;
+	protected plugin: IPluginContext;
 	protected domCleanups: Array<() => void> = [];
+
+	// 设置前缀（子类在构造函数中设置，用于自动持久化）
+	protected settingsPrefix: string = '';
+
+	// 排序状态
+	protected sortState: SortState = DEFAULT_SORT_STATE;
 
 	// 标签筛选状态
 	protected tagFilterState: TagFilterState = DEFAULT_TAG_FILTER_STATE;
@@ -25,7 +31,7 @@ export abstract class BaseViewRenderer {
 	// 状态筛选状态
 	protected statusFilterState: StatusFilterState = DEFAULT_STATUS_FILTER_STATE;
 
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		this.app = app;
 		this.plugin = plugin;
 	}
@@ -124,17 +130,22 @@ export abstract class BaseViewRenderer {
 	}
 
 	/**
+	 * 设置标签筛选状态（当 settingsPrefix 已设置时自动持久化）
+	 */
+	public setTagFilterState(state: TagFilterState): void {
+		this.tagFilterState = state;
+		if (this.settingsPrefix) {
+			this.saveTagFilterState(this.settingsPrefix).catch((err: unknown) => {
+				Logger.error('BaseViewRenderer', 'Failed to save tag filter', err);
+			});
+		}
+	}
+
+	/**
 	 * 获取标签筛选状态
 	 */
 	public getTagFilterState(): TagFilterState {
 		return this.tagFilterState;
-	}
-
-	/**
-	 * 设置标签筛选状态
-	 */
-	public setTagFilterState(state: TagFilterState): void {
-		this.tagFilterState = state;
 	}
 
 	/**
@@ -145,11 +156,15 @@ export abstract class BaseViewRenderer {
 	}
 
 	/**
-	 * 设置状态筛选状态
-	 * 子类可重写此方法以实现持久化
+	 * 设置状态筛选状态（当 settingsPrefix 已设置时自动持久化）
 	 */
 	public setStatusFilterState(state: StatusFilterState): void {
 		this.statusFilterState = state;
+		if (this.settingsPrefix) {
+			this.saveStatusFilterState(this.settingsPrefix).catch((err: unknown) => {
+				Logger.error('BaseViewRenderer', 'Failed to save status filter', err);
+			});
+		}
 	}
 
 	/**
@@ -161,14 +176,14 @@ export abstract class BaseViewRenderer {
 		if (!settings) return;
 
 		// 加载状态筛选
-		const savedStatuses = settings[`${settingsPrefix}SelectedStatuses`];
+		const savedStatuses = (settings as Record<string, any>)[`${settingsPrefix}SelectedStatuses`];
 		if (savedStatuses !== undefined) {
 			this.statusFilterState = { selectedStatuses: savedStatuses };
 		}
 
 		// 加载标签筛选
-		const savedTags = settings[`${settingsPrefix}SelectedTags`];
-		const savedOperator = settings[`${settingsPrefix}TagOperator`];
+		const savedTags = (settings as Record<string, any>)[`${settingsPrefix}SelectedTags`];
+		const savedOperator = (settings as Record<string, any>)[`${settingsPrefix}TagOperator`];
 		if (savedTags !== undefined || savedOperator !== undefined) {
 			this.tagFilterState = {
 				selectedTags: savedTags || [],
@@ -178,11 +193,58 @@ export abstract class BaseViewRenderer {
 	}
 
 	/**
+	 * 从插件设置初始化排序状态
+	 * @param defaultSortState 默认排序状态（各视图不同）
+	 */
+	protected initializeSortState(defaultSortState: SortState): void {
+		if (!this.settingsPrefix) return;
+		const settings = this.plugin?.settings;
+		if (!settings) return;
+
+		const savedField = (settings as Record<string, any>)[`${this.settingsPrefix}SortField`];
+		const savedOrder = (settings as Record<string, any>)[`${this.settingsPrefix}SortOrder`];
+		if (savedField && savedOrder) {
+			this.sortState = { field: savedField, order: savedOrder };
+		} else {
+			this.sortState = defaultSortState;
+		}
+	}
+
+	/**
+	 * 获取排序状态
+	 */
+	public getSortState(): SortState {
+		return this.sortState;
+	}
+
+	/**
+	 * 设置排序状态（自动持久化到插件设置）
+	 */
+	public setSortState(state: SortState): void {
+		this.sortState = state;
+		if (this.settingsPrefix) {
+			this.saveSortState();
+		}
+	}
+
+	/**
+	 * 保存排序状态到插件设置
+	 */
+	private saveSortState(): void {
+		if (!this.plugin?.settings) return;
+		(this.plugin.settings as Record<string, any>)[`${this.settingsPrefix}SortField`] = this.sortState.field;
+		(this.plugin.settings as Record<string, any>)[`${this.settingsPrefix}SortOrder`] = this.sortState.order;
+		this.plugin.saveSettings().catch((err: unknown) => {
+			Logger.error('BaseViewRenderer', 'Failed to save sort state', err);
+		});
+	}
+
+	/**
 	 * 保存状态筛选到设置
 	 */
 	protected async saveStatusFilterState(settingsPrefix: string): Promise<void> {
 		if (!this.plugin?.settings) return;
-		this.plugin.settings[`${settingsPrefix}SelectedStatuses`] =
+		(this.plugin.settings as Record<string, any>)[`${settingsPrefix}SelectedStatuses`] =
 			this.statusFilterState.selectedStatuses;
 		await this.plugin.saveSettings();
 	}
@@ -192,9 +254,9 @@ export abstract class BaseViewRenderer {
 	 */
 	protected async saveTagFilterState(settingsPrefix: string): Promise<void> {
 		if (!this.plugin?.settings) return;
-		this.plugin.settings[`${settingsPrefix}SelectedTags`] =
+		(this.plugin.settings as Record<string, any>)[`${settingsPrefix}SelectedTags`] =
 			this.tagFilterState.selectedTags;
-		this.plugin.settings[`${settingsPrefix}TagOperator`] =
+		(this.plugin.settings as Record<string, any>)[`${settingsPrefix}TagOperator`] =
 			this.tagFilterState.operator;
 		await this.plugin.saveSettings();
 	}

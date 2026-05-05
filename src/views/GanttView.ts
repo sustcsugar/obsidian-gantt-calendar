@@ -37,9 +37,6 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	// 视图模式（仅支持周视图）
 	private ganttViewMode: GanttChartConfig['view_mode'] = 'week';
 
-	// 排序状态（默认按截止时间升序）
-	private sortState: SortState = { field: 'dueDate', order: 'asc' };
-
 	// 甘特图 组件
 	private ganttWrapper: GanttChartAdapter | null = null;
 	private updateHandler: TaskUpdateHandler | null = null;

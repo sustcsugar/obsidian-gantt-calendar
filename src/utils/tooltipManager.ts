@@ -1,4 +1,4 @@
-import type { GCTask } from '../types';
+import type { IPluginContext,  GCTask } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { TagPill } from '../components/tagPill';
 
@@ -48,7 +48,7 @@ export class TooltipManager {
 		file?: HTMLElement;
 	} = {};
 
-	private constructor(private plugin: any, config: TooltipConfig = {}) {
+	private constructor(private plugin: IPluginContext, config: TooltipConfig = {}) {
 		this.config = {
 			showDelay: config.showDelay ?? 400,
 			hideDelay: config.hideDelay ?? 100
@@ -58,7 +58,7 @@ export class TooltipManager {
 	/**
 	 * 获取单例实例
 	 */
-	static getInstance(plugin: any, config?: TooltipConfig): TooltipManager {
+	static getInstance(plugin: IPluginContext, config?: TooltipConfig): TooltipManager {
 		if (!TooltipManager.instance) {
 			TooltipManager.instance = new TooltipManager(plugin, config);
 		}

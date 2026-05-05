@@ -5,7 +5,6 @@ import { DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
  * Gantt Calendar Plugin 默认设置
  */
 export const DEFAULT_SETTINGS: GanttCalendarSettings = {
-	mySetting: 'default',
 	startOnMonday: true,
 	showLunar: true,
 	showFestivals: true,

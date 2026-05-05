@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
-import type { GCTask, TagFilterState } from '../types';
+import type { IPluginContext,  GCTask, TagFilterState } from '../types';
 import { YearViewClasses } from '../utils/bem';
 import { YearViewLayoutManager } from '../utils/yearViewLayout';
 import { Logger } from '../utils/logger';
@@ -18,7 +18,7 @@ export class YearViewRenderer extends BaseViewRenderer {
 	// 设置前缀
 	private readonly SETTINGS_PREFIX = 'yearView';
 
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		super(app, plugin);
 		this.initializeFilterStates(this.SETTINGS_PREFIX);
 	}

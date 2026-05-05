@@ -196,3 +196,29 @@ export interface StatusFilterState {
 export const DEFAULT_STATUS_FILTER_STATE: StatusFilterState = {
 	selectedStatuses: ['todo']
 };
+
+import type { App } from 'obsidian';
+import type { GanttCalendarSettings } from './settings/types';
+
+/**
+ * 插件上下文接口
+ * 供视图渲染器和组件使用，替代 `plugin: any`
+ */
+export interface IPluginContext {
+	settings: GanttCalendarSettings;
+	saveSettings(): Promise<void>;
+	taskCache: {
+		getAllTasks(): GCTask[];
+		whenReady(): Promise<void>;
+		onUpdate(handler: (filePath?: string) => void): () => void;
+		offUpdate(handler: (filePath?: string) => void): void;
+		initialize(globalTaskFilter: string, enabledFormats?: string[], retryCount?: number): Promise<void>;
+	};
+	calendarView: {
+		selectDate(date: Date, viewType?: CalendarViewType): void;
+		render(): void;
+	};
+	app: App;
+	dailyNoteIndex: any;
+	refreshCalendarViews(): void;
+}

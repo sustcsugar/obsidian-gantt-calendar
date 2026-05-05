@@ -5,7 +5,7 @@
 
 import { SvgGanttRenderer } from './svgGanttRenderer';
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
-import type { GCTask } from '../../types';
+import type { IPluginContext,  GCTask } from '../../types';
 import { GanttClasses } from '../../utils/bem';
 import { Logger } from '../../utils/logger';
 
@@ -20,7 +20,7 @@ export class GanttChartAdapter {
 	private container: HTMLElement;
 	private config: GanttChartConfig;
 	private isInitialized = false;
-	private plugin: any;
+	private plugin: IPluginContext;
 	private app: any;  // Obsidian App 实例
 	private originalTasks: GCTask[] = [];
 	private startField: DateFieldType = 'startDate';
@@ -39,7 +39,7 @@ export class GanttChartAdapter {
 	constructor(
 		container: HTMLElement,
 		config: GanttChartConfig,
-		plugin: any,
+		plugin: IPluginContext,
 		originalTasks: GCTask[] = [],
 		startField: DateFieldType = 'startDate',
 		endField: DateFieldType = 'dueDate'
@@ -180,16 +180,6 @@ export class GanttChartAdapter {
 		if (this.renderer) {
 			this.renderer.updateTasks(ganttTasks);
 		}
-	}
-
-	/**
-	 * 获取当前任务列表
-	 *
-	 * @returns 当前任务列表
-	 */
-	getTasks(): GanttChartTask[] {
-		// 返回配置中的任务（由外部维护）
-		return [];
 	}
 
 	/**

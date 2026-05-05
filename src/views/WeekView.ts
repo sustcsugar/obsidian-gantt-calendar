@@ -3,7 +3,7 @@ import { BaseViewRenderer } from './BaseViewRenderer';
 import { getWeekOfDate } from '../dateUtils/dateUtilsIndex';
 import { updateTaskDateField } from '../tasks/taskUpdater';
 import { CreateTaskModal } from '../modals/CreateTaskModal';
-import type { GCTask, SortState, StatusFilterState, TagFilterState, CalendarDay } from '../types';
+import type { IPluginContext,  GCTask, TagFilterState, CalendarDay } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { TaskCardComponent, WeekViewConfig, type TaskCardConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
@@ -16,12 +16,6 @@ import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
  * 周视图渲染器
  */
 export class WeekViewRenderer extends BaseViewRenderer {
-	// 排序状态 - 默认优先级降序
-	private sortState: SortState = { field: 'priority', order: 'desc' };
-
-	// 设置前缀
-	private readonly SETTINGS_PREFIX = 'weekView';
-
 	// 时间轴模式持久化标志（一旦激活，会话内保持）
 	private timelineActive: boolean = false;
 
@@ -37,67 +31,25 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		enableDrag: true,
 	};
 
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		super(app, plugin);
-		this.initializeFilterStates(this.SETTINGS_PREFIX);
-		this.initializeSortState();
+		this.settingsPrefix = 'weekView';
+		this.initializeFilterStates(this.settingsPrefix);
+		this.initializeSortState({ field: 'priority', order: 'desc' });
 	}
 
 	/**
 	 * 初始化排序状态
 	 */
-	private initializeSortState(): void {
-		const settings = this.plugin?.settings;
-		if (!settings) return;
-
-		const savedField = settings[`${this.SETTINGS_PREFIX}SortField`];
-		const savedOrder = settings[`${this.SETTINGS_PREFIX}SortOrder`];
-		if (savedField && savedOrder) {
-			this.sortState = { field: savedField, order: savedOrder };
-		}
-	}
-
 	/**
 	 * 保存排序状态
 	 */
-	private async saveSortState(): Promise<void> {
-		if (!this.plugin?.settings) return;
-		this.plugin.settings[`${this.SETTINGS_PREFIX}SortField`] = this.sortState.field;
-		this.plugin.settings[`${this.SETTINGS_PREFIX}SortOrder`] = this.sortState.order;
-		await this.plugin.saveSettings();
-	}
-
-	public getSortState(): SortState {
-		return this.sortState;
-	}
-
-	public setSortState(state: SortState): void {
-		this.sortState = state;
-		this.saveSortState().catch(err => {
-			Logger.error('WeekView', 'Failed to save sort state', err);
-		});
-	}
-
 	/**
 	 * 重写状态筛选 setter 以支持持久化
 	 */
-	public setStatusFilterState(state: StatusFilterState): void {
-		super.setStatusFilterState(state);
-		this.saveStatusFilterState(this.SETTINGS_PREFIX).catch(err => {
-			Logger.error('WeekView', 'Failed to save status filter', err);
-		});
-	}
-
 	/**
 	 * 重写标签筛选 setter 以支持持久化
 	 */
-	public setTagFilterState(state: TagFilterState): void {
-		super.setTagFilterState(state);
-		this.saveTagFilterState(this.SETTINGS_PREFIX).catch(err => {
-			Logger.error('WeekView', 'Failed to save tag filter', err);
-		});
-	}
-
 	/**
 	 * 检测周内是否有带时间精度的任务
 	 */
@@ -364,7 +316,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			e.stopPropagation();
 			const modal = new CreateTaskModal({
 				app: this.app,
-				plugin: this.plugin,
+				plugin: this.plugin as any,
 				targetDate,
 				targetHour: hour,
 				onSuccess: () => {
