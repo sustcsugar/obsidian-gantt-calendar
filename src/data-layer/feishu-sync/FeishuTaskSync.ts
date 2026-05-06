@@ -46,6 +46,8 @@ export interface FeishuSyncOptions {
     creatorOpenId?: string;
     /** 推送过滤配置（仅限制 Obsidian → 飞书方向的推送） */
     pushFilter?: PushFilterConfig;
+    /** 中断信号，用于手动停止同步 */
+    abortSignal?: AbortSignal;
 }
 
 /** 同步结果 */
@@ -138,6 +140,7 @@ export class FeishuTaskSync {
             // 4. 应用变更
             const total = changes.length;
             for (let i = 0; i < changes.length; i++) {
+                if (this.shouldStop(result)) break;
                 const change = changes[i];
                 onProgress?.(`🔄 飞书同步: ${this.changeLabel(change.type)} ${i + 1}/${total}`);
                 try {
@@ -156,6 +159,10 @@ export class FeishuTaskSync {
             // 6. 保存状态
             onProgress?.('🔄 飞书同步: 保存状态...');
             await this.state.save();
+
+            // 附加停止原因
+            const reason = this.stopReason(result);
+            if (reason) result.errors.push(reason);
 
             const parts: string[] = [];
             if (result.pushed > 0) parts.push(`推送${result.pushed}`);
@@ -234,6 +241,7 @@ export class FeishuTaskSync {
 
             // 4. 推送 OB → 飞书
             for (let i = 0; i < obTasksToPush.length; i++) {
+                if (this.shouldStop(result)) break;
                 const task = obTasksToPush[i];
                 onProgress?.(`🧪 测试同步: 推送 OB→飞书 ${i + 1}/${obTasksToPush.length}`);
                 try {
@@ -247,6 +255,7 @@ export class FeishuTaskSync {
 
             // 5. 拉取 飞书 → OB
             for (let i = 0; i < feishuTasksToPull.length; i++) {
+                if (this.shouldStop(result)) break;
                 const task = feishuTasksToPull[i];
                 onProgress?.(`🧪 测试同步: 拉取 飞书→OB ${i + 1}/${feishuTasksToPull.length}`);
                 try {
@@ -265,6 +274,9 @@ export class FeishuTaskSync {
             onProgress?.('🧪 测试同步: 保存状态...');
             await this.state.save();
 
+            const reason = this.stopReason(result);
+            if (reason) result.errors.push(reason);
+
             const parts: string[] = [];
             if (result.pushed > 0) parts.push(`推送${result.pushed}`);
             if (result.pulled > 0) parts.push(`拉取${result.pulled}`);
@@ -280,6 +292,20 @@ export class FeishuTaskSync {
         }
 
         return result;
+    }
+
+    /** 检查是否应停止同步（手动中止或错误超限） */
+    private shouldStop(result: SyncResult): boolean {
+        if (this.options.abortSignal?.aborted) return true;
+        if (result.errors.length >= 5) return true;
+        return false;
+    }
+
+    /** 生成停止原因描述 */
+    private stopReason(result: SyncResult): string | null {
+        if (this.options.abortSignal?.aborted) return '同步已被用户手动停止';
+        if (result.errors.length >= 5) return '错误次数超过 5 次，同步已自动停止';
+        return null;
     }
 
     // ==================== 数据获取 ====================

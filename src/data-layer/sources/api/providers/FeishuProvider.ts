@@ -314,12 +314,12 @@ export class FeishuProvider extends APIDataSource {
         if (payload.summary) body.summary = payload.summary;
         if (payload.description) body.description = payload.description;
 
-        // v2 API 时间字段使用毫秒时间戳字符串
+        // v2 API 时间字段使用嵌套对象 { timestamp: "毫秒时间戳" }
         if (payload.due?.timestamp) {
-            body.due_at = payload.due.timestamp;
+            body.due = { timestamp: payload.due.timestamp };
         }
         if (payload.start?.timestamp) {
-            body.start_at = payload.start.timestamp;
+            body.start = { timestamp: payload.start.timestamp };
         }
 
         // v2 完成状态：completed_at（毫秒时间戳）
@@ -400,12 +400,12 @@ export class FeishuProvider extends APIDataSource {
         if (payload.summary) body.summary = payload.summary;
         if (payload.description) body.description = payload.description;
 
-        // v2 API 时间字段使用毫秒时间戳字符串
+        // v2 API 时间字段使用嵌套对象 { timestamp: "毫秒时间戳" }
         if (payload.due?.timestamp) {
-            body.due_at = payload.due.timestamp;
+            body.due = { timestamp: payload.due.timestamp };
         }
         if (payload.start?.timestamp) {
-            body.start_at = payload.start.timestamp;
+            body.start = { timestamp: payload.start.timestamp };
         }
 
         // v2 完成状态：completed_at（毫秒时间戳），空字符串 = 恢复未完成

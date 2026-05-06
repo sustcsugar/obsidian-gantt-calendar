@@ -2526,155 +2526,572 @@ Author: sugar
 	pointer-events: none;
 }
 
-/* Heatmap palette setting (tiled single-select) */
-.heatmap-palette-setting {
+
+/* ========================================
+   Settings Tab Navigation (设置页 Tab 导航)
+   ======================================== */
+
+.gc-settings-tab-nav {
 	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 12px 0;
-	border-bottom: 1px solid var(--background-modifier-border);
+	gap: 4px;
+	padding: 4px;
+	border-radius: 10px;
+	background: var(--background-secondary);
+	position: sticky;
+	top: 0;
+	z-index: 10;
 }
 
-.heatmap-palette-label {
-	padding: 0 10px;
-}
-
-.heatmap-palette-name {
-	font-weight: 600;
-	color: var(--text-normal);
-	margin-bottom: 4px;
-}
-
-.heatmap-palette-desc {
-	font-size: 12px;
+.gc-settings-tab-button {
+	flex: 1;
+	padding: 7px 0;
+	font-size: 13px;
+	font-weight: 500;
+	letter-spacing: -0.12px;
 	color: var(--text-muted);
-}
-
-.heatmap-palette-list {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 12px;
-	padding: 8px 10px;
-}
-
-.heatmap-palette-option {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 8px 10px;
-	border: 2px solid transparent;
-	border-radius: 8px;
 	cursor: pointer;
-	transition: all 0.2s ease;
-	background: var(--background-secondary);
+	border: none;
+	border-radius: 7px;
+	background: transparent;
+	transition: color 150ms ease, background-color 150ms ease, font-weight 0ms;
+	white-space: nowrap;
+	text-align: center;
 }
 
-.heatmap-palette-option:hover {
-	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-
-.heatmap-palette-option.selected {
-	border-color: var(--interactive-accent);
-}
-
-.heatmap-palette-bars {
-	display: grid;
-	grid-auto-flow: column;
-	grid-auto-columns: 14px;
-	gap: 3px;
-}
-
-.heatmap-palette-bar {
-	width: 14px;
-	height: 14px;
-	border-radius: 2px;
-	background-color: var(--background-modifier-border);
-}
-
-.heatmap-palette-label-text {
-	font-size: 12px;
-	color: var(--text-muted);
-}
-
-/* Festival Color Settings */
-.festival-color-settings-container {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 16px;
-	padding: 12px 0;
-	margin-bottom: 16px;
-}
-
-.festival-color-setting {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 12px;
-	background: var(--background-secondary);
-	border-radius: 8px;
-}
-
-.festival-color-label {
-	padding: 0 10px;
-}
-
-.festival-color-name {
-	font-weight: 600;
+.gc-settings-tab-button:hover {
 	color: var(--text-normal);
-	margin-bottom: 4px;
+	background: var(--background-modifier-hover);
 }
 
-.festival-color-desc {
-	font-size: 12px;
-	color: var(--text-muted);
+.gc-settings-tab-button--active {
+	color: var(--text-normal);
+	font-weight: 600;
+	background: var(--background-primary);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.festival-color-picker {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 8px 10px;
-	flex-wrap: wrap;
-}
-
-.festival-color-input {
+.gc-settings-tab-content {
 	display: none;
 }
 
-.festival-color-swatch {
-	width: 14px;
-	height: 14px;
-	border-radius: 2px;
+.gc-settings-tab-content--active {
+	display: block;
+	margin-top: var(--size-4-4);
+}
+
+/* ========================================
+   Settings: Sync (设置页: 飞书同步)
+   ======================================== */
+
+.gc-sync-hint {
+	margin-top: var(--size-4-3);
+	padding: var(--size-2-3) var(--size-4-3);
+	border-radius: var(--radius-m);
+	background-color: var(--background-secondary);
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.gc-sync-hint--warning {
+	border: 1px solid var(--interactive-accent);
+	background-color: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+	font-weight: var(--font-medium);
+}
+
+.gc-sync-hint--success {
+	border: 1px solid var(--color-green);
+	background-color: hsla(var(--color-green-hsl), 0.15);
+	color: var(--color-green);
+	font-weight: var(--font-medium);
+}
+
+.gc-sync-hint__list-name {
+	font-weight: var(--font-bold);
+	color: var(--interactive-accent);
+}
+
+.gc-sync-tasklist {
+	margin-top: 18px;
+	margin-bottom: 18px;
+}
+
+.gc-sync-tasklist__header {
+	font-weight: var(--font-semibold);
+	margin-bottom: var(--size-4-3);
+	font-size: var(--font-ui-medium);
+}
+
+.gc-sync-tasklist__grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-3);
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.gc-sync-tasklist-card {
+	padding: var(--size-4-3);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background-color: var(--background-secondary);
+	min-width: 220px;
+	flex: 0 0 auto;
+}
+
+.gc-sync-tasklist-card--selected {
+	border: 2px solid var(--interactive-accent);
+	background-color: var(--interactive-accent-hover);
+}
+
+.gc-sync-tasklist-card__name {
+	font-weight: var(--font-medium);
+}
+
+.gc-sync-tasklist-card__guid {
+	font-size: 11px;
+	font-family: var(--font-monospace);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+	word-break: break-all;
+}
+
+.gc-sync-tasklist-card__meta {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-top: var(--size-2-1);
+}
+
+.gc-sync-tasklist-card__actions {
+	margin-top: var(--size-2-3);
+	display: flex;
+	gap: var(--size-2-2);
+	align-items: center;
+}
+
+.gc-sync-tasklist-card__actions button {
+	padding: 6px 16px;
+	font-size: var(--font-ui-smaller);
+}
+
+/* 同步清单选中行 */
+.gc-sync-tasklist-selection {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 12px;
+	padding: 10px 14px;
+	border-radius: var(--radius-m);
+	background-color: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+.gc-sync-tasklist-selection span {
+	font-weight: var(--font-medium);
+	font-size: var(--font-ui-medium);
+}
+
+.gc-sync-tasklist-cancel-btn {
+	padding: 4px 12px;
+	font-size: var(--font-ui-smaller);
+}
+
+/* ========================================
+   Settings: Task Subsetting Container
+   ======================================== */
+
+.gc-task-subsetting {
+	margin-top: var(--size-4-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+}
+
+/* Settings utility classes */
+.gc-settings-section-hidden {
+	display: none;
+}
+
+
+
+/* ── Heatmap Palette Chip Selector (BEM: gc-settings-heatmap-chip) ── */
+
+.gc-settings-heatmap-chip__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.gc-settings-heatmap-chip__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 14px;
+	border-radius: 9999px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: all 120ms ease;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	user-select: none;
+}
+
+.gc-settings-heatmap-chip__chip:hover {
+	border-color: var(--text-faint);
+	color: var(--text-normal);
+}
+
+.gc-settings-heatmap-chip__chip--active {
+	border-color: var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.gc-settings-heatmap-chip__preview {
+	width: 40px;
+	height: 12px;
+	border-radius: 6px;
 	flex-shrink: 0;
 }
 
-.festival-color-swatch:hover {
-	transform: scale(1.1);
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+.gc-settings-heatmap-chip__label {
+	white-space: nowrap;
+}
+/* Settings Card Chip Toggles (BEM: gc-settings-card-chip) */
+.gc-settings-card-chip__chip-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
 }
 
-/* Task Status Setting */
-.task-status-setting {
-	margin-top: 12px;
-}
-
-.task-status-label {
-	padding: 0 10px;
-	margin-bottom: 12px;
-}
-
-.task-status-name {
+.gc-settings-card-chip__chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px 14px;
+	border-radius: 9999px;
+	font-size: 12px;
 	font-weight: 600;
+	letter-spacing: -0.12px;
+	cursor: pointer;
+	user-select: none;
+	transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+	background: transparent;
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.gc-settings-card-chip__chip:hover {
+	background: var(--background-modifier-hover);
 	color: var(--text-normal);
+}
+
+.gc-settings-card-chip__chip--active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.gc-settings-card-chip__chip--active:hover {
+	filter: brightness(1.1);
+}
+
+/* ─── Settings Status Card (BEM: gc-settings-status-card) ─── */
+
+.gc-settings-status-card__grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 16px;
+}
+
+.gc-settings-status-card__card {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px;
+	background: var(--background-secondary);
+	border-radius: 18px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+/* Header: preview pill + key + delete */
+.gc-settings-status-card__header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.gc-settings-status-card__dot {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 12px;
+	border-radius: 9999px;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: -0.12px;
+	transition: background-color 120ms ease, color 120ms ease;
+}
+
+
+.gc-settings-status-card__key {
+	font-size: 11px;
+	font-weight: 400;
+	color: var(--text-faint);
+	font-family: var(--font-monospace);
+}
+
+.gc-settings-status-card__delete-btn {
+	margin-left: auto;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	font-size: 16px;
+	line-height: 1;
+	border-radius: 50%;
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 120ms ease, color 120ms ease;
+}
+
+.gc-settings-status-card__delete-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* Body: theme sections */
+.gc-settings-status-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.gc-settings-status-card__divider {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 2px 0;
+}
+
+.gc-settings-status-card__theme-section {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.gc-settings-status-card__theme-label {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+	letter-spacing: -0.12px;
+}
+
+.gc-settings-status-card__color-row {
+	display: flex;
+	gap: 16px;
+}
+
+.gc-settings-status-card__color-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1;
+}
+
+.gc-settings-status-card__color-label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.gc-settings-status-card__color-label-text {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.gc-settings-status-card__swatch-wrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.gc-settings-status-card__hidden-input {
+	position: absolute;
+	width: 22px;
+	height: 22px;
+	opacity: 0;
+	cursor: pointer;
+	z-index: 1;
+}
+
+.gc-settings-status-card__swatch {
+	width: 22px;
+	height: 22px;
+	border-radius: 9999px;
+	border: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+	pointer-events: none;
+	transition: background-color 120ms ease;
+}
+
+/* Macaron quick-pick grid */
+.gc-settings-status-card__macaron-grid {
+	display: grid;
+	gap: 4px;
+}
+
+.gc-settings-status-card__macaron-swatch {
+	width: 18px;
+	height: 18px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: outline 120ms ease;
+}
+
+/* ── Add Custom Status Modal ── */
+
+.gc-settings-status-modal__title {
+	margin-bottom: 16px;
+}
+
+.gc-settings-status-modal__field {
+	margin-bottom: 16px;
+}
+
+.gc-settings-status-modal__label {
+	display: block;
+	margin-bottom: 6px;
+	font-weight: 500;
+	font-size: 13px;
+}
+
+.gc-settings-status-modal__input {
+	width: 100%;
+	padding: 8px;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+}
+
+.gc-settings-status-modal__textarea {
+	width: 100%;
+	padding: 8px;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+	resize: vertical;
+}
+
+.gc-settings-status-modal__hint {
+	font-size: 11px;
+	color: var(--text-muted);
 	margin-bottom: 4px;
 }
 
-.task-status-desc {
+.gc-settings-status-modal__error {
 	font-size: 12px;
-	color: var(--text-muted);
+	color: var(--text-error);
+	margin-top: 4px;
+}
+
+.gc-settings-status-modal__theme-section {
+	padding: 12px;
+	background: var(--background-secondary);
+	border-radius: 12px;
+	border: 1px solid var(--background-modifier-border);
+	margin-bottom: 16px;
+}
+
+.gc-settings-status-modal__theme-header {
+	font-weight: 500;
+	margin-bottom: 12px;
+}
+
+.gc-settings-status-modal__color-row {
+	display: flex;
+	gap: 24px;
+}
+
+.gc-settings-status-modal__color-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.gc-settings-status-modal__color-label {
+	font-size: 12px;
+}
+
+.gc-settings-status-modal__swatch-wrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.gc-settings-status-modal__hidden-input {
+	position: absolute;
+	width: 0;
+	height: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.gc-settings-status-modal__swatch {
+	width: 22px;
+	height: 22px;
+	border-radius: 9999px;
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+	transition: transform 120ms ease;
+}
+
+.gc-settings-status-modal__swatch:hover {
+	transform: scale(1.15);
+}
+
+.gc-settings-status-modal__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 24px;
+}
+
+.gc-settings-status-modal__btn {
+	padding: 8px 20px;
+	border-radius: 9999px;
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 14px;
+	transition: background 120ms ease;
+}
+
+.gc-settings-status-modal__btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gc-settings-status-modal__btn--primary {
+	border: none;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.gc-settings-status-modal__btn--primary:hover {
+	opacity: 0.9;
 }
 
 /* ========================================

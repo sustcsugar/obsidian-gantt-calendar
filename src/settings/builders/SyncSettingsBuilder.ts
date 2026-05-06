@@ -763,6 +763,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			if (!statusOptions['done']) statusOptions['done'] = '已完成';
 			if (!statusOptions['in_progress']) statusOptions['in_progress'] = '进行中';
 			if (!statusOptions['canceled']) statusOptions['canceled'] = '已取消';
+			statusOptions['_uncompleted'] = '未完成（组合）';
+			statusOptions['_completed'] = '已完成（组合）';
 
 			addSetting(setting =>
 				setting.setName('状态过滤')
@@ -1021,7 +1023,15 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				return;
 			}
 
-			new Notice('正在同步飞书任务...');
+			const controller = new AbortController();
+			const progressNotice = new Notice('🔄 正在同步飞书任务...', 0);
+			const stopBtn = progressNotice.noticeEl.createEl('button', { text: '停止同步' });
+			stopBtn.style.cssText = 'margin-left:12px;padding:2px 10px;cursor:pointer;';
+			stopBtn.onclick = () => {
+				controller.abort();
+				stopBtn.disabled = true;
+				stopBtn.textContent = '已停止';
+			};
 
 			const provider = new FeishuProvider({
 				enabled: true,
@@ -1047,9 +1057,24 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				enabledFormats: (this.plugin.settings.enabledTaskFormats as ('tasks' | 'dataview')[]) || ['tasks', 'dataview'],
 				globalFilter: this.plugin.settings.globalTaskFilter,
 				pushFilter: syncConfig.pushFilter as PushFilterConfig,
+				abortSignal: controller.signal,
+				onProgress: (msg: string) => {
+					const btnHtml = stopBtn.disabled ? '' : '<button style="margin-left:12px;padding:2px 10px;cursor:pointer;" onclick="this.previousElementSibling?.click()">停止同步</button>';
+					progressNotice.noticeEl.innerHTML = '<span>' + msg + '</span>' + btnHtml;
+					// 重新绑定停止按钮
+					const newBtn = progressNotice.noticeEl.querySelector('button');
+					if (newBtn && !controller.signal.aborted) {
+						newBtn.onclick = () => {
+							controller.abort();
+							newBtn.remove();
+						};
+					}
+				},
 			});
 
 			const result = await syncEngine.sync();
+
+			progressNotice.hide();
 
 			const parts: string[] = [];
 			if (result.pushed > 0) parts.push('推送 ' + result.pushed + ' 个');
@@ -1059,7 +1084,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const summary = parts.length > 0 ? parts.join('，') : '无变更';
 
 			if (result.errors.length > 0) {
-				new Notice('同步完成: ' + summary + '，' + result.errors.length + ' 个错误', 8000);
+				new Notice("同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
 			} else {
 				new Notice('同步完成: ' + summary);
 			}
@@ -1093,7 +1118,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				return;
 			}
 
-			new Notice('正在测试同步（最多各 5 条任务）...');
+			const controller = new AbortController();
 
 			const provider = new FeishuProvider({
 				enabled: true,
@@ -1121,6 +1146,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				pushFilter: syncConfig.pushFilter as PushFilterConfig,
 				tasklistGuid,
 				creatorOpenId: apiConfig.userOpenId,
+				abortSignal: controller.signal,
 			});
 
 			const result = await syncEngine.testSync(5);
@@ -1131,7 +1157,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const summary = parts.length > 0 ? parts.join('，') : '无变更';
 
 			if (result.errors.length > 0) {
-				new Notice('测试同步完成: ' + summary + '，' + result.errors.length + ' 个错误', 8000);
+				new Notice("测试同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
 			} else {
 				new Notice('测试同步完成: ' + summary);
 			}
