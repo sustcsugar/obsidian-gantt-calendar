@@ -20,7 +20,7 @@ import {
 import { parseTasksFromFile } from '../../tasks/taskParser/main';
 import { serializeTask, TaskUpdates } from '../../tasks/taskSerializer';
 import { Logger } from '../../utils/logger';
-import { PushFilterConfig, applyPushFilter } from '../../utils/taskFilter';
+import { PushFilterConfig, applyPushFilter, passesPushFilter } from '../../utils/taskFilter';
 
 /** 冲突解决策略 */
 export type ConflictStrategy = 'newest-win' | 'local-win' | 'remote-win';
@@ -599,22 +599,12 @@ export class FeishuTaskSync {
         const filter = this.options.pushFilter;
         if (!filter?.enabled) return;
 
-        // 收集所有出现在 push 变更中的 obsidianTask
-        const pushTasks = changes
-            .filter(c => c.type === 'push-create' || c.type === 'push-update')
-            .map(c => c.obsidianTask!)
-            .filter(Boolean);
-        const uniquePushTasks = [...new Map(pushTasks.map(t => [t.filePath + ':' + t.lineNumber, t])).values()];
-        const passingTasks = new Set(
-            applyPushFilter(uniquePushTasks, filter).map(t => t.filePath + ':' + t.lineNumber)
-        );
-
-        // 移除不通过过滤的 push 变更
+        // 仅过滤 push-create（入池），push-update（已在池中）不受过滤限制
         for (let i = changes.length - 1; i >= 0; i--) {
             const change = changes[i];
-            if (change.type === 'push-create' || change.type === 'push-update') {
-                const key = change.obsidianTask!.filePath + ':' + change.obsidianTask!.lineNumber;
-                if (!passingTasks.has(key)) {
+            if (change.type === 'push-create') {
+                const task = change.obsidianTask!;
+                if (!passesPushFilter(task, filter)) {
                     changes.splice(i, 1);
                 }
             }

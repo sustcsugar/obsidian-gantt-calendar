@@ -161,12 +161,9 @@ export interface GanttCalendarSettings {
 		}>;
 		pushFilter?: {
 			enabled: boolean;
-			statuses: string[];
-			tags: string[];
-			tagOperator: 'AND' | 'OR' | 'NOT';
-			priorities: string[];
 			paths: string[];
-			pathMode: 'include' | 'exclude';
+			completionStatus: 'all' | 'incomplete-only';
+			sinceDate: string;
 		};
 	};
 }

@@ -8,7 +8,6 @@ import { FeishuProvider } from '../data-layer/sources/api/providers/FeishuProvid
 import { FeishuTaskSync } from '../data-layer/feishu-sync/FeishuTaskSync';
 import { SyncStateManager } from '../data-layer/feishu-sync/syncState';
 import { DEFAULT_PUSH_FILTER } from '../utils/taskFilter';
-import type { PushFilterConfig } from '../utils/taskFilter';
 import { Logger } from '../utils/logger';
 
 /**
@@ -103,7 +102,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin): Promise<void
 			targetFile: syncConfig.feishuSyncTargetFile || 'gantt-calendar-feishu-sync.md',
 			enabledFormats: (plugin.settings.enabledTaskFormats as ('tasks' | 'dataview')[]) || ['tasks', 'dataview'],
 			globalFilter: plugin.settings.globalTaskFilter,
-			pushFilter: syncConfig.pushFilter as PushFilterConfig,
+			pushFilter: syncConfig.pushFilter as any,
 							tasklistGuid: apiConfig.tasklistGuid,
 			creatorOpenId: apiConfig.userOpenId,
 			creatorUserId: apiConfig.userId,

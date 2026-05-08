@@ -746,7 +746,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			// 启用开关
 			addSetting(setting =>
 				setting.setName('启用推送过滤')
-					.setDesc('开启后，仅符合条件的本地任务推送到飞书，拉取不受影响')
+					.setDesc('开启后，仅符合条件的新任务会推送到飞书，已同步任务的任何变更仍会同步')
 					.addToggle(toggle => toggle
 						.setValue(pushFilter.enabled)
 						.onChange(async (value: boolean) => {
@@ -758,212 +758,104 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 状态多选
-			const taskStatuses = this.plugin.settings.taskStatuses || [];
-			const statusOptions: Record<string, string> = {};
-			for (const s of taskStatuses) {
-				statusOptions[s.key] = s.name || s.key;
-			}
-			if (!statusOptions['todo']) statusOptions['todo'] = '待办';
-			if (!statusOptions['done']) statusOptions['done'] = '已完成';
-			if (!statusOptions['in_progress']) statusOptions['in_progress'] = '进行中';
-			if (!statusOptions['canceled']) statusOptions['canceled'] = '已取消';
-			statusOptions['_uncompleted'] = '未完成（组合）';
-			statusOptions['_completed'] = '已完成（组合）';
-
+			// 完成状态过滤
 			addSetting(setting =>
-				setting.setName('状态过滤')
-					.setDesc('仅推送所选状态的任务（不选=全部）')
-					.addDropdown(drop => {
-						drop.addOptions(statusOptions);
-						drop.setValue('');
-						drop.onChange(async (value: string) => {
-							if (!value) return;
+				setting.setName('完成状态过滤')
+					.setDesc('选择推送哪些任务，已同步任务不受影响')
+					.addDropdown(drop => drop
+						.addOptions({
+							'all': '全部任务',
+							'incomplete-only': '仅未完成任务',
+						})
+						.setValue(pushFilter.completionStatus || 'all')
+						.onChange(async (value: string) => {
 							if (!syncConfig.pushFilter) {
 								syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
 							}
-							if (!syncConfig.pushFilter.statuses.includes(value)) {
-								syncConfig.pushFilter.statuses = [...syncConfig.pushFilter.statuses, value];
-							}
+							syncConfig.pushFilter.completionStatus = value as 'all' | 'incomplete-only';
 							await this.saveAndRefreshViews();
-							await this.saveAndRefreshAll();
-						});
-						drop.selectEl.options[0] && (drop.selectEl.options[0].text = '选择状态...');
-					})
+						}))
 			);
 
-			// 已选状态标签
-			if (pushFilter.statuses.length > 0) {
-				const statusTagsEl = this.containerEl.createDiv('gc-sync-filter-tags');
-				pushFilter.statuses.forEach(statusKey => {
-					const tagEl = statusTagsEl.createEl('span', {
-						text: (statusOptions[statusKey] || statusKey) + ' ×',
-						cls: 'gc-sync-filter-tag'
-					});
-					tagEl.onclick = async () => {
-						if (!syncConfig.pushFilter) return;
-						syncConfig.pushFilter.statuses = syncConfig.pushFilter.statuses.filter((s: string) => s !== statusKey);
-						await this.saveAndRefreshViews();
-						await this.saveAndRefreshAll();
-					};
-				});
-			}
-
-			// 标签输入
-			addSetting(setting =>
-				setting.setName('标签过滤')
-					.setDesc('输入标签名后回车添加（不选=全部）')
+			// 日期过滤
+			addSetting(setting => {
+				const dateSetting = setting.setName('日期过滤')
+					.setDesc('仅推送指定日期之后的任务，任务任一日期字段匹配即可')
 					.addText(text => {
-						text.setPlaceholder('输入标签名...');
-						text.inputEl.onkeydown = async (e: KeyboardEvent) => {
-							if (e.key === 'Enter') {
-								const value = text.getValue().trim();
-								if (!value) return;
-								if (!syncConfig.pushFilter) {
-									syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-								}
-								if (!syncConfig.pushFilter.tags.includes(value)) {
-									syncConfig.pushFilter.tags = [...syncConfig.pushFilter.tags, value];
-									text.setValue('');
-									await this.saveAndRefreshViews();
-									await this.saveAndRefreshAll();
-								}
-							}
-						};
-					})
-			);
-
-			// 已选标签
-			if (pushFilter.tags.length > 0) {
-				const tagTagsEl = this.containerEl.createDiv('gc-sync-filter-tags');
-				pushFilter.tags.forEach((tag: string) => {
-					const tagEl = tagTagsEl.createEl('span', {
-						text: tag + ' ×',
-						cls: 'gc-sync-filter-tag'
-					});
-					tagEl.onclick = async () => {
-						if (!syncConfig.pushFilter) return;
-						syncConfig.pushFilter.tags = syncConfig.pushFilter.tags.filter((t: string) => t !== tag);
-						await this.saveAndRefreshViews();
-						await this.saveAndRefreshAll();
-					};
-				});
-			}
-
-			// 标签组合器
-			if (pushFilter.tags.length > 1) {
-				addSetting(setting =>
-					setting.setName('标签匹配方式')
-						.setDesc('多个标签之间的逻辑关系')
-						.addDropdown(drop => drop
-							.addOptions({
-								'OR': '任一匹配 (OR)',
-								'AND': '全部匹配 (AND)',
-								'NOT': '排除标签 (NOT)',
-							})
-							.setValue(pushFilter.tagOperator)
-							.onChange(async (value: string) => {
-								if (!syncConfig.pushFilter) {
-									syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-								}
-								syncConfig.pushFilter.tagOperator = value as 'AND' | 'OR' | 'NOT';
-								await this.saveAndRefreshViews();
-							}))
-				);
-			}
-
-			// 优先级过滤
-			const priorityOptions: Record<string, string> = {
-				'highest': '🔺 最高',
-				'high': '⏫ 高',
-				'medium': '🔼 中',
-				'normal': '普通',
-				'low': '🔽 低',
-				'lowest': '⏬ 最低',
-			};
-
-			addSetting(setting =>
-				setting.setName('优先级过滤')
-					.setDesc('仅推送所选优先级的任务（不选=全部）')
-					.addDropdown(drop => {
-						drop.addOptions(priorityOptions);
-						drop.setValue('');
-						drop.onChange(async (value: string) => {
-							if (!value) return;
-							if (!syncConfig.pushFilter) {
-								syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-							}
-							if (!syncConfig.pushFilter.priorities.includes(value)) {
-								syncConfig.pushFilter.priorities = [...syncConfig.pushFilter.priorities, value];
-							}
+						text.inputEl.type = 'date';
+						text.setValue(pushFilter.sinceDate || '');
+						text.onChange(async (value: string) => {
+							if (!syncConfig.pushFilter) { syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER }; }
+							syncConfig.pushFilter.sinceDate = value;
 							await this.saveAndRefreshViews();
-							await this.saveAndRefreshAll();
 						});
-						drop.selectEl.options[0] && (drop.selectEl.options[0].text = '选择优先级...');
-					})
-			);
-
-			// 已选优先级标签
-			if (pushFilter.priorities.length > 0) {
-				const prioEl = this.containerEl.createDiv('gc-sync-filter-tags');
-				pushFilter.priorities.forEach((p: string) => {
-					const tagEl = prioEl.createEl('span', {
-						text: (priorityOptions[p] || p) + ' ×',
-						cls: 'gc-sync-filter-tag'
 					});
-					tagEl.onclick = async () => {
-						if (!syncConfig.pushFilter) return;
-						syncConfig.pushFilter.priorities = syncConfig.pushFilter.priorities.filter((v: string) => v !== p);
+				const dateInputEl = dateSetting.components[0] as any;
+				dateSetting
+					.addButton(btn => btn.setButtonText('全部').onClick(async () => {
+						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+						syncConfig.pushFilter.sinceDate = '';
+						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = '';
 						await this.saveAndRefreshViews();
-						await this.saveAndRefreshAll();
-					};
-				});
-			}
-
-			// 路径过滤
+					}))
+					.addButton(btn => btn.setButtonText('近一周').onClick(async () => {
+						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+						const d = new Date(); d.setDate(d.getDate() - 7);
+						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+						await this.saveAndRefreshViews();
+					}))
+					.addButton(btn => btn.setButtonText('近1月').onClick(async () => {
+						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+						const d = new Date(); d.setDate(d.getDate() - 30);
+						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+						await this.saveAndRefreshViews();
+					}))
+					.addButton(btn => btn.setButtonText('近3月').onClick(async () => {
+						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+						const d = new Date(); d.setDate(d.getDate() - 90);
+						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+						await this.saveAndRefreshViews();
+					}))
+					.addButton(btn => btn.setButtonText('近半年').onClick(async () => {
+						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+						const d = new Date(); d.setDate(d.getDate() - 180);
+						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+						await this.saveAndRefreshViews();
+					}))
+					.addButton(btn => btn.setButtonText('近1年').onClick(async () => {
+						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+						const d = new Date(); d.setDate(d.getDate() - 365);
+						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+						await this.saveAndRefreshViews();
+					}))
+				;
+			});
+// 路径过滤
 			addSetting(setting =>
 				setting.setName('路径过滤')
-					.setDesc('按文件路径过滤，每行一个路径。文件夹路径以 / 结尾')
+					.setDesc('按文件路径过滤，每行一个路径，文件夹以 / 结尾')
 					.addTextArea(text => {
-						text.setPlaceholder('每行一个路径，如：\nprojects/\nDaily/Tasks.md')
-							.setValue(pushFilter.paths.join('\n'));
+						text.setPlaceholder('每行一个路径，如：' + String.fromCharCode(10) + 'projects/' + String.fromCharCode(10) + 'Daily/Tasks.md')
+							.setValue(pushFilter.paths.join(String.fromCharCode(10)));
 						text.inputEl.rows = 3;
 						text.onChange(async (value: string) => {
 							if (!syncConfig.pushFilter) {
 								syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
 							}
-							syncConfig.pushFilter.paths = value.split('\n').map((p: string) => p.trim()).filter((p: string) => p.length > 0);
+							syncConfig.pushFilter.paths = value.split(String.fromCharCode(10)).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
 							await this.saveAndRefreshViews();
 						});
 					})
 			);
-
-			// 路径模式
-			if (pushFilter.paths.length > 0) {
-				addSetting(setting =>
-					setting.setName('路径匹配模式')
-						.setDesc('include = 仅同步匹配路径的任务，exclude = 排除匹配路径的任务')
-						.addDropdown(drop => drop
-							.addOptions({
-								'include': '包含 (Include)',
-								'exclude': '排除 (Exclude)',
-							})
-							.setValue(pushFilter.pathMode)
-							.onChange(async (value: string) => {
-								if (!syncConfig.pushFilter) {
-									syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-								}
-								syncConfig.pushFilter.pathMode = value as 'include' | 'exclude';
-								await this.saveAndRefreshViews();
-							}))
-				);
-			}
 		});
 	}
 
-	// ==================== 配置读写 ====================
-
-	private getSyncConfiguration(): any {
+		private getSyncConfiguration(): any {
 		if (!this.plugin.settings.syncConfiguration) {
 			this.plugin.settings.syncConfiguration = {
 				enabledSources: {},
