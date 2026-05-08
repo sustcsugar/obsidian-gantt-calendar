@@ -43,8 +43,6 @@ export class SyncManagerBridge {
 			if (this.syncManager) {
 				Logger.info('SyncManagerBridge', 'Sync manager initialized');
 
-				// 注册同步命令
-				this.registerCommands();
 
 				// 如果启用了自动同步，启动定时同步
 				if (config.syncInterval > 0) {
@@ -120,19 +118,6 @@ export class SyncManagerBridge {
 			Logger.error('SyncManagerBridge', 'Sync error:', error);
 			new Notice(`同步出错: ${error instanceof Error ? error.message : String(error)}`);
 		}
-	}
-
-	/**
-	 * 注册同步相关命令
-	 */
-	private registerCommands(): void {
-		this.plugin.addCommand({
-			id: 'sync-now',
-			name: '立即同步',
-			callback: async () => {
-				await this.sync();
-			}
-		});
 	}
 
 	/**

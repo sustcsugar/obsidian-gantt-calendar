@@ -13,6 +13,7 @@ import { SyncStateManager } from '../../data-layer/feishu-sync/syncState';
 import { Logger } from '../../utils/logger';
 import { FileSuggest } from '../components';
 import { PushFilterConfig, DEFAULT_PUSH_FILTER } from '../../utils/taskFilter';
+import { syncFeishuTasks } from '../../commands/feishuCommands';
 
 /**
  * 同步设置构建器
@@ -1010,103 +1011,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 	// ==================== 同步操作 ====================
 
 		private async runManualSync(): Promise<void> {
-		try {
-			const syncConfig = this.getSyncConfiguration();
-			const apiConfig = syncConfig.api;
-
-			if (!apiConfig?.accessToken) {
-				new Notice('请先在设置中完成飞书授权');
-				return;
-			}
-
-			const clientId = apiConfig.clientId || apiConfig.appId;
-			const clientSecret = apiConfig.clientSecret || apiConfig.appSecret;
-
-			if (!clientId || !clientSecret) {
-				new Notice('请先配置飞书 App ID 和 App Secret');
-				return;
-			}
-
-			// 第一步：验证授权有效性（token 过期时尝试刷新，刷新失败则立即提示，不创建任何 UI）
-			const provider = new FeishuProvider({
-				enabled: true,
-				syncDirection: syncConfig.syncDirection,
-				autoSync: false,
-				syncInterval: 0,
-				conflictResolution: syncConfig.conflictResolution,
-				api: {
-					provider: 'feishu',
-					accessToken: apiConfig.accessToken,
-					refreshToken: apiConfig.refreshToken,
-					tokenExpireAt: apiConfig.tokenExpireAt,
-					clientId,
-					clientSecret,
-					redirectUri: apiConfig.redirectUri,
-				},
-			});
-
-			try {
-				await provider.validateAuth();
-			} catch (authError) {
-				new Notice('飞书授权已失效，请重新授权', 8000);
-				return;
-			}
-
-			// 授权有效，开始同步流程
-			const controller = new AbortController();
-			const progressNotice = new Notice('🔄 正在同步飞书任务...', 0);
-			const stopBtn = progressNotice.noticeEl.createEl('button', { text: '停止同步' });
-			stopBtn.style.cssText = 'margin-left:12px;padding:2px 10px;cursor:pointer;';
-			stopBtn.onclick = () => {
-				controller.abort();
-				stopBtn.disabled = true;
-				stopBtn.textContent = '已停止';
-			};
-
-			const stateManager = new SyncStateManager(this.plugin.app);
-			const syncEngine = new FeishuTaskSync(this.plugin.app, provider, stateManager, {
-				conflictStrategy: syncConfig.conflictResolution as 'newest-win' | 'local-win' | 'remote-win' || 'newest-win',
-				targetFile: syncConfig.feishuSyncTargetFile || 'gantt-calendar-feishu-sync.md',
-				enabledFormats: (this.plugin.settings.enabledTaskFormats as ('tasks' | 'dataview')[]) || ['tasks', 'dataview'],
-				globalFilter: this.plugin.settings.globalTaskFilter,
-				pushFilter: syncConfig.pushFilter as PushFilterConfig,
-								tasklistGuid: apiConfig.tasklistGuid,
-				creatorOpenId: apiConfig.userOpenId,
-				creatorUserId: apiConfig.userId,
-abortSignal: controller.signal,
-				onProgress: (msg: string) => {
-					const btnHtml = stopBtn.disabled ? '' : '<button style="margin-left:12px;padding:2px 10px;cursor:pointer;" onclick="this.previousElementSibling?.click()">停止同步</button>';
-					progressNotice.noticeEl.innerHTML = '<span>' + msg + '</span>' + btnHtml;
-					const newBtn = progressNotice.noticeEl.querySelector('button');
-					if (newBtn && !controller.signal.aborted) {
-						newBtn.onclick = () => {
-							controller.abort();
-							newBtn.remove();
-						};
-					}
-				},
-			});
-
-			const result = await syncEngine.sync();
-
-			progressNotice.hide();
-
-			const parts: string[] = [];
-			if (result.pushed > 0) parts.push('推送 ' + result.pushed + ' 个');
-			if (result.pulled > 0) parts.push('拉取 ' + result.pulled + ' 个');
-			if (result.conflicted > 0) parts.push('冲突 ' + result.conflicted + ' 个');
-			if (result.skipped > 0) parts.push('跳过 ' + result.skipped + ' 个');
-			const summary = parts.length > 0 ? parts.join('，') : '无变更';
-
-			if (result.errors.length > 0) {
-				new Notice("同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
-			} else {
-				new Notice('同步完成: ' + summary);
-			}
-		} catch (error) {
-			const errorMsg = error instanceof Error ? error.message : String(error);
-			new Notice('同步出错: ' + errorMsg);
-		}
+		await syncFeishuTasks(this.plugin);
 	}
 
 	private async runTestSync(): Promise<void> {
