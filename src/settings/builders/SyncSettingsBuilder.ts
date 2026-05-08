@@ -787,53 +787,97 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						text.onChange(async (value: string) => {
 							if (!syncConfig.pushFilter) { syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER }; }
 							syncConfig.pushFilter.sinceDate = value;
-							await this.saveAndRefreshViews();
+							updateActiveBtn();
+							await this.plugin.saveSettings();
 						});
 					});
 				const dateInputEl = dateSetting.components[0] as any;
+				const quickBtns: HTMLButtonElement[] = [];
+				const updateActiveBtn = (activeEl?: HTMLButtonElement | null) => {
+					for (const b of quickBtns) {
+						if (activeEl && b === activeEl) {
+							b.classList.add('mod-cta');
+						} else {
+							b.classList.remove('mod-cta');
+						}
+					}
+				};
 				dateSetting
-					.addButton(btn => btn.setButtonText('全部').onClick(async () => {
-						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-						syncConfig.pushFilter.sinceDate = '';
-						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = '';
-						await this.saveAndRefreshViews();
-					}))
-					.addButton(btn => btn.setButtonText('近一周').onClick(async () => {
-						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-						const d = new Date(); d.setDate(d.getDate() - 7);
-						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
-						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
-						await this.saveAndRefreshViews();
-					}))
-					.addButton(btn => btn.setButtonText('近1月').onClick(async () => {
-						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-						const d = new Date(); d.setDate(d.getDate() - 30);
-						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
-						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
-						await this.saveAndRefreshViews();
-					}))
-					.addButton(btn => btn.setButtonText('近3月').onClick(async () => {
-						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-						const d = new Date(); d.setDate(d.getDate() - 90);
-						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
-						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
-						await this.saveAndRefreshViews();
-					}))
-					.addButton(btn => btn.setButtonText('近半年').onClick(async () => {
-						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-						const d = new Date(); d.setDate(d.getDate() - 180);
-						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
-						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
-						await this.saveAndRefreshViews();
-					}))
-					.addButton(btn => btn.setButtonText('近1年').onClick(async () => {
-						if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
-						const d = new Date(); d.setDate(d.getDate() - 365);
-						syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
-						if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
-						await this.saveAndRefreshViews();
-					}))
-				;
+					.addButton(btn => {
+						btn.setButtonText('全部');
+						quickBtns.push(btn.buttonEl);
+						btn.onClick(async () => {
+							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+							syncConfig.pushFilter.sinceDate = '';
+							if (dateInputEl?.inputEl) dateInputEl.inputEl.value = '';
+							updateActiveBtn(btn.buttonEl);
+							await this.plugin.saveSettings();
+						});
+					})
+					.addButton(btn => {
+						btn.setButtonText('近一周');
+						quickBtns.push(btn.buttonEl);
+						btn.onClick(async () => {
+							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+							const d = new Date(); d.setDate(d.getDate() - 7);
+							syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+							if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+							updateActiveBtn(btn.buttonEl);
+							await this.plugin.saveSettings();
+						});
+					})
+					.addButton(btn => {
+						btn.setButtonText('近1月');
+						quickBtns.push(btn.buttonEl);
+						btn.onClick(async () => {
+							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+							const d = new Date(); d.setDate(d.getDate() - 30);
+							syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+							if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+							updateActiveBtn(btn.buttonEl);
+							await this.plugin.saveSettings();
+						});
+					})
+					.addButton(btn => {
+						btn.setButtonText('近3月');
+						quickBtns.push(btn.buttonEl);
+						btn.onClick(async () => {
+							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+							const d = new Date(); d.setDate(d.getDate() - 90);
+							syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+							if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+							updateActiveBtn(btn.buttonEl);
+							await this.plugin.saveSettings();
+						});
+					})
+					.addButton(btn => {
+						btn.setButtonText('近半年');
+						quickBtns.push(btn.buttonEl);
+						btn.onClick(async () => {
+							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+							const d = new Date(); d.setDate(d.getDate() - 180);
+							syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+							if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+							updateActiveBtn(btn.buttonEl);
+							await this.plugin.saveSettings();
+						});
+					})
+					.addButton(btn => {
+						btn.setButtonText('近1年');
+						quickBtns.push(btn.buttonEl);
+						btn.onClick(async () => {
+							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
+							const d = new Date(); d.setDate(d.getDate() - 365);
+							syncConfig.pushFilter.sinceDate = d.toISOString().slice(0, 10);
+							if (dateInputEl?.inputEl) dateInputEl.inputEl.value = d.toISOString().slice(0, 10);
+							updateActiveBtn(btn.buttonEl);
+							await this.plugin.saveSettings();
+						});
+					});
+				// 初始状态：无日期过滤时高亮"全部"
+				if (!pushFilter.sinceDate && quickBtns.length > 0) {
+					quickBtns[0].classList.add('mod-cta');
+				}
 			});
 // 路径过滤
 			addSetting(setting =>
