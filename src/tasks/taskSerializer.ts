@@ -23,6 +23,10 @@ export interface TaskUpdates {
 	ticktick?: string | null;
 	feishuGuid?: string | null;  // 飞书任务 GUID，null 表示清除
 	feishuDesc?: string | null;  // 飞书任务描述，null 表示清除
+	datePrecision?: {
+		dueDate?: 'day' | 'time';
+		startDate?: 'day' | 'time';
+	};
 }
 
 /**
@@ -44,6 +48,10 @@ interface MergedTask {
 	dueDate?: Date;
 	cancelledDate?: Date;
 	completionDate?: Date;
+	datePrecision?: {
+		dueDate?: 'day' | 'time';
+		startDate?: 'day' | 'time';
+	};
 }
 
 /**
@@ -160,6 +168,7 @@ export function serializeTask(
 		dueDate: updates.dueDate !== undefined ? (updates.dueDate || undefined) : task.dueDate,
 		cancelledDate: updates.cancelledDate !== undefined ? (updates.cancelledDate || undefined) : task.cancelledDate,
 		completionDate: updates.completionDate !== undefined ? (updates.completionDate || undefined) : task.completionDate,
+		datePrecision: updates.datePrecision !== undefined ? updates.datePrecision : task.datePrecision,
 	};
 
 	// 2. 从插件设置中获取全局过滤器和任务状态配置（官方 API）

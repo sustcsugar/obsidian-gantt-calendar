@@ -78,6 +78,10 @@ export interface GCTaskUpdates {
     priority?: string;
     dueDate?: Date;
     startDate?: Date;
+    datePrecision?: {
+        dueDate?: 'day' | 'time';
+        startDate?: 'day' | 'time';
+    };
 }
 
 /**
@@ -104,19 +108,23 @@ export function fromFeishuTask(feishu: FeishuTask): GCTaskUpdates {
         updates.completed = feishu.completed;
     }
 
-    // due_time → dueDate
+    // due_time → dueDate（根据 is_all_day 保留时间精度）
     if (feishu.due_time?.timestamp) {
         const millis = parseInt(feishu.due_time.timestamp, 10);
         if (!isNaN(millis)) {
             updates.dueDate = new Date(millis);
+            if (!updates.datePrecision) updates.datePrecision = {};
+            updates.datePrecision.dueDate = feishu.due_time.is_all_day === true ? 'day' : 'time';
         }
     }
 
-    // start_time → startDate
+    // start_time → startDate（根据 is_all_day 保留时间精度）
     if (feishu.start_time?.timestamp) {
         const millis = parseInt(feishu.start_time.timestamp, 10);
         if (!isNaN(millis)) {
             updates.startDate = new Date(millis);
+            if (!updates.datePrecision) updates.datePrecision = {};
+            updates.datePrecision.startDate = feishu.start_time.is_all_day === true ? 'day' : 'time';
         }
     }
 

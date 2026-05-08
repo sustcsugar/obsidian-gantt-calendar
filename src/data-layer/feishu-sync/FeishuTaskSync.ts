@@ -543,7 +543,8 @@ export class FeishuTaskSync {
         }
 
         const feishuChanged = feishu.update_time !== record.feishuUpdatedAt
-            || this.isFeishuCompleted(feishu) !== record.feishuCompleted;
+            || this.isFeishuCompleted(feishu) !== record.feishuCompleted
+            || this.hasTimePrecisionMismatch(feishu, obsidian);
         const obsidianChanged = this.hasObsidianChanged(obsidian, record);
 
         if (feishuChanged && obsidianChanged) {
@@ -589,6 +590,24 @@ export class FeishuTaskSync {
     private isFeishuCompleted(feishu: FeishuTaskRaw): boolean {
         return feishu.completed === true
             || (feishu.completed_at != null && feishu.completed_at !== '0');
+    }
+
+    /**
+     * 检测飞书与 OB 任务的时间精度是否不一致
+     *
+     * 当飞书任务有具体时间（is_all_day === false）但 OB 任务只有日期时，
+     * 视为飞书侧变更，触发 pull-update 以拉取时间信息。
+     */
+    private hasTimePrecisionMismatch(feishu: FeishuTaskRaw, obsidian: GCTask): boolean {
+        const feishuDueHasTime = feishu.due && feishu.due.is_all_day === false && feishu.due.timestamp;
+        const obDueHasTime = obsidian.datePrecision?.dueDate === 'time';
+        if (feishuDueHasTime && !obDueHasTime) return true;
+
+        const feishuStartHasTime = feishu.start && feishu.start.is_all_day === false && feishu.start.timestamp;
+        const obStartTime = obsidian.datePrecision?.startDate === 'time';
+        if (feishuStartHasTime && !obStartTime) return true;
+
+        return false;
     }
 
     /**
@@ -860,6 +879,7 @@ export class FeishuTaskSync {
             dueDate: updates.dueDate,
             startDate: updates.startDate,
             feishuGuid: updates.feishuGuid ?? undefined,
+            datePrecision: updates.datePrecision,
         };
 
         const taskUpdates: TaskUpdates = {
@@ -869,6 +889,7 @@ export class FeishuTaskSync {
             dueDate: updates.dueDate,
             startDate: updates.startDate,
             priority: updates.priority as any,
+            datePrecision: updates.datePrecision,
         };
 
         // serializeTask 返回 "[ ] 内容"，需要补上 "- " 列表标记
@@ -908,6 +929,7 @@ export class FeishuTaskSync {
                 dueDate: updates.dueDate !== undefined ? updates.dueDate : task.dueDate,
                 startDate: updates.startDate !== undefined ? updates.startDate : task.startDate,
                 priority: updates.priority as any,
+                datePrecision: updates.datePrecision !== undefined ? updates.datePrecision : task.datePrecision,
             };
 
             // completed 变更时同步 status，避免 serializeTask 用旧 status 覆盖 checkbox
