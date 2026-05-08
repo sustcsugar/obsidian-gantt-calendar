@@ -19,6 +19,8 @@ export interface SyncRecord {
     feishuUpdatedAt: string;
     /** 上次同步时的 Obsidian 任务内容哈希 */
     lastSyncedContent: string;
+    /** 上次同步时飞书任务的完成状态 */
+    feishuCompleted?: boolean;
 }
 
 /** 同步状态数据 (key 为 feishuGuid) */

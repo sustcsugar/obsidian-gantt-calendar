@@ -542,7 +542,8 @@ export class FeishuTaskSync {
             return { type: 'pull-update', feishuTask: feishu, obsidianTask: obsidian };
         }
 
-        const feishuChanged = feishu.update_time !== record.feishuUpdatedAt;
+        const feishuChanged = feishu.update_time !== record.feishuUpdatedAt
+            || this.isFeishuCompleted(feishu) !== record.feishuCompleted;
         const obsidianChanged = this.hasObsidianChanged(obsidian, record);
 
         if (feishuChanged && obsidianChanged) {
@@ -577,6 +578,17 @@ export class FeishuTaskSync {
             task.startDate?.getTime() || '0',
         ];
         return parts.join('|');
+    }
+
+    /**
+     * 判断飞书任务是否实际完成
+     *
+     * feishu.completed 可能为 undefined（v2 API 不一定返回），
+     * 因此同时检查 completed_at 字段：非零值表示已完成。
+     */
+    private isFeishuCompleted(feishu: FeishuTaskRaw): boolean {
+        return feishu.completed === true
+            || (feishu.completed_at != null && feishu.completed_at !== '0');
     }
 
     /**
@@ -663,6 +675,7 @@ export class FeishuTaskSync {
             obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
             feishuUpdatedAt: String(Date.now()),
             lastSyncedContent: this.hashTask(task),
+            feishuCompleted: task.completed,
         });
 
         result.pushed++;
@@ -678,8 +691,13 @@ export class FeishuTaskSync {
         const payload = toFeishuTaskPayload(task);
 
         // 同步完成状态：v2 API 使用 completed_at（毫秒时间戳），"0" 表示恢复未完成
-        if (feishu.completed !== task.completed) {
-            payload.completed_at = task.completed ? String(task.completionDate?.getTime() || Date.now()) : '0';
+        // 注意：feishu.completed 可能未返回（undefined），需同时检查 completed_at 判断实际状态
+        const feishuIsCompleted = this.isFeishuCompleted(feishu);
+
+        if (task.completed !== feishuIsCompleted) {
+            payload.completed_at = task.completed
+                ? String(task.completionDate?.getTime() || Date.now())
+                : '0';
         }
 
         if (Object.keys(payload).length === 0) {
@@ -700,6 +718,7 @@ export class FeishuTaskSync {
             obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
             feishuUpdatedAt: feishu.update_time || String(Date.now()),
             lastSyncedContent: this.hashTask(task),
+            feishuCompleted: task.completed,
         });
 
         result.pushed++;
@@ -712,7 +731,7 @@ export class FeishuTaskSync {
             task_guid: feishu.guid,
             summary: feishu.summary,
             description: feishu.description,
-            completed: feishu.completed,
+            completed: this.isFeishuCompleted(feishu),
             due_time: feishu.due,
             start_time: feishu.start,
             priority: feishu.priority,
@@ -734,6 +753,7 @@ export class FeishuTaskSync {
             obsidianTaskId: SyncStateManager.makeTaskId(file.path, lineNumber),
             feishuUpdatedAt: feishu.update_time || String(Date.now()),
             lastSyncedContent: '',
+            feishuCompleted: this.isFeishuCompleted(feishu),
         });
 
         result.pulled++;
@@ -750,7 +770,7 @@ export class FeishuTaskSync {
             task_guid: feishu.guid,
             summary: feishu.summary,
             description: feishu.description,
-            completed: feishu.completed,
+            completed: this.isFeishuCompleted(feishu),
             due_time: feishu.due,
             start_time: feishu.start,
             priority: feishu.priority,
@@ -764,6 +784,7 @@ export class FeishuTaskSync {
             obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
             feishuUpdatedAt: feishu.update_time || String(Date.now()),
             lastSyncedContent: this.hashTask(updatedTask as GCTask),
+            feishuCompleted: this.isFeishuCompleted(feishu),
         });
 
         result.pulled++;
@@ -898,6 +919,11 @@ export class FeishuTaskSync {
                 startDate: updates.startDate !== undefined ? updates.startDate : task.startDate,
                 priority: updates.priority as any,
             };
+
+            // completed 变更时同步 status，避免 serializeTask 用旧 status 覆盖 checkbox
+            if (updates.completed !== undefined) {
+                taskUpdates.status = updates.completed ? 'done' : 'todo';
+            }
 
             const taskContent = serializeTask(this.app, task, taskUpdates, task.format || this.getDefaultFormat());
 
