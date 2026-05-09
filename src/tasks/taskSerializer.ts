@@ -283,7 +283,7 @@ export function serializeTask(
 		// 只有当 date 是 Date 对象时才输出（null 和 undefined 都不输出）
 		if (date instanceof Date) {
 			// 根据精度决定输出格式：'time' 输出 YYYY-MM-DD HH:mm，否则仅 YYYY-MM-DD
-			const precision = task.datePrecision?.[field as keyof NonNullable<typeof task.datePrecision>];
+			const precision = merged.datePrecision?.[field as keyof NonNullable<typeof merged.datePrecision>];
 			const formatStr = precision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd';
 			const dateStr = formatDate(date, formatStr);
 			if (format === 'tasks') {

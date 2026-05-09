@@ -248,7 +248,7 @@ export interface FeishuTaskTime {
  * 飞书任务（API原始返回格式）
  *
  * 注意：
- * - 时间字段 create_time, update_time, completed_at 可能不返回或返回 "0"
+ * - 时间字段 created_at, updated_at, completed_at 可能不返回或返回 "0"
  * - start/due 中的 timestamp 是字符串格式的毫秒时间戳
  */
 export interface FeishuTaskRaw {
@@ -257,8 +257,8 @@ export interface FeishuTaskRaw {
     description?: string;
     completed?: boolean;
     completed_at?: string;  // 字符串格式的毫秒时间戳，或 "0"
-    create_time?: string;   // 字符串格式的毫秒时间戳
-    update_time?: string;   // 字符串格式的毫秒时间戳
+    created_at?: string;    // 字符串格式的毫秒时间戳
+    updated_at?: string;    // 字符串格式的毫秒时间戳
     start?: FeishuTaskTime;
     due?: FeishuTaskTime;
     status?: string;

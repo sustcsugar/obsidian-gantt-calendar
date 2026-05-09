@@ -542,10 +542,26 @@ export class FeishuTaskSync {
             return { type: 'pull-update', feishuTask: feishu, obsidianTask: obsidian };
         }
 
-        const feishuChanged = feishu.update_time !== record.feishuUpdatedAt
-            || this.isFeishuCompleted(feishu) !== record.feishuCompleted
-            || this.hasTimePrecisionMismatch(feishu, obsidian);
+        const timeMismatch = this.hasTimePrecisionMismatch(feishu, obsidian);
         const obsidianChanged = this.hasObsidianChanged(obsidian, record);
+
+        // timeMismatch 只在 OB 未变更时触发 pull（OB 变更时用户意图优先）
+        const feishuChanged = feishu.updated_at !== record.feishuUpdatedAt
+            || this.isFeishuCompleted(feishu) !== record.feishuCompleted
+            || (timeMismatch && !obsidianChanged);
+
+        Logger.debug('FeishuTaskSync', `detectMatchedChange [${feishu.summary || obsidian.description || '?'}]`, {
+            feishu_due: feishu.due ? { ts: feishu.due.timestamp, allDay: feishu.due.is_all_day } : null,
+            ob_dueDate: obsidian.dueDate?.toISOString(),
+            ob_precision: obsidian.datePrecision,
+            feishu_update_time: feishu.updated_at,
+            stored_update_time: record.feishuUpdatedAt,
+            update_time_match: feishu.updated_at === record.feishuUpdatedAt,
+            completed_changed: this.isFeishuCompleted(feishu) !== record.feishuCompleted,
+            timeMismatch,
+            feishuChanged,
+            obsidianChanged,
+        });
 
         if (feishuChanged && obsidianChanged) {
             return { type: 'conflict', feishuTask: feishu, obsidianTask: obsidian };
@@ -599,11 +615,19 @@ export class FeishuTaskSync {
      * 视为飞书侧变更，触发 pull-update 以拉取时间信息。
      */
     private hasTimePrecisionMismatch(feishu: FeishuTaskRaw, obsidian: GCTask): boolean {
-        const feishuDueHasTime = feishu.due && feishu.due.is_all_day === false && feishu.due.timestamp;
+        const feishuDueHasTime = feishu.due && feishu.due.is_all_day !== true && feishu.due.timestamp;
         const obDueHasTime = obsidian.datePrecision?.dueDate === 'time';
+
+        Logger.debug('FeishuTaskSync', `hasTimePrecisionMismatch [${feishu.summary || obsidian.description || '?'}]`, {
+            feishu_due: feishu.due,
+            feishuDueHasTime,
+            obDueHasTime,
+            ob_datePrecision: obsidian.datePrecision,
+        });
+
         if (feishuDueHasTime && !obDueHasTime) return true;
 
-        const feishuStartHasTime = feishu.start && feishu.start.is_all_day === false && feishu.start.timestamp;
+        const feishuStartHasTime = feishu.start && feishu.start.is_all_day !== true && feishu.start.timestamp;
         const obStartTime = obsidian.datePrecision?.startDate === 'time';
         if (feishuStartHasTime && !obStartTime) return true;
 
@@ -699,6 +723,13 @@ export class FeishuTaskSync {
     ): Promise<void> {
         const payload = toFeishuTaskPayload(task);
 
+        Logger.debug('FeishuTaskSync', `pushUpdate [${task.description || '?'}]`, {
+            ob_dueDate: task.dueDate?.toISOString(),
+            ob_completed: task.completed,
+            payload_due: payload.due,
+            payload_completed_at: payload.completed_at,
+        });
+
         // 同步完成状态：v2 API 使用 completed_at（毫秒时间戳），"0" 表示恢复未完成
         // 注意：feishu.completed 可能未返回（undefined），需同时检查 completed_at 判断实际状态
         const feishuIsCompleted = this.isFeishuCompleted(feishu);
@@ -725,7 +756,7 @@ export class FeishuTaskSync {
         this.state.setRecord(feishu.guid, {
             lastSyncAt: new Date().toISOString(),
             obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
-            feishuUpdatedAt: feishu.update_time || String(Date.now()),
+            feishuUpdatedAt: feishu.updated_at || String(Date.now()),
             lastSyncedContent: this.hashTask(task),
             feishuCompleted: task.completed,
         });
@@ -760,7 +791,7 @@ export class FeishuTaskSync {
         this.state.setRecord(feishu.guid, {
             lastSyncAt: new Date().toISOString(),
             obsidianTaskId: SyncStateManager.makeTaskId(file.path, lineNumber),
-            feishuUpdatedAt: feishu.update_time || String(Date.now()),
+            feishuUpdatedAt: feishu.updated_at || String(Date.now()),
             lastSyncedContent: '',
             feishuCompleted: this.isFeishuCompleted(feishu),
         });
@@ -785,13 +816,22 @@ export class FeishuTaskSync {
             priority: feishu.priority,
         });
 
+        Logger.debug('FeishuTaskSync', 'pullUpdate', {
+            task: feishu.summary,
+            feishu_due: feishu.due,
+            updates_dueDate: updates.dueDate?.toISOString(),
+            updates_precision: updates.datePrecision,
+            ob_dueDate_before: task.dueDate?.toISOString(),
+            ob_precision_before: task.datePrecision,
+        });
+
         await this.updateObsidianTaskLine(task, updates);
 
         const updatedTask = { ...task, ...updates };
         this.state.setRecord(feishu.guid, {
             lastSyncAt: new Date().toISOString(),
             obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
-            feishuUpdatedAt: feishu.update_time || String(Date.now()),
+            feishuUpdatedAt: feishu.updated_at || String(Date.now()),
             lastSyncedContent: this.hashTask(updatedTask as GCTask),
             feishuCompleted: this.isFeishuCompleted(feishu),
         });
@@ -815,7 +855,7 @@ export class FeishuTaskSync {
             case 'newest-win':
             default: {
                 // 比较时间戳
-                const feishuTime = parseInt(feishu.update_time || '0', 10);
+                const feishuTime = parseInt(feishu.updated_at || '0', 10);
                 // 从同步记录获取上次同步时间作为参考
                 const record = this.state.getRecord(feishu.guid);
                 const lastSync = record ? new Date(record.lastSyncAt).getTime() : 0;
