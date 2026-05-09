@@ -77,8 +77,15 @@ export class DailyTimelineTab {
 			}
 		}
 
-		// 按时间排序有时段任务
-		sortTasks(timedTasks, { field: 'startDate', order: 'asc' });
+		// 按截止时间排序
+		timedTasks.sort((a, b) => {
+			const timeA = a.dueDate ? a.dueDate.getHours() * 60 + a.dueDate.getMinutes() : null;
+			const timeB = b.dueDate ? b.dueDate.getHours() * 60 + b.dueDate.getMinutes() : null;
+			if (timeA === null && timeB === null) return 0;
+			if (timeA === null) return 1;
+			if (timeB === null) return -1;
+			return timeA - timeB;
+		});
 
 		// 渲染全天区域（始终显示，作为拖放目标）
 		const allDaySection = container.createDiv(SidebarClasses.elements.timelineAllDay);
@@ -98,35 +105,17 @@ export class DailyTimelineTab {
 	private getTodayTasks(tasks: GCTask[], today: Date): GCTask[] {
 		return tasks.filter(t => {
 			if (t.cancelled) return false;
-			// 检查各日期字段是否为今天
-			return (t.dueDate && isTodayInTimezone(t.dueDate)) ||
-				(t.scheduledDate && isTodayInTimezone(t.scheduledDate)) ||
-				(t.startDate && isTodayInTimezone(t.startDate));
+			return t.dueDate && isTodayInTimezone(t.dueDate);
 		});
 	}
 
 	private getDatePrecision(task: GCTask): 'day' | 'time' {
-		const precision = task.datePrecision;
-		if (precision) {
-			if (precision.dueDate === 'time') return 'time';
-			if (precision.scheduledDate === 'time') return 'time';
-			if (precision.startDate === 'time') return 'time';
-		}
-		return 'day';
+		return task.datePrecision?.dueDate === 'time' ? 'time' : 'day';
 	}
 
 	private getTaskTime(task: GCTask): number | null {
-		// 获取任务的时间（小时*60+分钟），使用与 getDatePrecision 一致的字段优先级
-		const precision = task.datePrecision;
-		const fields: Array<{ key: 'scheduledDate' | 'startDate' | 'dueDate'; date: Date | undefined }> = [
-			{ key: 'scheduledDate', date: task.scheduledDate },
-			{ key: 'startDate', date: task.startDate },
-			{ key: 'dueDate', date: task.dueDate },
-		];
-		for (const field of fields) {
-			if (field.date && precision?.[field.key] === 'time') {
-				return field.date.getHours() * 60 + field.date.getMinutes();
-			}
+		if (task.dueDate && task.datePrecision?.dueDate === 'time') {
+			return task.dueDate.getHours() * 60 + task.dueDate.getMinutes();
 		}
 		return null;
 	}
