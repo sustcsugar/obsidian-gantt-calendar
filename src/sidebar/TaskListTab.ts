@@ -30,6 +30,7 @@ export class TaskListTab {
 	private sortOrder: 'asc' | 'desc' = 'asc';
 
 	private debounceTimer: number | null = null;
+	private scrollContainer: HTMLElement | null = null;
 	private taskListEl: HTMLElement | null = null;
 	private cardMap: Map<string, { element: HTMLElement; destroy: () => void }> = new Map();
 
@@ -40,6 +41,7 @@ export class TaskListTab {
 
 	render(container: HTMLElement): void {
 		this.cardMap.clear();
+		this.scrollContainer = container;
 
 		// 搜索框
 		const searchContainer = container.createDiv(SidebarClasses.elements.searchInput);
@@ -436,8 +438,8 @@ export class TaskListTab {
 	private renderTaskList(): void {
 		if (!this.taskListEl) return;
 
-		// 保存滚动位置
-		const savedScrollTop = this.taskListEl.scrollTop;
+		// 保存滚动位置 — scrollContainer (contentContainer) 才是 overflow-y:auto 的真正滚动容器
+		const savedScrollTop = this.scrollContainer?.scrollTop ?? 0;
 
 		const allTasks = this.plugin?.taskCache?.getAllTasks() as GCTask[] | undefined;
 		if (!allTasks) return;
@@ -501,17 +503,41 @@ export class TaskListTab {
 			}
 		}
 
-		// 确保 DOM 顺序与排序顺序一致
-		for (const task of tasks) {
-			const taskId = `${task.filePath}:${task.lineNumber}`;
-			const cardResult = this.cardMap.get(taskId);
-			if (cardResult) {
-				this.taskListEl.appendChild(cardResult.element);
+		// 仅在 DOM 顺序与目标顺序不一致时才重排
+		if (this.needsReorder(tasks)) {
+			for (const task of tasks) {
+				const taskId = `${task.filePath}:${task.lineNumber}`;
+				const cardResult = this.cardMap.get(taskId);
+				if (cardResult) {
+					this.taskListEl.appendChild(cardResult.element);
+				}
 			}
 		}
 
 		// 恢复滚动位置
-		this.taskListEl.scrollTop = savedScrollTop;
+		if (this.scrollContainer) {
+			this.scrollContainer.scrollTop = savedScrollTop;
+		}
+	}
+
+	private needsReorder(tasks: GCTask[]): boolean {
+		const children = this.taskListEl!.children;
+		if (children.length !== this.cardMap.size) return true;
+
+		const elementToId = new Map<HTMLElement, string>();
+		for (const [id, card] of this.cardMap) {
+			elementToId.set(card.element, id);
+		}
+
+		let taskIdx = 0;
+		for (let i = 0; i < children.length; i++) {
+			const id = elementToId.get(children[i] as HTMLElement);
+			if (id) {
+				if (id !== `${tasks[taskIdx].filePath}:${tasks[taskIdx].lineNumber}`) return true;
+				taskIdx++;
+			}
+		}
+		return taskIdx !== tasks.length;
 	}
 
 	private filterTasks(tasks: GCTask[]): GCTask[] {
