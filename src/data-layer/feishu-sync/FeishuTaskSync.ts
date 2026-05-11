@@ -52,6 +52,20 @@ export interface FeishuSyncOptions {
     abortSignal?: AbortSignal;
 }
 
+/** 单条变更的详细记录 */
+export interface SyncResultDetail {
+    /** 变更类型 */
+    type: 'push-create' | 'push-update' | 'pull-create' | 'pull-update' | 'conflict' | 'clear-guid';
+    /** 变更类型标签 */
+    label: string;
+    /** 任务描述（用于展示） */
+    taskDescription: string;
+    /** 是否成功 */
+    success: boolean;
+    /** 错误信息（仅在失败时有值） */
+    error?: string;
+}
+
 /** 同步结果 */
 export interface SyncResult {
     pushed: number;
@@ -59,6 +73,8 @@ export interface SyncResult {
     conflicted: number;
     skipped: number;
     errors: string[];
+    /** 每个变更任务的详细记录 */
+    details: SyncResultDetail[];
 }
 
 /** 任务匹配对 */
@@ -102,7 +118,7 @@ export class FeishuTaskSync {
      * 执行双向同步
      */
     async sync(): Promise<SyncResult> {
-        const result: SyncResult = { pushed: 0, pulled: 0, conflicted: 0, skipped: 0, errors: [] };
+        const result: SyncResult = { pushed: 0, pulled: 0, conflicted: 0, skipped: 0, errors: [], details: [] };
         const onProgress = this.options.onProgress;
 
         try {
@@ -147,10 +163,24 @@ export class FeishuTaskSync {
                 onProgress?.(`🔄 飞书同步: ${this.changeLabel(change.type)} ${i + 1}/${total}`);
                 try {
                     await this.applyChange(change, result);
+                    const taskDesc = change.obsidianTask?.description || change.feishuTask?.summary || 'unknown';
+                    result.details.push({
+                        type: change.type,
+                        label: this.changeLabel(change.type),
+                        taskDescription: taskDesc,
+                        success: true,
+                    });
                 } catch (error) {
                     const taskDesc = change.obsidianTask?.description || change.feishuTask?.summary || 'unknown';
                     const msg = `[${change.type}] "${taskDesc}": ${error instanceof Error ? error.message : String(error)}`;
                     result.errors.push(msg);
+                    result.details.push({
+                        type: change.type,
+                        label: this.changeLabel(change.type),
+                        taskDescription: taskDesc,
+                        success: false,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
                     Logger.error('FeishuTaskSync', `Apply change failed: ${msg}`, error);
                 }
             }
@@ -207,7 +237,7 @@ export class FeishuTaskSync {
      * - 将飞书中截止时间最新、且未同步过的任务拉取到 OB
      */
     async testSync(limit: number = 5): Promise<SyncResult> {
-        const result: SyncResult = { pushed: 0, pulled: 0, conflicted: 0, skipped: 0, errors: [] };
+        const result: SyncResult = { pushed: 0, pulled: 0, conflicted: 0, skipped: 0, errors: [], details: [] };
         const onProgress = this.options.onProgress;
 
         try {
@@ -248,9 +278,22 @@ export class FeishuTaskSync {
                 onProgress?.(`🧪 测试同步: 推送 OB→飞书 ${i + 1}/${obTasksToPush.length}`);
                 try {
                     await this.pushCreate(task, result);
+                    result.details.push({
+                        type: 'push-create',
+                        label: '推送新建',
+                        taskDescription: task.description || 'unknown',
+                        success: true,
+                    });
                 } catch (error) {
                     const msg = `[push-create] "${task.description}": ${error instanceof Error ? error.message : String(error)}`;
                     result.errors.push(msg);
+                    result.details.push({
+                        type: 'push-create',
+                        label: '推送新建',
+                        taskDescription: task.description || 'unknown',
+                        success: false,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
                     Logger.error('FeishuTaskSync', `Test sync push failed: ${msg}`, error);
                 }
             }
@@ -262,9 +305,22 @@ export class FeishuTaskSync {
                 onProgress?.(`🧪 测试同步: 拉取 飞书→OB ${i + 1}/${feishuTasksToPull.length}`);
                 try {
                     await this.pullCreate(task, result);
+                    result.details.push({
+                        type: 'pull-create',
+                        label: '拉取新建',
+                        taskDescription: task.summary || 'unknown',
+                        success: true,
+                    });
                 } catch (error) {
                     const msg = `[pull-create] "${task.summary}": ${error instanceof Error ? error.message : String(error)}`;
                     result.errors.push(msg);
+                    result.details.push({
+                        type: 'pull-create',
+                        label: '拉取新建',
+                        taskDescription: task.summary || 'unknown',
+                        success: false,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
                     Logger.error('FeishuTaskSync', `Test sync pull failed: ${msg}`, error);
                 }
             }

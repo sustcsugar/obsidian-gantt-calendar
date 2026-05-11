@@ -9,6 +9,7 @@ import { FeishuTaskSync } from '../data-layer/feishu-sync/FeishuTaskSync';
 import { SyncStateManager } from '../data-layer/feishu-sync/syncState';
 import { DEFAULT_PUSH_FILTER } from '../utils/taskFilter';
 import { Logger } from '../utils/logger';
+import { showSyncResultModal } from '../modals/SyncResultModal';
 
 /**
  * 注册飞书相关命令
@@ -116,10 +117,10 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin): Promise<void
 			enabledFormats: (plugin.settings.enabledTaskFormats as ('tasks' | 'dataview')[]) || ['tasks', 'dataview'],
 			globalFilter: plugin.settings.globalTaskFilter,
 			pushFilter: syncConfig.pushFilter as any,
-							tasklistGuid: apiConfig.tasklistGuid,
+			tasklistGuid: apiConfig.tasklistGuid,
 			creatorOpenId: apiConfig.userOpenId,
 			creatorUserId: apiConfig.userId,
-abortSignal: controller.signal,
+			abortSignal: controller.signal,
 			onProgress: (msg: string) => {
 				const btnHtml = stopBtn.disabled ? '' : '<button style="margin-left:12px;padding:2px 10px;cursor:pointer;" onclick="this.previousElementSibling?.click()">停止同步</button>';
 				progressNotice.noticeEl.innerHTML = '<span>' + msg + '</span>' + btnHtml;
@@ -155,7 +156,10 @@ abortSignal: controller.signal,
 		if (result.skipped > 0) parts.push('跳过 ' + result.skipped + ' 个');
 		const summary = parts.length > 0 ? parts.join('，') : '无变更';
 
-		if (result.errors.length > 0) {
+		// 有详细变更记录时弹出详细结果弹窗
+		if (result.details.length > 0) {
+			showSyncResultModal(plugin.app, '飞书同步完成: ' + summary, result);
+		} else if (result.errors.length > 0) {
 			new Notice("同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
 		} else {
 			new Notice('同步完成: ' + summary);

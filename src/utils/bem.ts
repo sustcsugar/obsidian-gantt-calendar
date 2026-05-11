@@ -68,6 +68,8 @@ export const BLOCKS = {
 	SETTINGS_STATUS_MODAL: 'settings-status-modal',
 	/** 设置页热力图色卡选择器 */
 	SETTINGS_HEATMAP_CHIP: 'settings-heatmap-chip',
+	/** 同步结果弹窗 */
+	SYNC_RESULT_MODAL: 'sync-result-modal',
 } as const;
 
 /**
@@ -840,5 +842,31 @@ export const SettingsHeatmapChipClasses = {
 
 	modifiers: {
 		active: bem(BLOCKS.SETTINGS_HEATMAP_CHIP, 'chip', 'active'),
+	},
+};
+
+/**
+ * 同步结果弹窗类名常量
+ */
+export const SyncResultModalClasses = {
+	block: bem(BLOCKS.SYNC_RESULT_MODAL),
+
+	elements: {
+		summary: bem(BLOCKS.SYNC_RESULT_MODAL, 'summary'),
+		summaryItem: bem(BLOCKS.SYNC_RESULT_MODAL, 'summary-item'),
+		detailList: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-list'),
+		detailItem: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item'),
+		detailIcon: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-icon'),
+		detailLabel: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-label'),
+		detailDesc: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-desc'),
+		detailError: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-error'),
+		footer: bem(BLOCKS.SYNC_RESULT_MODAL, 'footer'),
+	},
+
+	modifiers: {
+		success: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'success'),
+		failed: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'failed'),
+		push: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'push'),
+		pull: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'pull'),
 	},
 };

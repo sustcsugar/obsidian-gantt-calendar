@@ -13,6 +13,7 @@ import { SyncStateManager } from '../../data-layer/feishu-sync/syncState';
 import { Logger } from '../../utils/logger';
 import { FileSuggest } from '../components';
 import { PushFilterConfig, DEFAULT_PUSH_FILTER } from '../../utils/taskFilter';
+import { showSyncResultModal } from '../../modals/SyncResultModal';
 import { syncFeishuTasks } from '../../commands/feishuCommands';
 
 /**
@@ -1054,7 +1055,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			if (result.pulled > 0) parts.push('拉取 ' + result.pulled + ' 个');
 			const summary = parts.length > 0 ? parts.join('，') : '无变更';
 
-			if (result.errors.length > 0) {
+			// 有详细变更记录时弹出详细结果弹窗
+			if (result.details.length > 0) {
+				showSyncResultModal(this.plugin.app, '测试同步完成: ' + summary, result);
+			} else if (result.errors.length > 0) {
 				new Notice("测试同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
 			} else {
 				new Notice('测试同步完成: ' + summary);
