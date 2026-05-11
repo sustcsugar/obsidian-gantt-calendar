@@ -11,7 +11,7 @@ import { setTimezoneOffset } from './src/dateUtils/timezone';
 
 import { SettingsManager } from './src/managers/SettingsManager';
 import { ThemeManager } from './src/managers/ThemeManager';
-import { ViewManager } from './src/managers/ViewManager';
+import { ViewManager, activateSidebarView } from './src/managers/ViewManager';
 import { SyncManagerBridge } from './src/managers/SyncManagerBridge';
 import { DailyNoteIndex } from './src/utils/dailyNoteSettingsBridge';
 
@@ -61,6 +61,11 @@ export default class GanttCalendarPlugin extends Plugin {
 
 		this.syncManagerBridge = new SyncManagerBridge(this);
 		this.syncManagerBridge.initialize(this.settings.syncConfiguration);
+
+		// 启动时自动打开侧边栏
+		this.app.workspace.onLayoutReady(() => {
+			activateSidebarView(this.app);
+		});
 	}
 
 	onunload() {
