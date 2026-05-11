@@ -1118,19 +1118,21 @@ export abstract class BaseTaskModal extends Modal {
 			/* 优先级板块 */
 			.${EditTaskModalClasses.elements.priorityGrid} {
 				display: grid;
-				grid-template-columns: repeat(3, 1fr);
-				gap: 8px;
+				grid-template-columns: repeat(6, 1fr);
+				gap: 6px;
 				margin-top: 8px;
 			}
 			.${EditTaskModalClasses.elements.priorityBtn} {
-				padding: 8px 12px;
+				padding: 6px 4px;
 				border: 1px solid var(--background-modifier-border);
 				border-radius: 4px;
 				background: var(--background-secondary);
 				color: var(--text-normal);
 				cursor: pointer;
-				font-size: var(--font-ui-small);
+				font-size: var(--font-ui-smaller);
 				transition: all 0.2s;
+				white-space: nowrap;
+				text-align: center;
 			}
 			.${EditTaskModalClasses.elements.priorityBtn}:hover {
 				background: var(--background-modifier-hover);
