@@ -541,6 +541,7 @@ export const EditTaskModalClasses = {
 		dateInputContainer: bem(BLOCKS.EDIT_TASK_MODAL, 'date-input-container'),
 		dateInput: bem(BLOCKS.EDIT_TASK_MODAL, 'date-input'),
 		dateClear: bem(BLOCKS.EDIT_TASK_MODAL, 'date-clear'),
+			dateAddTime: bem(BLOCKS.EDIT_TASK_MODAL, 'date-add-time'),
 
 		// 标签选择器板块
 		tagsSection: bem(BLOCKS.EDIT_TASK_MODAL, 'tags-section'),

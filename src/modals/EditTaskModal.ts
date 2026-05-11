@@ -222,9 +222,9 @@ class EditTaskModal extends BaseTaskModal {
 			});
 		});
 	}
-
 	/**
-	 * 重写 renderDateField 以跟踪日期变化（支持动态切换日期/日期时间）
+	 * 重写 renderDateField 以跟踪日期变化
+	 * 包装 onChange 回调，在每次变更时设置 datesChanged 标志
 	 */
 	protected renderDateField(
 		container: HTMLElement,
@@ -233,96 +233,10 @@ class EditTaskModal extends BaseTaskModal {
 		onChange: (d: Date | null) => void,
 		fieldKey?: string
 	): void {
-		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
-		const dateItem = container.createDiv(EditTaskModalClasses.elements.dateItem);
-		dateItem.createEl('label', {
-			text: label,
-			cls: EditTaskModalClasses.elements.dateLabel
-		});
-
-		const inputContainer = dateItem.createDiv(EditTaskModalClasses.elements.dateInputContainer);
-		const initialPrecision = fieldKey ? (this.datePrecision[fieldKey] || 'day') : 'day';
-		const isTimePrecision = initialPrecision === 'time';
-
-		// 根据精度创建对应类型的 input
-		const input = inputContainer.createEl('input', {
-			type: isTimePrecision ? 'datetime-local' : 'date',
-			cls: EditTaskModalClasses.elements.dateInput
-		});
-
-		if (current) {
-			input.value = isTimePrecision
-				? this.formatDateTimeForInput(current)
-				: this.formatDateForInput(current);
-		}
-
-		// 时间切换按钮：day精度时显示，点击后切换为 datetime-local
-		let timeToggleBtn: HTMLButtonElement | null = null;
-		if (!isTimePrecision) {
-			timeToggleBtn = inputContainer.createEl('button', {
-				cls: EditTaskModalClasses.elements.dateClear,
-				text: '+时间'
-			});
-			timeToggleBtn.style.fontSize = '0.75em';
-			timeToggleBtn.style.opacity = '0.6';
-			timeToggleBtn.addEventListener('click', () => {
-				if (!fieldKey) return;
-				this.datePrecision[fieldKey] = 'time';
-				// 记录当前日期值
-				const currentDateVal = input.value;
-				// 替换 input 为 datetime-local 类型
-				input.type = 'datetime-local';
-				if (currentDateVal) {
-					input.value = currentDateVal + 'T00:00';
-				}
-				// 隐藏切换按钮
-				timeToggleBtn!.style.display = 'none';
-				input.focus();
-				// 触发变更
-				if (input.value) {
-					const parsed = this.parseDate(input.value);
-					if (parsed) {
-						onChange(parsed);
-						this.datesChanged = true;
-					}
-				}
-			});
-		}
-
-		// 值变更处理
-		input.addEventListener('change', () => {
-			if (!input.value) {
-				onChange(null);
-				this.datesChanged = true;
-				if (fieldKey) this.datePrecision[fieldKey] = 'day';
-				return;
-			}
-			const parsed = this.parseDate(input.value);
-			if (parsed) {
-				if (fieldKey) {
-					this.datePrecision[fieldKey] = input.type === 'datetime-local' ? 'time' : 'day';
-				}
-				onChange(parsed);
-				this.datesChanged = true;
-			}
-		});
-
-		// 清空按钮
-		const clearBtn = inputContainer.createEl('button', {
-			cls: EditTaskModalClasses.elements.dateClear,
-			text: '×'
-		});
-		clearBtn.addEventListener('click', () => {
-			input.value = '';
-			onChange(null);
+		super.renderDateField(container, label, current, (d) => {
+			onChange(d);
 			this.datesChanged = true;
-			if (fieldKey) this.datePrecision[fieldKey] = 'day';
-			// 重置为 date 类型，显示时间切换按钮
-			if (input.type === 'datetime-local') {
-				input.type = 'date';
-				if (timeToggleBtn) timeToggleBtn.style.display = '';
-			}
-		});
+		}, fieldKey);
 	}
 
 	/**

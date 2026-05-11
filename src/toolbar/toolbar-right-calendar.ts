@@ -5,6 +5,8 @@ import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderCreateTaskButton } from './components/create-task-button';
 import { renderStatusFilterButton } from './components/status-filter';
+import { renderSyncButton } from './components/sync-button';
+import { syncFeishuTasks } from '../commands/feishuCommands';
 import type { CalendarViewType } from '../types';
 import type { DayViewRenderer } from '../views/DayView';
 import type { WeekViewRenderer } from '../views/WeekView';
@@ -16,10 +18,10 @@ import { ToolbarClasses } from '../utils/bem';
  * 工具栏右侧区域 - 日历视图功能区
  *
  * 按钮布局顺序：
- * 日视图：           [排序] | [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [刷新]
- * 周视图：[状态筛选] [排序] | [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [刷新]
- * 月视图：         [状态筛选] [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [刷新]
- * 年视图：                    [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [刷新]
+ * 日视图：           [排序] | [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [同步] [刷新]
+ * 周视图：[状态筛选] [排序] | [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [同步] [刷新]
+ * 月视图：         [状态筛选] [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [同步] [刷新]
+ * 年视图：                    [标签筛选] | [◀ 上一期] [今天] [下一期▶] | [同步] [刷新]
  */
 export class ToolbarRightCalendar {
 	private dayRenderer?: DayViewRenderer;
@@ -149,6 +151,13 @@ export class ToolbarRightCalendar {
 		// 设置按钮
 		if (plugin) {
 			renderSettingsButton(container, plugin);
+		}
+
+		// 飞书同步按钮
+		if (plugin) {
+			renderSyncButton(container, async () => {
+				await syncFeishuTasks(plugin);
+			});
 		}
 
 		// 刷新按钮（所有视图共有，始终在最右边）

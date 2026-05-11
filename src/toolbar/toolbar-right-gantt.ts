@@ -6,6 +6,8 @@ import { renderGanttScrollButtons } from './components/gantt-scroll-buttons';
 import { renderSortButton } from './components/sort-button';
 import { renderTagFilterButton } from './components/tag-filter';
 import { renderCreateTaskButton } from './components/create-task-button';
+import { renderSyncButton } from './components/sync-button';
+import { syncFeishuTasks } from '../commands/feishuCommands';
 import { ToolbarClasses } from '../utils/bem';
 
 /**
@@ -13,7 +15,7 @@ import { ToolbarClasses } from '../utils/bem';
  *
  * 按钮布局顺序：
  * 左侧（私有）：[滚动按钮] | [状态筛选]
- * 右侧（共有）：[排序] | [标签筛选] | [刷新]
+ * 右侧（共有）：[排序] | [标签筛选] | [同步] [刷新]
  *
  * 这样设计确保切换视图时共有按钮位置不变，避免跳动
  */
@@ -86,6 +88,13 @@ export class ToolbarRightGantt {
 		// 设置按钮
 		if (plugin) {
 			renderSettingsButton(container, plugin);
+		}
+
+		// 飞书同步按钮
+		if (plugin) {
+			renderSyncButton(container, async () => {
+				await syncFeishuTasks(plugin);
+			});
 		}
 
 		// 刷新按钮（所有视图共有，始终在最右边）

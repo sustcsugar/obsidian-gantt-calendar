@@ -245,7 +245,7 @@ export abstract class BaseTaskModal extends Modal {
 	}
 
 	/**
-	 * 渲染单个日期字段（支持动态切换日期/日期时间）
+	 * 渲染单个日期字段（日期与时间分离为独立输入框）
 	 */
 	protected renderDateField(
 		container: HTMLElement,
@@ -260,81 +260,123 @@ export abstract class BaseTaskModal extends Modal {
 			cls: EditTaskModalClasses.elements.dateLabel
 		});
 
-		const inputContainer = dateItem.createDiv(EditTaskModalClasses.elements.dateInputContainer);
 		const initialPrecision = fieldKey ? (this.datePrecision[fieldKey] || 'day') : 'day';
 		const isTimePrecision = initialPrecision === 'time';
 
-		// 根据精度创建对应类型的 input
-		const input = inputContainer.createEl('input', {
-			type: isTimePrecision ? 'datetime-local' : 'date',
+		// ---- 日期行 ----
+		const dateRow = dateItem.createDiv(EditTaskModalClasses.elements.dateInputContainer);
+		const dateInput = dateRow.createEl('input', {
+			type: 'date',
 			cls: EditTaskModalClasses.elements.dateInput
 		});
-
 		if (current) {
-			input.value = isTimePrecision
-				? this.formatDateTimeForInput(current)
-				: this.formatDateForInput(current);
+			dateInput.value = this.formatDateForInput(current);
 		}
 
-		// 时间切换按钮：day精度时显示，点击后切换为 datetime-local
-		let timeToggleBtn: HTMLButtonElement | null = null;
-		if (!isTimePrecision) {
-			timeToggleBtn = inputContainer.createEl('button', {
-				cls: EditTaskModalClasses.elements.dateClear,
-				text: '+时间'
-			});
-			timeToggleBtn.style.fontSize = '0.75em';
-			timeToggleBtn.style.opacity = '0.6';
-			timeToggleBtn.addEventListener('click', () => {
-				if (!fieldKey) return;
-				this.datePrecision[fieldKey] = 'time';
-				// 记录当前日期值
-				const currentDateVal = input.value;
-				// 替换 input 为 datetime-local 类型
-				input.type = 'datetime-local';
-				if (currentDateVal) {
-					input.value = currentDateVal + 'T00:00';
-				}
-				// 隐藏切换按钮
-				timeToggleBtn!.style.display = 'none';
-				input.focus();
-				// 触发变更
-				if (input.value) {
-					const parsed = this.parseDate(input.value);
-					if (parsed) onChange(parsed);
-				}
-			});
+		// 日期清空按钮（清除日期+时间）
+		const dateClearBtn = dateRow.createEl('button', {
+			cls: EditTaskModalClasses.elements.dateClear,
+			text: '×'
+		});
+
+		// ---- 时间行 ----
+		const timeRow = dateItem.createDiv(EditTaskModalClasses.elements.dateInputContainer);
+		timeRow.style.display = isTimePrecision ? 'flex' : 'none';
+
+		const timeInput = timeRow.createEl('input', {
+			type: 'time',
+			cls: EditTaskModalClasses.elements.dateInput
+		});
+		if (current && isTimePrecision) {
+			timeInput.value = this.formatTimeForInput(current);
 		}
 
-		// 值变更处理
-		input.addEventListener('change', () => {
-			if (!input.value) {
+		// 时间清空按钮（只清除时间）
+		const timeClearBtn = timeRow.createEl('button', {
+			cls: EditTaskModalClasses.elements.dateClear,
+			text: '×'
+		});
+
+		// ---- "+ 添加时间" 链接 ----
+		const addTimeLink = dateItem.createEl('span', {
+			cls: EditTaskModalClasses.elements.dateAddTime,
+			text: '+ 添加时间'
+		});
+		addTimeLink.style.display = isTimePrecision ? 'none' : '';
+
+		// ---- 辅助函数 ----
+		const buildDate = (): Date | null => {
+			const dateVal = dateInput.value;
+			if (!dateVal) return null;
+			const timeVal = timeInput.value;
+			if (timeVal) {
+				return this.parseDate(dateVal + 'T' + timeVal);
+			}
+			return this.parseDate(dateVal);
+		};
+
+		const notifyChange = () => {
+			onChange(buildDate());
+		};
+
+		// ---- 事件处理 ----
+
+		// 日期变更
+		dateInput.addEventListener('change', () => {
+			if (!dateInput.value) {
 				onChange(null);
 				if (fieldKey) this.datePrecision[fieldKey] = 'day';
 				return;
 			}
-			const parsed = this.parseDate(input.value);
-			if (parsed) {
-				if (fieldKey) {
-					this.datePrecision[fieldKey] = input.type === 'datetime-local' ? 'time' : 'day';
-				}
-				onChange(parsed);
+			if (fieldKey) {
+				this.datePrecision[fieldKey] = timeInput.value ? 'time' : 'day';
+			}
+			notifyChange();
+		});
+
+		// 时间变更
+		timeInput.addEventListener('change', () => {
+			if (fieldKey) {
+				this.datePrecision[fieldKey] = timeInput.value ? 'time' : 'day';
+			}
+			if (dateInput.value) {
+				notifyChange();
 			}
 		});
 
-		// 清空按钮
-		const clearBtn = inputContainer.createEl('button', {
-			cls: EditTaskModalClasses.elements.dateClear,
-			text: '×'
+		// 点击"+ 添加时间"
+		addTimeLink.addEventListener('click', () => {
+			if (!fieldKey) return;
+			this.datePrecision[fieldKey] = 'time';
+			timeRow.style.display = 'flex';
+			addTimeLink.style.display = 'none';
+			if (!timeInput.value) {
+				timeInput.value = '00:00';
+			}
+			timeInput.focus();
+			if (dateInput.value) {
+				notifyChange();
+			}
 		});
-		clearBtn.addEventListener('click', () => {
-			input.value = '';
+
+		// 日期清空：清除日期和时间
+		dateClearBtn.addEventListener('click', () => {
+			dateInput.value = '';
+			timeInput.value = '';
 			onChange(null);
 			if (fieldKey) this.datePrecision[fieldKey] = 'day';
-			// 重置为 date 类型，显示时间切换按钮
-			if (input.type === 'datetime-local') {
-				input.type = 'date';
-				if (timeToggleBtn) timeToggleBtn.style.display = '';
+			timeRow.style.display = 'none';
+			addTimeLink.style.display = '';
+		});
+
+		// 时间清空：只清除时间，保留日期
+		timeClearBtn.addEventListener('click', () => {
+			timeInput.value = '';
+			if (fieldKey) this.datePrecision[fieldKey] = 'day';
+			addTimeLink.style.display = '';
+			timeRow.style.display = 'none';
+			if (dateInput.value) {
+				notifyChange();
 			}
 		});
 	}
@@ -1151,6 +1193,17 @@ export abstract class BaseTaskModal extends Modal {
 			}
 			.${EditTaskModalClasses.elements.dateClear}:hover {
 				background: var(--background-modifier-hover);
+				color: var(--text-normal);
+			}
+			.${EditTaskModalClasses.elements.dateAddTime} {
+				font-size: var(--font-ui-smaller);
+				color: var(--text-muted);
+				cursor: pointer;
+				opacity: 0.7;
+				user-select: none;
+			}
+			.${EditTaskModalClasses.elements.dateAddTime}:hover {
+				opacity: 1;
 				color: var(--text-normal);
 			}
 
