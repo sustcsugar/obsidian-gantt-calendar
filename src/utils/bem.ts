@@ -684,6 +684,10 @@ export const WeekViewClasses = {
 		timeGutterLabel: bem(BLOCKS.WEEK_VIEW, 'time-gutter-label'),
 		timeSlot: bem(BLOCKS.WEEK_VIEW, 'time-slot'),
 		timeTasks: bem(BLOCKS.WEEK_VIEW, 'time-tasks'),
+			// 全天任务行
+			alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
+			alldaySlot: bem(BLOCKS.WEEK_VIEW, 'allday-slot'),
+			alldayTasks: bem(BLOCKS.WEEK_VIEW, 'allday-tasks'),
 	},
 
 	/** Modifiers */
@@ -692,6 +696,7 @@ export const WeekViewClasses = {
 		tasksColumnToday: bem(BLOCKS.WEEK_VIEW, 'tasks-column', 'today'),
 		timeline: bem(BLOCKS.WEEK_VIEW, undefined, 'timeline'),
 		dragOver: bem(BLOCKS.WEEK_VIEW, 'row', 'drag-over'),
+			alldayDragOver: bem(BLOCKS.WEEK_VIEW, 'allday-slot', 'drag-over'),
 	},
 };
 

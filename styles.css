@@ -1944,7 +1944,7 @@ Author: sugar
 .gc-week-view--timeline .gc-week-view__tasks-grid {
 	display: grid;
 	grid-template-columns: 48px repeat(7, 1fr);
-	grid-template-rows: 52px repeat(24, max-content);
+	grid-template-rows: 52px auto repeat(24, max-content);
 	overflow-y: visible;
 	overflow-x: hidden;
 	flex: 1 1 auto;
@@ -1984,6 +1984,43 @@ Author: sugar
 
 .gc-week-view__time-gutter-slot:first-of-type {
 	border-top: none;
+}
+
+/* 全天任务行 gutter（第 1 列第 2 行） */
+.gc-week-view__allday-gutter {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
+	padding: 2px 6px 0 0;
+	min-height: 28px;
+	font-size: 11px;
+	color: var(--text-muted);
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+}
+
+/* 全天任务格 */
+.gc-week-view__allday-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 2px 4px;
+	min-height: 28px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-right: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	transition: background-color 0.15s ease;
+}
+
+.gc-week-view__allday-tasks {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.gc-week-view__allday-slot--drag-over {
+	background-color: var(--background-modifier-hover);
 }
 
 .gc-week-view__time-gutter-label {

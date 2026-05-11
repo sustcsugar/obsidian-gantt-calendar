@@ -142,11 +142,30 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		// 保存每行所有元素的引用（用于整行高亮）
 		const rowElements: HTMLElement[][] = [];
 
-		// 时间标尺（第 1 列）
+		// === 第 2 行：全天任务行 ===
+		const alldayGutter = tasksGrid.createDiv(W.elements.alldayGutter);
+		alldayGutter.style.gridColumn = '1';
+		alldayGutter.style.gridRow = '2';
+		alldayGutter.setText('全天');
+
+		const alldaySlotContainers: HTMLElement[] = [];
+		const alldayRowElements: HTMLElement[] = [alldayGutter];
+
+		weekData.days.forEach((day, dayIdx) => {
+			const alldaySlot = tasksGrid.createDiv(W.elements.alldaySlot);
+			alldaySlot.style.gridColumn = `${dayIdx + 2}`;
+			alldaySlot.style.gridRow = '2';
+			const alldayTasksEl = alldaySlot.createDiv(W.elements.alldayTasks);
+			alldaySlotContainers[dayIdx] = alldayTasksEl;
+			alldayRowElements.push(alldaySlot);
+			this.setupDragDropForAlldaySlot(alldaySlot, day.date, alldayRowElements);
+		});
+
+		// 时间标尺（第 1 列，第 3-26 行）
 		for (let h = 0; h <= 23; h++) {
 			const gutterSlot = tasksGrid.createDiv(W.elements.timeGutterSlot);
 			gutterSlot.style.gridColumn = '1';
-			gutterSlot.style.gridRow = `${h + 2}`;
+			gutterSlot.style.gridRow = `${h + 3}`;
 			gutterSlot.createDiv(W.elements.timeGutterLabel)
 				.setText(`${String(h).padStart(2, '0')}:00`);
 			rowElements[h] = [gutterSlot];
@@ -158,7 +177,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			for (let h = 0; h <= 23; h++) {
 				const slot = tasksGrid.createDiv(W.elements.timeSlot);
 				slot.style.gridColumn = `${dayIdx + 2}`;
-				slot.style.gridRow = `${h + 2}`;
+				slot.style.gridRow = `${h + 3}`;
 				const tasksEl = slot.createDiv(W.elements.timeTasks);
 				slotContainers[dayIdx][h] = tasksEl;
 				rowElements[h].push(slot);
@@ -170,7 +189,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		// 填充任务到对应时间格
 		weekData.days.forEach((day, dayIdx) => {
 			this.populateTimelineSlots(
-				slotContainers[dayIdx], day.date, allRealTasks, allVirtualInstances, dateField
+				slotContainers[dayIdx], alldaySlotContainers[dayIdx], day.date, allRealTasks, allVirtualInstances, dateField
 			);
 		});
 
@@ -230,6 +249,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	 */
 	private populateTimelineSlots(
 		slotContainers: HTMLElement[],
+		alldayContainer: HTMLElement,
 		targetDate: Date,
 		allRealTasks: GCTask[],
 		allVirtualInstances: GCTask[],
@@ -260,21 +280,29 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		currentDayTasks = [...currentDayTasks, ...virtualForDay];
 		currentDayTasks = sortTasks(currentDayTasks, this.sortState);
 
-		// 构建 hour -> tasks 映射
+		// 分离全天任务和有时段任务
+		const allDayTasks: GCTask[] = [];
 		const tasksByHour: Map<number, GCTask[]> = new Map();
 		for (const task of currentDayTasks) {
 			const precision = task.datePrecision?.[dateField as keyof NonNullable<typeof task.datePrecision>];
-			let hour = 0;
 			if (precision === 'time') {
 				const dateValue = (task as any)[dateField];
+				let hour = 0;
 				if (dateValue instanceof Date) {
 					hour = dateValue.getHours();
 				} else if (dateValue) {
 					hour = new Date(dateValue).getHours();
 				}
+				if (!tasksByHour.has(hour)) tasksByHour.set(hour, []);
+				tasksByHour.get(hour)!.push(task);
+			} else {
+				allDayTasks.push(task);
 			}
-			if (!tasksByHour.has(hour)) tasksByHour.set(hour, []);
-			tasksByHour.get(hour)!.push(task);
+		}
+
+		// 渲染全天任务
+		for (const task of allDayTasks) {
+			this.renderTimelineTaskItem(task, alldayContainer, targetDate);
 		}
 
 		// 填充到对应容器
@@ -344,6 +372,69 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				this.refreshTasks();
 			},
 		}).render();
+	}
+
+	/**
+	 * 设置全天任务行的拖放功能
+	 */
+	private setupDragDropForAlldaySlot(slot: HTMLElement, targetDate: Date, alldayRowEls: HTMLElement[]): void {
+		slot.addEventListener('dragover', (e: DragEvent) => {
+			e.preventDefault();
+			if (e.dataTransfer) {
+				e.dataTransfer.dropEffect = 'move';
+			}
+			alldayRowEls.forEach(el => el.addClass(WeekViewClasses.modifiers.alldayDragOver));
+		});
+
+		slot.addEventListener('dragleave', (e: DragEvent) => {
+			const related = e.relatedTarget as HTMLElement | null;
+			if (related && !slot.contains(related)) {
+				alldayRowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.alldayDragOver));
+			}
+		});
+
+		slot.addEventListener('drop', async (e: DragEvent) => {
+			e.preventDefault();
+			alldayRowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.alldayDragOver));
+
+			const taskId = e.dataTransfer?.getData('taskId');
+			if (!taskId) return;
+
+			const [filePath, lineNum] = taskId.split(':');
+			const lineNumber = parseInt(lineNum, 10);
+
+			const allTasks = this.plugin.taskCache.getAllTasks();
+			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
+			if (!sourceTask) {
+				Logger.error('WeekView', 'Source task not found:', taskId);
+				return;
+			}
+
+			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
+
+			try {
+				this.clearTaskTooltips();
+
+				const newDate = new Date(targetDate);
+				newDate.setHours(0, 0, 0, 0);
+
+				// 设置为全天任务
+				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'day' };
+
+				await updateTaskDateField(
+					this.app,
+					sourceTask,
+					dateFieldName,
+					newDate,
+					this.plugin.settings.enabledTaskFormats
+				);
+
+				Logger.debug('WeekView', 'Task set to all-day via drag-drop', { taskId, targetDate });
+			} catch (error) {
+				Logger.error('WeekView', 'Error updating task to all-day:', error);
+				new Notice('更新任务失败');
+			}
+		});
 	}
 
 	/**
