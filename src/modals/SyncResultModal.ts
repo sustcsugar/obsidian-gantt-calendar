@@ -58,7 +58,8 @@ export class SyncResultModal extends Modal {
 
 		const listEl = container.createDiv(SyncResultModalClasses.elements.detailList);
 
-		for (const detail of this.result.details) {
+		for (let idx = 0; idx < this.result.details.length; idx++) {
+			const detail = this.result.details[idx];
 			const item = listEl.createDiv(SyncResultModalClasses.elements.detailItem);
 			item.addClass(detail.success ? SyncResultModalClasses.modifiers.success : SyncResultModalClasses.modifiers.failed);
 
@@ -71,6 +72,10 @@ export class SyncResultModal extends Modal {
 			} else {
 				item.addClass(SyncResultModalClasses.modifiers.pull);
 			}
+
+			// 序号
+			const indexEl = item.createSpan(SyncResultModalClasses.elements.detailIcon);
+			indexEl.textContent = `${idx + 1}.`;
 
 			// icon
 			const icon = item.createSpan(SyncResultModalClasses.elements.detailIcon);
