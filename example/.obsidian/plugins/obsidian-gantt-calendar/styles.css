@@ -21,12 +21,6 @@ Author: sugar
 	/* Task Status Colors */
 	--task-completed-color: #52c41a;
 	--task-pending-color: #ff7a45;
-
-	/* Timeline Slot — 卡片高度驱动格子行高 */
-	--gc-tl-card-h: 24px;
-	--gc-tl-card-gap: 2px;
-	--gc-tl-cards-per-slot: 2;
-	--gc-tl-slot-h: calc(var(--gc-tl-cards-per-slot) * var(--gc-tl-card-h) + (var(--gc-tl-cards-per-slot) - 1) * var(--gc-tl-card-gap));
 }
 
 /* ========================================
@@ -1388,55 +1382,6 @@ Author: sugar
 	margin-left: 0;
 }
 
-/* ========== 时间轴视图内的任务卡片 — 固定高度，单行不换行 ========== */
-.gc-sidebar__timeline-time-tasks .gc-task-card,
-.gc-week-view__time-tasks .gc-task-card,
-.gc-week-view__allday-tasks .gc-task-card,
-.gc-day-view__time-tasks .gc-task-card {
-	height: var(--gc-tl-card-h);
-	padding: 2px 6px;
-	font-size: 12px;
-	gap: 4px;
-	flex-wrap: nowrap;
-	overflow: hidden;
-	box-shadow: none;
-	border-left-width: 2px;
-}
-
-.gc-sidebar__timeline-time-tasks .gc-task-card__text,
-.gc-week-view__time-tasks .gc-task-card__text,
-.gc-week-view__allday-tasks .gc-task-card__text,
-.gc-day-view__time-tasks .gc-task-card__text {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.gc-sidebar__timeline-time-tasks .gc-task-card__tags,
-.gc-week-view__time-tasks .gc-task-card__tags,
-.gc-week-view__allday-tasks .gc-task-card__tags,
-.gc-day-view__time-tasks .gc-task-card__tags {
-	flex-wrap: nowrap;
-	overflow: hidden;
-	flex-shrink: 0;
-	max-width: 40%;
-}
-
-.gc-sidebar__timeline-time-tasks .gc-task-card__times,
-.gc-week-view__time-tasks .gc-task-card__times,
-.gc-week-view__allday-tasks .gc-task-card__times,
-.gc-day-view__time-tasks .gc-task-card__times {
-	flex-wrap: nowrap;
-	flex-shrink: 0;
-}
-
-.gc-sidebar__timeline-time-tasks .gc-task-card__checkbox,
-.gc-week-view__time-tasks .gc-task-card__checkbox,
-.gc-week-view__allday-tasks .gc-task-card__checkbox,
-.gc-day-view__time-tasks .gc-task-card__checkbox {
-	flex-shrink: 0;
-}
-
 .gc-task-card--month {
 	padding: 4px 6px;
 	font-size: 11px;
@@ -1590,6 +1535,18 @@ Author: sugar
 	color: #ec4899;
 }
 
+/* Tooltip Tags */
+.gc-task-tooltip__tags {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	margin-top: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
 
 /* ==================== 响应式设计 ==================== */
 
@@ -1894,8 +1851,7 @@ Author: sugar
 	max-width: 300px;
 	min-width: 250px;
 	font-size: 13px;
-	line-height: 1.47;
-	letter-spacing: -0.01px;
+	line-height: 1.5;
 	pointer-events: none;
 	opacity: 0;
 	transform: translateY(-8px) scale(0.95);
@@ -1921,52 +1877,10 @@ Author: sugar
 	font-size: 14px;
 }
 
-/* --- 属性区域 --- */
-.gc-task-tooltip .gc-task-tooltip__properties {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+.gc-task-tooltip .gc-task-tooltip__priority {
 	margin-bottom: 8px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-section {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	padding: 8px 8px 8px 12px;
-	background-color: var(--background-secondary);
-	border-radius: 6px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-row {
-	display: flex;
-	align-items: baseline;
-	gap: 8px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-label {
-	flex-shrink: 0;
-	width: 36px;
-	font-size: 12px;
-	color: var(--text-muted);
-	letter-spacing: -0.01px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-value {
-	color: var(--text-normal);
-	font-size: 13px;
-	word-break: break-word;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-value--overdue {
-	color: #d73a49;
-	font-weight: 600;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-divider {
-	height: 1px;
-	background-color: rgba(0, 0, 0, 0.06);
-	margin: 2px 0;
+	padding: 4px 0;
+	font-weight: 500;
 }
 
 .gc-task-tooltip .priority-highest {
@@ -1989,12 +1903,25 @@ Author: sugar
 	color: #0366d6;
 }
 
-.gc-task-tooltip .gc-task-tooltip__tags {
+.gc-task-tooltip .gc-task-tooltip__times {
 	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 6px;
-	flex-wrap: wrap;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 8px;
+	padding: 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.gc-task-tooltip .gc-task-tooltip__time-item {
+	font-size: 12px;
+	color: var(--text-muted);
+	padding: 2px 0;
+}
+
+.gc-task-tooltip .gc-task-tooltip__time-item--overdue {
+	color: #d73a49;
+	font-weight: 600;
 }
 
 .gc-task-tooltip .gc-task-tooltip__file {
@@ -2017,9 +1944,8 @@ Author: sugar
 .gc-week-view--timeline .gc-week-view__tasks-grid {
 	display: grid;
 	grid-template-columns: 48px repeat(7, 1fr);
-	grid-template-rows: 52px auto repeat(24, var(--gc-tl-slot-h));
-	align-content: start;
-	overflow-y: auto;
+	grid-template-rows: 52px auto repeat(24, max-content);
+	overflow-y: visible;
 	overflow-x: hidden;
 	flex: 1 1 auto;
 	min-height: 0;
@@ -2050,7 +1976,7 @@ Author: sugar
 	align-items: flex-start;
 	justify-content: flex-end;
 	padding: 2px 6px 0 0;
-	height: var(--gc-tl-slot-h);
+	min-height: 36px;
 	border-top: 1px solid var(--background-modifier-border);
 	background-color: var(--background-primary);
 	border-right: 1px solid var(--background-modifier-border);
@@ -2065,31 +1991,32 @@ Author: sugar
 	display: flex;
 	align-items: flex-start;
 	justify-content: flex-end;
-	padding: 0 6px 0 0;
+	padding: 2px 6px 0 0;
+	min-height: 28px;
 	font-size: 11px;
 	color: var(--text-muted);
 	border-right: 1px solid var(--background-modifier-border);
 	border-bottom: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary-alt);
+	background-color: var(--background-primary);
 }
 
 /* 全天任务格 */
 .gc-week-view__allday-slot {
 	display: flex;
 	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
-	padding: 0 4px;
+	gap: 2px;
+	padding: 2px 4px;
+	min-height: 28px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	border-right: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary-alt);
+	background-color: var(--background-primary);
 	transition: background-color 0.15s ease;
 }
 
 .gc-week-view__allday-tasks {
 	display: flex;
 	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
-	min-height: var(--gc-tl-card-h);
+	gap: 2px;
 }
 
 .gc-week-view__allday-slot--drag-over {
@@ -2107,19 +2034,18 @@ Author: sugar
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
-	padding: 0 4px;
-	height: var(--gc-tl-slot-h);
-	overflow: hidden;
+	padding: 2px 4px;
+	min-height: 36px;
 	border-top: 1px solid var(--background-modifier-border);
 	border-right: 1px solid var(--background-modifier-border);
+	overflow: visible;
 	position: relative;
 }
 
 .gc-week-view__time-tasks {
 	display: flex;
 	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
-	overflow: hidden;
+	gap: 2px;
 }
 
 .gc-week-view__row--drag-over {
@@ -2192,7 +2118,6 @@ Author: sugar
 	gap: 4px;
 	padding: 4px 0;
 	border-bottom: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary-alt);
 }
 
 .gc-day-view__allday-label {
@@ -2216,8 +2141,7 @@ Author: sugar
 
 .gc-day-view__time-slot {
 	display: flex;
-	height: var(--gc-tl-slot-h);
-	overflow: hidden;
+	min-height: 48px;
 	border-top: 1px solid var(--background-modifier-border);
 	position: relative;
 }
@@ -2240,9 +2164,9 @@ Author: sugar
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
+	gap: 4px;
+	padding: 4px 0;
 	min-height: 0;
-	overflow: hidden;
 }
 
 .gc-day-view__time-slot--drag-over {
@@ -2518,27 +2442,13 @@ Author: sugar
 	opacity: 0.85;
 }
 
-/* TaskCard metadata styles */
-.gc-task-card__metadata {
-	margin: 2px 0;
-	padding-left: 4px;
-}
-
-.gc-task-card__metadata-item {
-	display: inline-flex;
-	align-items: baseline;
-	gap: 2px;
-	font-size: 0.8em;
+.gc-task-tooltip__ticktick {
+	font-size: 0.9em;
 	color: var(--text-muted);
-	margin-right: 8px;
-}
-
-.gc-task-card__metadata-key {
-	font-weight: 600;
-}
-
-.gc-task-card__metadata-value {
-	color: var(--text-on-surface);
+	font-style: italic;
+	margin: 4px 0;
+	padding-left: 6px;
+	border-left: 2px solid var(--interactive-accent);
 }
 
 /* 6.9 Heatmap Components */
@@ -2709,6 +2619,50 @@ Author: sugar
 /* ========================================
    Settings: Sync (设置页: 飞书同步)
    ======================================== */
+
+/* 同步免责声明横幅 */
+.gc-settings-sync-warning {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	margin-bottom: 24px;
+	padding: 16px 20px;
+	border-radius: 11px;
+	border: 1px solid hsla(var(--color-orange-hsl), 0.35);
+	background-color: hsla(var(--color-orange-hsl), 0.08);
+}
+
+.gc-settings-sync-warning__icon {
+	flex-shrink: 0;
+	font-size: 22px;
+	line-height: 1.4;
+}
+
+.gc-settings-sync-warning__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.gc-settings-sync-warning__title {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-normal);
+	letter-spacing: -0.15px;
+	line-height: 1.35;
+}
+
+.gc-settings-sync-warning__desc {
+	margin-top: 6px;
+	font-size: 13px;
+	color: var(--text-muted);
+	line-height: 1.55;
+	letter-spacing: -0.08px;
+}
+
+.gc-settings-sync-warning__desc strong {
+	color: hsl(var(--color-orange-hsl));
+	font-weight: 600;
+}
 
 .gc-sync-hint {
 	margin-top: var(--size-4-3);
@@ -4315,9 +4269,6 @@ Author: sugar
 /* 全天区域 */
 .gc-sidebar__timeline-allday {
 	margin-bottom: 12px;
-	padding: 4px;
-	border-radius: 6px;
-	background-color: var(--background-primary-alt);
 }
 
 .gc-sidebar__timeline-allday-label {
@@ -4342,13 +4293,12 @@ Author: sugar
 	position: relative;
 }
 
-/* 时间轴固定行高：由 --gc-tl-cards-per-slot × --gc-tl-card-h 驱动 */
 .gc-sidebar__timeline-time-slot {
 	display: flex;
 	gap: 8px;
-	height: var(--gc-tl-slot-h);
-	overflow: hidden;
+	min-height: 40px;
 	border-top: 1px solid var(--background-modifier-border);
+	padding: 4px 0;
 	position: relative;
 }
 
@@ -4369,9 +4319,8 @@ Author: sugar
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
+	gap: 4px;
 	min-width: 0;
-	overflow: hidden;
 }
 
 /* 当前时间指示线 */
@@ -4381,7 +4330,7 @@ Author: sugar
 	right: 0;
 	height: 2px;
 	background-color: var(--interactive-accent);
-	z-index: 10;
+	z-index: 5;
 	pointer-events: none;
 }
 
@@ -4414,6 +4363,7 @@ Author: sugar
 /* 空时间格 "+" 创建按钮 */
 .gc-sidebar__timeline-slot-create {
 	flex: 1;
+	min-height: 30px;
 	display: flex;
 	align-items: center;
 	justify-content: center;

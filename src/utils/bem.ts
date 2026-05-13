@@ -68,6 +68,8 @@ export const BLOCKS = {
 	SETTINGS_STATUS_MODAL: 'settings-status-modal',
 	/** 设置页热力图色卡选择器 */
 	SETTINGS_HEATMAP_CHIP: 'settings-heatmap-chip',
+	/** 设置页同步免责声明 */
+	SETTINGS_SYNC_WARNING: 'settings-sync-warning',
 	/** 同步结果弹窗 */
 	SYNC_RESULT_MODAL: 'sync-result-modal',
 } as const;

@@ -15,6 +15,7 @@ import { FileSuggest } from '../components';
 import { PushFilterConfig, DEFAULT_PUSH_FILTER } from '../../utils/taskFilter';
 import { showSyncResultModal } from '../../modals/SyncResultModal';
 import { syncFeishuTasks } from '../../commands/feishuCommands';
+import { BLOCKS, bem } from '../../utils/bem';
 
 /**
  * 同步设置构建器
@@ -30,6 +31,9 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 	render(): void {
 		const syncConfig = this.getSyncConfiguration();
+
+		// 免责声明横幅（最顶部）
+		this.renderSyncWarningBanner();
 
 		// ===== 分组 1：飞书任务同步 =====
 		this.createSettingGroup('飞书任务同步', (group) => {
@@ -179,6 +183,28 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 		});
+	}
+
+	// ==================== 免责声明横幅 ====================
+
+	private renderSyncWarningBanner(): void {
+		const banner = this.containerEl.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING));
+
+		const iconWrap = banner.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'icon'));
+		iconWrap.setText('⚠️');
+
+		const body = banner.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'body'));
+
+		const title = body.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'title'));
+		title.setText('同步功能正在开发完善中');
+
+		const desc = body.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'desc'));
+		const line1 = desc.createDiv();
+		line1.setText('该功能可能存在未知的稳定性问题，使用前请务必备份您的笔记库，以免造成数据丢失。');
+
+		const line2 = desc.createDiv();
+		const strong = line2.createEl('strong');
+		strong.setText('数据无价，备份为先。');
 	}
 
 	// ==================== 任务清单卡片 ====================

@@ -2708,6 +2708,50 @@ Author: sugar
    Settings: Sync (设置页: 飞书同步)
    ======================================== */
 
+/* 同步免责声明横幅 */
+.gc-settings-sync-warning {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	margin-bottom: 24px;
+	padding: 16px 20px;
+	border-radius: 11px;
+	border: 1px solid hsla(var(--color-orange-hsl), 0.35);
+	background-color: hsla(var(--color-orange-hsl), 0.08);
+}
+
+.gc-settings-sync-warning__icon {
+	flex-shrink: 0;
+	font-size: 22px;
+	line-height: 1.4;
+}
+
+.gc-settings-sync-warning__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.gc-settings-sync-warning__title {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-normal);
+	letter-spacing: -0.15px;
+	line-height: 1.35;
+}
+
+.gc-settings-sync-warning__desc {
+	margin-top: 6px;
+	font-size: 13px;
+	color: var(--text-muted);
+	line-height: 1.55;
+	letter-spacing: -0.08px;
+}
+
+.gc-settings-sync-warning__desc strong {
+	color: hsl(var(--color-orange-hsl));
+	font-weight: 600;
+}
+
 .gc-sync-hint {
 	margin-top: var(--size-4-3);
 	padding: var(--size-2-3) var(--size-4-3);
