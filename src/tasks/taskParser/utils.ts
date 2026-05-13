@@ -10,6 +10,7 @@
 
 import { RegularExpressions } from '../../utils/RegularExpressions';
 import { createDate, isValidDate } from '../../dateUtils/timezone';
+import type { MetadataField } from '../../types';
 
 // ==================== 描述提取 ====================
 
@@ -61,7 +62,7 @@ export function extractTaskDescription(content: string): string {
     // 移除标签（使用统一正则入口）
     text = text.replace(RegularExpressions.DescriptionExtraction.removeTags, ' ');
 
-    // 移除 %%content%% ticktick 块
+    // 移除 %%content%% 块
     text = text.replace(RegularExpressions.DescriptionExtraction.removeTicktick, ' ');
 
     // 折叠多余空格并修剪首尾空格
@@ -102,7 +103,7 @@ export function extractTasksDescription(content: string): string {
     // 移除标签（使用统一正则入口）
     text = text.replace(RegularExpressions.DescriptionExtraction.removeTags, ' ');
 
-    // 移除 %%content%% ticktick 块
+    // 移除 %%content%% 块
     text = text.replace(RegularExpressions.DescriptionExtraction.removeTicktick, ' ');
 
     // 折叠多余空格
@@ -137,7 +138,7 @@ export function extractDataviewDescription(content: string): string {
     // 移除标签（使用统一正则入口）
     text = text.replace(RegularExpressions.DescriptionExtraction.removeTags, ' ');
 
-    // 移除 %%content%% ticktick 块
+    // 移除 %%content%% 块
     text = text.replace(RegularExpressions.DescriptionExtraction.removeTicktick, ' ');
 
     // 折叠多余空格
@@ -146,37 +147,32 @@ export function extractDataviewDescription(content: string): string {
     return text;
 }
 
-// ==================== ticktick / 内联元数据提取 ====================
+// ==================== 统一内联元数据提取 ====================
 
 /**
- * 提取任务 ticktick（%%content%% 块）和结构化内联元数据（%%[key::value]%% 块）
+ * 提取所有 %%[key::value]%% 内联元数据字段
  *
- * 从任务内容中提取：
- * 1. %%[key::value]%% 结构化元数据 → metadataFields (Record<string, string>)
- * 2. %%plain text%% 非结构化文本 → ticktick (拼接字符串)
+ * 统一解析任务内容中所有 %%[key::value]%% 模式，包括 guid、desc、ticktick
+ * 以及任何自定义 key，全部放入一个数组中。
  *
- * 并从内容中移除这些块。
- *
- * @param content - 任务内容（已移除全局过滤器和飞书字段）
- * @returns 包含 ticktick 文本、metadataFields 和清理后内容的对象
+ * @param content - 任务内容（已移除全局过滤器）
+ * @returns 包含 metadataFields 数组和清理后内容的对象
  *
  * @example
- * extractTicktick("任务 %%[project:: obsidian]%% %%重要备注%% ⏫ 📅 2024-01-15")
- * // 返回: { ticktick: "重要备注", metadataFields: { project: "obsidian" }, contentWithoutTicktick: "任务  ⏫ 📅 2024-01-15" }
+ * extractTicktick("任务 %%[guid:: abc]%% %%[project:: obsidian]%% ⏫")
+ * // 返回: { metadataFields: [{key:"guid",value:"abc"}, {key:"project",value:"obsidian"}], contentWithoutTicktick: "任务  ⏫" }
  *
  * extractTicktick("普通任务")
- * // 返回: { ticktick: undefined, metadataFields: {}, contentWithoutTicktick: "普通任务" }
+ * // 返回: { metadataFields: [], contentWithoutTicktick: "普通任务" }
  */
 export function extractTicktick(content: string): {
-    ticktick: string | undefined;
-    metadataFields: Record<string, string>;
+    metadataFields: MetadataField[];
     contentWithoutTicktick: string;
 } {
-    const ticktickMatches: string[] = [];
-    const metadataFields: Record<string, string> = {};
+    const metadataFields: MetadataField[] = [];
     let match: RegExpExecArray | null;
 
-    // 第一步：提取 %%[key::value]%% 结构化元数据
+    // 一次性提取所有 %%[key::value]%% 结构化元数据
     const metadataRegex = RegularExpressions.DescriptionExtraction.matchMetadataField;
     metadataRegex.lastIndex = 0;
 
@@ -184,83 +180,26 @@ export function extractTicktick(content: string): {
         const key = match[1].trim();
         const value = match[2].trim();
         if (key) {
-            metadataFields[key] = value;
+            metadataFields.push({ key, value });
         }
     }
 
-    // 第二步：移除结构化元数据块后，提取剩余 %%text%% 作为 ticktick
-    const contentAfterMetadata = Object.keys(metadataFields).length > 0
-        ? content.replace(RegularExpressions.DescriptionExtraction.matchMetadataField, ' ')
-        : content;
-
-    const ticktickRegex = RegularExpressions.DescriptionExtraction.matchTicktick;
-    ticktickRegex.lastIndex = 0;
-
-    while ((match = ticktickRegex.exec(contentAfterMetadata)) !== null) {
-        const text = match[1].trim();
-        if (text) {
-            ticktickMatches.push(text);
-        }
-    }
-
-    const ticktick = ticktickMatches.length > 0 ? ticktickMatches.join(' ') : undefined;
-    const hasMetadata = Object.keys(metadataFields).length > 0;
+    // 移除所有 %%...%% 块，得到干净的内容
     const contentWithoutTicktick = content
         .replace(RegularExpressions.DescriptionExtraction.removeTicktick, ' ')
         .replace(/\s{2,}/g, ' ')
         .trim();
 
-    return { ticktick, metadataFields: hasMetadata ? metadataFields : {}, contentWithoutTicktick };
-}
-
-// ==================== 飞书同步字段提取 ====================
-
-/** 匹配 %%[guid:: xxx]%% 格式 */
-const FEISHU_GUID_REGEX = /%%\[guid::\s*([^\]]+)\]%%/;
-
-/** 匹配 %%[desc:: xxx]%% 格式 */
-const FEISHU_DESC_REGEX = /%%\[desc::\s*([^\]]+)\]%%/;
-
-/** 移除 %%[guid:: xxx]%% 和 %%[desc:: xxx]%% 及周围空格 */
-const REMOVE_FEISHU_FIELDS = /\s*%%\[(?:guid|desc)::\s*[^\]]+\]%%\s*/g;
-
-/**
- * 提取飞书任务 GUID
- *
- * 从任务内容中提取 %%[guid:: xxx]%% 格式的飞书任务 GUID。
- *
- * @param content - 原始任务内容
- * @returns 飞书 GUID，不存在则返回 undefined
- */
-export function extractFeishuGuid(content: string): string | undefined {
-    const match = content.match(FEISHU_GUID_REGEX);
-    return match ? match[1].trim() : undefined;
+    return { metadataFields, contentWithoutTicktick };
 }
 
 /**
- * 提取飞书任务描述
- *
- * 从任务内容中提取 %%[desc:: xxx]%% 格式的飞书任务描述。
- *
- * @param content - 原始任务内容
- * @returns 飞书描述，不存在则返回 undefined
+ * 从 metadata 数组中查找给定 key 的第一个值
  */
-export function extractFeishuDesc(content: string): string | undefined {
-    const match = content.match(FEISHU_DESC_REGEX);
-    return match ? match[1].trim() : undefined;
-}
-
-/**
- * 移除飞书同步字段标记
- *
- * 从任务内容中移除 %%[guid:: xxx]%% 和 %%[desc:: xxx]%% 标记。
- * 用于在提取后清理内容，防止被 ticktick 解析器误捕获。
- *
- * @param content - 原始任务内容
- * @returns 移除飞书字段标记后的内容
- */
-export function removeFeishuFields(content: string): string {
-    return content.replace(REMOVE_FEISHU_FIELDS, ' ').replace(/\s{2,}/g, ' ').trim();
+export function findMetadataValue(fields: MetadataField[] | undefined, key: string): string | undefined {
+    if (!fields) return undefined;
+    const entry = fields.find(f => f.key === key);
+    return entry?.value || undefined;
 }
 
 // ==================== 字符串处理 ====================

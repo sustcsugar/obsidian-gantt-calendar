@@ -1,5 +1,5 @@
 import { App } from 'obsidian';
-import { GCTask } from '../types';
+import { GCTask, MetadataField } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { TaskStatusType, getStatusBySymbol, DEFAULT_TASK_STATUSES } from './taskStatus';
 
@@ -20,10 +20,8 @@ export interface TaskUpdates {
 	completionDate?: Date | null;
 	content?: string;
 	tags?: string[];
-	ticktick?: string | null;
-	metadataFields?: Record<string, string> | null;
-	feishuGuid?: string | null;  // 飞书任务 GUID，null 表示清除
-	feishuDesc?: string | null;  // 飞书任务描述，null 表示清除
+	metadataFields?: MetadataField[] | null;
+	feishuGuid?: string | null;  // 飞书任务 GUID（同步系统直接写入时使用）
 	datePrecision?: {
 		dueDate?: 'day' | 'time';
 		startDate?: 'day' | 'time';
@@ -40,10 +38,8 @@ interface MergedTask {
 	priority?: string;
 	description: string;
 	tags?: string[];  // 任务标签
-		ticktick?: string;  // ticktick 文本
-	metadataFields?: Record<string, string>;  // 结构化内联元数据字段
-	feishuGuid?: string;  // 飞书任务 GUID
-	feishuDesc?: string;  // 飞书任务描述
+	metadataFields?: MetadataField[];  // 统一内联元数据字段列表
+	feishuGuid?: string;  // 飞书任务 GUID（fallback 用）
 	createdDate?: Date;
 	startDate?: Date;
 	scheduledDate?: Date;
@@ -102,11 +98,19 @@ function getPriorityEmoji(priority: 'highest' | 'high' | 'medium' | 'low' | 'low
 }
 
 /**
+ * 检查 metadataFields 中是否已包含某个 key
+ */
+function metadataContainsKey(fields: MetadataField[] | undefined, key: string): boolean {
+	if (!fields) return false;
+	return fields.some(f => f.key === key);
+}
+
+/**
  * 序列化任务为文本行
  *
  * 按照固定顺序构建任务行：
- * Tasks 格式: [复选框] [全局过滤] [标签] [描述] [优先级] [创建] [开始] [计划] [截止] [取消] [完成]
- * Dataview 格式: [复选框] [全局过滤] [标签] [描述] [priority] [created] [start] [scheduled] [due] [cancelled] [completion]
+ * Tasks 格式: [复选框] [全局过滤] [标签] [描述] [元数据字段] [优先级] [创建] [开始] [计划] [截止] [取消] [完成]
+ * Dataview 格式: [复选框] [全局过滤] [标签] [描述] [元数据字段] [priority] [created] [start] [scheduled] [due] [cancelled] [completion]
  *
  * @param app Obsidian App 实例（用于访问插件设置）
  * @param task 原始任务对象
@@ -131,20 +135,12 @@ export function serializeTask(
 	// 这是防止字段丢失的关键修复
 	if (!finalDescription || finalDescription.trim() === '') {
 		if (task.content && task.content.trim() !== '') {
-			// 使用原始内容，但移除 Tasks 格式的元数据（emoji 优先级和日期）
-			// 这样可以保留任务的核心描述文本
 			let fallbackDesc = task.content;
-			// 移除优先级 emoji
 			fallbackDesc = fallbackDesc.replace(/[🔺⏫🔼🔽⏬]/g, ' ');
-			// 移除日期 emoji + 日期值
 			fallbackDesc = fallbackDesc.replace(/[➕🛫⏳📅❌✅]\s*\d{4}-\d{2}-\d{2}/g, ' ');
-			// 移除 Dataview 字段
 			fallbackDesc = fallbackDesc.replace(/\[(priority|created|start|scheduled|due|cancelled|completion)::\s*[^\]]+\]/gi, ' ');
-			// 移除 %%content%% ticktick 块
 			fallbackDesc = fallbackDesc.replace(/%%.+?%%/g, " ");
-			// 移除标签（因为标签会单独处理）
-			fallbackDesc = fallbackDesc.replace(/#[\u4e00-\u9fa5a-zA-Z0-9_]+/g, ' ');
-			// 清理空格
+			fallbackDesc = fallbackDesc.replace(/#[一-龥a-zA-Z0-9_]+/g, ' ');
 			finalDescription = fallbackDesc.replace(/\s+/g, ' ').trim();
 		}
 	}
@@ -153,17 +149,13 @@ export function serializeTask(
 		completed: updates.completed !== undefined ? updates.completed : task.completed,
 		cancelled: updates.cancelled !== undefined ? updates.cancelled : task.cancelled,
 		status: updates.status !== undefined ? updates.status : task.status,
-		// 优先级：所有任务都应该有优先级，默认为 'normal'
 		priority: updates.priority !== undefined
 			? getPriorityEmoji(updates.priority)
 			: getPriorityEmoji((task.priority || 'normal') as any),
 		description: finalDescription,
-		// 保留标签，优先使用更新的标签
 		tags: updates.tags !== undefined ? updates.tags : task.tags,
-		ticktick: updates.ticktick !== undefined ? (updates.ticktick || undefined) : task.ticktick,
-			metadataFields: updates.metadataFields !== undefined ? (updates.metadataFields || undefined) : task.metadataFields,
+		metadataFields: updates.metadataFields !== undefined ? (updates.metadataFields || undefined) : task.metadataFields,
 		feishuGuid: updates.feishuGuid !== undefined ? (updates.feishuGuid || undefined) : task.feishuGuid,
-		feishuDesc: updates.feishuDesc !== undefined ? (updates.feishuDesc || undefined) : task.feishuDesc,
 		// 处理日期字段：undefined 使用原始值，null 转为 undefined（表示清除）
 		createdDate: updates.createdDate !== undefined ? (updates.createdDate || undefined) : task.createdDate,
 		startDate: updates.startDate !== undefined ? (updates.startDate || undefined) : task.startDate,
@@ -182,17 +174,14 @@ export function serializeTask(
 	// 3. 构建任务行的各个部分
 	const parts: string[] = [];
 
-	// 复选框：根据 status 确定符号
-	// 如果有 status，使用对应的符号；否则使用传统的 completed/cancelled 判断
-	let checkboxSymbol = ' '; // 默认待办
+	// 复选框
+	let checkboxSymbol = ' ';
 	if (merged.status) {
-		// 根据状态查找对应的符号
 		const statusConfig = taskStatuses.find((s: { key: TaskStatusType; symbol: string }) => s.key === merged.status);
 		if (statusConfig) {
 			checkboxSymbol = statusConfig.symbol;
 		}
 	} else {
-		// 兼容旧逻辑：取消状态是 [-] 不是 [/]
 		if (merged.cancelled) {
 			checkboxSymbol = '-';
 		} else if (merged.completed) {
@@ -201,7 +190,7 @@ export function serializeTask(
 	}
 	parts.push(`[${checkboxSymbol}]`);
 
-	// 全局过滤器（从插件设置中获取）
+	// 全局过滤器
 	if (globalFilter) {
 		parts.push(globalFilter);
 	}
@@ -217,29 +206,20 @@ export function serializeTask(
 		parts.push(merged.description);
 	}
 
-	// 飞书同步字段（放在描述后、元数据前，使用 %% 注释语法隐藏）
-	if (merged.feishuGuid) {
+	// 统一的内联元数据字段 %%[key::value]%%
+	if (merged.metadataFields && merged.metadataFields.length > 0) {
+		for (const field of merged.metadataFields) {
+			parts.push(`%%[${field.key}:: ${field.value}]%%`);
+		}
+	} else if (merged.feishuGuid) {
+		// Fallback：同步系统直接写入 feishuGuid 但 metadataFields 未更新时
 		parts.push(`%%[guid:: ${merged.feishuGuid}]%%`);
 	}
 
-	// ticktick
-	if (merged.ticktick) {
-		parts.push("%%" + merged.ticktick + "%%");
-	}
-		// metadata fields (%%[key::value]%%)
-		if (merged.metadataFields) {
-			for (const [key, value] of Object.entries(merged.metadataFields)) {
-				parts.push(`%%[${key}:: ${value}]%%`);
-			}
-		}
-
 	// 优先级（放在描述后）
 	if (format === 'tasks') {
-		// 只有非 'normal' 的优先级才输出 emoji
 		const shouldOutputPriority =
-			// 情况1：不更改优先级，且原始任务有优先级（emoji 非空）
 			(updates.priority === undefined && merged.priority && merged.priority !== 'none') ||
-			// 情况2：明确设置了非 'normal' 的优先级
 			(updates.priority !== undefined && updates.priority !== 'normal');
 
 		if (shouldOutputPriority && merged.priority) {
@@ -249,21 +229,17 @@ export function serializeTask(
 
 	// 优先级（Dataview 格式）
 	if (format === 'dataview') {
-		// 只有非 'normal' 的优先级才输出字段
 		const shouldOutputPriority =
-			// 情况1：不更改优先级，且原始任务有优先级（不是 'normal'）
 			(updates.priority === undefined && task.priority && task.priority !== 'normal') ||
-			// 情况2：明确设置了非 'normal' 的优先级
 			(updates.priority !== undefined && updates.priority !== 'normal');
 
 		if (shouldOutputPriority) {
-			// 使用 updates.priority 或回退到 task.priority
 			const priorityValue = updates.priority !== undefined ? updates.priority : task.priority;
 			parts.push(`[priority:: ${priorityValue}]`);
 		}
 	}
 
-	// 周期任务规则（放在优先级后、日期前）
+	// 周期任务规则
 	const repeatValue = updates.repeat !== undefined
 		? (updates.repeat || undefined)
 		: task.repeat;
@@ -289,9 +265,7 @@ export function serializeTask(
 	for (const field of dateOrder) {
 		const date = merged[field];
 
-		// 只有当 date 是 Date 对象时才输出（null 和 undefined 都不输出）
 		if (date instanceof Date) {
-			// 根据精度决定输出格式：'time' 输出 YYYY-MM-DD HH:mm，否则仅 YYYY-MM-DD
 			const precision = merged.datePrecision?.[field as keyof NonNullable<typeof merged.datePrecision>];
 			const formatStr = precision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd';
 			const dateStr = formatDate(date, formatStr);

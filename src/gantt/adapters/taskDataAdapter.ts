@@ -72,7 +72,6 @@ export class TaskDataAdapter {
 			cancelledDate: task.cancelledDate,
 			completionDate: task.completionDate,
 			repeat: task.repeat,
-			ticktick: task.ticktick,
 			metadataFields: task.metadataFields,
 		};
 	}

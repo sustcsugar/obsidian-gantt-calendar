@@ -193,17 +193,15 @@ export class TaskCardRenderer {
 	 * 渲染结构化元数据字段（%%[key::value]%%）
 	 */
 	renderMetadataFields(card: HTMLElement, task: GCTask): void {
-		if (!task.metadataFields) return;
-		const entries = Object.entries(task.metadataFields);
-		if (entries.length === 0) return;
+		if (!task.metadataFields || task.metadataFields.length === 0) return;
 
 		const container = card.createDiv('gc-task-card__metadata');
-		for (const [key, value] of entries) {
+		for (const field of task.metadataFields) {
 			const itemEl = container.createDiv('gc-task-card__metadata-item');
 			const keyEl = itemEl.createEl('span', { cls: 'gc-task-card__metadata-key' });
-			keyEl.setText(`${key}:`);
+			keyEl.setText(`${field.key}:`);
 			const valueEl = itemEl.createEl('span', { cls: 'gc-task-card__metadata-value' });
-			valueEl.setText(value || '(空)');
+			valueEl.setText(field.value || '(空)');
 		}
 	}
 

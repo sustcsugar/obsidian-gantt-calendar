@@ -165,23 +165,22 @@ export const TooltipClasses = {
 
 	elements: {
 		description: bem(BLOCKS.TASK_TOOLTIP, 'description'),
-		priority: bem(BLOCKS.TASK_TOOLTIP, 'priority'),
-		ticktick: bem(BLOCKS.TASK_TOOLTIP, 'ticktick'),
-		metadata: bem(BLOCKS.TASK_TOOLTIP, 'metadata'),
-		metadataItem: bem(BLOCKS.TASK_TOOLTIP, 'metadata-item'),
-		metadataKey: bem(BLOCKS.TASK_TOOLTIP, 'metadata-key'),
-		metadataValue: bem(BLOCKS.TASK_TOOLTIP, 'metadata-value'),
-		times: bem(BLOCKS.TASK_TOOLTIP, 'times'),
-		timeItem: bem(BLOCKS.TASK_TOOLTIP, 'time-item'),
+		properties: bem(BLOCKS.TASK_TOOLTIP, 'properties'),
+		propertySection: bem(BLOCKS.TASK_TOOLTIP, 'property-section'),
+		propertyRow: bem(BLOCKS.TASK_TOOLTIP, 'property-row'),
+		propertyLabel: bem(BLOCKS.TASK_TOOLTIP, 'property-label'),
+		propertyValue: bem(BLOCKS.TASK_TOOLTIP, 'property-value'),
+		propertyDivider: bem(BLOCKS.TASK_TOOLTIP, 'property-divider'),
 		tags: bem(BLOCKS.TASK_TOOLTIP, 'tags'),
 		file: bem(BLOCKS.TASK_TOOLTIP, 'file'),
 		fileLocation: bem(BLOCKS.TASK_TOOLTIP, 'file-location'),
 	},
 
-	modifiers: {
-		visible: bem(BLOCKS.TASK_TOOLTIP, undefined, 'visible'),
-	},
-};
+		modifiers: {
+			visible: bem(BLOCKS.TASK_TOOLTIP, undefined, 'visible'),
+			propertyValueOverdue: bem(BLOCKS.TASK_TOOLTIP, 'property-value', 'overdue'),
+		},
+	};
 
 /**
  * 标签类名常量

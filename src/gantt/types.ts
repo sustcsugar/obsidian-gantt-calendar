@@ -5,7 +5,7 @@
  */
 
 import type { TaskStatusType } from '../tasks/taskStatus';
-import type { StatusFilterState } from '../types';
+import type { StatusFilterState, MetadataField } from '../types';
 
 /**
  * 甘特图任务格式
@@ -68,10 +68,8 @@ export interface GanttChartTask {
 	completionDate?: Date;
 	/** 周期规则，如 "every day" */
 	repeat?: string;
-	/** ticktick 文本（%%content%%） */
-	ticktick?: string;
 	/** 结构化内联元数据字段 (%%[key::value]%%) */
-	metadataFields?: Record<string, string>;
+	metadataFields?: MetadataField[];
 }
 
 /**

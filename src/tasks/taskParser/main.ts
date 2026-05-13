@@ -17,7 +17,7 @@ import { parseTaskLine } from './step1';
 import { passesGlobalFilter, removeGlobalFilter } from './step2';
 import { detectFormat } from './step3';
 import { parseCheckboxStatus, parseTaskAttributes } from './step4';
-import { extractTaskDescription, extractTags, extractTicktick, extractFeishuGuid, extractFeishuDesc, removeFeishuFields } from './utils';
+import { extractTaskDescription, extractTags, extractTicktick, findMetadataValue } from './utils';
 
 // ==================== 主解析函数 ====================
 
@@ -78,21 +78,13 @@ export function parseTasksFromListItems(
         // 解析复选框状态（包括 status）
         const { completed, cancelled, status } = parseCheckboxStatus(checkboxStatus);
 
-        // ==================== 提取飞书同步字段 ====================
-        const feishuGuid = extractFeishuGuid(contentWithoutFilter);
-        const feishuDesc = extractFeishuDesc(contentWithoutFilter);
-        // 从内容中移除飞书字段标记，防止被 ticktick 解析器误捕获
-        const contentWithoutFeishu = feishuGuid || feishuDesc
-            ? removeFeishuFields(contentWithoutFilter)
-            : contentWithoutFilter;
-
         // ==================== 第三步：判断格式 ====================
-        const detectedFormat = detectFormat(contentWithoutFeishu, enabledFormats);
+        const detectedFormat = detectFormat(contentWithoutFilter, enabledFormats);
         // 混合格式默认使用 tasks 格式进行解析
         const format = detectedFormat === 'mixed' ? 'tasks' : detectedFormat;
 
-        // 提取 %%content%% ticktick 和 %%[key::value]%% 内联元数据（在描述提取之前）
-        const { ticktick, metadataFields, contentWithoutTicktick } = extractTicktick(contentWithoutFeishu);
+        // 统一提取所有 %%[key::value]%% 内联元数据（包括 guid、desc 等）
+        const { metadataFields, contentWithoutTicktick } = extractTicktick(contentWithoutFilter);
 
         // ==================== 第四步：解析属性 ====================
         const task: GCTask = {
@@ -105,14 +97,13 @@ export function parseTasksFromListItems(
             cancelled,
             status,
             priority: 'normal', // 默认优先级
-            ticktick,
-            metadataFields: Object.keys(metadataFields).length > 0 ? metadataFields : undefined,
-            feishuGuid,
-            feishuDesc,
+            metadataFields: metadataFields.length > 0 ? metadataFields : undefined,
+            // 从统一的 metadataFields 数组中派生 feishuGuid（供飞书同步使用）
+            feishuGuid: findMetadataValue(metadataFields, 'guid'),
         };
 
         // 解析标签
-        const tags = extractTags(contentWithoutFeishu);
+        const tags = extractTags(contentWithoutFilter);
         if (tags.length > 0) {
             task.tags = tags;
         }
@@ -120,7 +111,7 @@ export function parseTasksFromListItems(
         // 如果检测到有效格式，解析任务属性
         if (format && enabledFormats.includes(format)) {
             const { priority, dates, datePrecisions, hasCancelledDate, repeat } = parseTaskAttributes(
-                contentWithoutFeishu,
+                contentWithoutFilter,
                 format
             );
 
@@ -291,8 +282,8 @@ export function parseSingleTaskLine(
     const detectedFormat = detectFormat(contentWithoutFilter, enabledFormats);
     const format = detectedFormat === 'mixed' ? 'tasks' : detectedFormat;
 
-    // 提取 %%content%% ticktick 和 %%[key::value]%% 内联元数据（在描述提取之前）
-    const { ticktick, metadataFields, contentWithoutTicktick } = extractTicktick(contentWithoutFilter);
+    // 统一提取所有 %%[key::value]%% 内联元数据
+    const { metadataFields, contentWithoutTicktick } = extractTicktick(contentWithoutFilter);
 
     const task: GCTask = {
         filePath: filePath || '',
@@ -304,8 +295,8 @@ export function parseSingleTaskLine(
         cancelled,
         status,
         priority: 'normal', // 默认优先级
-        ticktick,
-        metadataFields: Object.keys(metadataFields).length > 0 ? metadataFields : undefined,
+        metadataFields: metadataFields.length > 0 ? metadataFields : undefined,
+        feishuGuid: findMetadataValue(metadataFields, 'guid'),
     };
 
     // 解析标签

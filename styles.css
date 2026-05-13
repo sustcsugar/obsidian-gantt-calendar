@@ -1590,18 +1590,6 @@ Author: sugar
 	color: #ec4899;
 }
 
-/* Tooltip Tags */
-.gc-task-tooltip__tags {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 6px;
-	flex-wrap: wrap;
-	margin-top: 8px;
-	padding: 8px;
-	background-color: var(--background-secondary);
-	border-radius: 4px;
-}
 
 /* ==================== 响应式设计 ==================== */
 
@@ -1906,7 +1894,8 @@ Author: sugar
 	max-width: 300px;
 	min-width: 250px;
 	font-size: 13px;
-	line-height: 1.5;
+	line-height: 1.47;
+	letter-spacing: -0.01px;
 	pointer-events: none;
 	opacity: 0;
 	transform: translateY(-8px) scale(0.95);
@@ -1932,10 +1921,52 @@ Author: sugar
 	font-size: 14px;
 }
 
-.gc-task-tooltip .gc-task-tooltip__priority {
+/* --- 属性区域 --- */
+.gc-task-tooltip .gc-task-tooltip__properties {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 	margin-bottom: 8px;
-	padding: 4px 0;
-	font-weight: 500;
+}
+
+.gc-task-tooltip .gc-task-tooltip__property-section {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 8px 8px 8px 12px;
+	background-color: var(--background-secondary);
+	border-radius: 6px;
+}
+
+.gc-task-tooltip .gc-task-tooltip__property-row {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.gc-task-tooltip .gc-task-tooltip__property-label {
+	flex-shrink: 0;
+	width: 36px;
+	font-size: 12px;
+	color: var(--text-muted);
+	letter-spacing: -0.01px;
+}
+
+.gc-task-tooltip .gc-task-tooltip__property-value {
+	color: var(--text-normal);
+	font-size: 13px;
+	word-break: break-word;
+}
+
+.gc-task-tooltip .gc-task-tooltip__property-value--overdue {
+	color: #d73a49;
+	font-weight: 600;
+}
+
+.gc-task-tooltip .gc-task-tooltip__property-divider {
+	height: 1px;
+	background-color: rgba(0, 0, 0, 0.06);
+	margin: 2px 0;
 }
 
 .gc-task-tooltip .priority-highest {
@@ -1958,30 +1989,15 @@ Author: sugar
 	color: #0366d6;
 }
 
-.gc-task-tooltip .gc-task-tooltip__times {
+.gc-task-tooltip .gc-task-tooltip__tags {
 	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	margin-bottom: 8px;
-	padding: 8px;
-	background-color: var(--background-secondary);
-	border-radius: 4px;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
 }
 
-.gc-task-tooltip .gc-task-tooltip__time-item {
-	font-size: 12px;
-	color: var(--text-muted);
-	padding: 2px 0;
-}
-
-.gc-task-tooltip .gc-task-tooltip__time-item--overdue {
-	color: #d73a49;
-	font-weight: 600;
-}
-
-.gc-task-tooltip .gc-task-tooltip__file {
-	padding-top: 8px;
-	border-top: 1px solid var(--divider-color);
+.gc-task-tooltip .gc-task-tooltip__file-location {
 	font-size: 11px;
 	color: var(--text-muted);
 }
@@ -2498,39 +2514,6 @@ Author: sugar
 	padding-left: 4px;
 	border-left: 2px solid var(--interactive-accent);
 	opacity: 0.85;
-}
-
-.gc-task-tooltip__ticktick {
-	font-size: 0.9em;
-	color: var(--text-muted);
-	font-style: italic;
-	margin: 4px 0;
-	padding-left: 6px;
-	border-left: 2px solid var(--interactive-accent);
-}
-
-.gc-task-tooltip__metadata {
-	margin: 4px 0;
-	padding-left: 6px;
-}
-
-.gc-task-tooltip__metadata-item {
-	display: flex;
-	align-items: baseline;
-	gap: 4px;
-	margin: 2px 0;
-	font-size: 0.85em;
-}
-
-.gc-task-tooltip__metadata-key {
-	color: var(--text-muted);
-	font-weight: 600;
-	white-space: nowrap;
-}
-
-.gc-task-tooltip__metadata-value {
-	color: var(--text-normal);
-	word-break: break-word;
 }
 
 /* TaskCard metadata styles */
