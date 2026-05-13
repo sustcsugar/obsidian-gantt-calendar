@@ -29,7 +29,8 @@ export function registerFeishuCommands(plugin: GanttCalendarPlugin): void {
  *
  * 与设置面板"立即同步"按钮共用此函数，确保行为一致。
  */
-export async function syncFeishuTasks(plugin: GanttCalendarPlugin): Promise<void> {
+export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { isAutoSync?: boolean }): Promise<void> {
+	const isAutoSync = options?.isAutoSync ?? false;
 	try {
 		// 读取同步配置（与 SyncSettingsBuilder.getSyncConfiguration 逻辑一致）
 		let syncConfig = plugin.settings.syncConfiguration;
@@ -156,9 +157,21 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin): Promise<void
 		if (result.skipped > 0) parts.push('跳过 ' + result.skipped + ' 个');
 		const summary = parts.length > 0 ? parts.join('，') : '无变更';
 
-		// 有详细变更记录时弹出详细结果弹窗
+		// 有详细变更记录时展示结果
 		if (result.details.length > 0) {
-			showSyncResultModal(plugin.app, '飞书同步完成: ' + summary, result);
+			if (isAutoSync) {
+				// 自动同步：每个任务一条 Notice
+				new Notice('自动同步完成: ' + summary, 8000);
+				for (let idx = 0; idx < result.details.length; idx++) {
+					const detail = result.details[idx];
+					const icon = detail.success ? '✅' : '❌';
+					let msg = `${idx + 1}/${result.details.length} ${icon} ${detail.label} - ${detail.taskDescription}`;
+					if (detail.error) msg += ` (${detail.error})`;
+					new Notice(msg, 6000);
+				}
+			} else {
+				showSyncResultModal(plugin.app, '飞书同步完成: ' + summary, result);
+			}
 		} else if (result.errors.length > 0) {
 			new Notice("同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
 		} else {

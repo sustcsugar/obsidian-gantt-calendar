@@ -4,11 +4,11 @@
  * 负责桥接 SyncManager 和插件，处理命令注册和自动同步
  */
 
-import { Notice } from 'obsidian';
 import type GanttCalendarPlugin from '../../main';
 import type { SyncConfiguration } from '../data-layer/sync/syncTypes';
 import { SyncManager } from '../data-layer/sync/syncManager';
 import { createSyncManager } from '../data-layer/sync/syncFactory';
+import { syncFeishuTasks } from '../commands/feishuCommands';
 import { Logger } from '../utils/logger';
 
 /**
@@ -42,7 +42,6 @@ export class SyncManagerBridge {
 
 			if (this.syncManager) {
 				Logger.info('SyncManagerBridge', 'Sync manager initialized');
-
 
 				// 如果启用了自动同步，启动定时同步
 				if (config.syncInterval > 0) {
@@ -82,65 +81,18 @@ export class SyncManagerBridge {
 	}
 
 	/**
-	 * 执行手动同步
-	 */
-	async sync(): Promise<void> {
-		if (!this.syncManager) {
-			new Notice('同步功能未启用，请在设置中配置同步源');
-			return;
-		}
-
-		new Notice('开始同步...');
-
-		try {
-			const result = await this.syncManager.sync();
-
-			if (result.success) {
-				const stats = result.stats;
-				let message = `同步完成！`;
-
-				if (stats.created > 0) message += ` 新建: ${stats.created}`;
-				if (stats.updated > 0) message += ` 更新: ${stats.updated}`;
-				if (stats.deleted > 0) message += ` 删除: ${stats.deleted}`;
-				if (stats.conflicts > 0) message += ` 冲突: ${stats.conflicts}`;
-
-				new Notice(message);
-
-				// 刷新视图
-				this.plugin.refreshCalendarViews();
-			} else {
-				new Notice('同步失败，请查看控制台日志');
-				if (result.errors && result.errors.length > 0) {
-					Logger.error('SyncManagerBridge', 'Sync errors:', result.errors);
-				}
-			}
-		} catch (error) {
-			Logger.error('SyncManagerBridge', 'Sync error:', error);
-			new Notice(`同步出错: ${error instanceof Error ? error.message : String(error)}`);
-		}
-	}
-
-	/**
 	 * 启动自动同步
 	 */
 	private startAutoSync(intervalMinutes: number): void {
-		if (!this.syncManager) {
-			return;
-		}
-
 		// 清除现有定时器
 		this.stopAutoSync();
 
 		const intervalMs = intervalMinutes * 60 * 1000;
 
-		// 使用 Obsidian 的 registerInterval 来管理定时器
 		this.autoSyncTimer = window.setInterval(async () => {
 			Logger.info('SyncManagerBridge', 'Running auto sync...');
-			await this.sync();
+			await syncFeishuTasks(this.plugin, { isAutoSync: true });
 		}, intervalMs);
-
-		// 保存到 syncManager 中供外部访问
-		this.syncManager.autoSyncTimer = this.autoSyncTimer;
 
 		Logger.info('SyncManagerBridge', `Auto sync started (interval: ${intervalMinutes} minutes)`);
 	}
@@ -152,9 +104,6 @@ export class SyncManagerBridge {
 		if (this.autoSyncTimer) {
 			clearInterval(this.autoSyncTimer);
 			this.autoSyncTimer = undefined;
-			if (this.syncManager) {
-				this.syncManager.autoSyncTimer = undefined;
-			}
 			Logger.info('SyncManagerBridge', 'Auto sync stopped');
 		}
 	}
