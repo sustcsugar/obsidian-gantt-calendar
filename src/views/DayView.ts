@@ -363,10 +363,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 				targetDate,
 				targetHour: hour,
 				onSuccess: () => {
-					this.plugin.taskCache.initialize(
-						this.plugin.settings.globalTaskFilter,
-						this.plugin.settings.enabledTaskFormats
-					);
+					// vault modify event triggers incremental update automatically
 				},
 			});
 			modal.open();

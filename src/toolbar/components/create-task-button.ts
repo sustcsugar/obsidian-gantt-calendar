@@ -54,12 +54,9 @@ export function renderCreateTaskButton(
 			app: plugin.app,
 			plugin: plugin,
 			targetDate: targetDate || new Date(),
-			onSuccess: async () => {
-				// 刷新任务缓存（重新初始化）
-				await plugin.taskCache.initialize(plugin.settings.globalTaskFilter, plugin.settings.enabledTaskFormats);
-				// 刷新所有视图
-				plugin.refreshCalendarViews();
-			}
+			onSuccess: () => {
+			// vault modify event triggers incremental update automatically
+		}
 		});
 		modal.open();
 	});
