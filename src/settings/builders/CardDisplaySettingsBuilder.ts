@@ -14,12 +14,7 @@ const SHARED_CHIPS: ChipDef[] = [
 	{ label: '复选框', keys: { week: 'weekViewShowCheckbox', month: 'monthViewShowCheckbox', sidebar: 'sidebarShowCheckbox' } },
 	{ label: '标签', keys: { week: 'weekViewShowTags', month: 'monthViewShowTags', sidebar: 'sidebarShowTags' } },
 	{ label: '优先级', keys: { week: 'weekViewShowPriority', month: 'monthViewShowPriority', sidebar: 'sidebarShowPriority' } },
-	{ label: 'Ticktick', keys: { week: 'weekViewShowTicktick', month: 'monthViewShowTicktick', sidebar: 'sidebarShowTicktick' } },
-];
-
-const SIDEBAR_CHIPS: ChipDef[] = [
-	{ label: '文件位置', keys: { week: undefined, month: undefined, sidebar: 'sidebarShowFileLocation' } },
-	{ label: '截止日期', keys: { week: undefined, month: undefined, sidebar: 'sidebarShowDueDate' } },
+	{ label: '附加内容', keys: { week: 'weekViewShowTicktick', month: 'monthViewShowTicktick', sidebar: 'sidebarShowTicktick' } },
 ];
 
 const VIEW_ROWS: { view: ViewType; name: string }[] = [
@@ -34,7 +29,7 @@ export class CardDisplaySettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('卡片显示控制', (group) => {
+		this.createSettingGroup('任务卡片显示控制', (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -51,7 +46,6 @@ export class CardDisplaySettingsBuilder extends BaseBuilder {
 
 					const row = setting.controlEl.createDiv(SettingsCardChipClasses.elements.chipRow);
 
-					// Shared chips (all views)
 					for (const chip of SHARED_CHIPS) {
 						const key = chip.keys[view]!;
 						this.createChip(
@@ -64,23 +58,6 @@ export class CardDisplaySettingsBuilder extends BaseBuilder {
 								await this.saveAndRefreshViews();
 							}
 						);
-					}
-
-					// Sidebar-only chips
-					if (view === 'sidebar') {
-						for (const chip of SIDEBAR_CHIPS) {
-							const key = chip.keys[view]!;
-							this.createChip(
-								row,
-								chip.label,
-								!!settings[key as string],
-								`${name} - ${chip.label}`,
-								async (value) => {
-									settings[key as string] = value;
-									await this.saveAndRefreshViews();
-								}
-							);
-						}
 					}
 				});
 			}

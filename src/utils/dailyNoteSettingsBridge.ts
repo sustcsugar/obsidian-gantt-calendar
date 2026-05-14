@@ -118,7 +118,7 @@ export class DailyNoteIndex {
 				this.cache = {};
 			}
 		}
-		return this.cache;
+			return this.cache;
 	}
 
 	invalidate(): void {
@@ -143,7 +143,7 @@ export function findDailyNoteForDate(
 	if (settings.followObsidianDailyNote) {
 		const dailyNotes = index.getIndex();
 		const momentDate = window.moment(date);
-		return getDailyNote(momentDate, dailyNotes);
+			return getDailyNote(momentDate, dailyNotes);
 	}
 
 	// 手动模式：提取纯文件名（修复嵌套文件夹格式 bug）

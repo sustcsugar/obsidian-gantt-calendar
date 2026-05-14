@@ -68,8 +68,8 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	// WeekView 卡片显示控制
 	weekViewShowCheckbox: true,
 	weekViewShowTags: true,
-	weekViewShowPriority: true,
-	weekViewShowTicktick: true,
+	weekViewShowPriority: false,
+	weekViewShowTicktick: false,
 
 	// MonthView
 	monthViewSortField: 'dueDate',
@@ -80,13 +80,13 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	// MonthView 卡片显示控制
 	monthViewShowCheckbox: true,
 	monthViewShowTags: true,
-	monthViewShowPriority: false,  // 月视图空间有限，默认不显示优先级
-	monthViewShowTicktick: true,
+	monthViewShowPriority: false,
+	monthViewShowTicktick: false,
 
 	// 侧边栏卡片显示控制
 	sidebarShowCheckbox: true,
 	sidebarShowTags: true,
-	sidebarShowPriority: true,
+	sidebarShowPriority: false,
 	sidebarShowTicktick: false,
 	sidebarShowFileLocation: false,
 	sidebarShowDueDate: true,
