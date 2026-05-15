@@ -69,6 +69,9 @@ export class MarkdownDataSource implements IDataSource {
 	// 待处理文件队列：当文件正在处理时，新的修改请求会被加入此队列
 	// 处理完成后会重新检查这些文件，避免遗漏快速连续的修改
 	private pendingFileChecks: Set<string> = new Set();
+	// metadataCache 延迟重检队列：首次解析未发现新任务时延迟重检
+	private recheckTimers: Map<string, number> = new Map();
+	private readonly RECHECK_DELAY_MS = 300;
 	// 防止重复注册事件监听器
 	private fileWatchersRegistered: boolean = false;
 	// 保存事件监听器引用，用于清理
@@ -224,6 +227,12 @@ export class MarkdownDataSource implements IDataSource {
 						deleted: changes.deleted.length
 					});
 					this.changeHandler(changes);
+
+						// 如果没有新增任务但有更新，可能是 metadataCache 延迟导致新任务行未被索引
+						// 延迟重检，等待 metadataCache 刷新后重新解析
+						if (changes.created.length === 0 && changes.updated.length > 0) {
+							this.scheduleRecheck(filePath);
+						}
 				} else {
 					Logger.debug('MarkdownDataSource', `No actual changes detected for ${filePath}`);
 				}
@@ -243,6 +252,28 @@ export class MarkdownDataSource implements IDataSource {
 	}
 
 	/**
+	 * 延迟重检文件：等待 metadataCache 刷新后重新解析
+	 * 解决 app.vault.modify() 后 metadataCache 未及时更新的问题
+	 */
+	private scheduleRecheck(filePath: string): void {
+		// 取消已有的重检定时器
+		const existing = this.recheckTimers.get(filePath);
+		if (existing !== undefined) {
+			clearTimeout(existing);
+		}
+
+		const timer = window.setTimeout(async () => {
+			this.recheckTimers.delete(filePath);
+			if (!this.processingFiles.has(filePath)) {
+				Logger.debug("MarkdownDataSource", "MetadataCache recheck: " + filePath);
+				await this.processFileModification(filePath);
+			}
+		}, this.RECHECK_DELAY_MS);
+
+		this.recheckTimers.set(filePath, timer);
+	}
+
+	/**
 	 * 销毁数据源
 	 */
 	destroy(): void {
@@ -257,6 +288,8 @@ export class MarkdownDataSource implements IDataSource {
 		this.debounceTimers.clear();
 		this.processingFiles.clear();
 		this.pendingFileChecks.clear();  // 清理待处理队列
+		this.recheckTimers.forEach((timer) => clearTimeout(timer));
+		this.recheckTimers.clear();
 		this.cache.clear();
 	}
 
