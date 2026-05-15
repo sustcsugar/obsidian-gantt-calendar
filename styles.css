@@ -3399,7 +3399,15 @@ Author: sugar
 }
 
 .gc-week-view__tasks-column--today {
-	background-color: rgba(255, 107, 107, 0.03);
+	background-color: rgba(255, 107, 107, 0.1);
+}
+
+.gc-week-view__time-slot--today {
+	background-color: rgba(255, 107, 107, 0.08);
+}
+
+.gc-week-view__allday-slot--today {
+	background-color: rgba(255, 107, 107, 0.08);
 }
 
 /* 7.6 Text Decoration (已完成任务) */

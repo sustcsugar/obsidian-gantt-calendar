@@ -155,6 +155,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			const alldaySlot = tasksGrid.createDiv(W.elements.alldaySlot);
 			alldaySlot.style.gridColumn = `${dayIdx + 2}`;
 			alldaySlot.style.gridRow = '2';
+			if (day.isToday) {
+				alldaySlot.addClass(W.modifiers.alldaySlotToday);
+			}
 			const alldayTasksEl = alldaySlot.createDiv(W.elements.alldayTasks);
 			alldaySlotContainers[dayIdx] = alldayTasksEl;
 			alldayRowElements.push(alldaySlot);
@@ -178,6 +181,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				const slot = tasksGrid.createDiv(W.elements.timeSlot);
 				slot.style.gridColumn = `${dayIdx + 2}`;
 				slot.style.gridRow = `${h + 3}`;
+				if (day.isToday) {
+					slot.addClass(W.modifiers.timeSlotToday);
+				}
 				const tasksEl = slot.createDiv(W.elements.timeTasks);
 				slotContainers[dayIdx][h] = tasksEl;
 				rowElements[h].push(slot);
