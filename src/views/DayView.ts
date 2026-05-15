@@ -10,6 +10,8 @@ import { EmbeddedNoteEditor } from './EmbeddedNoteEditor';
 import { updateTaskDateField } from '../tasks/taskUpdater';
 import { CreateTaskModal } from '../modals/CreateTaskModal';
 import { Notice } from 'obsidian';
+import { isTodayInTimezone } from '../dateUtils/timezone';
+import { renderCurrentTimeLine } from '../utils/currentTimeLine';
 
 /**
  * 日视图渲染器
@@ -238,6 +240,11 @@ export class DayViewRenderer extends BaseViewRenderer {
 			if (hourTasks.length === 0) {
 				this.setupQuickCreateForSlot(slot, h, targetDate);
 			}
+		}
+
+		// 当前时间指示线
+		if (isTodayInTimezone(targetDate)) {
+			renderCurrentTimeLine(timeGrid, `.${D.timeSlot}`, D.currentTimeLine);
 		}
 	}
 

@@ -241,6 +241,7 @@ export const DayViewClasses = {
 			timeSlot: bem(BLOCKS.DAY_VIEW, 'time-slot'),
 			timeLabel: bem(BLOCKS.DAY_VIEW, 'time-label'),
 			timeTasks: bem(BLOCKS.DAY_VIEW, 'time-tasks'),
+			currentTimeLine: bem(BLOCKS.DAY_VIEW, 'timeline-current-time'),
 	},
 };
 
@@ -695,6 +696,7 @@ export const WeekViewClasses = {
 			alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
 			alldaySlot: bem(BLOCKS.WEEK_VIEW, 'allday-slot'),
 			alldayTasks: bem(BLOCKS.WEEK_VIEW, 'allday-tasks'),
+			currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
 	},
 
 	/** Modifiers */

@@ -1951,6 +1951,28 @@ Author: sugar
 	transition: background-color 0.15s ease;
 }
 
+/* Week View — 当前时间指示线 */
+.gc-week-view__timeline-current-time {
+	position: absolute;
+	left: 48px;
+	right: 0;
+	height: 2px;
+	background-color: var(--interactive-accent);
+	z-index: 10;
+	pointer-events: none;
+}
+
+.gc-week-view__timeline-current-time::before {
+	content: '';
+	position: absolute;
+	left: -5px;
+	top: -3px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: var(--interactive-accent);
+}
+
 /* ==================== Day View Sub-Components ==================== */
 /* BEM命名: gc-day-view Elements */
 
@@ -2036,6 +2058,7 @@ Author: sugar
 	flex: 1;
 	overflow-y: auto;
 	min-height: 0;
+	position: relative;
 }
 
 .gc-day-view__time-slot {
@@ -2074,6 +2097,27 @@ Author: sugar
 	transition: background-color 0.15s ease;
 }
 
+/* Day View — 当前时间指示线 */
+.gc-day-view__timeline-current-time {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background-color: var(--interactive-accent);
+	z-index: 10;
+	pointer-events: none;
+}
+
+.gc-day-view__timeline-current-time::before {
+	content: '';
+	position: absolute;
+	left: -5px;
+	top: -3px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: var(--interactive-accent);
+}
 
 
 .gc-day-view--horizontal .gc-day-view__section--tasks {

@@ -10,6 +10,7 @@ import { openFileInExistingLeaf } from '../utils/fileOpener';
 import { updateTaskDateField } from '../tasks/taskUpdater';
 import { CreateTaskModal } from '../modals/CreateTaskModal';
 import { Logger } from '../utils/logger';
+import { renderCurrentTimeLine } from '../utils/currentTimeLine';
 
 /**
  * 侧边栏 — 今日时间线 Tab
@@ -180,7 +181,7 @@ export class DailyTimelineTab {
 
 		// 标记当前时间线
 		if (isTodayInTimezone(today)) {
-			this.renderCurrentTimeLine(container, 0, 24);
+			renderCurrentTimeLine(container, `.${SidebarClasses.elements.timelineTimeSlot}`, SidebarClasses.elements.timelineCurrentTime, 0, 24);
 		}
 	}
 
@@ -302,27 +303,6 @@ export class DailyTimelineTab {
 				new Notice('更新任务失败');
 			}
 		});
-	}
-
-	private renderCurrentTimeLine(container: HTMLElement, startHour: number, endHour: number): void {
-		const now = new Date();
-		const currentHour = now.getHours();
-		if (currentHour < startHour || currentHour >= endHour) return;
-
-		const currentMinute = now.getMinutes();
-		const slots = container.querySelectorAll(`.${SidebarClasses.elements.timelineTimeSlot}`);
-		const slotIndex = currentHour - startHour;
-		const slot = slots[slotIndex] as HTMLElement;
-		if (!slot) return;
-
-		// 计算时间线在 container 中的绝对位置（基于 slot 的 offsetTop）
-		const slotTop = slot.offsetTop;
-		const slotHeight = slot.offsetHeight;
-		const minuteOffset = (currentMinute / 60) * slotHeight;
-		const lineTop = slotTop + minuteOffset;
-
-		const line = container.createDiv(SidebarClasses.elements.timelineCurrentTime);
-		line.style.top = `${lineTop}px`;
 	}
 
 	private renderTaskCards(container: HTMLElement, tasks: GCTask[]): void {

@@ -11,6 +11,7 @@ import { TooltipManager } from '../utils/tooltipManager';
 import { WeekViewClasses } from '../utils/bem';
 import { toISOStringLocal, createDate } from '../dateUtils/timezone';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
+import { renderCurrentTimeLine } from '../utils/currentTimeLine';
 
 /**
  * 周视图渲染器
@@ -209,6 +210,11 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				}
 			}
 		});
+
+		// 当前时间指示线
+		if (weekData.days.some(day => day.isToday)) {
+			renderCurrentTimeLine(tasksGrid, `.${W.elements.timeSlot}`, W.elements.currentTimeLine);
+		}
 	}
 
 	/**
