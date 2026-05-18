@@ -38,6 +38,9 @@ export class SettingsManager {
 		// 迁移 Templater 设置到新的模板文件路径
 		await this.migrateTemplaterSettings(settings);
 
+		// 迁移：将非核心默认状态降级为自定义状态
+		await this.migratePresetStatuses(settings);
+
 		// 更新 CSS 变量
 		this.updateCSSVariables(settings);
 
@@ -70,6 +73,26 @@ export class SettingsManager {
 		const data = await this.plugin.loadData() as Record<string, unknown> || {};
 		if ('templaterTemplatePath' in data && !('dailyNoteTemplatePath' in data)) {
 			settings.dailyNoteTemplatePath = (data as any).templaterTemplatePath || '';
+			await this.plugin.saveData(settings);
+		}
+	}
+
+	/**
+	 * 迁移非核心默认状态为自定义状态
+	 * 将 important、canceled、in_progress、question、start 从 isDefault:true 改为 isDefault:false
+	 */
+	private async migratePresetStatuses(settings: GanttCalendarSettings): Promise<void> {
+		const presetKeys = ['important', 'canceled', 'in_progress', 'question', 'start'];
+		let needsSave = false;
+
+		for (const status of settings.taskStatuses) {
+			if (presetKeys.includes(status.key) && status.isDefault) {
+				status.isDefault = false;
+				needsSave = true;
+			}
+		}
+
+		if (needsSave) {
 			await this.plugin.saveData(settings);
 		}
 	}

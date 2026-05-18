@@ -4,6 +4,8 @@
 
 import {
 	DEFAULT_TASK_STATUSES,
+	PRESET_CUSTOM_STATUSES,
+	ALL_BUILTIN_STATUSES,
 	STATUS_SYMBOL_REGEX,
 	STATUS_SYMBOL_EXCLUDED,
 	RESERVED_SYMBOLS,
@@ -20,8 +22,8 @@ import type { TaskStatus } from '../src/tasks/taskStatus';
 
 describe('任务状态', () => {
 	describe('DEFAULT_TASK_STATUSES', () => {
-		it('TS-01: 包含 7 种默认状态', () => {
-			expect(DEFAULT_TASK_STATUSES).toHaveLength(7);
+		it('TS-01: 包含 2 种核心默认状态', () => {
+			expect(DEFAULT_TASK_STATUSES).toHaveLength(2);
 		});
 
 		it('TS-02: 每种状态都有必要的字段', () => {
@@ -37,15 +39,47 @@ describe('任务状态', () => {
 
 		it('TS-03: 包含所有预期状态', () => {
 			const keys = DEFAULT_TASK_STATUSES.map(s => s.key);
-			expect(keys).toEqual(['todo', 'done', 'important', 'canceled', 'in_progress', 'question', 'start']);
+			expect(keys).toEqual(['todo', 'done']);
 		});
 
 		it('TS-04: 符号映射正确', () => {
 			const symbolMap: Record<string, string> = {
+				' ': 'todo', 'x': 'done',
+			};
+			DEFAULT_TASK_STATUSES.forEach(status => {
+				expect(symbolMap[status.symbol]).toBe(status.key);
+			});
+		});
+	});
+
+	describe('PRESET_CUSTOM_STATUSES', () => {
+		it('TS-01b: 包含 5 种预设自定义状态', () => {
+			expect(PRESET_CUSTOM_STATUSES).toHaveLength(5);
+		});
+
+		it('TS-02b: 预设状态 isDefault 为 false', () => {
+			PRESET_CUSTOM_STATUSES.forEach(status => {
+				expect(status.isDefault).toBe(false);
+			});
+		});
+
+		it('TS-03b: 包含预期的预设状态', () => {
+			const keys = PRESET_CUSTOM_STATUSES.map(s => s.key);
+			expect(keys).toEqual(['important', 'canceled', 'in_progress', 'question', 'start']);
+		});
+	});
+
+	describe('ALL_BUILTIN_STATUSES', () => {
+		it('TS-01c: 包含全部 7 种内置状态', () => {
+			expect(ALL_BUILTIN_STATUSES).toHaveLength(7);
+		});
+
+		it('TS-02c: 符号映射正确', () => {
+			const symbolMap: Record<string, string> = {
 				' ': 'todo', 'x': 'done', '!': 'important', '-': 'canceled',
 				'/': 'in_progress', '?': 'question', 'n': 'start',
 			};
-			DEFAULT_TASK_STATUSES.forEach(status => {
+			ALL_BUILTIN_STATUSES.forEach(status => {
 				expect(symbolMap[status.symbol]).toBe(status.key);
 			});
 		});
@@ -85,6 +119,14 @@ describe('任务状态', () => {
 			expect(validateStatusSymbol('Z').valid).toBe(true);
 		});
 
+		it('TS-09b: 有效标点符号', () => {
+			expect(validateStatusSymbol('!').valid).toBe(true);
+			expect(validateStatusSymbol('-').valid).toBe(true);
+			expect(validateStatusSymbol('/').valid).toBe(true);
+			expect(validateStatusSymbol('?').valid).toBe(true);
+			expect(validateStatusSymbol('@').valid).toBe(true);
+		});
+
 		it('TS-10: 有效数字符号', () => {
 			expect(validateStatusSymbol('1').valid).toBe(true);
 		});
@@ -95,14 +137,15 @@ describe('任务状态', () => {
 			});
 		});
 
-		it('TS-12: 非自定义时字母数字保留符号可通过验证', () => {
-			// isCustom=false 跳过保留符号检查，但仍需通过 EXCLUDED 和 REGEX
-			// 只有 'x' 和 'n' 是字母数字且不在 EXCLUDED 中
+		it('TS-12: 非自定义时保留符号可通过验证', () => {
 			expect(validateStatusSymbol('x', false).valid).toBe(true);
-			expect(validateStatusSymbol('n', false).valid).toBe(true);
-			// 非字母数字符号即使 isCustom=false 也失败
+			// 空格不是 \S，即使 isCustom=false 也无效
 			expect(validateStatusSymbol(' ', false).valid).toBe(false);
-			expect(validateStatusSymbol('!', false).valid).toBe(false);
+		});
+
+		it('TS-12b: 非自定义时各种符号均可通过验证', () => {
+			expect(validateStatusSymbol('!', false).valid).toBe(true);
+			expect(validateStatusSymbol('n', false).valid).toBe(true);
 		});
 
 		it('TS-13: 禁止的符号列表', () => {
@@ -122,20 +165,20 @@ describe('任务状态', () => {
 
 	describe('getStatusColor', () => {
 		it('TS-16: light 模式返回 lightColors', () => {
-			const color = getStatusColor('done', DEFAULT_TASK_STATUSES, 'light');
+			const color = getStatusColor('done', ALL_BUILTIN_STATUSES, 'light');
 			expect(color).toBeDefined();
 			expect(color!.bg).toBe('#52c41a');
 			expect(color!.text).toBe('#FFFFFF');
 		});
 
 		it('TS-17: dark 模式返回 darkColors', () => {
-			const color = getStatusColor('done', DEFAULT_TASK_STATUSES, 'dark');
+			const color = getStatusColor('done', ALL_BUILTIN_STATUSES, 'dark');
 			expect(color).toBeDefined();
 			expect(color!.bg).toBe('#3c8524');
 		});
 
 		it('TS-18a: 不存在的 key 返回 undefined', () => {
-			expect(getStatusColor('unknown', DEFAULT_TASK_STATUSES, 'light')).toBeUndefined();
+			expect(getStatusColor('unknown', ALL_BUILTIN_STATUSES, 'light')).toBeUndefined();
 		});
 
 		it('TS-18: 旧格式兼容（lightColors/darkColors 优先）', () => {
@@ -151,8 +194,7 @@ describe('任务状态', () => {
 				isDefault: false,
 			}];
 			const color = getStatusColor('custom', legacyStatuses, 'light');
-			// lightColors 存在（即使为空）会走新格式分支，使用默认值
-			expect(color!.bg).toBe('#FFFFFF'); // 空 backgroundColor 的默认值
+			expect(color!.bg).toBe('#FFFFFF');
 			expect(color!.text).toBe('#333333');
 		});
 	});
@@ -172,7 +214,11 @@ describe('任务状态', () => {
 		it('TS-27: 默认状态返回 true', () => {
 			expect(isDefaultStatus('todo')).toBe(true);
 			expect(isDefaultStatus('done')).toBe(true);
-			expect(isDefaultStatus('important')).toBe(true);
+		});
+
+		it('TS-27b: 预设自定义状态返回 false', () => {
+			expect(isDefaultStatus('important')).toBe(false);
+			expect(isDefaultStatus('in_progress')).toBe(false);
 		});
 
 		it('TS-28: 自定义状态返回 false', () => {
@@ -181,10 +227,10 @@ describe('任务状态', () => {
 	});
 
 	describe('getDefaultStatusKeys', () => {
-		it('TS-29: 返回 7 个默认 key', () => {
+		it('TS-29: 返回 2 个默认 key', () => {
 			const keys = getDefaultStatusKeys();
-			expect(keys).toHaveLength(7);
-			expect(keys).toEqual(['todo', 'done', 'important', 'canceled', 'in_progress', 'question', 'start']);
+			expect(keys).toHaveLength(2);
+			expect(keys).toEqual(['todo', 'done']);
 		});
 	});
 

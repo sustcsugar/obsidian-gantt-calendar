@@ -1,5 +1,5 @@
 import type { GanttCalendarSettings } from './types';
-import { DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
+import { DEFAULT_TASK_STATUSES, PRESET_CUSTOM_STATUSES } from '../tasks/taskStatus';
 
 /**
  * Gantt Calendar Plugin 默认设置
@@ -28,7 +28,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	yearHeatmapPalette: 'blue',
 	yearHeatmap3DEnabled: 2,
 	taskNotePath: 'Tasks', // 默认任务笔记文件夹路径
-	taskStatuses: DEFAULT_TASK_STATUSES, // 默认任务状态配置
+	taskStatuses: [...DEFAULT_TASK_STATUSES, ...PRESET_CUSTOM_STATUSES], // 默认任务状态 + 预设自定义状态
 	taskSortField: 'dueDate', // 默认排序字段：截止日期
 	taskSortOrder: 'asc', // 默认排序顺序：升序
 	defaultView: 'month', // 默认视图：月视图

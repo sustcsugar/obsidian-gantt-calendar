@@ -2859,7 +2859,7 @@ Author: sugar
 
 .gc-settings-status-card__grid {
 	display: grid;
-	grid-template-columns: repeat(2, 1fr);
+	grid-template-columns: repeat(3, 1fr);
 	gap: 16px;
 }
 
@@ -2901,7 +2901,6 @@ Author: sugar
 }
 
 .gc-settings-status-card__delete-btn {
-	margin-left: auto;
 	width: 24px;
 	height: 24px;
 	padding: 0;
@@ -2921,6 +2920,35 @@ Author: sugar
 .gc-settings-status-card__delete-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
+}
+
+.gc-settings-status-card__edit-btn {
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	font-size: 14px;
+	line-height: 1;
+	border-radius: 50%;
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 120ms ease, color 120ms ease;
+}
+
+.gc-settings-status-card__edit-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.gc-settings-status-card__btn-group {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 4px;
 }
 
 /* Body: theme sections */
