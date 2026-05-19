@@ -374,7 +374,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -385,7 +385,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888 10%);
+	background-color: color-mix(in srgb, var(--background-secondary) 70%, #888888 10%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 	flex-wrap: wrap;
 }
@@ -431,7 +431,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -528,7 +528,7 @@ Author: sugar
 	padding: 4px; /* p-1 */
 	border-radius: 8px; /* rounded-lg */
 	/* 与灰色混合，产生轻微差异的背景色 */
-	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888888 5%);
 	/* 轻微 inset 阴影产生凹陷效果 */
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -639,10 +639,6 @@ Author: sugar
 .gc-toolbar__right > div {
 	display: flex;
 	align-items: center;
-}
-
-/* 平滑过渡效果 */
-.gc-toolbar__right > div {
 	transition: opacity 0.15s ease;
 }
 
@@ -748,7 +744,7 @@ Author: sugar
 	gap: 1px;
 	padding: 1px;
 	border-radius: 8px;
-	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888 5%);
+	background-color: color-mix(in srgb, var(--background-secondary) 35%, #888888 5%);
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -3675,28 +3671,6 @@ Author: sugar
    旧样式兼容（保留以避免破坏现有功能）
    ======================================== */
 
-/* 甘特图容器 */
-.gc-gantt-view__container {
-	flex: 1 1 auto;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-	overflow: visible;
-	width: 100%;
-	height: 100%;
-}
-
-/* 甘特图根容器 */
-.gc-gantt-view__root {
-	flex: 1 1 auto;
-	min-width: 100%;
-	position: relative;
-	overflow: visible;
-	background-color: var(--background-primary);
-	border-radius: 8px;
-	padding: 8px;
-}
-
 /* Sticky 时间线容器（旧版，保留兼容） */
 .gc-gantt-view__sticky-header {
 	display: grid;
@@ -3784,7 +3758,7 @@ Author: sugar
 }
 
 .gc-gantt-view__bar-group .task-cancelled {
-	fill: var(--text-muted, #999);
+	fill: var(--text-muted, #999999);
 	opacity: 0.5;
 }
 
