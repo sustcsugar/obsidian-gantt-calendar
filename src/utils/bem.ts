@@ -436,6 +436,7 @@ export const ToolbarClasses = {
 		navButtons: {
 			group: bem(BLOCKS.TOOLBAR, 'nav-buttons'),
 			btn: bem(BLOCKS.TOOLBAR, 'btn'),
+			btnIcon: bem(BLOCKS.TOOLBAR, 'btn', 'icon'),
 		},
 
 		/** 视图选择器 */
@@ -778,6 +779,8 @@ export const SettingsStatusCardClasses = {
 		dot: bem(BLOCKS.SETTINGS_STATUS_CARD, 'dot'),
 		key: bem(BLOCKS.SETTINGS_STATUS_CARD, 'key'),
 		deleteBtn: bem(BLOCKS.SETTINGS_STATUS_CARD, 'delete-btn'),
+		editBtn: bem(BLOCKS.SETTINGS_STATUS_CARD, 'edit-btn'),
+		btnGroup: bem(BLOCKS.SETTINGS_STATUS_CARD, 'btn-group'),
 		body: bem(BLOCKS.SETTINGS_STATUS_CARD, 'body'),
 		themeSection: bem(BLOCKS.SETTINGS_STATUS_CARD, 'theme-section'),
 		themeLabel: bem(BLOCKS.SETTINGS_STATUS_CARD, 'theme-label'),

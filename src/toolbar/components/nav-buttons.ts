@@ -68,6 +68,7 @@ export function renderNavButtons(
 	});
 	setIcon(prevBtn, 'chevron-left');
 	prevBtn.addClass(buttonClass);
+	prevBtn.addClass(ToolbarClasses.components.navButtons.btnIcon);
 	prevBtn.onclick = onPrevious;
 
 	// 今天按钮
@@ -84,6 +85,7 @@ export function renderNavButtons(
 	});
 	setIcon(nextBtn, 'chevron-right');
 	nextBtn.addClass(buttonClass);
+	nextBtn.addClass(ToolbarClasses.components.navButtons.btnIcon);
 	nextBtn.onclick = onNext;
 
 	// 清理函数
@@ -142,6 +144,7 @@ export function renderNavButtonsFull(
 	});
 	setIcon(prevBtn, 'chevron-left');
 	prevBtn.addClass(buttonClass);
+	prevBtn.addClass(ToolbarClasses.components.navButtons.btnIcon);
 	prevBtn.onclick = baseOptions.onPrevious;
 	buttons.push(prevBtn);
 
@@ -160,6 +163,7 @@ export function renderNavButtonsFull(
 	});
 	setIcon(nextBtn, 'chevron-right');
 	nextBtn.addClass(buttonClass);
+	nextBtn.addClass(ToolbarClasses.components.navButtons.btnIcon);
 	nextBtn.onclick = baseOptions.onNext;
 	buttons.push(nextBtn);
 

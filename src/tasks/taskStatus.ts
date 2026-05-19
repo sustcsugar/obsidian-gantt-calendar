@@ -11,16 +11,9 @@
 // ==================== 类型定义 ====================
 
 /**
- * 默认任务状态类型
+ * 默认任务状态类型（不可删除）
  */
-export type DefaultTaskStatusType =
-    | 'todo'
-    | 'done'
-    | 'important'
-    | 'canceled'
-    | 'in_progress'
-    | 'question'
-    | 'start';
+export type DefaultTaskStatusType = 'todo' | 'done';
 
 /**
  * 任务状态类型（包括用户自定义）
@@ -83,10 +76,9 @@ export interface TaskStatus {
 // ==================== 默认状态配置 ====================
 
 /**
- * 默认任务状态配置
+ * 默认任务状态配置（不可删除）
  *
- * 用于插件初始化时的默认值。
- * 包含 7 种预定义状态。
+ * 仅包含待办和已完成两种核心状态。
  */
 export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
     {
@@ -119,6 +111,14 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
         },
         isDefault: true,
     },
+];
+
+/**
+ * 预设自定义状态
+ *
+ * 初始安装时作为自定义状态提供，用户可修改或删除。
+ */
+export const PRESET_CUSTOM_STATUSES: TaskStatus[] = [
     {
         key: 'important',
         symbol: '!',
@@ -132,7 +132,7 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
             backgroundColor: '#cc3a3c',
             textColor: '#ffe6e6',
         },
-        isDefault: true,
+        isDefault: false,
     },
     {
         key: 'canceled',
@@ -147,7 +147,7 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
             backgroundColor: '#4a525c',
             textColor: '#8b949e',
         },
-        isDefault: true,
+        isDefault: false,
     },
     {
         key: 'in_progress',
@@ -162,7 +162,7 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
             backgroundColor: '#c78a0f',
             textColor: '#fff5e6',
         },
-        isDefault: true,
+        isDefault: false,
     },
     {
         key: 'question',
@@ -177,7 +177,7 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
             backgroundColor: '#cc9a54',
             textColor: '#ffe6cc',
         },
-        isDefault: true,
+        isDefault: false,
     },
     {
         key: 'start',
@@ -192,8 +192,18 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
             backgroundColor: '#3387cc',
             textColor: '#e6f3ff',
         },
-        isDefault: true,
+        isDefault: false,
     },
+];
+
+/**
+ * 所有内置状态（默认 + 预设自定义）
+ *
+ * 用作工具函数的默认参数，确保所有内置符号都能被识别。
+ */
+export const ALL_BUILTIN_STATUSES: TaskStatus[] = [
+    ...DEFAULT_TASK_STATUSES,
+    ...PRESET_CUSTOM_STATUSES,
 ];
 
 // ==================== 马卡龙配色 ====================
@@ -216,23 +226,23 @@ export const MACARON_COLORS = [
 /**
  * 状态符号验证正则
  *
- * 只接受字母和数字作为状态符号
+ * 接受任意单个非空白字符作为状态符号
  */
-export const STATUS_SYMBOL_REGEX = /^[a-zA-Z0-9]$/;
+export const STATUS_SYMBOL_REGEX = /^\S$/;
 
 /**
  * 禁止使用的符号列表
  *
- * 这些符号有特殊含义或可能与 Markdown 语法冲突
+ * 仅禁止会破坏复选框语法（- [x]）的字符
  */
-export const STATUS_SYMBOL_EXCLUDED = ['/', '|', '_', '$', '#', '^', '*'];
+export const STATUS_SYMBOL_EXCLUDED = ['[', ']'];
 
 /**
  * 保留的符号列表（用于默认状态）
  *
- * 这些符号被默认状态使用，不允许用户自定义时使用
+ * 仅待办（空格）和已完成（x）为不可删除的默认状态
  */
-export const RESERVED_SYMBOLS = [' ', 'x', '!', '-', '/', '?', 'n'];
+export const RESERVED_SYMBOLS = [' ', 'x'];
 
 // ==================== 工具函数 ====================
 
@@ -252,7 +262,7 @@ export const RESERVED_SYMBOLS = [' ', 'x', '!', '-', '/', '?', 'n'];
  */
 export function getStatusBySymbol(
     symbol: string,
-    statuses: TaskStatus[] = DEFAULT_TASK_STATUSES
+    statuses: TaskStatus[] = ALL_BUILTIN_STATUSES
 ): TaskStatus | undefined {
     return statuses.find(s => s.symbol === symbol);
 }
@@ -272,7 +282,7 @@ export function getStatusBySymbol(
  */
 export function getStatusByKey(
     key: string,
-    statuses: TaskStatus[] = DEFAULT_TASK_STATUSES
+    statuses: TaskStatus[] = ALL_BUILTIN_STATUSES
 ): TaskStatus | undefined {
     return statuses.find(s => s.key === key);
 }
@@ -287,7 +297,8 @@ export function getStatusByKey(
  * @example
  * ```ts
  * validateStatusSymbol('a')     // { valid: true }
- * validateStatusSymbol('/')     // { valid: false, error: '符号不能使用特殊字符' }
+ * validateStatusSymbol('!')     // { valid: true }
+ * validateStatusSymbol('/')     // { valid: true }
  * validateStatusSymbol('x', false)  // { valid: true } （非自定义，允许使用保留符号）
  * ```
  */
@@ -310,9 +321,9 @@ export function validateStatusSymbol(
         return { valid: false, error: '符号不能使用特殊字符' };
     }
 
-    // 必须符合正则（字母或数字）
+    // 必须符合正则（非空白字符）
     if (!STATUS_SYMBOL_REGEX.test(symbol)) {
-        return { valid: false, error: '符号只能是字母或数字' };
+        return { valid: false, error: '符号不能为空或空白字符' };
     }
 
     return { valid: true };
@@ -395,7 +406,7 @@ export function getCurrentThemeMode(): ThemeMode {
  */
 export function parseStatusFromCheckbox(
     checkboxStatus: string,
-    statuses: TaskStatus[] = DEFAULT_TASK_STATUSES
+    statuses: TaskStatus[] = ALL_BUILTIN_STATUSES
 ): string {
     const status = statuses.find(s => s.symbol === checkboxStatus);
     return status?.key || 'todo';

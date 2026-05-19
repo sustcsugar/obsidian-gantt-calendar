@@ -9,6 +9,7 @@ export interface TaskStatusCardConfig {
 	plugin: GanttCalendarPlugin;
 	status: TaskStatus;
 	onDelete?: () => Promise<void> | void;
+	onEdit?: () => void;
 	onColorChange?: () => Promise<void> | void;
 }
 
@@ -21,13 +22,13 @@ export class TaskStatusCard {
 	}
 
 	render(): void {
-		const { container, plugin, status, onDelete } = this.config;
+		const { container, plugin, status, onDelete, onEdit } = this.config;
 		const isCustom = !status.isDefault;
 		const cls = SettingsStatusCardClasses.elements;
 
 		const card = container.createDiv(cls.card);
 
-		// ── Header: preview pill + key + delete ──
+		// ── Header: preview pill + button group (edit + delete) ──
 		const header = card.createDiv(cls.header);
 
 		// Live preview pill: shows [symbol] name with actual status colors
@@ -36,12 +37,20 @@ export class TaskStatusCard {
 		this.previewEl.setText(`[${symbol}]  ${status.name}`);
 		this.updatePreview();
 
-		const keyEl = header.createEl('span', { text: status.key, cls: cls.key });
+		if (isCustom) {
+			const btnGroup = header.createDiv(cls.btnGroup);
 
-		if (isCustom && onDelete) {
-			const deleteBtn = header.createEl('button', cls.deleteBtn);
-			deleteBtn.setText('×');
-			deleteBtn.addEventListener('click', onDelete);
+			if (onEdit) {
+				const editBtn = btnGroup.createEl('button', cls.editBtn);
+				editBtn.setText('✎');
+				editBtn.addEventListener('click', onEdit);
+			}
+
+			if (onDelete) {
+				const deleteBtn = btnGroup.createEl('button', cls.deleteBtn);
+				deleteBtn.setText('×');
+				deleteBtn.addEventListener('click', onDelete);
+			}
 		}
 
 		// ── Body: light/dark theme sections ──

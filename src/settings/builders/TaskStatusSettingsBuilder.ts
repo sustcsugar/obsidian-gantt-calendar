@@ -1,7 +1,7 @@
 import { Setting, SettingGroup } from 'obsidian';
 import { BaseBuilder } from './BaseBuilder';
 import { TaskStatusCard } from '../components';
-import { AddCustomStatusModal } from '../modals';
+import { AddCustomStatusModal, EditCustomStatusModal } from '../modals';
 import { SettingsStatusCardClasses } from '../../utils/bem';
 import type { BuilderConfig } from '../types';
 import type { TaskStatus } from '../../tasks/taskStatus';
@@ -27,13 +27,12 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 			// ── 默认状态 ──
 			addSetting(setting => {
 				setting.setName('默认状态')
-					.setDesc('内置的 7 种任务状态，可自定义颜色');
+					.setDesc('待办和已完成为核心状态，不可删除');
 				setting.controlEl.remove();
 				setting.settingEl.style.flexDirection = 'column';
 				setting.settingEl.style.alignItems = 'flex-start';
 
 				const grid = setting.settingEl.createDiv(cls.grid);
-				grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
 				const defaultStatuses = this.plugin.settings.taskStatuses.filter((s: TaskStatus) => s.isDefault);
 				defaultStatuses.forEach((status: TaskStatus) => {
 					new TaskStatusCard({
@@ -47,26 +46,24 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 
 			// ── 自定义状态 ──
 			const customStatuses = this.plugin.settings.taskStatuses.filter((s: TaskStatus) => !s.isDefault);
-			const maxCustom = 3;
 
-			if (customStatuses.length < maxCustom) {
-				addSetting(setting =>
-					setting.setName('添加自定义状态')
-						.setDesc(`已添加 ${customStatuses.length}/${maxCustom} 个自定义状态`)
-						.addButton(button => button
-							.setButtonText('添加')
-							.setCta()
-							.onClick(() => {
-								new AddCustomStatusModal(this.plugin.app, this.plugin, () => {
-									this.onRefreshSettings?.();
-								}).open();
-							}))
-				);
-			}
+			addSetting(setting =>
+				setting.setName('添加自定义状态')
+					.setDesc(`已添加 ${customStatuses.length} 个自定义状态`)
+					.addButton(button => button
+						.setButtonText('添加')
+						.setCta()
+						.onClick(() => {
+							new AddCustomStatusModal(this.plugin.app, this.plugin, () => {
+								this.onRefreshSettings?.();
+							}).open();
+						}))
+			);
 
 			if (customStatuses.length > 0) {
 				addSetting(setting => {
-					setting.setName('自定义状态');
+					setting.setName('自定义状态')
+						.setDesc('可自由修改颜色或删除，点击 ✎ 编辑');
 					setting.controlEl.remove();
 					setting.settingEl.style.flexDirection = 'column';
 					setting.settingEl.style.alignItems = 'flex-start';
@@ -78,6 +75,11 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 							plugin: this.plugin,
 							status,
 							onColorChange: async () => { await this.saveAndRefreshViews(); },
+							onEdit: () => {
+								new EditCustomStatusModal(this.plugin.app, this.plugin, status, () => {
+									this.onRefreshSettings?.();
+								}).open();
+							},
 							onDelete: async () => {
 								this.plugin.settings.taskStatuses = this.plugin.settings.taskStatuses.filter((s: TaskStatus) => s.key !== status.key);
 								await this.saveAndRefreshAll();

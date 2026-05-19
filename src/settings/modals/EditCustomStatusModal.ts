@@ -5,11 +5,13 @@ import { SettingsStatusModalClasses } from '../../utils/bem';
 import { TaskStatus, validateStatusSymbol } from '../../tasks/taskStatus';
 
 /**
- * 添加自定义状态模态框
- * 支持设置亮色和暗色主题的颜色
+ * 编辑自定义状态模态框
+ * 预填当前值，支持修改所有可编辑字段（key 不可修改以保证数据完整性）
  */
-export class AddCustomStatusModal extends Modal {
+export class EditCustomStatusModal extends Modal {
 	private plugin: GanttCalendarPlugin;
+	private existingStatus: TaskStatus;
+
 	private nameInput: HTMLInputElement;
 	private keyInput: HTMLInputElement;
 	private symbolInput: HTMLInputElement;
@@ -25,14 +27,14 @@ export class AddCustomStatusModal extends Modal {
 	private darkBgSwatch?: HTMLElement;
 	private darkTextSwatch?: HTMLElement;
 
-	private nameError?: HTMLElement;
 	private symbolError: HTMLElement;
-	private onStatusAdded?: () => void;
+	private onStatusEdited?: () => void;
 
-	constructor(app: App, plugin: GanttCalendarPlugin, onStatusAdded?: () => void) {
+	constructor(app: App, plugin: GanttCalendarPlugin, status: TaskStatus, onStatusEdited?: () => void) {
 		super(app);
 		this.plugin = plugin;
-		this.onStatusAdded = onStatusAdded;
+		this.existingStatus = status;
+		this.onStatusEdited = onStatusEdited;
 	}
 
 	onOpen() {
@@ -40,7 +42,7 @@ export class AddCustomStatusModal extends Modal {
 		contentEl.empty();
 		const cls = SettingsStatusModalClasses.elements;
 
-		contentEl.createEl('h2', { text: '添加自定义状态', cls: cls.title });
+		contentEl.createEl('h2', { text: '编辑自定义状态', cls: cls.title });
 
 		// 状态名称
 		const nameField = contentEl.createDiv(cls.field);
@@ -50,15 +52,18 @@ export class AddCustomStatusModal extends Modal {
 			placeholder: '例如：等待审核',
 			cls: cls.input,
 		});
+		this.nameInput.value = this.existingStatus.name;
 
-		// 状态 Key
+		// 状态 Key（只读，不可修改）
 		const keyField = contentEl.createDiv(cls.field);
-		keyField.createEl('label', { text: '状态标识（英文）', cls: cls.label });
+		keyField.createEl('label', { text: '状态标识（英文，不可修改）', cls: cls.label });
 		this.keyInput = keyField.createEl('input', {
 			type: 'text',
 			placeholder: '例如：pending_review',
 			cls: cls.input,
 		});
+		this.keyInput.value = this.existingStatus.key;
+		this.keyInput.disabled = true;
 
 		// 状态符号
 		const symbolField = contentEl.createDiv(cls.field);
@@ -71,6 +76,7 @@ export class AddCustomStatusModal extends Modal {
 			cls: cls.input,
 		});
 		this.symbolInput.maxLength = 1;
+		this.symbolInput.value = this.existingStatus.symbol === ' ' ? '' : this.existingStatus.symbol;
 		this.symbolError = symbolField.createDiv(cls.error);
 
 		// 状态描述
@@ -81,6 +87,7 @@ export class AddCustomStatusModal extends Modal {
 			cls: cls.textarea,
 		});
 		this.descInput.rows = 2;
+		this.descInput.value = this.existingStatus.description;
 
 		// 亮色主题
 		this.renderThemeSection(contentEl, 'light');
@@ -107,11 +114,11 @@ export class AddCustomStatusModal extends Modal {
 		const cancelBtn = footer.createEl('button', { text: '取消', cls: cls.btn });
 		cancelBtn.addEventListener('click', () => this.close());
 
-		const addBtn = footer.createEl('button', {
-			text: '添加',
+		const saveBtn = footer.createEl('button', {
+			text: '保存',
 			cls: `${cls.btn} ${SettingsStatusModalClasses.modifiers.btnPrimary}`,
 		});
-		addBtn.addEventListener('click', () => this.addCustomStatus());
+		saveBtn.addEventListener('click', () => this.saveCustomStatus());
 	}
 
 	private renderThemeSection(
@@ -126,11 +133,10 @@ export class AddCustomStatusModal extends Modal {
 
 		const colorRow = section.createDiv(cls.colorRow);
 
-		const defaultBg = theme === 'dark' ? '#2d333b' : '#FFFFFF';
-		const defaultText = theme === 'dark' ? '#adbac7' : '#333333';
+		const currentColors = theme === 'dark' ? this.existingStatus.darkColors : this.existingStatus.lightColors;
 
-		const bgInput = this.createColorField(colorRow, '背景', defaultBg);
-		const textInput = this.createColorField(colorRow, '文字', defaultText);
+		const bgInput = this.createColorField(colorRow, '背景', currentColors.backgroundColor);
+		const textInput = this.createColorField(colorRow, '文字', currentColors.textColor);
 
 		if (theme === 'light') {
 			this.lightBgColorInput = bgInput.input;
@@ -172,9 +178,8 @@ export class AddCustomStatusModal extends Modal {
 		return { input, swatch };
 	}
 
-	private addCustomStatus() {
+	private saveCustomStatus() {
 		const name = this.nameInput.value.trim();
-		const key = this.keyInput.value.trim();
 		const symbol = this.symbolInput.value.trim();
 		const description = this.descInput.value.trim();
 
@@ -183,29 +188,27 @@ export class AddCustomStatusModal extends Modal {
 			return;
 		}
 
-		if (!key) {
-			this.showFieldError(this.keyInput, '请输入状态标识');
-			return;
-		}
-
 		if (!symbol) {
 			this.symbolError.textContent = '请输入复选框符号';
 			return;
 		}
 
-		const validation = validateStatusSymbol(symbol, true);
-		if (!validation.valid) {
-			this.symbolError.textContent = validation.error || '符号无效';
-			return;
+		// 符号验证：如果是原来的符号则允许通过（即使它是非字母数字的，因为它已经在使用中）
+		if (symbol !== this.existingStatus.symbol) {
+			const validation = validateStatusSymbol(symbol, true);
+			if (!validation.valid) {
+				this.symbolError.textContent = validation.error || '符号无效';
+				return;
+			}
 		}
 
-		if (this.plugin.settings.taskStatuses.some((s: TaskStatus) => s.key === key)) {
-			this.showFieldError(this.keyInput, '状态标识已存在');
-			return;
-		}
+		const idx = this.plugin.settings.taskStatuses.findIndex(
+			(s: TaskStatus) => s.key === this.existingStatus.key
+		);
+		if (idx === -1) return;
 
-		const newStatus: TaskStatus = {
-			key,
+		this.plugin.settings.taskStatuses[idx] = {
+			...this.plugin.settings.taskStatuses[idx],
 			symbol,
 			name,
 			description: description || '自定义状态',
@@ -217,16 +220,14 @@ export class AddCustomStatusModal extends Modal {
 				backgroundColor: this.darkBgColorInput.value,
 				textColor: this.darkTextColorInput.value,
 			},
-			isDefault: false,
 		};
 
-		this.plugin.settings.taskStatuses.push(newStatus);
 		this.plugin.saveSettings();
 		this.plugin.refreshCalendarViews();
 		this.close();
 
-		if (this.onStatusAdded) {
-			this.onStatusAdded();
+		if (this.onStatusEdited) {
+			this.onStatusEdited();
 		}
 	}
 
