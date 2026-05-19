@@ -4555,9 +4555,6 @@ Author: sugar
   display: inline-block;
 }
 .flatpickr-months {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
 }
 .flatpickr-months .flatpickr-month {
@@ -4837,9 +4834,6 @@ Author: sugar
   text-align: center;
   overflow: hidden;
   width: 100%;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
   -webkit-box-align: center;
   -webkit-align-items: center;
@@ -4848,9 +4842,6 @@ Author: sugar
   height: 28px;
 }
 .flatpickr-weekdays .flatpickr-weekdaycontainer {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
   -webkit-box-flex: 1;
   -webkit-flex: 1;
@@ -4879,9 +4870,6 @@ span.flatpickr-weekday {
 .flatpickr-days {
   position: relative;
   overflow: hidden;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
   -webkit-box-align: start;
   -webkit-align-items: flex-start;
@@ -4901,10 +4889,6 @@ span.flatpickr-weekday {
   max-width: 307.875px;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
-  display: inline-block;
-  display: -ms-flexbox;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
   -webkit-flex-wrap: wrap;
           flex-wrap: wrap;
@@ -5073,10 +5057,6 @@ span.flatpickr-weekday {
   border: none;
 }
 .flatpickr-innerContainer {
-  display: block;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
@@ -5098,9 +5078,6 @@ span.flatpickr-weekday {
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
   overflow: hidden;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
 }
 .flatpickr-time:after {
