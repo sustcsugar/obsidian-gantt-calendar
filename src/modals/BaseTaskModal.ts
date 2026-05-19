@@ -311,9 +311,13 @@ export abstract class BaseTaskModal extends Modal {
 				},
 				onOpen: () => {
 					dateClearBtn.style.opacity = '0';
+					const ta = this.contentEl.querySelector('textarea');
+					if (ta) ta.setAttribute('inert', '');
 				},
 				onClose: () => {
 					dateClearBtn.style.opacity = '';
+					const ta = this.contentEl.querySelector('textarea');
+					if (ta) ta.removeAttribute('inert');
 				},
 			});
 
