@@ -6,7 +6,6 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"postbuild": "node scripts/sync-to-example.js",
 		"postinstall": "node -e \"const fs=require('fs'),p='node_modules/obsidian-daily-notes-interface/node_modules/obsidian';if(fs.existsSync(p))fs.rmSync(p,{recursive:true})\"",
 		"test": "jest --verbose",
 		"test:watch": "jest --watch --verbose",

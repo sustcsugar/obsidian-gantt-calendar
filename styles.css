@@ -478,7 +478,7 @@ Author: sugar
 }
 
 /* 只含图标的按钮（左右箭头）- 稍大一点以容纳图标 */
-.gc-toolbar__nav-buttons .gc-toolbar__btn:has(svg) {
+.gc-toolbar__nav-buttons .gc-toolbar__btn--icon {
 	min-width: 24px;
 	padding: 4px 4px;
 }
@@ -1469,7 +1469,7 @@ Author: sugar
 
 /* 星期标签容器 - BEM类名: gc-year-view__weekdays */
 .gc-year-view__weekdays {
-	display: grid !important;
+	display: grid;
 	grid-template-columns: repeat(7, 1fr);
 	width: 100%;
 	margin-bottom: 1px;
@@ -2408,53 +2408,53 @@ Author: sugar
 /* 6.9 Heatmap Components */
 /* 热力图色卡：蓝、绿、红（5级） - BEM类名支持 */
 /* 为年视图新类名添加热力图样式，排除非当月日期 */
-.gc-year-view__day:not(.outside-month).heatmap-blue-1 { background-image: none; background-color: rgba(56, 132, 255, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-blue-2 { background-image: none; background-color: rgba(56, 132, 255, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-blue-3 { background-image: none; background-color: rgba(56, 132, 255, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-blue-4 { background-image: none; background-color: rgba(56, 132, 255, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-blue-5 { background-image: none; background-color: rgba(56, 132, 255, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-blue-1 { background-image: none; background-color: rgba(56, 132, 255, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-2 { background-image: none; background-color: rgba(56, 132, 255, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-3 { background-image: none; background-color: rgba(56, 132, 255, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-4 { background-image: none; background-color: rgba(56, 132, 255, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-5 { background-image: none; background-color: rgba(56, 132, 255, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-green-1 { background-image: none; background-color: rgba(82, 196, 26, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-green-2 { background-image: none; background-color: rgba(82, 196, 26, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-green-3 { background-image: none; background-color: rgba(82, 196, 26, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-green-4 { background-image: none; background-color: rgba(82, 196, 26, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-green-5 { background-image: none; background-color: rgba(82, 196, 26, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-green-1 { background-image: none; background-color: rgba(82, 196, 26, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-green-2 { background-image: none; background-color: rgba(82, 196, 26, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-green-3 { background-image: none; background-color: rgba(82, 196, 26, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-green-4 { background-image: none; background-color: rgba(82, 196, 26, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-green-5 { background-image: none; background-color: rgba(82, 196, 26, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-red-1 { background-image: none; background-color: rgba(231, 76, 60, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-red-2 { background-image: none; background-color: rgba(231, 76, 60, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-red-3 { background-image: none; background-color: rgba(231, 76, 60, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-red-4 { background-image: none; background-color: rgba(231, 76, 60, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-red-5 { background-image: none; background-color: rgba(231, 76, 60, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-red-1 { background-image: none; background-color: rgba(231, 76, 60, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-red-2 { background-image: none; background-color: rgba(231, 76, 60, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-red-3 { background-image: none; background-color: rgba(231, 76, 60, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-red-4 { background-image: none; background-color: rgba(231, 76, 60, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-red-5 { background-image: none; background-color: rgba(231, 76, 60, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-purple-1 { background-image: none; background-color: rgba(142, 68, 173, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-purple-2 { background-image: none; background-color: rgba(142, 68, 173, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-purple-3 { background-image: none; background-color: rgba(142, 68, 173, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-purple-4 { background-image: none; background-color: rgba(142, 68, 173, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-purple-5 { background-image: none; background-color: rgba(142, 68, 173, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-purple-1 { background-image: none; background-color: rgba(142, 68, 173, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-2 { background-image: none; background-color: rgba(142, 68, 173, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-3 { background-image: none; background-color: rgba(142, 68, 173, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-4 { background-image: none; background-color: rgba(142, 68, 173, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-5 { background-image: none; background-color: rgba(142, 68, 173, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-orange-1 { background-image: none; background-color: rgba(245, 124, 0, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-orange-2 { background-image: none; background-color: rgba(245, 124, 0, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-orange-3 { background-image: none; background-color: rgba(245, 124, 0, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-orange-4 { background-image: none; background-color: rgba(245, 124, 0, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-orange-5 { background-image: none; background-color: rgba(245, 124, 0, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-orange-1 { background-image: none; background-color: rgba(245, 124, 0, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-2 { background-image: none; background-color: rgba(245, 124, 0, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-3 { background-image: none; background-color: rgba(245, 124, 0, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-4 { background-image: none; background-color: rgba(245, 124, 0, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-5 { background-image: none; background-color: rgba(245, 124, 0, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-cyan-1 { background-image: none; background-color: rgba(0, 188, 212, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-2 { background-image: none; background-color: rgba(0, 188, 212, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-3 { background-image: none; background-color: rgba(0, 188, 212, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-4 { background-image: none; background-color: rgba(0, 188, 212, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-5 { background-image: none; background-color: rgba(0, 188, 212, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-1 { background-image: none; background-color: rgba(0, 188, 212, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-2 { background-image: none; background-color: rgba(0, 188, 212, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-3 { background-image: none; background-color: rgba(0, 188, 212, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-4 { background-image: none; background-color: rgba(0, 188, 212, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-5 { background-image: none; background-color: rgba(0, 188, 212, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-pink-1 { background-image: none; background-color: rgba(233, 30, 99, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-pink-2 { background-image: none; background-color: rgba(233, 30, 99, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-pink-3 { background-image: none; background-color: rgba(233, 30, 99, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-pink-4 { background-image: none; background-color: rgba(233, 30, 99, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-pink-5 { background-image: none; background-color: rgba(233, 30, 99, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-pink-1 { background-image: none; background-color: rgba(233, 30, 99, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-2 { background-image: none; background-color: rgba(233, 30, 99, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-3 { background-image: none; background-color: rgba(233, 30, 99, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-4 { background-image: none; background-color: rgba(233, 30, 99, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-5 { background-image: none; background-color: rgba(233, 30, 99, 0.58); }
 
-.gc-year-view__day:not(.outside-month).heatmap-yellow-1 { background-image: none; background-color: rgba(255, 193, 7, 0.12) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-2 { background-image: none; background-color: rgba(255, 193, 7, 0.22) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-3 { background-image: none; background-color: rgba(255, 193, 7, 0.32) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44) !important; }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58) !important; }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-1 { background-image: none; background-color: rgba(255, 193, 7, 0.12); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-2 { background-image: none; background-color: rgba(255, 193, 7, 0.22); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-3 { background-image: none; background-color: rgba(255, 193, 7, 0.32); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58); }
 
 /* 热力图3D效果 - 第一档：轻微突起 */
 .gc-year-view__day:not(.outside-month).heatmap-3d-1[class*="heatmap-"] {

@@ -436,6 +436,7 @@ export const ToolbarClasses = {
 		navButtons: {
 			group: bem(BLOCKS.TOOLBAR, 'nav-buttons'),
 			btn: bem(BLOCKS.TOOLBAR, 'btn'),
+			btnIcon: bem(BLOCKS.TOOLBAR, 'btn', 'icon'),
 		},
 
 		/** 视图选择器 */
