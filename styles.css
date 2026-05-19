@@ -4727,7 +4727,6 @@ Author: sugar
 }
 .flatpickr-current-month {
   font-size: 135%;
-  line-height: inherit;
   font-weight: 300;
   color: inherit;
   position: absolute;
@@ -4754,7 +4753,6 @@ Author: sugar
 }
 .flatpickr-current-month .numInputWrapper {
   width: 6ch;
-  width: 7ch\0;
   display: inline-block;
 }
 .flatpickr-current-month .numInputWrapper span.arrowUp:after {
