@@ -1,28 +1,32 @@
 # Obsidian Gantt Calendar
 
+[简体中文](./README_zh.md)
+
 <div align="center" style="padding: 20px; border: 2px solid #8b5cf6; border-radius: 12px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); margin: 20px 0;">
 
-✨ 一个强大的 Obsidian 任务管理和日历插件 ✨
+A powerful visual task management plugin for Obsidian.
 
-🗓️ **多视图日历** - 任务视图/日历视图(年月周日)/甘特图/侧边栏 六大视图自由切换
+**Multi-View Calendar** — Task / Year / Month / Week / Day / Gantt — six views with seamless switching
 
-🏮 **节日显示** - 公历/农历节日和二十四节气显示
+**Festival Display** — Solar festivals, lunar festivals, and 24 solar terms
 
-📊 **数据可视化** - 任务热力图、每日任务数量统计、8种渐变配色方案
+**Data Visualization** — Task heatmap, daily task counts, 8 gradient palettes
 
-✅ **智能任务管理** - 全局筛选、优先级标记、6种时间属性、时间精度(HH:mm)
+**Smart Task Management** — Global filter, priority tags, 6 date fields, time precision (HH:mm)
 
-⏱️ **时间轴视图** - 日/周视图支持24小时时间轴布局，拖拽+快速创建
+**Timeline View** — Day/Week views with 24-hour timeline layout, drag & drop, quick create
 
-📝 **Daily Note 集成** - 嵌入式编辑器，编辑/预览模式切换
+**Daily Note Integration** — Embedded editor with edit/preview mode toggle
 
-📡 **侧边栏视图** - 任务搜索筛选排序 + 每日时间线
+**Sidebar View** — Task search, filter & sort + daily timeline
 
-🎨 **高度可定制** - 节日颜色、热力图配色、任务显示数量等全面配置
+**Highly Customizable** — Festival colors, heatmap palettes, task display count, and more
 
-🔗 **双格式兼容** - 完美支持 Tasks 插件（emoji）与 Dataview 插件（字段）格式
+**Dual Format** — Full support for Tasks plugin (emoji) and Dataview plugin (inline field) formats
 
-🔁 **周期任务** - 支持 daily/weekly/monthly/yearly 重复任务显示
+**Recurring Tasks** — daily/weekly/monthly/yearly repeat with virtual instance display
+
+**Feishu Sync** — Bidirectional task sync with Feishu (Lark) via OAuth 2.0
 
 </div>
 
@@ -30,291 +34,276 @@
 
 ## Screenshots
 
-YearView
+Year View
 ![YearView](./docs/images/gantt-calendar-YearView.png)
 
 Gantt View
 ![GanttView](./docs/images/gantt-view.png)
 
-Week Timeline View (时间轴模式)
+Week Timeline View
 ![WeekTimeline](./docs/images/gantt-calendar-weekview-timeline.png)
 
-Sidebar View (任务列表 + 每日时间线)
+Sidebar View (Task List + Daily Timeline)
 ![SidebarView](./docs/images/gantt-calendar-sidebar-timeline.png)
 
-Day View with Embedded Editor (嵌入式编辑器)
+Day View with Embedded Editor
 ![DayViewEditor](./docs/images/gantt-calendar-day-view.png)
 
-## 🚀 Quick Start
+## Installation
 
-### 安装插件
+### Via BRAT
 
-#### 使用`BRAT`插件安装:
-1. 下载并启用社区插件 `BRAT`
-2. 执行命令 `Add a beta plugin for testing (with or without version)`
-3. 填写仓库地址: https://github.com/sustcsugar/obsidian-gantt-calendar
+1. Install and enable the community plugin [BRAT](https://github.com/TfTHacker/obsidian42-brat)
+2. Run the command `BRAT: Add a beta plugin for testing`
+3. Enter the repository URL: `https://github.com/sustcsugar/obsidian-gantt-calendar`
 
+### Manual
 
-#### 手动安装
-1. 下载最新的 [Release](https://github.com/sustcsugar/obsidian-gantt-calendar/releases)
-2. 解压后将文件夹复制到 `<你的库>/.obsidian/plugins/`
-3. 重启 Obsidian 并在设置中启用插件
+1. Download the latest [Release](https://github.com/sustcsugar/obsidian-gantt-calendar/releases)
+2. Extract and copy the folder to `<your-vault>/.obsidian/plugins/`
+3. Restart Obsidian and enable the plugin in Settings
 
-### 打开视图
+## Quick Start
 
-**点击侧边栏按钮**
-- 通过侧边栏按钮打开插件的视图页面.
+### Open the View
 
-**视图切换**
-- 在工具栏左侧点击**视图切换按钮**快速切换
+- Click the **sidebar icon** to open the main calendar view
+- Use the **view switcher** in the toolbar to switch between views
 
-### 工具栏添加任务
-- 工具栏右侧功能区,使用**添加任务**按钮, 创建任务.
+### Create Tasks
 
-### 手动创建任务
-> 通过quickadd/tasks插件,进行任务的创建
+Use the **Add Task** button in the toolbar, or manually write tasks in any Markdown file:
 
-在任何 Markdown 文件中输入：
 ```markdown
-- [ ] 🎯 完成项目文档 📅 2025-12-20
+- [ ] 🎯 Complete project documentation 📅 2025-12-20
 ```
 
-刷新插件即可在日历和任务列表中看到该任务！
+Refresh the plugin and the task will appear in the calendar and task list.
 
+## Features
 
-## 📋 主要功能
+### Layout
 
-### 界面布局
+The plugin uses a **toolbar + content area** layout:
 
-插件采用顶部工具栏 + 内容区的布局结构：
+- **Toolbar Left** — View switcher (6 views)
+- **Toolbar Center** — Current date range / title
+- **Toolbar Right** — Functional buttons (navigation, sort, filter, add task, etc.)
 
-**工具栏（Toolbar）** - 分为左/中/右三个区域：
-- **左侧**：视图切换(六大视图切换)
-- **中间**：当前日期(范围)/标题显示
-- **右侧**：功能按钮
+### Task Formats
 
----
+**Tasks Plugin Format (Emoji)**
 
-### 任务格式
-
-**Tasks 插件格式（Emoji）**
 ```markdown
-- [ ] 🎯 完成项目文档 ⏫ ➕ 2025-01-10 📅 2025-01-15
+- [ ] 🎯 Complete project documentation ⏫ ➕ 2025-01-10 📅 2025-01-15
 ```
 
-| Emoji | 含义 | Emoji | 含义 |
-|-------|------|-------|------|
-| `🎯` | 全局标记 | `🔺` | 最高优先级 |
-| `⏫` | 高优先级 | `🔼` | 中优先级 |
-| `🔽` | 低优先级 | `⏬` | 最低优先级 |
-| `➕` | 创建日期 | `🛫` | 开始日期 |
-| `⏳` | 计划日期 | `📅` | 截止日期 |
-| `✅` | 完成日期 | `❌` | 取消日期 |
-| `🔁` | 重复任务 | - | - |
+| Emoji | Meaning | Emoji | Meaning |
+|-------|---------|-------|---------|
+| `🎯` | Global filter marker | `🔺` | Highest priority |
+| `⏫` | High priority | `🔼` | Medium priority |
+| `🔽` | Low priority | `⏬` | Lowest priority |
+| `➕` | Created date | `🛫` | Start date |
+| `⏳` | Scheduled date | `📅` | Due date |
+| `✅` | Completion date | `❌` | Cancelled date |
+| `🔁` | Recurring task | - | - |
 
-**Dataview 插件格式（字段）**
+**Dataview Plugin Format (Inline Fields)**
+
 ```markdown
-- [ ] 🎯 完成项目文档 [priority:: high] [created:: 2025-01-10] [due:: 2025-01-15]
+- [ ] 🎯 Complete project documentation [priority:: high] [created:: 2025-01-10] [due:: 2025-01-15]
 ```
 
-| 字段 | 含义 | 字段 | 含义 |
-|------|------|------|------|
-| `priority::` | 优先级 | `created::` | 创建日期 |
-| `start::` | 开始日期 | `scheduled::` | 计划日期 |
-| `due::` | 截止日期 | `completion::` | 完成日期 |
-| `cancelled::` | 取消日期 | `repeat::` | 重复规则 |
+| Field | Meaning | Field | Meaning |
+|-------|---------|-------|---------|
+| `priority::` | Priority | `created::` | Created date |
+| `start::` | Start date | `scheduled::` | Scheduled date |
+| `due::` | Due date | `completion::` | Completion date |
+| `cancelled::` | Cancelled date | `repeat::` | Recurrence rule |
 
-**时间精度**
-- 日期格式：`YYYY-MM-DD`（如 `2026-04-27`）
-- 时间格式：`YYYY-MM-DD HH:mm`（如 `2026-04-27 14:00`）
-- 包含时间的任务会自动在日视图和周视图中显示为时间轴布局
+**Time Precision**
 
-**重复任务语法**
+- Date: `YYYY-MM-DD` (e.g., `2026-04-27`)
+- Time: `YYYY-MM-DD HH:mm` (e.g., `2026-04-27 14:00`)
+- Tasks with time automatically display in timeline layout
+
+**Recurring Task Syntax**
+
 ```markdown
-🔁 every day          # 每天
-🔁 every 3 days       # 每3天
-🔁 every week on Monday  # 每周一
-🔁 every month on 15  # 每月15日
-🔁 every year on 01-01  # 每年1月1日
-🔁 every weekday      # 每个工作日
-🔁 when done          # 完成后重新开始
+🔁 every day              # Every day
+🔁 every 3 days           # Every 3 days
+🔁 every week on Monday   # Every Monday
+🔁 every month on 15      # Every month on the 15th
+🔁 every year on 01-01    # Every year on Jan 1
+🔁 every weekday          # Every weekday
+🔁 when done              # Restart after completion
 ```
 
-**任务属性说明**
-1. **全局筛选标记**：必须在复选框后开头位置，用于筛选特定任务
-2. **任务描述**：纯文本内容，属性标记会自动清理
-3. **优先级**：6 个等级（highest/high/medium/normal/low/lowest）
-4. **时间属性**：6 种可选日期（格式 `YYYY-MM-DD` 或 `YYYY-MM-DD HH:mm`）
+### Year View
 
----
+- **Year Overview** — 12 month cards showing full-year task distribution
+- **Task Heatmap** — 5-level color gradient for task density
+  - 8 palette options: blue / green / red / purple / orange / cyan / pink / yellow
+  - 3D heatmap effect (off / slight / prominent)
+- **Responsive Layout** — Auto-switches between 4×3 / 3×4 / 2×6 / 1×12 grids
+- **Task Count** — Optional per-day task total display
+- **Lunar Calendar** — Chinese lunar dates in month cards
+- **Click Navigation** — Click a date to switch to Day View
 
-### 年视图
-- **全年概览**：12 个月卡片展示全年任务分布
-- **任务热力图**：5 级颜色梯度，直观显示任务密度
-  - 8 种配色方案：蓝/绿/红/紫/橙/青/粉/黄
-  - 3D 热力图效果
-- **响应式布局**：根据窗口宽度自动切换 4×3 / 3×4 / 2×6 / 1×12 布局
-- **任务数量统计**：可选显示每日任务总数
-- **农历显示**：月卡片内显示农历日期
-- **点击交互**：点击日期切换到日视图
+### Month View
 
-### 月视图
-- **月度日历**：标准月历布局，清晰显示每日任务
-- **任务列表**：每天显示指定数量的任务（可配置 1-10 个）
-- **任务弹窗**：点击日期显示当天完整任务列表
-- **节日显示**：阳历节日、农历节日、节气三色标记
-- **拖拽排序**：支持拖拽任务卡片在日期间移动
-- **周期任务**：自动显示重复任务的虚拟实例
-- **周起始配置**：支持周一/周日开始
+- **Monthly Calendar** — Standard month grid layout with daily tasks
+- **Week Numbers** — ISO week numbers shown in the first column
+- **Task Display Limit** — Configurable per-day task count (1–10) with "+N more" overflow
+- **Task Popup** — Click a date to view all tasks for that day
+- **Festival Display** — Solar/lunar/solar-term festivals with distinct colors
+- **Drag & Drop** — Drag task cards between days to reschedule
+- **Recurring Tasks** — Virtual instances for repeating tasks
+- **Week Start** — Configurable Monday or Sunday start
 
-### 周视图
-- **双模式布局**：
-  - **列表模式**：当周内无定时任务时，按天显示任务列表
-  - **时间轴模式**：当存在带时间的任务时自动切换，显示 24h 纵向时间轴，7 天并排，行列完美对齐
-- **今日高亮**：当天日期特殊标记
-- **灵活导航**：上一周/本周/下一周快速切换
-- **拖拽交互**：拖拽任务卡片到任意天/小时格
-- **快速创建**：空时间格悬停显示"+"按钮，点击快速创建任务
-- **农历信息**：日期旁显示农历文本和节日
+### Week View
 
-### 日视图
-- **详细任务列表**：显示当天所有任务详情
-- **时间轴布局**：当任务包含时间精度（HH:mm）时，自动显示 0:00-23:00 时间轴，任务定位到对应小时格
-- **拖拽交互**：拖拽任务到任意时间格调整时间
-- **快速创建**：空时间格悬停显示"+"按钮，点击快速创建任务
-- **Daily Note 集成**：
-  - 嵌入式完整编辑器（WorkspaceSplit 模式）
-  - 编辑/预览模式切换按钮
-  - 动态显示当前笔记文件名
-  - 水平布局（左右分屏）：任务在左，笔记在右
-  - 垂直布局（上下分屏）：任务在上，笔记在下
-- **农历信息栏**：显示农历日期、节日、节气
-- **任务跳转**：点击任务直接定位到源文件
+- **Dual Mode Layout**
+  - **List Mode** — When no timed tasks exist, displays 7-column card layout
+  - **Timeline Mode** — When timed tasks are detected, shows 24-hour vertical time grid with 7 days side by side
+- **Today Highlight** — Current day is visually emphasized
+- **Navigation** — Previous week / This week / Next week
+- **Drag & Drop** — Drag tasks to any day or hour slot
+- **Quick Create** — Hover over empty time slots to reveal "+" button for fast task creation
+- **Current Time Indicator** — Red line marking the current time
+- **Lunar Info** — Lunar dates and festivals in day headers
 
-### 任务视图
-- **任务列表**：集中展示所有任务
-- **时间字段筛选**：按 6 种时间字段过滤任务
-- **日期范围模式**：全部 / 今天 / 本周 / 本月 / 自定义范围
-- **多维筛选**：状态、优先级、标签筛选
-- **排序**：支持多种排序方式
-- **筛选状态持久化**：刷新后保留筛选配置
+### Day View
 
-### 甘特视图
-- **交互式甘特条**：
-  - 拖动整体任务条调整时间
-  - 拖动左右端点调整开始/结束时间
-  - 点击任务条跳转到源文件
-- **导航按钮**：快速跳转到今天 / 向左 / 向右
-- **增量刷新**：智能更新策略，避免全量重绘
-- **标签/状态筛选**：按标签和任务状态过滤甘特条
+- **Task List** — Detailed view of all tasks for the selected day
+- **Timeline Layout** — When timed tasks exist, renders 0:00–23:00 time grid with tasks positioned at their hours
+- **Drag & Drop** — Drag tasks to any hour slot to adjust time
+- **Quick Create** — Hover over empty slots for "+" quick-create button
+- **Current Time Indicator** — Red line at the current time
+- **Daily Note Integration**
+  - Embedded full editor (WorkspaceSplit mode)
+  - Edit / Preview mode toggle
+  - Auto-loads daily note for the selected date
+  - Supports Obsidian core daily notes, Periodic Notes plugin, and custom paths
+- **Resizable Split** — Draggable divider between task and note panes (horizontal or vertical layout)
+- **Lunar Info Bar** — Lunar date, festivals, and solar terms
 
----
+### Task View
 
-### 侧边栏视图
+- **Task List** — Centralized display of all tasks
+- **Date Range Filter** — All / Today / This Week / This Month / Custom range
+- **Time Field Selector** — Filter by any of 6 date fields
+- **Multi-dimensional Filtering** — Status, priority, and tags (AND/OR/NOT operators)
+- **Sorting** — 7 sort fields with asc/desc toggle
+- **Persistent State** — Filter and sort settings persist across refreshes
 
-侧边栏视图提供两个标签页，方便随时查看和管理任务：
+### Gantt View
 
-**任务列表**
-- 关键词搜索
-- 多维筛选：状态、优先级、标签（OR/AND 运算）、日期（全部/今天/本周/本月）
-- 排序：优先级 / 截止日期 / 开始日期
-- 点击任务卡片直接跳转到源文件
+- **Interactive Gantt Bars** — Custom SVG rendering engine
+  - Drag entire bar to shift dates
+  - Drag endpoints to adjust start/end dates
+  - Drag to change progress percentage
+  - Click to open task edit modal
+- **Navigation** — Jump to today / scroll left / scroll right
+- **Incremental Refresh** — Smart update strategy to avoid full redraws
+- **Tag & Status Filtering** — Filter gantt bars by tags and status
+- **Configurable Fields** — Choose which date fields map to gantt start/end
 
-**每日时间线**
-- 24 小时时间格展示今日定时任务
-- 全天任务区域（无具体时间的任务）
-- 当前时间指示线（实时标记当前时刻）
-- 拖拽任务调整时间
-- 空时间格悬停快速创建
+### Sidebar View
 
----
+Two-tab sidebar for quick task access:
 
-### 交互功能
+**Task List Tab**
+- Keyword search (debounced)
+- Multi-dimensional filters: status, priority, tags (OR/AND), date range
+- Sort by: priority / due date / start date
+- Click task to navigate to source file
 
-**右键菜单**
-- 编辑任务（弹窗编辑）
-- 创建任务笔记（同名 / 别名）
-- 设置优先级（最高/高/中/普通/低/最低）
-- 设置任务状态：重要 🔴 / 有疑问 🟠
-- 延期任务（1/3/7 天，支持"推迟"和"设置截止日期"两种方式）
-- 取消 / 恢复任务
-- 删除任务
+**Daily Timeline Tab**
+- 24-hour timeline for today's timed tasks
+- All-day task section
+- Current time indicator line
+- Drag & drop to adjust time
+- Quick create on empty slots
 
-**任务悬浮窗**
-- 鼠标悬停显示任务详细信息
+### Context Menu
 
-**拖拽操作**
-- 月视图：拖拽任务卡片在日期间移动
-- 周视图：拖拽任务到任意天/小时格
-- 日视图：拖拽任务到任意时间格
-- 侧边栏：拖拽任务调整时间
+Right-click any task for:
 
----
+- **Edit Task** — Full edit modal (description, priority, dates, repeat, tags)
+- **Create Note** — Generate a wiki-linked note from the task (same name or alias)
+- **Set Priority** — 6 levels: highest / high / medium / normal / low / lowest
+- **Set Status** — Custom statuses (important, question)
+- **Postpone** — Delay 1/3/7 days (from due date or from today)
+- **Cancel / Restore** — Toggle cancelled state
+- **Delete** — Remove task from markdown file
 
-## 📅 开发路线图
+### Feishu (Lark) Sync
 
-### 任务解析
-- ✅ 支持 Tasks 和 Dataview 双格式任务解析
-- ✅ 完整的任务属性支持
-    - ✅ 任务全局筛选符号
-    - ✅ 任务标签属性
-    - [ ] 嵌套标签识别
-    - ✅ 任务描述
-    - ✅ 任务6种优先级
-    - ✅ 任务6种时间属性
-    - ✅ 任务时间精度（HH:mm）
-    - ✅ 重复任务识别与显示
-- [ ] 换行任务识别
-- [ ] 子任务识别
-- [ ] 任务依赖关系
+- **Bidirectional Sync** — Push local tasks to Feishu and pull Feishu tasks to Obsidian
+- **OAuth 2.0** — Secure authentication with automatic token refresh
+- **Push Filters** — Filter by file paths, completion status, and date
+- **Conflict Resolution** — Multiple strategies: local-wins, remote-wins, newest-wins, manual
+- **Auto Sync** — Configurable automatic sync interval
+- **Sync Result Modal** — Detailed per-task sync results with statistics
 
-### 视图功能
-- ✅ 日视图 Daily Note 集成（嵌入式编辑器，编辑/预览切换）
-- ✅ 日视图时间轴布局
-- ✅ 周视图双模式（列表 + 时间轴）
-- ✅ 周视图/月视图卡片拖动
-- ✅ 年视图任务热力图和数量统计
-- ✅ 任务视图（多维筛选 + 日期范围）
-- ✅ 甘特图（拖动 + 增量刷新 + 导航）
-- ✅ 侧边栏视图（任务列表 + 每日时间线）
+## Roadmap
 
-### 工具栏功能
-- ✅ 工具栏视图切换
-- ✅ 标签/状态/优先级筛选
-- ✅ 日期导航按钮
-- ✅ 时间字段筛选
-- ✅ 添加任务按钮
+### Task Parsing
+- [x] Tasks and Dataview dual-format parsing
+- [x] Global filter markers
+- [x] Task tags
+- [x] Task description
+- [x] 6 priority levels
+- [x] 6 date fields with time precision (HH:mm)
+- [x] Recurring task recognition and display
+- [ ] Nested tag recognition
+- [ ] Multi-line task recognition
+- [ ] Sub-task recognition
+- [ ] Task dependency relationships
 
-### 交互功能
-- ✅ 任务卡片（描述/标签/优先级）
-- ✅ 任务右键菜单（编辑/创建笔记/优先级/状态/延期/取消/删除）
-- ✅ 任务悬浮窗
-- ✅ 空时间格悬停快速创建
+### Views
+- [x] Day View with Daily Note integration (embedded editor)
+- [x] Day View timeline layout
+- [x] Week View dual mode (list + timeline)
+- [x] Week/Month View drag & drop
+- [x] Year View heatmap and task count
+- [x] Task View (multi-dimensional filter + date range)
+- [x] Gantt View (drag + incremental refresh + navigation)
+- [x] Sidebar View (task list + daily timeline)
 
-### 💡 未来计划（v2.0.0）
-- [ ] 订阅第三方日历
-    - [ ] 飞书日历
-    - [ ] Outlook 日历
-- [ ] 第三方任务同步
-    - [ ] 飞书任务
-    - [ ] Microsoft To Do
+### Toolbar
+- [x] View switcher
+- [x] Tag / status / priority filtering
+- [x] Date navigation buttons
+- [x] Time field selector
+- [x] Add task button
 
----
+### Interactions
+- [x] Task cards (description, tags, priority)
+- [x] Context menu (edit, create note, priority, status, postpone, cancel, delete)
+- [x] Hover tooltips
+- [x] Quick create on empty time slots
 
-### 贡献指南
-欢迎提交 Issue 和 Pull Request！
+### Future Plans (v2.0.0)
+- [ ] Third-party calendar subscription (Feishu Calendar, Outlook Calendar)
+- [ ] Microsoft To Do sync
+- [ ] Google / Apple Calendar via CalDAV
 
+## Contributing
 
-## 📄 许可证
+Issues and Pull Requests are welcome!
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+## License
+
+[MIT](LICENSE)
 
 ---
 
 <div align="center">
 
-💡 **遇到问题或有建议？** 欢迎提交 [Issue](https://github.com/sustcsugar/obsidian-gantt-calendar/issues)
+Found a bug or have a suggestion? Open an [Issue](https://github.com/sustcsugar/obsidian-gantt-calendar/issues)
 
-⭐ **喜欢这个插件？** 请给我一个 Star！
+Enjoying the plugin? Give it a ⭐!
 
 </div>
