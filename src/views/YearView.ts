@@ -1,21 +1,14 @@
 import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
-import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import type { IPluginContext, GCTask, TagFilterState } from '../types';
 import { YearViewClasses } from '../utils/bem';
-import { YearViewLayoutManager } from '../utils/yearViewLayout';
 import { Logger } from '../utils/logger';
-
-/**
- * 年视图布局类型
- */
-type YearViewLayout = '4x3' | '3x4' | '2x6' | '1x12';
 
 /**
  * 年视图渲染器
  */
 export class YearViewRenderer extends BaseViewRenderer {
-	// 设置前缀
 	private readonly SETTINGS_PREFIX = 'yearView';
 
 	constructor(app: App, plugin: IPluginContext) {
@@ -32,74 +25,11 @@ export class YearViewRenderer extends BaseViewRenderer {
 			Logger.error('YearView', 'Failed to save tag filter', err);
 		});
 	}
+
 	private yearContainer: HTMLElement | null = null;
-	private monthsGrid: HTMLElement | null = null;
-	private resizeObserver: ResizeObserver | null = null;
-	private currentLayout: YearViewLayout = '4x3';
-
-	/**
-	 * 根据容器宽度计算布局模式（使用动态CSS值读取）
-	 */
-	private calculateLayout(width: number): YearViewLayout {
-		if (!this.yearContainer) return '4x3';
-		return YearViewLayoutManager.calculateOptimalLayout(width, this.yearContainer);
-	}
-
-	/**
-	 * 应用布局模式到网格容器
-	 */
-	private applyLayout(layout: YearViewLayout): void {
-		if (!this.monthsGrid) return;
-
-		this.currentLayout = layout;
-		const { columns, rows } = YearViewLayoutManager.getLayoutDimensions(layout);
-
-		this.monthsGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-		this.monthsGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-	}
-
-	/**
-	 * 设置响应式布局监听
-	 */
-	private setupResponsiveLayout(): void {
-		if (!this.monthsGrid) return;
-
-		// 清除缓存以确保使用最新的CSS值
-		YearViewLayoutManager.clearCache();
-
-		const initialWidth = this.monthsGrid.offsetWidth;
-		this.currentLayout = this.calculateLayout(initialWidth);
-		this.applyLayout(this.currentLayout);
-
-		// 设置 ResizeObserver 监听容器宽度变化
-		this.resizeObserver = new ResizeObserver((entries) => {
-			for (const entry of entries) {
-				const width = entry.contentRect.width;
-				const layout = this.calculateLayout(width);
-				if (layout !== this.currentLayout) {
-					this.applyLayout(layout);
-				}
-			}
-		});
-
-		this.resizeObserver.observe(this.monthsGrid);
-	}
-
-	/**
-	 * 清理响应式布局监听
-	 */
-	private cleanupResponsiveLayout(): void {
-		if (this.resizeObserver) {
-			this.resizeObserver.disconnect();
-			this.resizeObserver = null;
-		}
-	}
 
 	render(container: HTMLElement, currentDate: Date): void {
 		const year = currentDate.getFullYear();
-
-		// 清理旧的 ResizeObserver
-		this.cleanupResponsiveLayout();
 
 		// 预计算当年每日任务数量
 		let tasks: GCTask[] = this.plugin.taskCache?.getAllTasks?.() || [];
@@ -122,7 +52,6 @@ export class YearViewRenderer extends BaseViewRenderer {
 		this.yearContainer = yearContainer;
 
 		const monthsGrid = yearContainer.createDiv('gc-year-view__months');
-		this.monthsGrid = monthsGrid;
 
 		for (let month = 1; month <= 12; month++) {
 			const monthData = generateMonthCalendar(year, month, !!(this.plugin?.settings?.startOnMonday));
@@ -151,17 +80,15 @@ export class YearViewRenderer extends BaseViewRenderer {
 			monthData.days.forEach((day) => {
 				const dayEl = daysDiv.createEl('div');
 				dayEl.addClass(YearViewClasses.elements.day);
-				// 添加日期标识，用于增量刷新时定位
 				dayEl.dataset.date = `${day.date.getFullYear()}-${(day.date.getMonth() + 1).toString().padStart(2, '0')}-${day.date.getDate().toString().padStart(2, '0')}`;
 
-				// 热力图：根据任务数量设置背景
+				// 热力图
 				const dayKey = `${day.date.getFullYear()}-${(day.date.getMonth() + 1).toString().padStart(2, '0')}-${day.date.getDate().toString().padStart(2, '0')}`;
 				const count = countsMap.get(dayKey) || 0;
 				if (this.plugin.settings.yearHeatmapEnabled && count > 0) {
 					const palette = this.plugin.settings.yearHeatmapPalette || 'blue';
 					const level = count >= 20 ? 5 : count >= 10 ? 4 : count >= 5 ? 3 : count >= 2 ? 2 : 1;
 					dayEl.addClass(`heatmap-${palette}-${level}`);
-					// 添加3D效果类
 					if (this.plugin.settings.yearHeatmap3DEnabled === 1) {
 						dayEl.addClass('heatmap-3d-1');
 					} else if (this.plugin.settings.yearHeatmap3DEnabled === 2) {
@@ -183,7 +110,6 @@ export class YearViewRenderer extends BaseViewRenderer {
 					}
 				}
 
-				// 显示任务数量
 				if (this.plugin.settings.yearShowTaskCount && count > 0) {
 					const countEl = dayEl.createEl('div', { text: `${count}` });
 					countEl.addClass(YearViewClasses.elements.taskCount);
@@ -196,7 +122,6 @@ export class YearViewRenderer extends BaseViewRenderer {
 					dayEl.addClass('today');
 				}
 
-				// 点击事件由主视图处理
 				dayEl.onclick = () => {
 					if (this.plugin.calendarView) {
 						this.plugin.calendarView.selectDate(day.date);
@@ -204,9 +129,6 @@ export class YearViewRenderer extends BaseViewRenderer {
 				};
 			});
 		}
-
-		// 设置响应式布局
-		this.setupResponsiveLayout();
 	}
 
 	/**
@@ -215,25 +137,18 @@ export class YearViewRenderer extends BaseViewRenderer {
 	public refreshTasks(): void {
 		if (!this.yearContainer) return;
 
-		// 重新计算任务数量
 		let tasks: GCTask[] = this.plugin.taskCache?.getAllTasks?.() || [];
 		tasks = this.applyTagFilter(tasks);
 		const dateField = this.plugin.settings.dateFilterField || 'dueDate';
 
-		// 获取当前年份
 		const yearGrid = this.yearContainer.querySelector('.gc-year-view__months');
 		if (!yearGrid) return;
 
-		// 获取第一个月份卡片的年份来确定当前年份
 		const firstMonthCard = yearGrid.querySelector('.gc-year-view__month-card');
 		if (!firstMonthCard) return;
 
-		// 重新计算任务计数
 		const countsMap: Map<string, number> = new Map();
 		const monthCards = yearGrid.querySelectorAll('.gc-year-view__month-card');
-
-		// 从DOM中获取年份信息
-		let currentYear = new Date().getFullYear();
 
 		for (const t of tasks) {
 			const d = (t as any)[dateField] as Date | undefined;
@@ -242,27 +157,16 @@ export class YearViewRenderer extends BaseViewRenderer {
 			countsMap.set(key, (countsMap.get(key) || 0) + 1);
 		}
 
-		// 更新每个日期格子的样式
 		monthCards.forEach((monthCard) => {
 			const days = monthCard.querySelectorAll('.gc-year-view__day');
 			days.forEach((dayEl: Element) => {
 				const dayNumberEl = dayEl.querySelector('.gc-year-view__day-number');
 				if (!dayNumberEl) return;
 
-				const dayNum = parseInt(dayNumberEl.textContent || '0');
-				if (isNaN(dayNum)) return;
-
-				// 从数据属性中获取完整的日期信息
 				const dateStr = (dayEl as HTMLElement).dataset.date;
-				let dayKey: string;
-				if (dateStr) {
-					dayKey = dateStr;
-				} else {
-					// 如果没有 data-date 属性，跳过
-					return;
-				}
+				if (!dateStr) return;
 
-				const count = countsMap.get(dayKey) || 0;
+				const count = countsMap.get(dateStr) || 0;
 
 				// 移除旧的热力图类
 				(dayEl as HTMLElement).classList.remove(
@@ -282,7 +186,6 @@ export class YearViewRenderer extends BaseViewRenderer {
 					const palette = this.plugin.settings.yearHeatmapPalette || 'blue';
 					const level = count >= 20 ? 5 : count >= 10 ? 4 : count >= 5 ? 3 : count >= 2 ? 2 : 1;
 					(dayEl as HTMLElement).classList.add(`heatmap-${palette}-${level}`);
-					// 添加3D效果类
 					if (this.plugin.settings.yearHeatmap3DEnabled === 1) {
 						(dayEl as HTMLElement).classList.add('heatmap-3d-1');
 					} else if (this.plugin.settings.yearHeatmap3DEnabled === 2) {
@@ -315,7 +218,6 @@ export class YearViewRenderer extends BaseViewRenderer {
 	 */
 	public updateAllMonthCards(): void {
 		if (!this.yearContainer) return;
-		// 农历始终显示，此方法可用于触发其他更新
 	}
 
 	/**

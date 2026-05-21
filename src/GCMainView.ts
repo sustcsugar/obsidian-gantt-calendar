@@ -242,8 +242,8 @@ export class GCMainView extends ItemView {
 	}
 
 	private renderCalendarContent(content: HTMLElement): void {
-		// 瀑布流视图：日/周/任务视图取消内部滚动，由 .view-content 统一滚动
-		const waterfallViews: CalendarViewType[] = ['day', 'week', 'task'];
+		// 瀑布流视图：日/周/任务/年视图取消内部滚动，由 .view-content 统一滚动
+		const waterfallViews: CalendarViewType[] = ['day', 'week', 'task', 'year'];
 		const isWaterfall = waterfallViews.includes(this.viewType);
 		content.style.overflow = isWaterfall ? 'visible' : '';
 		const viewContent = content.parentElement;

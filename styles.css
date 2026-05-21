@@ -168,19 +168,17 @@ Author: sugar
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	height: 100%;
-	overflow: hidden;
 }
 
-/* BEM: 年视图月份网格 */
+/* BEM: 年视图月份网格 — CSS auto-fill 响应式布局 */
 .gc-view--year .gc-year-view__months {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	grid-template-rows: repeat(3, 1fr);
-	gap: 6px;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 300px));
+	justify-content: center;
+	gap: 8px;
 	width: 100%;
-	flex: 1;
-	/* 响应式布局由 TypeScript 控制，基于实际CSS值动态计算 */
+	padding: 12px;
+	align-content: start;
 }
 
 /* ========================================
@@ -1444,12 +1442,12 @@ Author: sugar
 .gc-year-view__month-card {
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	padding: 6px;
+	border-radius: 6px;
+	padding: 4px 6px;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
-	height: 100%;
+	width: 100%;
 }
 
 /* 月份标题 - BEM类名: gc-year-view__month-header */
@@ -1489,32 +1487,31 @@ Author: sugar
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
 	flex: 1;
-	gap: 2px;
+	gap: 1px;
 }
 
 /* 日期单元格 - BEM类名: gc-year-view__day */
 .gc-year-view__day {
-	aspect-ratio: 1;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 0;
-	padding: 1px;
-	border-radius: 12px;
+	padding: 1px 2px;
+	border-radius: 4px;
 	cursor: pointer;
 	background-color: transparent;
 	border: none;
-	transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease-out;
-	min-height: 0;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	min-height: 35px;
 }
 
 /* 日期数字 - BEM类名: gc-year-view__day-number */
 .gc-year-view__day-number {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	color: var(--text-normal);
-	line-height: 1;
+	line-height: 1.2;
 }
 
 /* 农历文本 - BEM类名: gc-year-view__lunar-text */
@@ -1526,6 +1523,7 @@ Author: sugar
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	max-width: 100%;
 }
 
 /* 年视图月卡片中的农历字体大小可调 */
@@ -1641,7 +1639,7 @@ Author: sugar
 .gc-year-view__task-count {
 	font-size: 10px;
 	color: var(--text-muted);
-	margin-top: 2px;
+	line-height: 1;
 }
 
 .gc-week-view__tasks-column {
@@ -3262,8 +3260,8 @@ Author: sugar
 
 /* 年视图日期悬停效果 */
 .gc-year-view__day:hover {
-	transform: translateY(-2px) scale(1.05);
-	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px) scale(1.08);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 	z-index: 10;
 }
 
@@ -3419,9 +3417,9 @@ Author: sugar
 .gc-year-view__day.today::before {
 	content: '';
 	position: absolute;
-	inset: 4px;
+	inset: 2px;
 	border: 2px dashed #ff6b6b;
-	border-radius: 50%;
+	border-radius: 4px;
 	pointer-events: none;
 	z-index: 1;
 }
