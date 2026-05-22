@@ -4,6 +4,7 @@
  */
 
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 时间字段类型
@@ -29,15 +30,15 @@ export interface DateFieldOption {
 }
 
 /**
- * 默认时间字段选项
+ * 默认时间字段选项（标签在每次访问时通过 i18n 解析）
  */
 export const DEFAULT_DATE_FIELD_OPTIONS: DateFieldOption[] = [
-	{ value: 'createdDate', label: '创建时间', icon: '➕' },
-	{ value: 'startDate', label: '开始时间', icon: '🛫' },
-	{ value: 'scheduledDate', label: '计划时间', icon: '⏳' },
-	{ value: 'dueDate', label: '截止时间', icon: '📅' },
-	{ value: 'completionDate', label: '完成时间', icon: '✅' },
-	{ value: 'cancelledDate', label: '取消时间', icon: '❌' }
+	{ value: 'createdDate', get label() { return i18n.t('toolbar.fieldSelector.createdDate'); }, icon: '➕' },
+	{ value: 'startDate', get label() { return i18n.t('toolbar.fieldSelector.startDate'); }, icon: '🛫' },
+	{ value: 'scheduledDate', get label() { return i18n.t('toolbar.fieldSelector.scheduledDate'); }, icon: '⏳' },
+	{ value: 'dueDate', get label() { return i18n.t('toolbar.fieldSelector.dueDate'); }, icon: '📅' },
+	{ value: 'completionDate', get label() { return i18n.t('toolbar.fieldSelector.completionDate'); }, icon: '✅' },
+	{ value: 'cancelledDate', get label() { return i18n.t('toolbar.fieldSelector.cancelledDate'); }, icon: '❌' }
 ];
 
 /**
@@ -78,7 +79,7 @@ export function renderFieldSelector(
 	const {
 		currentField,
 		onFieldChange,
-		label = '字段筛选',
+		label = i18n.t('toolbar.fieldSelector.defaultLabel'),
 		excludeFields = [],
 		customOptions,
 		containerClass
@@ -172,7 +173,7 @@ export function renderDualFieldSelector(
 	const startResult = renderFieldSelector(wrapper, {
 		currentField: startField,
 		onFieldChange: onStartFieldChange,
-		label: '开始时间',
+		label: i18n.t('toolbar.fieldSelector.startTime'),
 		excludeFields
 	});
 
@@ -180,7 +181,7 @@ export function renderDualFieldSelector(
 	const endResult = renderFieldSelector(wrapper, {
 		currentField: endField,
 		onFieldChange: onEndFieldChange,
-		label: '结束时间',
+		label: i18n.t('toolbar.fieldSelector.endTime'),
 		excludeFields
 	});
 
@@ -214,6 +215,6 @@ export function renderGanttFieldSelector(
 
 	return renderFieldSelector(container, {
 		...rest,
-		label: selectorType === 'start' ? '开始时间' : '结束时间'
+		label: selectorType === 'start' ? i18n.t('toolbar.fieldSelector.startTime') : i18n.t('toolbar.fieldSelector.endTime')
 	});
 }

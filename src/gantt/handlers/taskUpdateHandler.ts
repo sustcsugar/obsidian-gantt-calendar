@@ -8,6 +8,7 @@ import type { GCTask, IPluginContext } from '../../types';
 import type { GanttChartTask, DateFieldType } from '../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { Logger } from '../../utils/logger';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 任务更新回调函数类型
@@ -53,7 +54,7 @@ export class TaskUpdateHandler {
 			// 直接从 GanttChartTask 获取任务信息
 			if (!ganttTask.filePath || ganttTask.lineNumber === undefined) {
 				Logger.error('TaskUpdateHandler', 'Missing task information:', ganttTask);
-				new Notice('任务信息不完整');
+				new Notice(i18n.t('gantt.taskInfoIncomplete'));
 				return;
 			}
 
@@ -73,11 +74,11 @@ export class TaskUpdateHandler {
 			);
 
 			// 显示通知
-			new Notice(`任务时间已更新: ${formatDate(newStart, 'yyyy-MM-dd')} - ${formatDate(newEnd, 'yyyy-MM-dd')}`);
+			new Notice(i18n.t('gantt.timeUpdated', { start: formatDate(newStart, 'yyyy-MM-dd'), end: formatDate(newEnd, 'yyyy-MM-dd') }));
 
 		} catch (error) {
 			Logger.error('TaskUpdateHandler', 'Error updating task:', error);
-			new Notice('更新任务失败: ' + (error as Error).message);
+			new Notice(i18n.t('gantt.updateFailed', { error: (error as Error).message }));
 		}
 	}
 
@@ -97,7 +98,7 @@ export class TaskUpdateHandler {
 			// 直接从 GanttChartTask 获取任务信息
 			if (!ganttTask.filePath || ganttTask.lineNumber === undefined) {
 				Logger.error('TaskUpdateHandler', 'Missing task information:', ganttTask);
-				new Notice('任务信息不完整');
+				new Notice(i18n.t('gantt.taskInfoIncomplete'));
 				return;
 			}
 
@@ -113,11 +114,11 @@ export class TaskUpdateHandler {
 				this.plugin.settings.enabledTaskFormats
 			);
 
-			new Notice(completed ? '任务已标记为完成' : '任务已标记为未完成');
+			new Notice(completed ? i18n.t('gantt.markedComplete') : i18n.t('gantt.markedIncomplete'));
 
 		} catch (error) {
 			Logger.error('TaskUpdateHandler', 'Error updating progress:', error);
-			new Notice('更新进度失败: ' + (error as Error).message);
+			new Notice(i18n.t('gantt.updateProgressFailed', { error: (error as Error).message }));
 		}
 	}
 

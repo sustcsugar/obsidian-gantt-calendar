@@ -3,6 +3,7 @@ import type { GCTask } from '../../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
+import { i18n } from '../../i18n/i18n';
 
 // ==================== 类型定义 ====================
 
@@ -65,7 +66,7 @@ export async function openExistingNote(
 	if (dest) {
 		const leaf = app.workspace.getLeaf(false);
 		await leaf.openFile(dest);
-		new Notice('已存在任务笔记');
+		new Notice(i18n.t('contextMenu.commands.createNote.alreadyExists'));
 	}
 }
 
@@ -186,7 +187,7 @@ export async function createNoteFromTaskCore(
 	try {
 		// 1) 检查文件名是否有效
 		if (!fileName) {
-			new Notice('文件名为空，无法创建文件');
+			new Notice(i18n.t('contextMenu.commands.createNote.emptyFileName'));
 			return;
 		}
 
@@ -199,7 +200,7 @@ export async function createNoteFromTaskCore(
 		// 4) 检查整个 vault 中是否存在同名文件
 		const existingFileInVault = app.metadataCache.getFirstLinkpathDest(fileName, task.filePath);
 		if (existingFileInVault) {
-			new Notice(`已存在同名笔记: ${fileName}.md`);
+			new Notice(i18n.t('contextMenu.commands.createNote.existsInPath', { fileName }));
 			const leaf = app.workspace.getLeaf(false);
 			await leaf.openFile(existingFileInVault);
 			// 直接将任务改为双链，方便后续跳转
@@ -211,7 +212,7 @@ export async function createNoteFromTaskCore(
 		const filePath = normalizePath(`${defaultPath}/${fileName}.md`);
 		const existingFile = app.vault.getAbstractFileByPath(filePath);
 		if (existingFile instanceof TFile) {
-			new Notice(`指定目录下已存在文件: ${fileName}.md`);
+			new Notice(i18n.t('contextMenu.commands.createNote.existsInDir', { fileName }));
 			const leaf = app.workspace.getLeaf(false);
 			await leaf.openFile(existingFile);
 			// 仍将任务内容改为双链，方便后续跳转
@@ -236,13 +237,13 @@ export async function createNoteFromTaskCore(
 		const leaf = app.workspace.getLeaf(false);
 		await leaf.openFile(file);
 
-		new Notice(`已创建笔记: ${fileName}.md`);
+		new Notice(i18n.t('contextMenu.commands.noteCreated', { fileName: fileName + '.md' }));
 
 		// 9) 更新源任务行为双链，使用 updateTaskProperties 保留 tags 等元数据
 		await updateTaskProperties(app, task, { content: options.wikiLinkContent }, enabledFormats);
 	} catch (error) {
 		Logger.error('createNoteFromTask', 'Failed to create note from task:', error);
-		new Notice('创建笔记失败');
+		new Notice(i18n.t('contextMenu.commands.noteCreateFailed'));
 	}
 }
 

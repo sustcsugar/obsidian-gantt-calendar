@@ -1,5 +1,6 @@
 import { setIcon } from 'obsidian';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 渲染飞书同步按钮
@@ -8,7 +9,7 @@ import { ToolbarClasses } from '../../utils/bem';
 export function renderSyncButton(
 	container: HTMLElement,
 	onSync: () => Promise<void>,
-	title: string = '飞书同步'
+	title: string = i18n.t('toolbar.syncButton.defaultTitle')
 ): void {
 	const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
 

@@ -1,6 +1,7 @@
 import { Setting, SettingGroup } from 'obsidian';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig, DateFieldType } from '../types';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 甘特图构建器
@@ -11,7 +12,7 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('甘特图', (group) => {
+		this.createSettingGroup(i18n.t('settings.ganttView.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -22,16 +23,16 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 
 			// 起始字段
 			addSetting(setting =>
-				setting.setName('甘特图起始字段')
-					.setDesc('选择用于确定甘特条开始位置的任务时间字段')
+				setting.setName(i18n.t('settings.ganttView.startField.name'))
+					.setDesc(i18n.t('settings.ganttView.startField.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'createdDate': '创建日期',
-							'startDate': '开始日期',
-							'scheduledDate': '计划日期',
-							'dueDate': '截止日期',
-							'completionDate': '完成日期',
-							'cancelledDate': '取消日期',
+						'createdDate': i18n.t('settings.ganttView.dateFieldOptions.createdDate'),
+						'startDate': i18n.t('settings.ganttView.dateFieldOptions.startDate'),
+						'scheduledDate': i18n.t('settings.ganttView.dateFieldOptions.scheduledDate'),
+						'dueDate': i18n.t('settings.ganttView.dateFieldOptions.dueDate'),
+						'completionDate': i18n.t('settings.ganttView.dateFieldOptions.completionDate'),
+						'cancelledDate': i18n.t('settings.ganttView.dateFieldOptions.cancelledDate'),
 						})
 						.setValue(this.plugin.settings.ganttStartField)
 						.onChange(async (value) => {
@@ -42,16 +43,16 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 
 			// 结束字段
 			addSetting(setting =>
-				setting.setName('甘特图结束字段')
-					.setDesc('选择用于确定甘特条结束位置的任务时间字段')
+				setting.setName(i18n.t('settings.ganttView.endField.name'))
+					.setDesc(i18n.t('settings.ganttView.endField.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'createdDate': '创建日期',
-							'startDate': '开始日期',
-							'scheduledDate': '计划日期',
-							'dueDate': '截止日期',
-							'completionDate': '完成日期',
-							'cancelledDate': '取消日期',
+						'createdDate': i18n.t('settings.ganttView.dateFieldOptions.createdDate'),
+						'startDate': i18n.t('settings.ganttView.dateFieldOptions.startDate'),
+						'scheduledDate': i18n.t('settings.ganttView.dateFieldOptions.scheduledDate'),
+						'dueDate': i18n.t('settings.ganttView.dateFieldOptions.dueDate'),
+						'completionDate': i18n.t('settings.ganttView.dateFieldOptions.completionDate'),
+						'cancelledDate': i18n.t('settings.ganttView.dateFieldOptions.cancelledDate'),
 						})
 						.setValue(this.plugin.settings.ganttEndField)
 						.onChange(async (value) => {

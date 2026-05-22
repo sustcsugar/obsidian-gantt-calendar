@@ -9,6 +9,7 @@ import type GanttCalendarPlugin from '../../../main';
 import { setIcon } from 'obsidian';
 import { CreateTaskModal } from '../../modals/CreateTaskModal';
 import { CreateTaskButtonClasses, ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 创建任务按钮选项
@@ -38,7 +39,7 @@ export function renderCreateTaskButton(
 	// 创建按钮
 	const createBtn = buttonGroup.createEl('button', {
 		cls: ToolbarClasses.components.navButtons.btn,
-		attr: { 'aria-label': '创建新任务' }
+		attr: { 'aria-label': i18n.t('toolbar.createTask.ariaLabel') }
 	});
 
 	// 添加样式类

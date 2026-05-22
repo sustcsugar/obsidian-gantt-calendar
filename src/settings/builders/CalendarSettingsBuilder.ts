@@ -3,6 +3,7 @@ import { BaseBuilder } from './BaseBuilder';
 import { FolderSuggest, FileSuggest } from '../components';
 import type { BuilderConfig } from '../types';
 import { getObsidianDailyNoteSettings, isObsidianDailyNoteAvailable } from '../../utils/dailyNoteSettingsBridge';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 日历设置构建器
@@ -34,8 +35,8 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 
 			// 使用 Obsidian 日记设置开关
 			addSetting(setting =>
-				setting.setName('使用 Obsidian 日记设置')
-					.setDesc('读取核心"日记"插件或"Periodic Notes"插件的文件夹和格式设置，无需手动配置')
+				setting.setName(i18n.t('settings.calendar.useObsidianDailyNote.name'))
+					.setDesc(i18n.t('settings.calendar.useObsidianDailyNote.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.followObsidianDailyNote)
 						.onChange(async (value) => {
@@ -54,29 +55,29 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 				const template = obsidianSettings.template || '(无)';
 
 				new Setting(obsidianSection)
-					.setName('日记文件夹')
-					.setDesc('来自 Obsidian 日记设置（只读）')
+					.setName(i18n.t('settings.calendar.obsidianMode.folder.name'))
+					.setDesc(i18n.t('settings.calendar.obsidianMode.folder.description'))
 					.addText(text => text.setValue(folder).setDisabled(true));
 
 				new Setting(obsidianSection)
-					.setName('文件名格式')
-					.setDesc(`Moment.js 格式（只读）: ${format}`)
+					.setName(i18n.t('settings.calendar.obsidianMode.format.name'))
+					.setDesc(i18n.t('settings.calendar.obsidianMode.format.descriptionReadonly', { format }))
 					.addText(text => text.setValue(format).setDisabled(true));
 
 				new Setting(obsidianSection)
-					.setName('模板')
+					.setName(i18n.t('settings.calendar.obsidianMode.template.name'))
 					.setDesc(template)
 					.addText(text => text.setValue(template).setDisabled(true));
 			} else {
 				new Setting(obsidianSection)
-					.setName('未检测到日记插件')
-					.setDesc('请启用 Obsidian 核心"日记"插件或安装"Periodic Notes"社区插件');
+					.setName(i18n.t('settings.calendar.obsidianMode.notDetected.name'))
+					.setDesc(i18n.t('settings.calendar.obsidianMode.notDetected.description'));
 			}
 
 			// === 手动模式设置 ===
 			new Setting(manualSection)
-				.setName('Daily Note 文件夹路径')
-				.setDesc('指定存放 Daily Note 文件的文件夹路径（相对于库根目录）')
+				.setName(i18n.t('settings.calendar.manualMode.folder.name'))
+				.setDesc(i18n.t('settings.calendar.manualMode.folder.description'))
 				.addSearch(cb => {
 					new FolderSuggest(this.plugin.app, cb.inputEl);
 					cb.setPlaceholder('Example: DailyNotes')
@@ -89,8 +90,8 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 				});
 
 			new Setting(manualSection)
-				.setName('Daily Note 文件名格式')
-				.setDesc('指定 Daily Note 文件名格式（如 yyyy-MM-dd，会在日视图中用当前日期自动替换）')
+				.setName(i18n.t('settings.calendar.manualMode.format.name'))
+				.setDesc(i18n.t('settings.calendar.manualMode.format.description'))
 				.addText(text => text
 					.setPlaceholder('yyyy-MM-dd')
 					.setValue(this.plugin.settings.dailyNoteNameFormat)
@@ -100,8 +101,8 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 					}));
 
 			new Setting(manualSection)
-				.setName('Daily Note 模板文件路径')
-				.setDesc('创建 Daily Note 时使用的模板文件路径（留空则创建空文件）')
+				.setName(i18n.t('settings.calendar.manualMode.template.name'))
+				.setDesc(i18n.t('settings.calendar.manualMode.template.description'))
 				.addSearch(cb => {
 					new FileSuggest(this.plugin.app, cb.inputEl);
 					cb.setPlaceholder('Templates/Daily Note.md')

@@ -8,6 +8,8 @@
  * @module tasks/taskStatus
  */
 
+import { i18n } from '../i18n/i18n';
+
 // ==================== 类型定义 ====================
 
 /**
@@ -308,22 +310,22 @@ export function validateStatusSymbol(
 ): { valid: boolean; error?: string } {
     // 必须是单个字符
     if (symbol.length !== 1) {
-        return { valid: false, error: '符号必须是单个字符' };
+        return { valid: false, error: i18n.t('taskStatus.validation.symbolSingleChar') };
     }
 
     // 自定义状态不能使用保留符号
     if (isCustom && RESERVED_SYMBOLS.includes(symbol)) {
-        return { valid: false, error: `符号 "${symbol}" 已被默认状态使用` };
+        return { valid: false, error: i18n.t('taskStatus.validation.symbolReserved', { symbol }) };
     }
 
     // 不能使用禁止的符号
     if (STATUS_SYMBOL_EXCLUDED.includes(symbol)) {
-        return { valid: false, error: '符号不能使用特殊字符' };
+        return { valid: false, error: i18n.t('taskStatus.validation.symbolSpecial') };
     }
 
     // 必须符合正则（非空白字符）
     if (!STATUS_SYMBOL_REGEX.test(symbol)) {
-        return { valid: false, error: '符号不能为空或空白字符' };
+        return { valid: false, error: i18n.t('taskStatus.validation.symbolWhitespace') };
     }
 
     return { valid: true };

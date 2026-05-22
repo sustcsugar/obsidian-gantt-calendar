@@ -1,5 +1,6 @@
 import type { GanttCalendarSettings } from './types';
 import { DEFAULT_TASK_STATUSES, PRESET_CUSTOM_STATUSES } from '../tasks/taskStatus';
+import { i18n } from '../i18n/i18n';
 
 /**
  * Gantt Calendar Plugin 默认设置
@@ -107,7 +108,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 export const HEATMAP_PALETTES = {
 	blue: {
 		key: 'blue' as const,
-		label: '蓝色',
+		label: i18n.t('settings.heatmapPalettes.blue'),
 		colors: [
 			'rgba(56, 132, 255, 0.12)',
 			'rgba(56, 132, 255, 0.22)',
@@ -118,7 +119,7 @@ export const HEATMAP_PALETTES = {
 	},
 	green: {
 		key: 'green' as const,
-		label: '绿色',
+		label: i18n.t('settings.heatmapPalettes.green'),
 		colors: [
 			'rgba(82, 196, 26, 0.12)',
 			'rgba(82, 196, 26, 0.22)',
@@ -129,7 +130,7 @@ export const HEATMAP_PALETTES = {
 	},
 	red: {
 		key: 'red' as const,
-		label: '红色',
+		label: i18n.t('settings.heatmapPalettes.red'),
 		colors: [
 			'rgba(231, 76, 60, 0.12)',
 			'rgba(231, 76, 60, 0.22)',
@@ -140,7 +141,7 @@ export const HEATMAP_PALETTES = {
 	},
 	purple: {
 		key: 'purple' as const,
-		label: '紫色',
+		label: i18n.t('settings.heatmapPalettes.purple'),
 		colors: [
 			'rgba(142, 68, 173, 0.12)',
 			'rgba(142, 68, 173, 0.22)',
@@ -151,7 +152,7 @@ export const HEATMAP_PALETTES = {
 	},
 	orange: {
 		key: 'orange' as const,
-		label: '橙色',
+		label: i18n.t('settings.heatmapPalettes.orange'),
 		colors: [
 			'rgba(245, 124, 0, 0.12)',
 			'rgba(245, 124, 0, 0.22)',
@@ -162,7 +163,7 @@ export const HEATMAP_PALETTES = {
 	},
 	cyan: {
 		key: 'cyan' as const,
-		label: '青色',
+		label: i18n.t('settings.heatmapPalettes.cyan'),
 		colors: [
 			'rgba(0, 188, 212, 0.12)',
 			'rgba(0, 188, 212, 0.22)',
@@ -173,7 +174,7 @@ export const HEATMAP_PALETTES = {
 	},
 	pink: {
 		key: 'pink' as const,
-		label: '粉色',
+		label: i18n.t('settings.heatmapPalettes.pink'),
 		colors: [
 			'rgba(233, 30, 99, 0.12)',
 			'rgba(233, 30, 99, 0.22)',
@@ -184,7 +185,7 @@ export const HEATMAP_PALETTES = {
 	},
 	yellow: {
 		key: 'yellow' as const,
-		label: '黄色',
+		label: i18n.t('settings.heatmapPalettes.yellow'),
 		colors: [
 			'rgba(255, 193, 7, 0.12)',
 			'rgba(255, 193, 7, 0.22)',

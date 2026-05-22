@@ -5,6 +5,7 @@
 
 import { setIcon } from 'obsidian';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 甘特图滚动按钮组配置选项
@@ -45,7 +46,7 @@ export function renderGanttScrollButtons(
 
 	// 左置顶按钮
 	const scrollToLeftBtn = scrollButtonsGroup.createEl('button', {
-		attr: { 'aria-label': '滚动到最左边' }
+		attr: { 'aria-label': i18n.t('toolbar.ganttScroll.scrollLeft') }
 	});
 	setIcon(scrollToLeftBtn, 'chevrons-left');
 	scrollToLeftBtn.addClass(ToolbarClasses.components.navButtons.btn);
@@ -53,15 +54,15 @@ export function renderGanttScrollButtons(
 
 	// 今天按钮
 	const todayBtn = scrollButtonsGroup.createEl('button', {
-		text: '今',
-		attr: { 'aria-label': '回到今天' }
+		text: i18n.t('toolbar.nav.today'),
+		attr: { 'aria-label': i18n.t('toolbar.ganttScroll.goToday') }
 	});
 	todayBtn.addClass(ToolbarClasses.components.navButtons.btn);
 	todayBtn.onclick = onScrollToToday;
 
 	// 右置顶按钮
 	const scrollToRightBtn = scrollButtonsGroup.createEl('button', {
-		attr: { 'aria-label': '滚动到最右边' }
+		attr: { 'aria-label': i18n.t('toolbar.ganttScroll.scrollRight') }
 	});
 	setIcon(scrollToRightBtn, 'chevrons-right');
 	scrollToRightBtn.addClass(ToolbarClasses.components.navButtons.btn);

@@ -10,6 +10,7 @@ import { updateTaskDateField } from '../tasks/taskUpdater';
 import { sortTasks } from '../tasks/taskSorter';
 import { toISOStringLocal, createDate } from '../dateUtils/timezone';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 月视图渲染器
@@ -71,7 +72,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				Logger.debug('MonthView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
 			} catch (error) {
 				Logger.error('MonthView', 'Error updating task date:', error);
-				new Notice('更新任务日期失败');
+				new Notice(i18n.t('views.dayView.updateDateFailed'));
 			}
 		});
 	}
@@ -86,8 +87,8 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 		// 星期标签 - 第一行
 		const startOnMonday = !!(this.plugin?.settings?.startOnMonday);
-		const labelsSunFirst = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-		const labelsMonFirst = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+		const labelsSunFirst = i18n.t('views.monthView.weekdays') as unknown as string[];
+		const labelsMonFirst = i18n.t('views.monthView.weekdaysMon') as unknown as string[];
 
 		// 创建第一列的空占位（第1行第1列）
 		const emptyPlaceholder = monthContainer.createEl('div', { cls: MonthViewClasses.elements.weekday });

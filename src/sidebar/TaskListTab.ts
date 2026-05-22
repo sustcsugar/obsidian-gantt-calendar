@@ -11,6 +11,7 @@ import { isToday } from '../dateUtils/dateCompare';
 import { isThisWeek } from '../dateUtils/week';
 import { isThisMonth } from '../dateUtils/dateCompare';
 import { Logger } from '../utils/logger';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 侧边栏 — 任务列表 Tab
@@ -47,7 +48,7 @@ export class TaskListTab {
 		const searchContainer = container.createDiv(SidebarClasses.elements.searchInput);
 		const searchInput = searchContainer.createEl('input', {
 			type: 'text',
-			placeholder: '搜索任务...',
+			placeholder: i18n.t('sidebar.taskList.searchPlaceholder'),
 		});
 		searchInput.value = this.searchQuery;
 		searchInput.addEventListener('input', () => {
@@ -83,7 +84,7 @@ export class TaskListTab {
 		// 状态筛选按钮
 		const statusBtn = filterBar.createEl('button', { cls: 'clickable-icon' });
 		setIcon(statusBtn, 'filter');
-		statusBtn.title = '状态筛选';
+		statusBtn.title = i18n.t('sidebar.taskList.filterBar.statusFilter');
 		statusBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			this.toggleStatusDropdown(filterBar, statusBtn);
@@ -92,7 +93,7 @@ export class TaskListTab {
 		// 优先级筛选按钮
 		const priorityBtn = filterBar.createEl('button', { cls: 'clickable-icon' });
 		setIcon(priorityBtn, 'flame');
-		priorityBtn.title = '优先级筛选';
+		priorityBtn.title = i18n.t('sidebar.taskList.filterBar.priorityFilter');
 		priorityBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			this.togglePriorityDropdown(filterBar, priorityBtn);
@@ -101,7 +102,7 @@ export class TaskListTab {
 		// 标签筛选按钮
 		const tagBtn = filterBar.createEl('button', { cls: 'clickable-icon' });
 		setIcon(tagBtn, 'tags');
-		tagBtn.title = '标签筛选';
+		tagBtn.title = i18n.t('sidebar.taskList.filterBar.tagFilter');
 		tagBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			this.toggleTagDropdown(filterBar, tagBtn);
@@ -110,7 +111,7 @@ export class TaskListTab {
 		// 排序按钮
 		const sortBtn = filterBar.createEl('button', { cls: 'clickable-icon' });
 		setIcon(sortBtn, 'arrow-up-down');
-		sortBtn.title = '排序';
+		sortBtn.title = i18n.t('sidebar.taskList.filterBar.sort');
 		sortBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			this.toggleSortDropdown(filterBar, sortBtn);
@@ -119,7 +120,7 @@ export class TaskListTab {
 		// 日期筛选按钮
 		const dateBtn = filterBar.createEl('button', { cls: 'clickable-icon' });
 		setIcon(dateBtn, 'calendar');
-		dateBtn.title = '日期筛选';
+		dateBtn.title = i18n.t('sidebar.taskList.filterBar.dateFilter');
 		dateBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			this.toggleDateFilterDropdown(filterBar, dateBtn);
@@ -195,13 +196,13 @@ export class TaskListTab {
 		if (existing) { existing.remove(); return; }
 
 		const priorities = [
-			{ key: 'all', label: '全部' },
-			{ key: 'highest', label: '最高' },
-			{ key: 'high', label: '高' },
-			{ key: 'medium', label: '中' },
-			{ key: 'normal', label: '普通' },
-			{ key: 'low', label: '低' },
-			{ key: 'lowest', label: '最低' },
+			{ key: 'all', label: i18n.t('sidebar.taskList.priority.all') },
+			{ key: 'highest', label: i18n.t('sidebar.taskList.priority.highest') },
+			{ key: 'high', label: i18n.t('sidebar.taskList.priority.high') },
+			{ key: 'medium', label: i18n.t('sidebar.taskList.priority.medium') },
+			{ key: 'normal', label: i18n.t('sidebar.taskList.priority.normal') },
+			{ key: 'low', label: i18n.t('sidebar.taskList.priority.low') },
+			{ key: 'lowest', label: i18n.t('sidebar.taskList.priority.lowest') },
 		];
 
 		const dropdown = container.createDiv('sidebar-dropdown');
@@ -246,9 +247,9 @@ export class TaskListTab {
 		if (existing) { existing.remove(); return; }
 
 		const sortOptions = [
-			{ key: 'priority' as const, label: '按优先级' },
-			{ key: 'dueDate' as const, label: '按截止日期' },
-			{ key: 'startDate' as const, label: '按开始日期' },
+			{ key: 'priority' as const, label: i18n.t('sidebar.taskList.sortOptions.byPriority') },
+			{ key: 'dueDate' as const, label: i18n.t('sidebar.taskList.sortOptions.byDueDate') },
+			{ key: 'startDate' as const, label: i18n.t('sidebar.taskList.sortOptions.byStartDate') },
 		];
 
 		const dropdown = container.createDiv('sidebar-dropdown');
@@ -272,7 +273,7 @@ export class TaskListTab {
 				label.style.cssText = 'font-size:13px;';
 
 				if (isActive) {
-					const dirLabel = item.createSpan({ text: this.sortOrder === 'asc' ? '升序' : '降序' });
+					const dirLabel = item.createSpan({ text: this.sortOrder === 'asc' ? i18n.t('sidebar.taskList.sortOptions.ascending') : i18n.t('sidebar.taskList.sortOptions.descending') });
 					dirLabel.style.cssText = 'font-size:11px;color:var(--text-muted);margin-left:auto;';
 				}
 
@@ -329,7 +330,7 @@ export class TaskListTab {
 			// OR/AND 切换
 			const operatorRow = dropdown.createDiv('sidebar-dropdown-item');
 			operatorRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 8px;border-bottom:1px solid var(--background-modifier-border);margin-bottom:4px;';
-			operatorRow.createSpan({ text: '匹配模式: ' }).style.cssText = 'font-size:12px;color:var(--text-muted);';
+			operatorRow.createSpan({ text: i18n.t('sidebar.taskList.tagFilter.matchMode') }).style.cssText = 'font-size:12px;color:var(--text-muted);';
 			const orBtn = operatorRow.createEl('button', { text: 'OR', cls: 'clickable-icon' });
 			orBtn.style.cssText = 'font-size:11px;padding:2px 6px;border-radius:4px;';
 			orBtn.toggleClass('is-selected', this.tagOperator === 'OR');
@@ -392,10 +393,10 @@ export class TaskListTab {
 		if (existing) { existing.remove(); return; }
 
 		const options = [
-			{ key: 'all' as const, label: '全部', icon: 'infinity' },
-			{ key: 'today' as const, label: '今天', icon: 'sun' },
-			{ key: 'week' as const, label: '本周', icon: 'calendar-range' },
-			{ key: 'month' as const, label: '本月', icon: 'calendar-days' },
+			{ key: 'all' as const, label: i18n.t('sidebar.taskList.dateFilterOptions.all'), icon: 'infinity' },
+			{ key: 'today' as const, label: i18n.t('sidebar.taskList.dateFilterOptions.today'), icon: 'sun' },
+			{ key: 'week' as const, label: i18n.t('sidebar.taskList.dateFilterOptions.thisWeek'), icon: 'calendar-range' },
+			{ key: 'month' as const, label: i18n.t('sidebar.taskList.dateFilterOptions.thisMonth'), icon: 'calendar-days' },
 		];
 
 		const dropdown = container.createDiv('sidebar-dropdown');
@@ -478,7 +479,7 @@ export class TaskListTab {
 
 		if (tasks.length === 0) {
 			const empty = this.taskListEl.createDiv(SidebarClasses.elements.emptyState);
-			empty.textContent = this.searchQuery ? '没有匹配的任务' : '暂无任务';
+			empty.textContent = this.searchQuery ? i18n.t('sidebar.taskList.noMatchingTasks') : i18n.t('sidebar.taskList.noTasks');
 			return;
 		}
 

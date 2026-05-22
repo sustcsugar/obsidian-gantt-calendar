@@ -3,6 +3,7 @@ import { BaseBuilder } from './BaseBuilder';
 import { MacaronColorPicker } from '../components';
 import { PRESET_FESTIVAL_COLORS } from '../constants';
 import type { BuilderConfig } from '../types';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 节日颜色设置构建器
@@ -13,7 +14,7 @@ export class FestivalColorBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('节日颜色', (group) => {
+		this.createSettingGroup(i18n.t('settings.festivalColor.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -24,8 +25,8 @@ export class FestivalColorBuilder extends BaseBuilder {
 
 			// 阳历节日颜色
 			addSetting(setting => {
-				setting.setName('阳历节日颜色')
-					.setDesc('自定义阳历节日显示颜色');
+				setting.setName(i18n.t('settings.festivalColor.solarFestival.name'))
+					.setDesc(i18n.t('settings.festivalColor.solarFestival.description'));
 				setting.controlEl.empty();
 				new MacaronColorPicker({
 					container: setting.controlEl,
@@ -41,8 +42,8 @@ export class FestivalColorBuilder extends BaseBuilder {
 
 			// 农历节日颜色
 			addSetting(setting => {
-				setting.setName('农历节日颜色')
-					.setDesc('自定义农历节日显示颜色');
+				setting.setName(i18n.t('settings.festivalColor.lunarFestival.name'))
+					.setDesc(i18n.t('settings.festivalColor.lunarFestival.description'));
 				setting.controlEl.empty();
 				new MacaronColorPicker({
 					container: setting.controlEl,
@@ -58,8 +59,8 @@ export class FestivalColorBuilder extends BaseBuilder {
 
 			// 节气颜色
 			addSetting(setting => {
-				setting.setName('节气颜色')
-					.setDesc('自定义节气显示颜色');
+				setting.setName(i18n.t('settings.festivalColor.solarTerm.name'))
+					.setDesc(i18n.t('settings.festivalColor.solarTerm.description'));
 				setting.controlEl.empty();
 				new MacaronColorPicker({
 					container: setting.controlEl,

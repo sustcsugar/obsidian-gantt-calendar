@@ -1,0 +1,1260 @@
+{
+	"common": {
+		"cancel": "取消",
+		"save": "保存",
+		"add": "添加",
+		"ok": "确定",
+		"confirm": "确认",
+		"delete": "删除",
+		"edit": "编辑",
+		"close": "关闭",
+		"loading": "加载中...",
+		"noTasks": "暂无任务",
+		"error": "错误",
+		"ready": "就绪",
+		"today": "今天",
+		"none": "无",
+		"noContent": "无内容",
+		"fileNotFound": "文件未找到：{{path}}",
+		"priority": {
+			"highest": "最高",
+			"high": "高",
+			"medium": "中",
+			"normal": "普通",
+			"low": "低",
+			"lowest": "最低"
+		},
+		"weekdays": {
+			"mon": "周一",
+			"tue": "周二",
+			"wed": "周三",
+			"thu": "周四",
+			"fri": "周五",
+			"sat": "周六",
+			"sun": "周日"
+		},
+		"weekdaysFull": {
+			"mon": "星期一",
+			"tue": "星期二",
+			"wed": "星期三",
+			"thu": "星期四",
+			"fri": "星期五",
+			"sat": "星期六",
+			"sun": "星期日"
+		},
+		"months": {
+			"jan": "一月",
+			"feb": "二月",
+			"mar": "三月",
+			"apr": "四月",
+			"may": "五月",
+			"jun": "六月",
+			"jul": "七月",
+			"aug": "八月",
+			"sep": "九月",
+			"oct": "十月",
+			"nov": "十一月",
+			"dec": "十二月"
+		},
+		"dateLabels": {
+			"created": "创建",
+			"start": "开始",
+			"scheduled": "计划",
+			"due": "截止",
+			"done": "完成",
+			"cancelled": "取消"
+		},
+		"dateFields": {
+			"createdDate": "➕ 创建日期",
+			"startDate": "🛫 开始日期",
+			"scheduledDate": "⏳ 计划日期",
+			"dueDate": "📅 截止日期",
+			"completionDate": "✅ 完成日期",
+			"cancelledDate": "❌ 取消日期"
+		},
+		"status": {
+			"todo": "待办",
+			"done": "已完成",
+			"important": "重要",
+			"canceled": "已取消",
+			"inProgress": "进行中",
+			"question": "有疑问",
+			"started": "已开始",
+			"custom": "自定义状态"
+		},
+		"recurrence": {
+			"none": "不重复",
+			"day": "天",
+			"week": "周",
+			"month": "月",
+			"year": "年",
+			"custom": "自定义",
+			"every": "每",
+			"clear": "× 清除",
+			"lastDay": "最后一天",
+			"daySuffix": "号"
+		}
+	},
+	"main": {
+		"ribbonTooltip": "甘特日历",
+		"taskCacheInitFailed": "任务缓存初始化失败",
+		"notSynced": "— 未同步",
+		"synced": "同步 {{time}}",
+		"yesterday": "昨日 {{time}}"
+	},
+	"settings": {
+		"tabs": {
+			"general": "通用",
+			"calendar": "日历",
+			"views": "视图",
+			"tasks": "任务",
+			"sync": "同步"
+		},
+		"general": {
+			"groupTitle": "通用",
+			"defaultView": {
+				"name": "默认视图",
+				"description": "打开插件时默认显示的视图",
+				"options": {
+					"day": "日视图",
+					"week": "周视图",
+					"month": "月视图",
+					"year": "年视图",
+					"task": "任务视图",
+					"gantt": "甘特图"
+				}
+			},
+			"debugMode": {
+				"name": "开发者模式",
+				"description": "启用后将输出详细的调试日志，关闭后仅显示统计信息和错误"
+			},
+			"showNavButtonText": {
+				"name": "视图导航按钮显示文本",
+				"description": "工具栏左侧的视图导航按钮是否显示文字标签。关闭后仅显示图标"
+			},
+			"timezoneFormat": {
+				"groupTitle": "时区与格式",
+				"timezone": {
+					"name": "时区",
+					"description": "选择日历视图使用的时区。影响「今天」的判定和日历高亮"
+				},
+				"timeFormat": {
+					"name": "时间格式",
+					"description": "任务时间的显示格式，影响弹窗和视图中时间的展示方式",
+					"24h": "24 小时制 (14:30)",
+					"12h": "12 小时制 (2:30 PM)"
+				}
+			}
+		},
+		"calendar": {
+			"groupTitle": "Daily Notes",
+			"useObsidianDailyNote": {
+				"name": "使用 Obsidian 日记设置",
+				"description": "读取核心「日记」插件或「Periodic Notes」插件的文件夹和格式设置，无需手动配置"
+			},
+			"obsidianMode": {
+				"folder": {
+					"name": "日记文件夹",
+					"description": "来自 Obsidian 日记设置（只读）"
+				},
+				"format": {
+					"name": "文件名格式",
+					"descriptionReadonly": "Moment.js 格式（只读）: {{format}}"
+				},
+				"template": {
+					"name": "模板"
+				},
+				"notDetected": {
+					"name": "未检测到日记插件",
+					"description": "请启用 Obsidian 核心「日记」插件或安装「Periodic Notes」社区插件"
+				}
+			},
+			"manualMode": {
+				"folder": {
+					"name": "Daily Note 文件夹路径",
+					"description": "指定存放 Daily Note 文件的文件夹路径（相对于库根目录）"
+				},
+				"format": {
+					"name": "Daily Note 文件名格式",
+					"description": "指定 Daily Note 文件名格式（如 yyyy-MM-dd，会在日视图中用当前日期自动替换）"
+				},
+				"template": {
+					"name": "Daily Note 模板文件路径",
+					"description": "创建 Daily Note 时使用的模板文件路径（留空则创建空文件）"
+				}
+			}
+		},
+		"calendarView": {
+			"groupTitle": "日历视图",
+			"dateFilterField": {
+				"name": "日期筛选字段",
+				"description": "日历视图始终使用此字段筛选任务；任务视图可在工具栏灵活切换"
+			},
+			"weekStart": {
+				"name": "一周开始日",
+				"description": "选择一周的起始日",
+				"options": {
+					"monday": "周一",
+					"sunday": "周日"
+				}
+			},
+			"lunarFestival": {
+				"groupTitle": "农历与节日",
+				"showLunar": {
+					"name": "显示农历",
+					"description": "在年视图、月视图、周视图中显示农历日期文本"
+				},
+				"showFestivals": {
+					"name": "显示节日与节气",
+					"description": "在农历文本上显示节日、节气的高亮颜色标记"
+				}
+			}
+		},
+		"tasks": {
+			"basic": {
+				"groupTitle": "任务基础",
+				"globalFilter": {
+					"name": "全局任务筛选标记",
+					"description": "用于标记任务的前缀符号或文字（如 \"🎯 \", \"TODO \", \"#task \"）。⚠ 修改后需重启 Obsidian",
+					"placeholder": "空则不使用筛选"
+				},
+				"taskFormat": {
+					"name": "启用的任务格式",
+					"description": "选择要支持的任务格式（Tasks 插件或 Dataview 插件）",
+					"options": {
+						"tasks": "Tasks 插件格式（使用 emoji 表示日期）",
+						"dataview": "Dataview 插件格式（使用行内字段表示日期）",
+						"both": "两者都支持"
+					}
+				},
+				"showGlobalFilter": {
+					"name": "任务文本显示 Global Filter",
+					"description": "在任务列表中文本前显示全局筛选前缀（如 🎯）。关闭则仅显示任务描述"
+				},
+				"taskNotePath": {
+					"name": "任务笔记文件夹路径",
+					"description": "从任务创建笔记时的默认存放路径（相对于库根目录）"
+				}
+			},
+			"creation": {
+				"groupTitle": "任务创建",
+				"newTaskHeading": {
+					"name": "新任务所在标题",
+					"description": "在 Daily Note 中添加新任务时的目标标题（留空则添加到文件末尾）",
+					"placeholder": "例如：## 工作任务"
+				},
+				"defaultPriority": {
+					"name": "默认任务优先级",
+					"description": "创建新任务时的默认优先级",
+					"options": {
+						"highest": "🔺 最高",
+						"high": "⏫ 高",
+						"medium": "🔼 中",
+						"low": "🔽 低",
+						"lowest": "⏬ 最低",
+						"normal": "无"
+					}
+				},
+				"recurringLimit": {
+					"name": "周期任务实例显示数量",
+					"description": "在周视图/月视图中，每个周期任务最多显示的未来虚拟实例数量。设置为 0 则不显示虚拟实例。"
+				}
+			}
+		},
+		"taskStatus": {
+			"groupTitle": "任务状态",
+			"defaultStatus": {
+				"name": "默认状态",
+				"description": "待办和已完成为核心状态，不可删除"
+			},
+			"addCustom": {
+				"name": "添加自定义状态",
+				"description": "已添加 {{count}} 个自定义状态",
+				"button": "添加"
+			},
+			"customStatus": {
+				"name": "自定义状态",
+				"description": "可自由修改颜色或删除，点击 ✎ 编辑"
+			}
+		},
+		"heatmapPalettes": {
+			"blue": "蓝色",
+			"green": "绿色",
+			"red": "红色",
+			"purple": "紫色",
+			"orange": "橙色",
+			"cyan": "青色",
+			"pink": "粉色",
+			"yellow": "黄色"
+		},
+		"dayView": {
+			"groupTitle": "日视图",
+			"showDailyNote": {
+				"name": "显示 Daily Note",
+				"description": "在日视图中显示当天的 Daily Note 内容"
+			},
+			"layout": {
+				"name": "日视图布局",
+				"description": "选择 Daily Note 和任务列表的布局方式",
+				"options": {
+					"horizontal": "左右分屏（任务在左，笔记在右）",
+					"vertical": "上下分屏（任务在上，笔记在下）"
+				}
+			}
+		},
+		"monthView": {
+			"groupTitle": "月视图",
+			"taskLimit": {
+				"name": "每天显示的任务数量",
+				"description": "设置月视图中每个日期卡片最多显示多少个任务（1-10）"
+			},
+			"lunarFontSize": {
+				"name": "月视图农历字号",
+				"description": "设置月视图中农历文字的大小（8-18px）"
+			}
+		},
+		"yearView": {
+			"groupTitle": "年视图",
+			"showTaskCount": {
+				"name": "显示每日任务数量",
+				"description": "在年视图每个日期下方显示当天任务总数（已完成+未完成）"
+			},
+			"lunarFontSize": {
+				"name": "农历字号",
+				"description": "调整年视图月卡片内农历文字大小（8-18px）"
+			},
+			"heatmapEnabled": {
+				"name": "启用任务热力图",
+				"description": "根据当天任务数量深浅显示日期背景颜色"
+			},
+			"heatmapPalette": {
+				"name": "热力图配色",
+				"description": "选择任务热力图的颜色梯度"
+			},
+			"heatmap3D": {
+				"name": "热力图3D效果",
+				"description": "为热力图颜色格子添加玻璃水珠质感效果",
+				"options": {
+					"off": "关闭",
+					"slight": "轻微突起",
+					"obvious": "明显突起"
+				}
+			}
+		},
+		"ganttView": {
+			"groupTitle": "甘特图",
+			"startField": {
+				"name": "甘特图起始字段",
+				"description": "选择用于确定甘特条开始位置的任务时间字段"
+			},
+			"endField": {
+				"name": "甘特图结束字段",
+				"description": "选择用于确定甘特条结束位置的任务时间字段"
+			},
+			"dateFieldOptions": {
+				"createdDate": "创建日期",
+				"startDate": "开始日期",
+				"scheduledDate": "计划日期",
+				"dueDate": "截止日期",
+				"completionDate": "完成日期",
+				"cancelledDate": "取消日期"
+			}
+		},
+		"festivalColor": {
+			"groupTitle": "节日颜色",
+			"solarFestival": {
+				"name": "阳历节日颜色",
+				"description": "自定义阳历节日显示颜色"
+			},
+			"lunarFestival": {
+				"name": "农历节日颜色",
+				"description": "自定义农历节日显示颜色"
+			},
+			"solarTerm": {
+				"name": "节气颜色",
+				"description": "自定义节气显示颜色"
+			}
+		},
+		"cardDisplay": {
+			"groupTitle": "任务卡片显示控制",
+			"chips": {
+				"checkbox": "复选框",
+				"tags": "标签",
+				"priority": "优先级",
+				"extraContent": "附加内容"
+			},
+			"views": {
+				"week": "周视图",
+				"month": "月视图",
+				"sidebar": "侧边栏"
+			}
+		},
+		"sync": {
+			"groupTitle": "飞书任务同步",
+			"syncConfigGroupTitle": "同步配置",
+			"taskList": {
+				"name": "任务清单",
+				"description": "获取飞书账号中可操作的任务清单",
+				"buttonText": "获取任务清单"
+			},
+			"targetFile": {
+				"name": "飞书同步目标文件",
+				"description": "飞书新任务将同步到此文件（不存在时自动创建）",
+				"placeholder": "gantt-calendar-feishu-sync.md"
+			},
+			"direction": {
+				"name": "同步方向",
+				"description": "选择任务同步的方向",
+				"options": {
+					"bidirectional": "双向同步",
+					"importOnly": "仅导入（从飞书）",
+					"exportOnly": "仅导出（到飞书）"
+				}
+			},
+			"conflictResolution": {
+				"name": "冲突解决策略",
+				"description": "当本地和飞书任务同时修改时的处理方式",
+				"options": {
+					"localWin": "本地优先",
+					"remoteWin": "飞书优先",
+					"newestWin": "最新修改优先"
+				}
+			},
+			"autoSyncInterval": {
+				"name": "自动同步间隔",
+				"description": "自动同步的时间间隔（分钟），设为 0 关闭自动同步"
+			},
+			"manualSync": {
+				"name": "手动同步",
+				"description": "立即执行一次同步操作。「测试同步」仅同步截止时间最新的 5 条真实任务，用于调试。"
+			},
+			"syncNow": {
+				"button": "立即同步",
+				"confirmTitle": "立即同步",
+				"confirmMessage": "即将执行全量双向同步：\n\n• Obsidian → 飞书：推送所有未同步的本地任务\n• 飞书 → Obsidian：拉取所有未同步的远程任务\n• 已同步的任务将根据变更情况进行更新\n• 冲突任务将按照当前冲突策略处理\n\n请确保已正确配置同步参数。",
+				"confirmText": "开始同步",
+				"cancelText": "取消"
+			},
+			"testSync": {
+				"button": "测试同步",
+				"tooltip": "双向同步截止时间最新的 5 条真实任务，用于调试",
+				"confirmTitle": "测试同步",
+				"confirmMessage": "即将执行测试同步（限 5 条任务）：\n\n• 仅同步截止时间最新的 5 条真实任务\n• 双向同步：Obsidian ↔ 飞书\n• 不会影响已同步的任务\n\n确定继续？",
+				"confirmText": "开始测试",
+				"cancelText": "取消",
+				"complete": "测试同步完成: {{summary}}",
+				"completeWithErrors": "测试同步有错误: {{summary}}",
+				"error": "测试同步出错: {{error}}"
+			},
+			"disclaimer": {
+				"title": "同步功能正在开发完善中",
+				"warning": "该功能可能存在未知的稳定性问题，使用前请务必备份您的笔记库，以免造成数据丢失。",
+				"backupReminder": "数据无价，备份为先。"
+			},
+			"statusHint": {
+				"fetchFirst": "↑ 请先点击上方「获取任务清单」按钮获取清单列表，然后选择同步目标清单。",
+				"notSelected": "⚠ 未选择任务清单，无法执行任务同步功能。请在下方选择一个任务清单作为同步目标。",
+				"selected": "✓ 已选择任务清单，可以执行任务同步功能。选择任务清单「",
+				"suffix": "」作为同步目标。",
+				"listTitle": "飞书任务清单列表 ({{count}} 个)"
+			},
+			"taskListCards": {
+				"creator": "创建者: {{id}}",
+				"members": "成员: {{count}} 人",
+				"deselect": "取消选择",
+				"select": "选择",
+				"testWrite": "测试写入",
+				"testWriteTitle": "向该清单写入 5 条虚拟任务，仅验证 API 连通性",
+				"clearTasks": "清除任务",
+				"clearTasksTitle": "删除该清单中的所有飞书任务（不可恢复）",
+				"switchConfirm": {
+					"title": "切换任务清单",
+					"message": "⚠️ 切换任务清单将触发全量同步\n\n为方便管理，Obsidian 中的任务仅会同步到当前选中的目标清单中，\n不会与飞书中其他清单的任务混淆。\n\n确定切换到清单「{{name}}」吗？",
+					"confirmText": "切换",
+					"cancelText": "取消"
+				},
+				"clearConfirm": {
+					"title": "清除任务",
+					"message": "确定要清除清单「{{name}}」中的所有任务吗？\n\n此操作将删除该清单下的所有飞书任务，不可恢复！",
+					"confirmText": "清除",
+					"cancelText": "取消"
+				},
+				"deselectNotice": "任务清单已取消选择，同步已暂停",
+				"switchConfirmTitle": "切换任务清单",
+				"switchConfirmMessage": "切换将触发全量同步。确认切换到 {{name}}？",
+				"switchConfirmButton": "切换",
+				"switchNotice": "已切换任务清单: {{name}}{{suffix}}",
+				"switchNoticeFullSync": "（将执行全量同步）",
+				"clearConfirmTitle": "清除任务",
+				"clearConfirmMessage": "确定要删除 {{name}} 中的所有任务吗？此操作不可撤销！",
+				"clearConfirmButton": "全部清除"
+			},
+			"account": {
+				"name": "飞书账号",
+				"connected": "已连接",
+				"disconnected": "未连接",
+				"reconnect": "重新授权",
+				"connect": "连接飞书账号"
+			},
+			"oauth": {
+				"appId": {
+					"label": "App ID",
+					"description": "飞书开放平台应用的 App ID"
+				},
+				"appSecret": {
+					"label": "App Secret",
+					"description": "飞书开放平台应用的 App Secret，用于刷新令牌"
+				},
+				"redirectUri": {
+					"label": "重定向 URL",
+					"description": "OAuth 授权完成后的回调地址"
+				},
+				"authCode": {
+					"label": "授权码",
+					"description": "从浏览器回调 URL 中复制 code 参数值并粘贴，然后点击获取令牌",
+					"placeholder": "粘贴授权码..."
+				},
+				"getToken": "获取令牌",
+				"invalidCode": "请先输入有效的授权码",
+				"authorizedUser": {
+					"label": "已授权用户"
+				},
+				"testConnection": "测试连接，获取用户信息",
+				"accessToken": {
+					"label": "Access Token",
+					"description": "请注意保密，不要分享给他人",
+					"copyTooltip": "复制完整 Token",
+					"copied": "已复制到剪贴板"
+				},
+				"tokenStatus": {
+					"label": "令牌状态",
+					"expired": "令牌已过期，请重新授权",
+					"expiresAt": "过期时间: {{time}} ({{remaining}})",
+					"expiredTooltip": "已过期",
+					"validTooltip": "有效",
+					"valid": "有效"
+				},
+				"refresh": "刷新",
+				"reauthorizeTooltip": "重新授权",
+				"refreshTokenTooltip": "尝试刷新令牌",
+				"refreshTokenStatus": {
+					"label": "Refresh 令牌状态",
+					"expired": "Refresh 令牌已过期，请重新授权",
+					"expiresAt": "过期时间: {{time}} ({{remaining}})",
+					"unknownExpiry": "过期时间未知（重新授权后可显示）",
+					"unknownTooltip": "时间未知",
+					"valid": "过期时间: {{time}} ({{remaining}})",
+					"unknown": "未知"
+				},
+				"revokeAuth": {
+					"label": "取消授权",
+					"description": "清除已保存的飞书授权信息",
+					"button": "取消授权",
+					"revoked": "已取消飞书授权"
+				},
+				"invalidCodeNotice": "请输入有效的授权码",
+				"testConnectionTooltip": "测试连接，获取用户信息",
+				"copyTokenTooltip": "复制完整 token",
+				"copiedNotice": "已复制到剪贴板",
+				"reauthorize": "重新授权",
+				"tryRefreshToken": "尝试刷新 token",
+				"resetAuth": {
+					"label": "撤销授权",
+					"description": "清除保存的飞书授权信息",
+					"button": "撤销授权",
+					"notice": "飞书授权已撤销"
+				},
+				"pleaseConfigureAppId": "请先配置 App ID",
+				"completeAuthInBrowser": "在浏览器中完成飞书授权，然后从回调 URL 复制授权码并粘贴到此处",
+				"exchangingCode": "正在交换授权码...",
+				"pleaseConfigureAppIdAndSecret": "请先配置飞书 App ID 和 App Secret",
+				"apiMissingAccessToken": "飞书 API 响应格式错误: 缺少 access_token",
+				"authSuccess": "飞书授权成功！",
+				"codeExpired": "授权码已过期，请重新授权",
+				"authFailed": "授权失败: {{error}}",
+				"tokenRefreshing": "正在刷新 token...",
+				"noRefreshToken": "没有刷新 token，请重新授权",
+				"tokenRefreshSuccess": "Token 刷新成功！",
+				"tokenRefreshFailed": "刷新失败: {{error}}"
+			},
+			"pushFilter": {
+				"groupTitle": "推送过滤",
+				"enabled": {
+					"name": "启用推送过滤",
+					"description": "开启后，仅符合条件的新任务会推送到飞书，已同步任务的任何变更仍会同步"
+				},
+				"completionStatus": {
+					"name": "完成状态过滤",
+					"description": "选择推送哪些任务，已同步任务不受影响",
+					"options": {
+						"all": "全部任务",
+						"incompleteOnly": "仅未完成任务"
+					}
+				},
+				"dateFilter": {
+					"name": "日期过滤",
+					"description": "仅推送指定日期之后的任务，任务任一日期字段匹配即可",
+					"all": "全部",
+					"lastWeek": "近一周",
+					"lastMonth": "近1月",
+					"last3Months": "近3月",
+					"lastHalfYear": "近半年",
+					"lastYear": "近1年",
+					"last6Months": "最近 6 个月"
+				},
+				"pathFilter": {
+					"name": "路径过滤",
+					"description": "按文件路径过滤，每行一个路径，文件夹以 / 结尾",
+					"placeholder": "每行一个路径，如：\nprojects/\nDaily/Tasks.md"
+				}
+			},
+			"notices": {
+				"cancelled": "已取消任务清单选择，同步功能已暂停。",
+				"switched": "已切换任务清单：{{name}}{{suffix}}",
+				"fullSyncHint": "（将执行全量同步）",
+				"needAppId": "请先配置 App ID",
+				"browserAuth": "请在浏览器中完成飞书授权，然后从回调 URL 中复制授权码",
+				"exchangingCode": "正在交换授权码...",
+				"needAppCredentials": "请先配置 App ID 和 App Secret",
+				"feishuApiError": "飞书 API 响应格式错误：缺少 access_token",
+				"authSuccess": "飞书授权成功！",
+				"codeExpired": "授权码已过期，请重新点击授权按钮（授权码有效期约 5 分钟）",
+				"authFailed": "授权失败: {{error}}",
+				"refreshingToken": "正在刷新令牌...",
+				"noRefreshToken": "没有可用的刷新令牌，请重新授权",
+				"tokenRefreshed": "令牌刷新成功！",
+				"refreshFailed": "刷新失败: {{error}}，请重新授权",
+				"notAuthorized": "未授权：请先完成飞书授权",
+				"unknown": "未知",
+				"connecting": "正在测试飞书连接...",
+				"connectionSuccess": "✅ 飞书连接测试成功",
+				"userInfo": "用户信息:",
+				"userName": "  名称: {{name}}",
+				"userEnName": "  英文名: {{name}}",
+				"userId": "  用户ID: {{id}}",
+				"userOpenId": "  OpenID: {{id}}",
+				"userEmail": "  邮箱: {{email}}",
+				"tokenStatus": "令牌状态:",
+				"expiryTime": "  过期时间: {{time}}",
+				"tokenStatusLine": "  状态: {{status}}",
+				"expired": "已过期",
+				"valid": "有效",
+				"authorizedLists": "已授权清单: {{count}} 个",
+				"currentList": "当前清单: {{name}}",
+				"connectionFailed": "❌ 飞书连接测试失败",
+				"errorInfo": "错误信息: {{message}}",
+				"errorCode": "错误码: {{code}}",
+				"tokenExpiryHint": "可能原因: Access Token 无效或已过期",
+				"reAuthSuggestion": "建议: 请重新授权获取新的令牌",
+				"permissionIssue": "可能原因: 权限不足或应用未通过审核",
+				"permissionSuggestion": "建议: 检查应用权限配置和应用审核状态",
+				"networkIssue": "可能原因: 网络连接问题",
+				"networkSuggestion": "建议: 检查网络连接或防火墙设置",
+				"pleaseAuth": "请先在设置中完成飞书授权",
+				"selectTaskList": "请先选择一个飞书任务清单作为同步目标",
+				"authExpiredForSync": "飞书授权已失效，请重新授权",
+				"pushedCount": "推送 {{count}} 个",
+				"pulledCount": "拉取 {{count}} 个",
+				"pushConnector": "，",
+				"noChange": "无变更",
+				"testSyncCompleteTitle": "测试同步完成: {{summary}}",
+				"testSyncComplete": "测试同步完成: {{summary}}",
+				"testSyncError": "测试同步出错: {{error}}",
+				"fetching": "正在获取飞书任务清单...",
+				"noTaskLists": "未找到任务清单，请先在飞书中创建至少一个任务清单，然后重新获取",
+				"fetchSuccess": "成功获取 {{count}} 个任务清单",
+				"authExpired": "认证失败：Access Token 无效或已过期，请重新授权",
+				"networkError": "网络错误：请检查网络连接",
+				"fetchFailed": "获取任务清单失败: {{error}}",
+				"testWriteConfirmTitle": "测试写入",
+				"testWriteConfirmMessage": "将向清单「{{name}}」中创建 5 个测试任务，\n用于验证同步功能是否正常。\n\n确定继续？",
+				"testWriteConfirmOk": "开始写入",
+				"testWriteCancel": "取消",
+				"testWriteTo": "正在向「{{name}}」创建虚拟任务...",
+				"virtualTaskSummary": "虚拟任务 {{index}}/{{total}} - {{date}}",
+				"virtualTaskDesc": "由 Gantt Calendar 插件创建的连通性测试任务，可安全删除。",
+				"testWriteProgress": "已创建 {{created}}/5 个测试任务...",
+				"testWriteComplete": "测试写入完成: 成功 {{created}} 个",
+				"testWriteFailedCount": "，失败 {{count}} 个",
+				"testWriteListInfo": "\n清单: {{name}}",
+				"testWriteError": "测试写入失败: {{error}}",
+				"clearingTasks": "正在获取清单「{{name}}」中的任务...",
+				"noTasksInList": "清单「{{name}}」中没有任务",
+				"clearingTasksFound": "找到 {{count}} 个任务，正在删除...",
+				"clearingProgress": "已删除 {{current}}/{{total}} 个任务...",
+				"clearComplete": "清除完成: 删除 {{deleted}} 个",
+				"clearFailedCount": "，失败 {{count}} 个",
+				"clearError": "清除任务失败: {{error}}",
+				"getUserInfoFailed": "获取用户信息失败",
+				"authRequired": "请先在设置中完成飞书授权",
+				"configRequired": "请先配置飞书 App ID 和 App Secret",
+				"fetchingTaskLists": "正在获取任务清单...",
+				"taskListsFetched": "已获取 {{count}} 个任务清单",
+				"authFailed401": "授权失败 (401)，请重新授权"
+			},
+			"connectionTest": {
+				"unauthorized": "未授权: 请先完成飞书授权",
+				"expireUnknown": "未知",
+				"testing": "正在测试飞书连接...",
+				"success": "✅ 飞书连接测试成功",
+				"userInfo": "用户信息:",
+				"userName": "  姓名: {{name}}",
+				"userEnName": "  英文名: {{name}}",
+				"userId": "  用户 ID: {{id}}",
+				"email": "  邮箱: {{email}}",
+				"tokenInfo": "Token 状态:",
+				"expireTime": "  过期时间: {{time}}",
+				"tokenExpired": "已过期",
+				"tokenValid": "有效",
+				"authorizedLists": "已授权清单: {{count}}",
+				"currentList": "当前清单: {{name}}",
+				"failed": "❌ 飞书连接测试失败",
+				"errorInfo": "错误信息: {{message}}",
+				"errorCode": "错误码: {{code}}",
+				"tokenExpiredStatus": "令牌状态: {{status}}",
+				"possible401": "可能原因: Token 无效或已过期",
+				"possible403": "可能原因: 权限不足",
+				"possibleNetwork": "可能原因: 网络连接问题",
+				"authExpired": "飞书授权已失效，请重新授权"
+			},
+			"groupTitles": {
+				"pushFilter": "推送过滤"
+			},
+			"testWrite": {
+				"confirmMessage": "写入 5 条测试任务以测试 API 连接？",
+				"confirmButton": "写入测试任务",
+				"creating": "正在创建测试任务...",
+				"virtualTaskTitle": "测试任务 {{index}}",
+				"virtualTaskDesc": "自动生成的测试任务 {{index}}，用于 API 测试",
+				"progress": "创建中 {{current}}/{{total}}",
+				"resultFailed": "测试写入失败: {{count}}/{{total}}",
+				"result": "测试写入完成: 成功 {{success}}/{{total}}",
+				"listLabel": "任务清单: {{name}} (ID: {{id}})",
+				"failed": "测试写入出错: {{error}}"
+			},
+			"clearTasks": {
+				"fetching": "正在获取任务清单...",
+				"empty": "任务清单为空，无需清除",
+				"deleting": "正在删除任务...",
+				"progress": "删除中 {{current}}/{{total}}",
+				"resultFailed": "删除失败: {{count}}/{{total}}",
+				"result": "已删除 {{count}} 个任务",
+				"failed": "清除任务出错: {{error}}"
+			}
+		}
+	},
+	"modals": {
+		"addStatus": {
+			"title": "添加自定义状态",
+			"name": {
+				"label": "状态名称",
+				"placeholder": "例如：等待审核"
+			},
+			"key": {
+				"label": "状态标识（英文）",
+				"placeholder": "例如：pending_review"
+			},
+			"symbol": {
+				"label": "复选框符号（单个字符）",
+				"hint": "任意单个非空白字符，但不能使用 [、] 或默认符号（空格, x）",
+				"placeholder": "例如：p",
+				"errorEmpty": "请输入复选框符号",
+				"errorInvalid": "符号无效",
+				"errorDuplicate": "状态标识已存在"
+			},
+			"description": {
+				"label": "状态描述",
+				"placeholder": "描述此状态的用途"
+			},
+			"colors": {
+				"macaronLabel": "快速选择亮色背景颜色",
+				"lightTheme": "☀️ 亮色",
+				"darkTheme": "🌙 暗色",
+				"background": "背景",
+				"text": "文字"
+			}
+		},
+		"editStatus": {
+			"title": "编辑自定义状态",
+			"name": {
+				"label": "状态名称",
+				"placeholder": "例如：等待审核",
+				"errorEmpty": "请输入状态名称"
+			},
+			"key": {
+				"label": "状态标识（英文，不可修改）"
+			},
+			"symbol": {
+				"label": "复选框符号（单个字符）",
+				"hint": "任意单个非空白字符，但不能使用 [、] 或默认符号（空格, x）",
+				"placeholder": "例如：p",
+				"errorEmpty": "请输入复选框符号",
+				"errorInvalid": "符号无效"
+			},
+			"description": {
+				"label": "状态描述",
+				"placeholder": "描述此状态的用途"
+			},
+			"colors": {
+				"macaronLabel": "快速选择亮色背景颜色",
+				"lightTheme": "☀️ 亮色",
+				"darkTheme": "🌙 暗色",
+				"background": "背景",
+				"text": "文字"
+			}
+		},
+		"createTask": {
+			"title": "创建新任务",
+			"descriptionLabel": "任务描述 *",
+			"descriptionPlaceholder": "输入任务描述...",
+			"submitHint": "按 Enter 键可快捷提交",
+			"errorEmptyDescription": "请输入任务描述",
+			"errorDateOrder": "创建日期不能晚于截止日期",
+			"success": "任务创建成功",
+			"error": "创建任务失败: {{error}}"
+		},
+		"editTask": {
+			"title": "编辑任务",
+			"descriptionLabel": "任务描述",
+			"priorityLabel": "优先级",
+			"recurrenceLabel": "重复设置",
+			"datesLabel": "日期设置",
+			"submitHint": "按 Enter 键可快捷提交",
+			"datePlaceholder": "选择日期和时间",
+			"success": "任务已更新",
+			"error": "更新任务失败"
+		},
+		"confirm": {
+			"cancel": "取消",
+			"confirm": "确定"
+		},
+		"syncResult": {
+			"pushed": "推送",
+			"pulled": "拉取",
+			"conflicted": "冲突",
+			"skipped": "跳过",
+			"noChange": "无变更",
+			"update": "更新",
+			"push": "推送",
+			"pull": "拉取",
+			"conflict": "冲突"
+		}
+	},
+	"toolbar": {
+		"sort": {
+			"ariaLabel": "排序选项",
+			"header": "排序方式 (点击切换)",
+			"options": {
+				"dueDate": "截止日期",
+				"priority": "优先级",
+				"status": "状态",
+				"tags": "标签"
+			}
+		},
+		"fieldSelector": {
+			"defaultLabel": "字段筛选",
+			"createdDate": "创建时间",
+			"startDate": "开始时间",
+			"scheduledDate": "计划时间",
+			"dueDate": "截止时间",
+			"completionDate": "完成时间",
+			"cancelledDate": "取消时间",
+			"startTime": "开始时间",
+			"endTime": "结束时间"
+		},
+		"statusFilter": {
+			"ariaLabel": "状态筛选",
+			"header": "筛选状态",
+			"empty": "暂无可用状态"
+		},
+		"dateFilter": {
+			"label": "日期",
+			"all": "全",
+			"day": "日",
+			"week": "周",
+			"month": "月",
+			"allTime": "全部时间",
+			"byDay": "按日筛选",
+			"byWeek": "按周筛选",
+			"byMonth": "按月筛选"
+		},
+		"viewSwitcher": {
+			"year": "年",
+			"month": "月",
+			"week": "周",
+			"day": "日",
+			"yearFull": "年视图",
+			"monthFull": "月视图",
+			"weekFull": "周视图",
+			"dayFull": "日视图"
+		},
+		"nav": {
+			"today": "今",
+			"previous": "上一个",
+			"next": "下一个",
+			"first": "第一个",
+			"last": "最后一个",
+			"goToday": "回到今天"
+		},
+		"createTask": {
+			"ariaLabel": "创建新任务"
+		},
+		"ganttScroll": {
+			"scrollLeft": "滚动到最左边",
+			"scrollRight": "滚动到最右边",
+			"goToday": "回到今天"
+		},
+		"refresh": {
+			"defaultTitle": "刷新",
+			"refreshTask": "刷新任务",
+			"refreshGantt": "刷新甘特图"
+		},
+		"settingsButton": {
+			"ariaLabel": "插件设置"
+		},
+		"syncButton": {
+			"defaultTitle": "飞书同步"
+		},
+		"tagFilter": {
+			"ariaLabel": "标签筛选",
+			"header": "筛选标签",
+			"andTitle": "交集：包含所有选中标签",
+			"orTitle": "并集：包含任一选中标签",
+			"notTitle": "排除：不包含选中标签",
+			"empty": "暂无标签"
+		},
+		"buttonGroup": {
+			"todayText": "今天",
+			"firstTitle": "第一个",
+			"prevTitle": "上一个",
+			"todayTitle": "回到今天",
+			"nextTitle": "下一个",
+			"lastTitle": "最后一个"
+		},
+		"modeToggle": {
+			"viewLabels": {
+				"day": {
+					"short": "日",
+					"full": "日视图"
+				},
+				"week": {
+					"short": "周",
+					"full": "周视图"
+				},
+				"month": {
+					"short": "月",
+					"full": "月视图"
+				},
+				"year": {
+					"short": "年",
+					"full": "年视图"
+				}
+			}
+		},
+		"timeGranularity": {
+			"day": "日",
+			"week": "周",
+			"month": "月"
+		},
+		"fieldFilter": {
+			"label": "字段筛选"
+		},
+		"dateFilterLabel": "日期",
+		"leftButtons": {
+			"day": {
+				"label": "日",
+				"ariaLabel": "日视图"
+			},
+			"week": {
+				"label": "周",
+				"ariaLabel": "周视图"
+			},
+			"month": {
+				"label": "月",
+				"ariaLabel": "月视图"
+			},
+			"year": {
+				"label": "年",
+				"ariaLabel": "年视图"
+			},
+			"task": {
+				"label": "任务",
+				"ariaLabel": "任务视图"
+			},
+			"gantt": {
+				"label": "甘特图",
+				"ariaLabel": "甘特图视图"
+			}
+		}
+	},
+	"contextMenu": {
+		"editTask": "编辑任务",
+		"createNote": "创建任务笔记:同名",
+		"createNoteAlias": "创建任务笔记:别名",
+		"priority": {
+			"highest": "最高",
+			"high": "高",
+			"medium": "中",
+			"normal": "普通",
+			"low": "低",
+			"lowest": "最低"
+		},
+		"statusImportant": "🔴 重要",
+		"statusQuestion": "🟠 有疑问",
+		"postpone": {
+			"days1": "延期 1 天",
+			"days3": "延期 3 天",
+			"days7": "延期 7 天"
+		},
+		"setDueDate": {
+			"tomorrow": "延期到明天",
+			"days3": "延期到3天后",
+			"days7": "延期到7天后"
+		},
+		"cancelTask": "取消任务",
+		"restoreTask": "恢复任务",
+		"deleteTask": "删除任务",
+		"commands": {
+			"cancelled": "任务已取消",
+			"cancelFailed": "取消任务失败",
+			"noteCreated": "已创建笔记: {{fileName}}",
+			"noteCreateFailed": "创建笔记失败",
+			"enterNoteName": "输入笔记名称",
+			"deleted": "任务已删除",
+			"deleteFailed": "删除任务失败",
+			"dueDateSet": "截止日期已设置为 {{date}}",
+			"postponed": "任务已延期 {{days}} 天，到期 {{date}}",
+			"postponeFailed": "延期失败",
+			"restored": "任务已恢复",
+			"restoreFailed": "恢复任务失败",
+			"priorityUpdated": "优先级已更新",
+			"priorityUpdateFailed": "更新优先级失败",
+			"statusUpdated": "任务状态已更新为：{{label}}",
+			"statusUpdateFailed": "更新任务状态失败",
+			"cancel": {
+				"alreadyCancelled": "任务已经是取消状态",
+				"cannotCancelDone": "已完成任务不能直接取消，请先取消完成状态"
+			},
+			"createNote": {
+				"alreadyExists": "已存在任务笔记",
+				"emptyFileName": "文件名为空，无法创建文件",
+				"existsInPath": "已存在同名笔记: {{fileName}}.md",
+				"existsInDir": "指定目录下已存在文件: {{fileName}}.md"
+			},
+			"deleteTask": {
+				"fileNotFound": "找不到任务所在文件",
+				"invalidLineNumber": "任务行号无效"
+			},
+			"restore": {
+				"alreadyDone": "恢复任务失败:任务已完成",
+				"alreadyRestored": "恢复任务失败:任务已经恢复"
+			}
+		}
+	},
+	"dailyNote": {
+		"createCancelled": "已取消创建任务",
+		"taskAdded": "已添加任务到 Daily Note",
+		"createdAndAdded": "已创建 Daily Note 并添加任务",
+		"createFailed": "创建 Daily Note 失败: {{error}}"
+	},
+	"sync": {
+		"feishuAuthRenewed": "飞书授权已自动续期"
+	},
+	"commands": {
+		"openCalendarView": "打开日历视图",
+		"openTaskView": "打开任务视图",
+		"openSidebarView": "打开侧边栏",
+		"feishuSync": "飞书任务双向同步",
+		"sync": {
+			"syncing": "🔄 同步中...",
+			"syncingFeishu": "🔄 正在同步飞书任务...",
+			"stopSync": "停止同步",
+			"stopped": "已停止",
+			"authRequired": "请先在设置中完成飞书授权",
+			"configRequired": "请先配置飞书 App ID 和 App Secret",
+			"authExpired": "飞书授权已失效，请重新授权",
+			"syncFailed": "❌ 同步失败",
+			"syncSuccess": "✅ 已同步",
+			"pushed": "推送",
+			"pulled": "拉取",
+			"conflicted": "冲突",
+			"skipped": "跳过",
+			"noChange": "无变更",
+			"autoSyncComplete": "自动同步完成: {{summary}}",
+			"syncComplete": "同步完成: {{summary}}",
+			"syncError": "同步出错: {{error}}",
+			"feishuSyncComplete": "飞书同步完成: {{summary}}"
+		}
+	},
+	"views": {
+		"yearView": {
+			"months": [
+				"一月",
+				"二月",
+				"三月",
+				"四月",
+				"五月",
+				"六月",
+				"七月",
+				"八月",
+				"九月",
+				"十月",
+				"十一月",
+				"十二月"
+			],
+			"weekdaysShort": [
+				"日",
+				"一",
+				"二",
+				"三",
+				"四",
+				"五",
+				"六"
+			],
+			"weekdaysShortMon": [
+				"一",
+				"二",
+				"三",
+				"四",
+				"五",
+				"六",
+				"日"
+			],
+			"weekNumber": "第{{week}}周"
+		},
+		"monthView": {
+			"weekdays": [
+				"日",
+				"一",
+				"二",
+				"三",
+				"四",
+				"五",
+				"六"
+			],
+			"weekdaysMon": [
+				"一",
+				"二",
+				"三",
+				"四",
+				"五",
+				"六",
+				"日"
+			]
+		},
+		"weekView": {
+			"weekdays": [
+				"一",
+				"二",
+				"三",
+				"四",
+				"五",
+				"六",
+				"日"
+			],
+			"allDay": "全天"
+		},
+		"dayView": {
+			"todayTasks": "当日任务",
+			"loading": "加载中...",
+			"noTasks": "暂无任务",
+			"loadError": "加载任务时出错",
+			"updateTimeFailed": "更新任务时间失败",
+			"updateTaskFailed": "更新任务失败",
+			"updateDateFailed": "更新任务日期失败",
+			"switchToPreview": "切换到预览模式",
+			"switchToEdit": "切换到编辑模式"
+		},
+		"taskView": {
+			"loading": "加载中...",
+			"noTasks": "未找到符合条件的任务",
+			"loadError": "加载任务时出错"
+		},
+		"ganttView": {
+			"invalidDateRange": "无效的日期范围",
+			"updateTaskFailed": "更新任务失败",
+			"emptyTitle": "暂无可显示的任务",
+			"possibleReasons": "可能的原因: ",
+			"checkDatesHint": "请检查任务是否包含开始和结束日期",
+			"renderError": "渲染甘特图时出错: ",
+			"currentFilter": "当前筛选: {{count}} 个状态",
+			"tagFilter": "标签筛选: {{tags}}",
+			"missingFieldConfig": "缺少时间字段配置"
+		}
+	},
+	"embeddedEditor": {
+		"dailyNoteNotFound": "未找到 Daily Note"
+	},
+	"sidebar": {
+		"taskList": {
+			"searchPlaceholder": "搜索任务...",
+			"loading": "加载中...",
+			"noTasks": "暂无任务",
+			"noMatchingTasks": "没有匹配的任务",
+			"filterBar": {
+				"statusFilter": "状态筛选",
+				"priorityFilter": "优先级筛选",
+				"tagFilter": "标签筛选",
+				"sort": "排序",
+				"dateFilter": "日期筛选"
+			},
+			"priority": {
+				"all": "全部",
+				"highest": "最高",
+				"high": "高",
+				"medium": "中",
+				"normal": "普通",
+				"low": "低",
+				"lowest": "最低"
+			},
+			"sortOptions": {
+				"byPriority": "按优先级",
+				"byDueDate": "按截止日期",
+				"byStartDate": "按开始日期",
+				"ascending": "升序",
+				"descending": "降序"
+			},
+			"dateFilterOptions": {
+				"all": "全部",
+				"today": "今天",
+				"thisWeek": "本周",
+				"thisMonth": "本月"
+			},
+			"tagFilter": {
+				"matchMode": "匹配模式: "
+			}
+		}
+	},
+	"taskStatus": {
+		"todo": "待办",
+		"done": "已完成",
+		"important": "重要",
+		"canceled": "已取消",
+		"inProgress": "进行中",
+		"question": "有疑问",
+		"started": "已开始",
+		"customDefault": "自定义状态",
+		"validation": {
+			"symbolEmpty": "符号不能为空",
+			"symbolSingleChar": "符号必须是单个字符",
+			"symbolReserved": "符号 \"{{symbol}}\" 已被默认状态使用",
+			"symbolSpecial": "符号不能使用特殊字符",
+			"symbolWhitespace": "符号不能为空或空白字符"
+		}
+	},
+	"taskCard": {
+		"due": "截止",
+		"created": "创建",
+		"start": "开始",
+		"scheduled": "计划",
+		"done": "完成"
+	},
+	"gantt": {
+		"taskInfoIncomplete": "任务信息不完整",
+		"timeUpdated": "任务时间已更新: {{start}} - {{end}}",
+		"updateFailed": "更新任务失败: {{error}}",
+		"markedComplete": "任务已标记为完成",
+		"markedIncomplete": "任务已标记为未完成",
+		"updateProgressFailed": "更新进度失败: {{error}}"
+	}
+}

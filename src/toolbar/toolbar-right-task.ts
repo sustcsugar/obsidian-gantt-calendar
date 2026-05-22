@@ -12,6 +12,7 @@ import { renderSyncButton } from './components/sync-button';
 import { syncFeishuTasks } from '../commands/feishuCommands';
 import type { DateFieldType } from './components/field-selector';
 import { ToolbarClasses } from '../utils/bem';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 工具栏右侧区域 - 任务视图功能区
@@ -68,7 +69,7 @@ export class ToolbarRightTask {
 				taskRenderer.setTimeFilterField(field);
 				onFilterChange();
 			},
-			label: '字段筛选',
+			label: i18n.t('toolbar.fieldFilter.label'),
 			containerClass: ToolbarClasses.components.fieldFilter.group
 		});
 
@@ -92,7 +93,7 @@ export class ToolbarRightTask {
 			inputClass: ToolbarClasses.components.dateFilter.input,
 			buttonClass: ToolbarClasses.components.dateFilter.modeBtn,
 			showAllOption: true,
-			labelText: '日期'
+			labelText: i18n.t('toolbar.dateFilterLabel')
 		});
 
 		// ===== 右侧：共有按钮（统一顺序） =====
@@ -142,7 +143,7 @@ export class ToolbarRightTask {
 		}
 
 		// 刷新按钮（所有视图共有，始终在最右边）
-		renderRefreshButton(container, onRefresh, '刷新任务');
+		renderRefreshButton(container, onRefresh, i18n.t('toolbar.refresh.refreshTask'));
 	}
 
 	/**

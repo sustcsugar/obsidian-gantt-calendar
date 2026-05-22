@@ -13,6 +13,7 @@ import { TaskStatusSettingsBuilder } from './builders/TaskStatusSettingsBuilder'
 import { FestivalColorBuilder } from './builders/FestivalColorBuilder';
 import { SyncSettingsBuilder } from './builders/SyncSettingsBuilder';
 import type { BuilderConfig } from './types';
+import { i18n } from '../i18n/i18n';
 
 /**
  * Gantt Calendar Plugin Settings Tab
@@ -37,7 +38,7 @@ export class GanttCalendarSettingTab extends PluginSettingTab {
 
 		// —— Tab 导航栏 ——
 		const tabNav = containerEl.createDiv('gc-settings-tab-nav');
-		const tabs = ['通用', '日历', '视图', '任务', '同步'];
+		const tabs = [i18n.t('settings.tabs.general'), i18n.t('settings.tabs.calendar'), i18n.t('settings.tabs.views'), i18n.t('settings.tabs.tasks'), i18n.t('settings.tabs.sync')];
 		const contentContainers: HTMLElement[] = [];
 
 		tabs.forEach((name, i) => {

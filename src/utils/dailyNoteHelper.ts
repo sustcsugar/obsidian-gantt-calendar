@@ -6,6 +6,7 @@
 
 import { App, Notice, TFile, TFolder } from 'obsidian';
 import type { GanttCalendarSettings } from '../settings';
+import { i18n } from '../i18n/i18n';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { Logger } from './logger';
 import type { DailyNoteIndex } from './dailyNoteSettingsBridge';
@@ -118,7 +119,7 @@ export async function createTaskInDailyNote(
 				{ confirmText: '创建', cancelText: '取消' }
 			);
 			if (!confirmed) {
-				new Notice('已取消创建任务');
+				new Notice(i18n.t('dailyNote.createCancelled'));
 				return;
 			}
 			file = await createDailyNote(momentDate);
@@ -127,7 +128,7 @@ export async function createTaskInDailyNote(
 
 		if (file) {
 			await insertTaskToFile(app, file, taskData, settings.newTaskHeading);
-			new Notice('已添加任务到 Daily Note');
+			new Notice(i18n.t('dailyNote.taskAdded'));
 		}
 		return;
 	}
@@ -166,7 +167,7 @@ async function handleMissingDailyNote(
 	);
 
 	if (!confirmed) {
-		new Notice('已取消创建任务');
+		new Notice(i18n.t('dailyNote.createCancelled'));
 		return;
 	}
 
@@ -177,11 +178,11 @@ async function handleMissingDailyNote(
 		const abstractFile = app.vault.getAbstractFileByPath(filePath);
 		if (abstractFile instanceof TFile) {
 			await insertTaskToFile(app, abstractFile, taskData, settings.newTaskHeading);
-			new Notice('已创建 Daily Note 并添加任务');
+			new Notice(i18n.t('dailyNote.createdAndAdded'));
 		}
 	} catch (error) {
 		Logger.error('DailyNoteHelper', 'Error creating daily note:', error);
-		new Notice('创建 Daily Note 失败: ' + (error as Error).message);
+		new Notice(i18n.t('dailyNote.createFailed', { error: (error as Error).message }));
 	}
 }
 

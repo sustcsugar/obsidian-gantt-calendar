@@ -3,6 +3,7 @@ import type { StatusFilterState } from '../../types';
 import type { TaskStatus } from '../../tasks/taskStatus';
 import { ToolbarClasses } from '../../utils/bem';
 import { getStatusColor } from '../../tasks/taskStatus';
+import { i18n } from '../../i18n/i18n';
 
 /** 状态筛选按钮选项 */
 export interface StatusFilterButtonOptions {
@@ -29,7 +30,7 @@ export function renderStatusFilterButton(
 	// 2. 创建筛选按钮
 	const statusBtn = buttonGroup.createEl('button', {
 		cls: ToolbarClasses.components.navButtons.btn,
-		attr: { 'aria-label': '状态筛选' }
+		attr: { 'aria-label': i18n.t('toolbar.statusFilter.ariaLabel') }
 	});
 
 	// 3. 按钮内容：图标 - 使用线条风格的复选框图标
@@ -48,7 +49,7 @@ export function renderStatusFilterButton(
 
 		// 面板头部
 		const header = dropdown.createEl('div', classes.dropdownHeader);
-		header.createEl('span', { text: '筛选状态' });
+		header.createEl('span', { text: i18n.t('toolbar.statusFilter.header') });
 
 		const state = getCurrentState();
 		const allStatuses = getAvailableStatuses();
@@ -57,7 +58,7 @@ export function renderStatusFilterButton(
 		const list = dropdown.createEl('div', classes.statusList);
 
 		if (allStatuses.length === 0) {
-			list.createEl('div', { text: '暂无可用状态', cls: classes.empty });
+			list.createEl('div', { text: i18n.t('toolbar.statusFilter.empty'), cls: classes.empty });
 			return;
 		}
 

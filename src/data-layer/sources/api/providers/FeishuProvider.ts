@@ -9,6 +9,7 @@ import { requestUrl, Notice } from 'obsidian';
 import { APIDataSource, APIResponse, APITaskDTO } from '../APIDataSource';
 import type { DataSourceConfig } from '../../../types';
 import { Logger } from '../../../../utils/logger';
+import { i18n } from '../../../../i18n/i18n';
 import { FeishuOAuth } from './feishu/FeishuOAuth';
 import type { FeishuOAuthConfig, FeishuTaskRaw, FeishuTaskResponse, FeishuTaskCreateResponse } from './feishu/FeishuTypes';
 import type { FeishuTaskPayload } from '../../../feishu-sync/taskMapper';
@@ -518,7 +519,7 @@ export class FeishuProvider extends APIDataSource {
                     this.tokenExpireAt = now + (expiresIn - 60) * 1000; // 提前1分钟过期
 
                     Logger.info('FeishuProvider', 'Token refreshed successfully');
-                    new Notice('飞书授权已自动续期', 3000);
+                    new Notice(i18n.t('sync.feishuAuthRenewed'), 3000);
 
                     // 通知外部更新配置
                     this.notifyConfigUpdate();

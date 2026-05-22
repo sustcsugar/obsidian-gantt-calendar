@@ -1,5 +1,6 @@
 import { setIcon } from 'obsidian';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 渲染共享的刷新按钮
@@ -8,7 +9,7 @@ import { ToolbarClasses } from '../../utils/bem';
 export function renderRefreshButton(
   container: HTMLElement,
   onRefresh: () => Promise<void>,
-  title: string = '刷新'
+  title: string = i18n.t('toolbar.refresh.defaultTitle')
 ): void {
   // 创建下凹底座容器（与导航按钮组样式一致）
   const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);

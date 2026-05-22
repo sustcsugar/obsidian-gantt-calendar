@@ -12,6 +12,7 @@ import type { GCTask } from '../types';
 import { updateTaskProperties } from '../tasks/taskUpdater';
 import { Logger } from '../utils/logger';
 import { BaseTaskModal, type PriorityOption, type RepeatConfig } from './BaseTaskModal';
+import { i18n } from '../i18n/i18n';
 
 export function openEditTaskModal(
 	app: App,
@@ -66,7 +67,7 @@ class EditTaskModal extends BaseTaskModal {
 	}
 
 	onOpen(): void {
-		this.renderModalContent('编辑任务');
+		this.renderModalContent(i18n.t('modals.editTask.title'));
 	}
 
 	// ==================== 实现抽象方法 ====================
@@ -84,11 +85,11 @@ class EditTaskModal extends BaseTaskModal {
 
 		const descContainer = section.createDiv(EditTaskModalClasses.elements.descContainer);
 		descContainer.createEl('label', {
-			text: '任务描述',
+			text: i18n.t('modals.editTask.descriptionLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 		descContainer.createEl('div', {
-			text: '按 Enter 键可快捷提交',
+			text: i18n.t('modals.editTask.submitHint'),
 			cls: EditTaskModalClasses.elements.sectionHint
 		});
 
@@ -154,10 +155,10 @@ class EditTaskModal extends BaseTaskModal {
 			await updateTaskProperties(this.app, this.task, updates, this.enabledFormats);
 			this.onSuccess();
 			this.close();
-			new Notice('任务已更新');
+			new Notice(i18n.t('modals.editTask.success'));
 		} catch (err) {
 			Logger.error('editTask', 'Failed to update task', err);
-			new Notice('更新任务失败');
+			new Notice(i18n.t('modals.editTask.error'));
 		}
 	}
 
@@ -179,7 +180,7 @@ class EditTaskModal extends BaseTaskModal {
 	 * 获取按钮文本
 	 */
 	protected getButtonTexts(): { cancel: string; save: string } {
-		return { cancel: '取消', save: '保存' };
+		return { cancel: i18n.t('common.cancel'), save: i18n.t('common.save') };
 	}
 
 	// ==================== 重写基类方法 ====================
@@ -193,7 +194,7 @@ class EditTaskModal extends BaseTaskModal {
 
 		const priorityContainer = section.createDiv(EditTaskModalClasses.elements.priorityContainer);
 		priorityContainer.createEl('label', {
-			text: '优先级',
+			text: i18n.t('modals.editTask.priorityLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 
@@ -287,13 +288,13 @@ class EditTaskModal extends BaseTaskModal {
 		setIcon(toggleIcon, 'chevron-right');
 
 		headerLeft.createEl('label', {
-			text: '重复设置',
+			text: i18n.t('modals.editTask.recurrenceLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 		headerLeft.querySelector('label')!.style.marginBottom = '0';
 
 		const repeatSummary = headerLeft.createEl('span', {
-			text: '不重复',
+			text: i18n.t('common.recurrence.none'),
 		});
 		repeatSummary.style.fontSize = 'var(--font-ui-smaller)';
 		repeatSummary.style.color = 'var(--text-muted)';
@@ -326,7 +327,7 @@ class EditTaskModal extends BaseTaskModal {
 		freqSelectRow.style.marginBottom = '12px';
 		freqSelectRow.style.flexWrap = 'wrap';
 
-		freqSelectRow.createEl('span', { text: '每' });
+		freqSelectRow.createEl('span', { text: i18n.t('common.recurrence.every') });
 
 		const intervalInput = freqSelectRow.createEl('input', {
 			type: 'number',
@@ -343,12 +344,12 @@ class EditTaskModal extends BaseTaskModal {
 		freqSelect.style.padding = '4px 8px';
 
 		const freqOptions = [
-			{ value: '', label: '不重复' },
-			{ value: 'daily', label: '天' },
-			{ value: 'weekly', label: '周' },
-			{ value: 'monthly', label: '月' },
-			{ value: 'yearly', label: '年' },
-			{ value: 'custom', label: '自定义' },
+			{ value: '', label: i18n.t('common.recurrence.none') },
+			{ value: 'daily', label: i18n.t('common.recurrence.day') },
+			{ value: 'weekly', label: i18n.t('common.recurrence.week') },
+			{ value: 'monthly', label: i18n.t('common.recurrence.month') },
+			{ value: 'yearly', label: i18n.t('common.recurrence.year') },
+			{ value: 'custom', label: i18n.t('common.recurrence.custom') },
 		];
 		freqOptions.forEach(opt => {
 			freqSelect.createEl('option', { value: opt.value, text: opt.label });
@@ -528,7 +529,7 @@ class EditTaskModal extends BaseTaskModal {
 				daily: '每天', weekly: '每周', monthly: '每月', yearly: '每年', custom: '自定义'
 			};
 			if (!freqSelect.value) {
-				repeatSummary.textContent = '不重复';
+				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';
 			} else {
 				const interval = parseInt(intervalInput.value) || 1;
@@ -675,7 +676,7 @@ class EditTaskModal extends BaseTaskModal {
 			this.repeat = null;
 			previewText.textContent = 'no repeat';
 			errorMsg.style.display = 'none';
-				repeatSummary.textContent = '不重复';
+				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';
 		});
 

@@ -12,6 +12,7 @@ import { WeekViewClasses } from '../utils/bem';
 import { toISOStringLocal, createDate } from '../dateUtils/timezone';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
 import { renderCurrentTimeLine } from '../utils/currentTimeLine';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 周视图渲染器
@@ -64,7 +65,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 	render(container: HTMLElement, currentDate: Date): void {
 		const weekData = getWeekOfDate(currentDate, currentDate.getFullYear(), !!(this.plugin?.settings?.startOnMonday));
-		const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+		const dayNames = i18n.t('views.weekView.weekdays') as unknown as string[];
 
 		// 清空容器
 		container.empty();
@@ -147,7 +148,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		const alldayGutter = tasksGrid.createDiv(W.elements.alldayGutter);
 		alldayGutter.style.gridColumn = '1';
 		alldayGutter.style.gridRow = '2';
-		alldayGutter.setText('全天');
+		alldayGutter.setText(i18n.t('views.weekView.allDay'));
 
 		const alldaySlotContainers: HTMLElement[] = [];
 		const alldayRowElements: HTMLElement[] = [alldayGutter];
@@ -441,7 +442,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				Logger.debug('WeekView', 'Task set to all-day via drag-drop', { taskId, targetDate });
 			} catch (error) {
 				Logger.error('WeekView', 'Error updating task to all-day:', error);
-				new Notice('更新任务失败');
+				new Notice(i18n.t('views.dayView.updateTaskFailed'));
 			}
 		});
 	}
@@ -516,7 +517,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				Logger.debug('WeekView', 'Task time updated via drag-drop', { taskId, hour, targetDate });
 			} catch (error) {
 				Logger.error('WeekView', 'Error updating task time:', error);
-				new Notice('更新任务时间失败');
+				new Notice(i18n.t('views.dayView.updateTimeFailed'));
 			}
 		});
 	}
@@ -598,7 +599,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				Logger.debug('WeekView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
 			} catch (error) {
 				Logger.error('WeekView', 'Error updating task date:', error);
-				new Notice('更新任务日期失败');
+				new Notice(i18n.t('views.dayView.updateDateFailed'));
 			}
 		});
 	}
@@ -651,14 +652,14 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			currentDayTasks = sortTasks(currentDayTasks, this.sortState);
 
 			if (currentDayTasks.length === 0) {
-				columnContainer.createEl('div', { text: '暂无任务', cls: WeekViewClasses.elements.empty });
+				columnContainer.createEl('div', { text: i18n.t('common.noTasks'), cls: WeekViewClasses.elements.empty });
 				return;
 			}
 
 			currentDayTasks.forEach(task => this.renderTaskItem(task, columnContainer, targetDate));
 		} catch (error) {
 			Logger.error('WeekView', 'Error loading week view tasks', error);
-			columnContainer.createEl('div', { text: '加载出错', cls: WeekViewClasses.elements.empty });
+			columnContainer.createEl('div', { text: i18n.t('views.dayView.loadError'), cls: WeekViewClasses.elements.empty });
 		}
 	}
 

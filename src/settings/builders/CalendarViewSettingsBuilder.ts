@@ -1,6 +1,7 @@
 import { Setting, SettingGroup } from 'obsidian';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 日历视图构建器
@@ -12,7 +13,7 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 
 	render(): void {
 		// 使用 SettingGroup 替代 h1 标题（兼容旧版本）
-		this.createSettingGroup('日历视图', (group) => {
+		this.createSettingGroup(i18n.t('settings.calendarView.groupTitle'), (group) => {
 			// 统一添加设置项的方法
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
@@ -24,16 +25,16 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 
 			// 日期筛选字段
 			addSetting(setting =>
-				setting.setName('日期筛选字段')
-					.setDesc('日历视图始终使用此字段筛选任务；任务视图可在工具栏灵活切换')
+				setting.setName(i18n.t('settings.calendarView.dateFilterField.name'))
+					.setDesc(i18n.t('settings.calendarView.dateFilterField.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'createdDate': '➕ 创建日期',
-							'startDate': '🛫 开始日期',
-							'scheduledDate': '⏳ 计划日期',
-							'dueDate': '📅 截止日期',
-							'completionDate': '✅ 完成日期',
-							'cancelledDate': '❌ 取消日期',
+							'createdDate': i18n.t('common.dateFields.createdDate'),
+							'startDate': i18n.t('common.dateFields.startDate'),
+							'scheduledDate': i18n.t('common.dateFields.scheduledDate'),
+							'dueDate': i18n.t('common.dateFields.dueDate'),
+							'completionDate': i18n.t('common.dateFields.completionDate'),
+							'cancelledDate': i18n.t('common.dateFields.cancelledDate'),
 						})
 						.setValue(this.plugin.settings.dateFilterField)
 						.onChange(async (value) => {
@@ -44,10 +45,10 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 
 			// 一周开始日
 			addSetting(setting => {
-				setting.setName('一周开始日')
-					.setDesc('选择一周的起始日')
+				setting.setName(i18n.t('settings.calendarView.weekStart.name'))
+					.setDesc(i18n.t('settings.calendarView.weekStart.description'))
 					.addDropdown(drop => {
-						drop.addOptions({ 'monday': '周一', 'sunday': '周日' });
+						drop.addOptions({ 'monday': i18n.t('settings.calendarView.weekStart.options.monday'), 'sunday': i18n.t('settings.calendarView.weekStart.options.sunday') });
 						drop.setValue(this.plugin.settings.startOnMonday ? 'monday' : 'sunday');
 						drop.onChange(async (value) => {
 							this.plugin.settings.startOnMonday = (value === 'monday');
@@ -58,7 +59,7 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 		});
 
 		// 农历与节日显示控制
-		this.createSettingGroup('农历与节日', (group) => {
+		this.createSettingGroup(i18n.t('settings.calendarView.lunarFestival.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -69,8 +70,8 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 
 			// 显示农历日期
 			addSetting(setting =>
-				setting.setName('显示农历')
-					.setDesc('在年视图、月视图、周视图中显示农历日期文本')
+				setting.setName(i18n.t('settings.calendarView.lunarFestival.showLunar.name'))
+					.setDesc(i18n.t('settings.calendarView.lunarFestival.showLunar.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.showLunar)
 						.onChange(async (value) => {
@@ -81,8 +82,8 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 
 			// 显示节日与节气
 			addSetting(setting =>
-				setting.setName('显示节日与节气')
-					.setDesc('在农历文本上显示节日、节气的高亮颜色标记')
+				setting.setName(i18n.t('settings.calendarView.lunarFestival.showFestivals.name'))
+					.setDesc(i18n.t('settings.calendarView.lunarFestival.showFestivals.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.showFestivals)
 						.onChange(async (value) => {

@@ -1,5 +1,6 @@
 import { App, Modal } from 'obsidian';
 import type { SyncResult } from '../data-layer/feishu-sync/FeishuTaskSync';
+import { i18n } from '../i18n/i18n';
 import { SyncResultModalClasses } from '../utils/bem';
 
 /**
@@ -35,15 +36,15 @@ export class SyncResultModal extends Modal {
 		const summaryEl = container.createDiv(SyncResultModalClasses.elements.summary);
 
 		const stats = [
-			{ label: '推送', count: this.result.pushed, hasData: this.result.pushed > 0 },
-			{ label: '拉取', count: this.result.pulled, hasData: this.result.pulled > 0 },
-			{ label: '冲突', count: this.result.conflicted, hasData: this.result.conflicted > 0 },
-			{ label: '跳过', count: this.result.skipped, hasData: this.result.skipped > 0 },
+			{ label: i18n.t('modals.syncResult.pushed'), count: this.result.pushed, hasData: this.result.pushed > 0 },
+			{ label: i18n.t('modals.syncResult.pulled'), count: this.result.pulled, hasData: this.result.pulled > 0 },
+			{ label: i18n.t('modals.syncResult.conflicted'), count: this.result.conflicted, hasData: this.result.conflicted > 0 },
+			{ label: i18n.t('modals.syncResult.skipped'), count: this.result.skipped, hasData: this.result.skipped > 0 },
 		];
 
 		const activeStats = stats.filter(s => s.hasData);
 		if (activeStats.length === 0) {
-			summaryEl.textContent = '无变更';
+			summaryEl.textContent = i18n.t('modals.syncResult.noChange');
 			summaryEl.style.color = 'var(--text-muted)';
 		} else {
 			for (const stat of activeStats) {
@@ -83,12 +84,12 @@ export class SyncResultModal extends Modal {
 
 			// label badge(s)
 			if (isConflict && detail.conflictResolution) {
-				const dirLabel = detail.conflictResolution === 'pull' ? '拉取' : '推送';
+				const dirLabel = detail.conflictResolution === 'pull' ? i18n.t('modals.syncResult.pull') : i18n.t('modals.syncResult.push');
 				const dirBadge = item.createSpan(SyncResultModalClasses.elements.detailLabel);
-				dirBadge.textContent = dirLabel + '更新';
+				dirBadge.textContent = dirLabel + i18n.t('modals.syncResult.update');
 
 				const conflictBadge = item.createSpan(SyncResultModalClasses.elements.detailLabel);
-				conflictBadge.textContent = '冲突';
+				conflictBadge.textContent = i18n.t('modals.syncResult.conflict');
 				conflictBadge.style.background = 'var(--background-modifier-warning)';
 				conflictBadge.style.color = 'var(--text-warning)';
 			} else {
@@ -111,7 +112,7 @@ export class SyncResultModal extends Modal {
 	private renderFooter(container: HTMLElement) {
 		const footer = container.createDiv(SyncResultModalClasses.elements.footer);
 
-		const confirmBtn = footer.createEl('button', { text: '确定' });
+		const confirmBtn = footer.createEl('button', { text: i18n.t('common.ok') });
 		confirmBtn.style.borderRadius = '9999px';
 		confirmBtn.style.padding = '8px 24px';
 		confirmBtn.style.background = 'var(--interactive-accent)';

@@ -2,6 +2,7 @@ import { Setting, SettingGroup } from 'obsidian';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
 import { TIMEZONE_OPTIONS } from '../../dateUtils/timezone';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 通用设置构建器
@@ -13,7 +14,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 
 	render(): void {
 		// ===== 通用 =====
-		this.createSettingGroup('通用', (group) => {
+		this.createSettingGroup(i18n.t('settings.general.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -24,16 +25,16 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 
 			// 默认视图
 			addSetting(setting =>
-				setting.setName('默认视图')
-					.setDesc('打开插件时默认显示的视图')
+				setting.setName(i18n.t('settings.general.defaultView.name'))
+					.setDesc(i18n.t('settings.general.defaultView.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'day': '日视图',
-							'week': '周视图',
-							'month': '月视图',
-							'year': '年视图',
-							'task': '任务视图',
-							'gantt': '甘特图'
+							'day': i18n.t('settings.general.defaultView.options.day'),
+							'week': i18n.t('settings.general.defaultView.options.week'),
+							'month': i18n.t('settings.general.defaultView.options.month'),
+							'year': i18n.t('settings.general.defaultView.options.year'),
+							'task': i18n.t('settings.general.defaultView.options.task'),
+							'gantt': i18n.t('settings.general.defaultView.options.gantt')
 						})
 						.setValue(this.plugin.settings.defaultView)
 						.onChange(async (value) => {
@@ -44,8 +45,8 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 
 			// 开发者模式
 			addSetting(setting =>
-				setting.setName('开发者模式')
-					.setDesc('启用后将输出详细的调试日志，关闭后仅显示统计信息和错误')
+				setting.setName(i18n.t('settings.general.debugMode.name'))
+					.setDesc(i18n.t('settings.general.debugMode.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.enableDebugMode)
 						.onChange(async (value) => {
@@ -56,8 +57,8 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 
 			// 视图导航按钮显示文本
 			addSetting(setting =>
-				setting.setName('视图导航按钮显示文本')
-					.setDesc('工具栏左侧的视图导航按钮是否显示文字标签。关闭后仅显示图标')
+				setting.setName(i18n.t('settings.general.showNavButtonText.name'))
+					.setDesc(i18n.t('settings.general.showNavButtonText.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.showViewNavButtonText)
 						.onChange(async (value) => {
@@ -68,7 +69,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 		});
 
 		// ===== 时区与格式 =====
-		this.createSettingGroup('时区与格式', (group) => {
+		this.createSettingGroup(i18n.t('settings.general.timezoneFormat.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -79,8 +80,8 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 
 			// 时区设置
 			addSetting(setting =>
-				setting.setName('时区')
-					.setDesc('选择日历视图使用的时区。影响"今天"的判定和日历高亮')
+				setting.setName(i18n.t('settings.general.timezoneFormat.timezone.name'))
+					.setDesc(i18n.t('settings.general.timezoneFormat.timezone.description'))
 					.addDropdown(drop => {
 						for (const [key, label] of Object.entries(TIMEZONE_OPTIONS)) {
 							drop.addOption(key, label);
@@ -96,11 +97,11 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 
 			// 时间格式
 			addSetting(setting =>
-				setting.setName('时间格式')
-					.setDesc('任务时间的显示格式，影响弹窗和视图中时间的展示方式')
+				setting.setName(i18n.t('settings.general.timezoneFormat.timeFormat.name'))
+					.setDesc(i18n.t('settings.general.timezoneFormat.timeFormat.description'))
 					.addDropdown(drop => drop
-						.addOption('24h', '24 小时制 (14:30)')
-						.addOption('12h', '12 小时制 (2:30 PM)')
+						.addOption('24h', i18n.t('settings.general.timezoneFormat.timeFormat.24h'))
+						.addOption('12h', i18n.t('settings.general.timezoneFormat.timeFormat.12h'))
 						.setValue(this.plugin.settings.timeFormat || '24h')
 						.onChange(async (value) => {
 							this.plugin.settings.timeFormat = value as '24h' | '12h';

@@ -13,6 +13,7 @@ import type { WeekViewRenderer } from '../views/WeekView';
 import type { MonthViewRenderer } from '../views/MonthView';
 import type { YearViewRenderer } from '../views/YearView';
 import { ToolbarClasses } from '../utils/bem';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 工具栏右侧区域 - 日历视图功能区
@@ -161,6 +162,6 @@ export class ToolbarRightCalendar {
 		}
 
 		// 刷新按钮（所有视图共有，始终在最右边）
-		renderRefreshButton(container, onRefresh, '刷新任务');
+		renderRefreshButton(container, onRefresh, i18n.t('toolbar.refresh.refreshTask'));
 	}
 }

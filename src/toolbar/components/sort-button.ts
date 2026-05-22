@@ -7,6 +7,7 @@ import { setIcon } from 'obsidian';
 import type { SortState } from '../../types';
 import { SORT_OPTIONS, getSortDisplayText, updateSortState } from '../../tasks/taskSorter';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 排序按钮配置选项
@@ -45,7 +46,7 @@ export function renderSortButton(
 	// 创建排序按钮
 	const sortBtn = buttonGroup.createEl('button', {
 		cls: ToolbarClasses.components.navButtons.btn,
-		attr: { 'aria-label': '排序选项' }
+		attr: { 'aria-label': i18n.t('toolbar.sort.ariaLabel') }
 	});
 
 	// 更新按钮显示内容的函数
@@ -83,7 +84,7 @@ export function renderSortButton(
 	dropdown.style.display = 'none';
 
 	// 添加菜单标题
-	dropdown.createEl('div', { text: '排序方式 (点击切换)', cls: ToolbarClasses.components.sort.dropdownHeader });
+	dropdown.createEl('div', { text: i18n.t('toolbar.sort.header'), cls: ToolbarClasses.components.sort.dropdownHeader });
 
 	const menuItems: HTMLElement[] = [];
 

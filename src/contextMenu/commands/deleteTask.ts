@@ -1,6 +1,7 @@
 import { App, Notice, TFile } from 'obsidian';
 import type { GCTask } from '../../types';
 import { Logger } from '../../utils/logger';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 删除任务
@@ -17,7 +18,7 @@ export async function deleteTask(
 	try {
 		const file = app.vault.getAbstractFileByPath(task.filePath);
 		if (!(file instanceof TFile)) {
-			new Notice('找不到任务所在文件');
+			new Notice(i18n.t('contextMenu.commands.deleteTask.fileNotFound'));
 			return;
 		}
 
@@ -26,7 +27,7 @@ export async function deleteTask(
 		const taskLineIndex = task.lineNumber - 1;
 
 		if (taskLineIndex < 0 || taskLineIndex >= lines.length) {
-			new Notice('任务行号无效');
+			new Notice(i18n.t('contextMenu.commands.deleteTask.invalidLineNumber'));
 			return;
 		}
 
@@ -37,10 +38,10 @@ export async function deleteTask(
 		const newContent = lines.join('\n');
 		await app.vault.modify(file, newContent);
 
-		new Notice('任务已删除');
+		new Notice(i18n.t('contextMenu.commands.deleted'));
 		onRefresh();
 	} catch (error) {
 		Logger.error('deleteTask', 'Failed to delete task:', error);
-		new Notice('删除任务失败');
+		new Notice(i18n.t('contextMenu.commands.deleteFailed'));
 	}
 }

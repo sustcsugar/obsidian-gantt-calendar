@@ -12,6 +12,7 @@ import { CreateTaskModal } from '../modals/CreateTaskModal';
 import { Notice } from 'obsidian';
 import { isTodayInTimezone } from '../dateUtils/timezone';
 import { renderCurrentTimeLine } from '../utils/currentTimeLine';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 日视图渲染器
@@ -60,7 +61,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		} else {
 			// 仅显示任务（全宽）
 			const tasksSection = dayContainer.createDiv(withModifiers(DayViewClasses.block, DayViewClasses.modifiers.tasksOnly));
-			const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
+			const tasksTitle = tasksSection.createEl('h3', { text: i18n.t('views.dayView.todayTasks') });
 			tasksTitle.addClass(DayViewClasses.elements.title);
 			const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
@@ -90,7 +91,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 		// 任务区（左）
 		const tasksSection = splitContainer.createDiv(DayViewClasses.elements.sectionTasks);
-		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
+		const tasksTitle = tasksSection.createEl('h3', { text: i18n.t('views.dayView.todayTasks') });
 		tasksTitle.addClass(DayViewClasses.elements.title);
 		const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
@@ -117,7 +118,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 		// 任务区（上）
 		const tasksSection = splitContainer.createDiv(DayViewClasses.elements.sectionTasks);
-		const tasksTitle = tasksSection.createEl('h3', { text: '当日任务' });
+		const tasksTitle = tasksSection.createEl('h3', { text: i18n.t('views.dayView.todayTasks') });
 		tasksTitle.addClass(DayViewClasses.elements.title);
 		const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
@@ -140,7 +141,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 	 */
 	private async loadDayViewTasks(listContainer: HTMLElement, targetDate: Date): Promise<void> {
 		listContainer.empty();
-		listContainer.createEl('div', { text: '加载中...', cls: 'gantt-task-empty' });
+		listContainer.createEl('div', { text: i18n.t('common.loading'), cls: 'gantt-task-empty' });
 
 		try {
 			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
@@ -167,7 +168,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			listContainer.empty();
 
 			if (currentDayTasks.length === 0) {
-				listContainer.createEl('div', { text: '暂无任务', cls: 'gantt-task-empty' });
+				listContainer.createEl('div', { text: i18n.t('common.noTasks'), cls: 'gantt-task-empty' });
 				return;
 			}
 
@@ -192,7 +193,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		} catch (error) {
 			Logger.error('DayView', 'Error loading day view tasks', error);
 			listContainer.empty();
-			listContainer.createEl('div', { text: '加载任务时出错', cls: 'gantt-task-empty' });
+			listContainer.createEl('div', { text: i18n.t('views.dayView.loadError'), cls: 'gantt-task-empty' });
 		}
 	}
 
@@ -345,7 +346,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 				Logger.debug('DayView', 'Task time updated via drag-drop', { taskId, hour });
 			} catch (error) {
 				Logger.error('DayView', 'Error updating task time:', error);
-				new Notice('更新任务时间失败');
+				new Notice(i18n.t('views.dayView.updateTimeFailed'));
 			}
 		});
 	}
@@ -523,7 +524,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		// 模式切换按钮
 		const toggleBtn = header.createEl('button', {
 			cls: EmbeddedEditorClasses.elements.modeToggle,
-			attr: { 'aria-label': '切换到预览模式' }
+			attr: { 'aria-label': i18n.t('views.dayView.switchToPreview') }
 		});
 		this.modeToggleEl = toggleBtn;
 
@@ -562,10 +563,10 @@ export class DayViewRenderer extends BaseViewRenderer {
 		if (!this.modeToggleEl || !this.modeToggleIconEl) return;
 		if (mode === 'source') {
 			setIcon(this.modeToggleIconEl, 'pencil');
-			this.modeToggleEl.setAttribute('aria-label', '切换到预览模式');
+			this.modeToggleEl.setAttribute('aria-label', i18n.t('views.dayView.switchToPreview'));
 		} else {
 			setIcon(this.modeToggleIconEl, 'book-open');
-			this.modeToggleEl.setAttribute('aria-label', '切换到编辑模式');
+			this.modeToggleEl.setAttribute('aria-label', i18n.t('views.dayView.switchToEdit'));
 		}
 	}
 }

@@ -10,6 +10,7 @@ import { SyncStateManager } from '../data-layer/feishu-sync/syncState';
 import { DEFAULT_PUSH_FILTER } from '../utils/taskFilter';
 import { Logger } from '../utils/logger';
 import { showSyncResultModal } from '../modals/SyncResultModal';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 注册飞书相关命令
@@ -17,7 +18,7 @@ import { showSyncResultModal } from '../modals/SyncResultModal';
 export function registerFeishuCommands(plugin: GanttCalendarPlugin): void {
     plugin.addCommand({
         id: 'feishu-sync-tasks',
-        name: '飞书任务双向同步',
+        name: i18n.t('commands.feishuSync'),
         callback: async () => {
             await syncFeishuTasks(plugin);
         }
@@ -50,7 +51,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 		const apiConfig = syncConfig.api;
 
 		if (!apiConfig?.accessToken) {
-			new Notice('请先在设置中完成飞书授权');
+			new Notice(i18n.t('commands.sync.authRequired'));
 			return;
 		}
 
@@ -58,7 +59,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 		const clientSecret = apiConfig.clientSecret || apiConfig.appSecret;
 
 		if (!clientId || !clientSecret) {
-			new Notice('请先配置飞书 App ID 和 App Secret');
+			new Notice(i18n.t('commands.sync.configRequired'));
 			return;
 		}
 
@@ -95,20 +96,20 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 		try {
 			await provider.validateAuth();
 		} catch (authError) {
-			new Notice('飞书授权已失效，请重新授权', 8000);
+			new Notice(i18n.t('commands.sync.authExpired'), 8000);
 			return;
 		}
 
 		// 授权有效，开始同步流程
-		plugin.setSyncStatus('🔄 同步中...');
+		plugin.setSyncStatus(i18n.t('commands.sync.syncing'));
 		const controller = new AbortController();
-		const progressNotice = new Notice('🔄 正在同步飞书任务...', 0);
-		const stopBtn = progressNotice.noticeEl.createEl('button', { text: '停止同步' });
+		const progressNotice = new Notice(i18n.t('commands.sync.syncingFeishu'), 0);
+		const stopBtn = progressNotice.noticeEl.createEl('button', { text: i18n.t('commands.sync.stopSync') });
 		stopBtn.style.cssText = 'margin-left:12px;padding:2px 10px;cursor:pointer;';
 		stopBtn.onclick = () => {
 			controller.abort();
 			stopBtn.disabled = true;
-			stopBtn.textContent = '已停止';
+			stopBtn.textContent = i18n.t('commands.sync.stopped');
 		};
 
 		const stateManager = new SyncStateManager(plugin.app);
@@ -123,7 +124,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 			creatorUserId: apiConfig.userId,
 			abortSignal: controller.signal,
 			onProgress: (msg: string) => {
-				const btnHtml = stopBtn.disabled ? '' : '<button style="margin-left:12px;padding:2px 10px;cursor:pointer;" onclick="this.previousElementSibling?.click()">停止同步</button>';
+				const btnHtml = stopBtn.disabled ? '' : '<button style="margin-left:12px;padding:2px 10px;cursor:pointer;" onclick="this.previousElementSibling?.click()">' + i18n.t('commands.sync.stopSync') + '</button>';
 				progressNotice.noticeEl.innerHTML = '<span>' + msg + '</span>' + btnHtml;
 				const newBtn = progressNotice.noticeEl.querySelector('button');
 				if (newBtn && !controller.signal.aborted) {
@@ -141,27 +142,27 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 
 		// 状态栏显示同步结果，10 秒后恢复就绪
 		if (result.errors.length > 0) {
-			plugin.setSyncStatus('❌ 同步失败');
+			plugin.setSyncStatus(i18n.t('commands.sync.syncFailed'));
 		} else {
 			const parts_status: string[] = [];
-			if (result.pushed > 0) parts_status.push(result.pushed + ' 推送');
-			if (result.pulled > 0) parts_status.push(result.pulled + ' 拉取');
-			plugin.setSyncStatus('✅ 已同步' + (parts_status.length > 0 ? ' ' + parts_status.join(' ') : ''));
+			if (result.pushed > 0) parts_status.push(result.pushed + ' ' + i18n.t('commands.sync.pushed'));
+			if (result.pulled > 0) parts_status.push(result.pulled + ' ' + i18n.t('commands.sync.pulled'));
+			plugin.setSyncStatus(i18n.t('commands.sync.syncSuccess') + (parts_status.length > 0 ? ' ' + parts_status.join(' ') : ''));
 		}
 		setTimeout(() => plugin.clearSyncStatus(), 10000);
 
 		const parts: string[] = [];
-		if (result.pushed > 0) parts.push('推送 ' + result.pushed + ' 个');
-		if (result.pulled > 0) parts.push('拉取 ' + result.pulled + ' 个');
-		if (result.conflicted > 0) parts.push('冲突 ' + result.conflicted + ' 个');
-		if (result.skipped > 0) parts.push('跳过 ' + result.skipped + ' 个');
-		const summary = parts.length > 0 ? parts.join('，') : '无变更';
+		if (result.pushed > 0) parts.push(i18n.t('commands.sync.pushed') + ' ' + result.pushed);
+		if (result.pulled > 0) parts.push(i18n.t('commands.sync.pulled') + ' ' + result.pulled);
+		if (result.conflicted > 0) parts.push(i18n.t('commands.sync.conflicted') + ' ' + result.conflicted);
+		if (result.skipped > 0) parts.push(i18n.t('commands.sync.skipped') + ' ' + result.skipped);
+		const summary = parts.length > 0 ? parts.join(', ') : i18n.t('commands.sync.noChange');
 
 		// 有详细变更记录时展示结果
 		if (result.details.length > 0) {
 			if (isAutoSync) {
 				// 自动同步：每个任务一条 Notice
-				new Notice('自动同步完成: ' + summary, 8000);
+				new Notice(i18n.t('commands.sync.autoSyncComplete', { summary }), 8000);
 				for (let idx = 0; idx < result.details.length; idx++) {
 					const detail = result.details[idx];
 					const icon = detail.success ? '✅' : '❌';
@@ -170,17 +171,17 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 					new Notice(msg, 6000);
 				}
 			} else {
-				showSyncResultModal(plugin.app, '飞书同步完成: ' + summary, result);
+				showSyncResultModal(plugin.app, i18n.t('commands.sync.feishuSyncComplete', { summary }), result);
 			}
 		} else if (result.errors.length > 0) {
-			new Notice("同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
+			new Notice(i18n.t('commands.sync.syncComplete', { summary }) + "\n" + result.errors.join("\n"), 10000);
 		} else {
-			new Notice('同步完成: ' + summary);
+			new Notice(i18n.t('commands.sync.syncComplete', { summary }));
 		}
 	} catch (error) {
 		const errorMsg = error instanceof Error ? error.message : String(error);
-		new Notice('同步出错: ' + errorMsg);
-		plugin.setSyncStatus('❌ 同步失败');
+		new Notice(i18n.t('commands.sync.syncError', { error: errorMsg }));
+		plugin.setSyncStatus(i18n.t('commands.sync.syncFailed'));
 		setTimeout(() => plugin.clearSyncStatus(), 10000);
 	}
 }

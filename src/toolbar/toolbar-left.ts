@@ -1,6 +1,7 @@
 import type { CalendarViewType } from '../types';
 import { ToolbarClasses } from '../utils/bem';
 import { setIcon } from 'obsidian';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 视图按钮配置
@@ -13,14 +14,16 @@ interface ViewButtonConfig {
 }
 
 /** 6个视图按钮的配置 - 使用线框风格图标 */
-const VIEW_BUTTONS: ViewButtonConfig[] = [
-	{ type: 'day', label: '日', icon: 'sun', ariaLabel: '日视图' },
-	{ type: 'week', label: '周', icon: 'layout', ariaLabel: '周视图' },
-	{ type: 'month', label: '月', icon: 'grid', ariaLabel: '月视图' },
-	{ type: 'year', label: '年', icon: 'map', ariaLabel: '年视图' },
-	{ type: 'task', label: '任务', icon: 'list-checks', ariaLabel: '任务视图' },
-	{ type: 'gantt', label: '甘特图', icon: 'chart-gantt', ariaLabel: '甘特图视图' },
-];
+function getViewButtons(): ViewButtonConfig[] {
+	return [
+		{ type: 'day', label: i18n.t('toolbar.leftButtons.day.label'), icon: 'sun', ariaLabel: i18n.t('toolbar.leftButtons.day.ariaLabel') },
+		{ type: 'week', label: i18n.t('toolbar.leftButtons.week.label'), icon: 'layout', ariaLabel: i18n.t('toolbar.leftButtons.week.ariaLabel') },
+		{ type: 'month', label: i18n.t('toolbar.leftButtons.month.label'), icon: 'grid', ariaLabel: i18n.t('toolbar.leftButtons.month.ariaLabel') },
+		{ type: 'year', label: i18n.t('toolbar.leftButtons.year.label'), icon: 'map', ariaLabel: i18n.t('toolbar.leftButtons.year.ariaLabel') },
+		{ type: 'task', label: i18n.t('toolbar.leftButtons.task.label'), icon: 'list-checks', ariaLabel: i18n.t('toolbar.leftButtons.task.ariaLabel') },
+		{ type: 'gantt', label: i18n.t('toolbar.leftButtons.gantt.label'), icon: 'chart-gantt', ariaLabel: i18n.t('toolbar.leftButtons.gantt.ariaLabel') },
+	];
+}
 
 /**
  * 工具栏左侧区域 - 6视图选择器
@@ -51,7 +54,7 @@ export class ToolbarLeft {
 		}
 
 		// 渲染6个视图按钮
-		VIEW_BUTTONS.forEach((config) => {
+		getViewButtons().forEach((config) => {
 			const btn = buttonGroup.createEl('button', {
 				attr: {
 					'data-view-type': config.type,

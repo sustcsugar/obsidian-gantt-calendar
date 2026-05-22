@@ -1,5 +1,6 @@
 import { Notice, type App } from 'obsidian';
 import { RegularExpressions } from './RegularExpressions';
+import { i18n } from '../i18n/i18n';
 import { openFileInExistingLeaf } from './fileOpener';
 
 /**
@@ -81,7 +82,7 @@ export class LinkRenderer {
 					if (file) {
 						await openFileInExistingLeaf(app, file.path, 0);
 					} else {
-						new Notice(`文件未找到：${notePath}`);
+						new Notice(i18n.t('common.fileNotFound', { path: notePath }));
 					}
 				});
 			} else if (m.type === 'markdown') {

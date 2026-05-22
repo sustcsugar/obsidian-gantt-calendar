@@ -1,6 +1,7 @@
 import { Setting, SettingGroup } from 'obsidian';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 日视图构建器
@@ -11,7 +12,7 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('日视图', (group) => {
+		this.createSettingGroup(i18n.t('settings.dayView.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -22,8 +23,8 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 
 			// 显示 Daily Note 开关
 			addSetting(setting =>
-				setting.setName('显示 Daily Note')
-					.setDesc('在日视图中显示当天的 Daily Note 内容')
+				setting.setName(i18n.t('settings.dayView.showDailyNote.name'))
+					.setDesc(i18n.t('settings.dayView.showDailyNote.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.enableDailyNote)
 						.onChange(async (value) => {
@@ -35,12 +36,12 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 			// 日视图布局（仅在启用 Daily Note 时显示）
 			if (this.plugin.settings.enableDailyNote) {
 				addSetting(setting =>
-					setting.setName('日视图布局')
-						.setDesc('选择 Daily Note 和任务列表的布局方式')
+					setting.setName(i18n.t('settings.dayView.layout.name'))
+						.setDesc(i18n.t('settings.dayView.layout.description'))
 						.addDropdown(drop => drop
 							.addOptions({
-								'horizontal': '左右分屏（任务在左，笔记在右）',
-								'vertical': '上下分屏（任务在上，笔记在下）',
+								'horizontal': i18n.t('settings.dayView.layout.options.horizontal'),
+								'vertical': i18n.t('settings.dayView.layout.options.vertical'),
 							})
 							.setValue(this.plugin.settings.dayViewLayout)
 							.onChange(async (value) => {

@@ -1,6 +1,7 @@
 import type { App } from 'obsidian';
 import { Notice, setIcon } from 'obsidian';
 import type { GCTask } from '../types';
+import { i18n } from '../i18n/i18n';
 import { SidebarClasses } from '../utils/bem';
 import { TaskCardComponent, buildSidebarConfig } from '../components/TaskCard';
 import { getTodayInTimezone, isTodayInTimezone } from '../dateUtils/timezone';
@@ -247,7 +248,7 @@ export class DailyTimelineTab {
 				Logger.debug('DailyTimelineTab', 'Task time updated via drag-drop', { taskId, hour });
 			} catch (error) {
 				Logger.error('DailyTimelineTab', 'Error updating task time:', error);
-				new Notice('更新任务时间失败');
+				new Notice(i18n.t('views.dayView.updateTimeFailed'));
 			}
 		});
 	}
@@ -300,7 +301,7 @@ export class DailyTimelineTab {
 				Logger.debug('DailyTimelineTab', 'Task set to all-day via drag-drop', { taskId });
 			} catch (error) {
 				Logger.error('DailyTimelineTab', 'Error setting task to all-day:', error);
-				new Notice('更新任务失败');
+				new Notice(i18n.t('views.dayView.updateTaskFailed'));
 			}
 		});
 	}

@@ -7,6 +7,7 @@ import { sortTasks } from '../tasks/taskSorter';
 import { ViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, TaskViewConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 任务视图渲染器
@@ -128,7 +129,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	 */
 	private async loadTaskList(listContainer: HTMLElement): Promise<void> {
 		listContainer.empty();
-		listContainer.createEl('div', { text: '加载中...', cls: 'gantt-task-empty' });
+		listContainer.createEl('div', { text: i18n.t('common.loading'), cls: 'gantt-task-empty' });
 
 		try {
 			let tasks: GCTask[] = this.plugin.taskCache.getAllTasks();
@@ -178,7 +179,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 			listContainer.empty();
 
 			if (tasks.length === 0) {
-				listContainer.createEl('div', { text: '未找到符合条件的任务', cls: 'gantt-task-empty' });
+				listContainer.createEl('div', { text: i18n.t('views.taskView.noTasks'), cls: 'gantt-task-empty' });
 				return;
 			}
 
@@ -186,7 +187,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		} catch (error) {
 			Logger.error('TaskView', 'Error rendering task view', error);
 			listContainer.empty();
-			listContainer.createEl('div', { text: '加载任务时出错', cls: 'gantt-task-empty' });
+			listContainer.createEl('div', { text: i18n.t('views.taskView.loadError'), cls: 'gantt-task-empty' });
 		}
 	}
 

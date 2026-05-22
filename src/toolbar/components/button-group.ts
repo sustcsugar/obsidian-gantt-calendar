@@ -5,6 +5,7 @@
 
 import { setIcon } from 'obsidian';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 单个按钮配置
@@ -132,26 +133,26 @@ export function renderNavButtonGroup(
 		onLast,
 		prevText = '◀',
 		nextText = '▶',
-		todayText = '今天',
+		todayText = i18n.t('toolbar.buttonGroup.todayText'),
 		...rest
 	} = options;
 
 	const buttons: ButtonConfig[] = [];
 
 	if (onFirst) {
-		buttons.push({ text: '«', title: '第一个', onClick: onFirst });
+		buttons.push({ text: '«', title: i18n.t('toolbar.buttonGroup.firstTitle'), onClick: onFirst });
 	}
 	if (onPrevious) {
-		buttons.push({ text: prevText, title: '上一个', onClick: onPrevious });
+		buttons.push({ text: prevText, title: i18n.t('toolbar.buttonGroup.prevTitle'), onClick: onPrevious });
 	}
 	if (onToday) {
-		buttons.push({ text: todayText, title: '回到今天', onClick: onToday });
+		buttons.push({ text: todayText, title: i18n.t('toolbar.buttonGroup.todayTitle'), onClick: onToday });
 	}
 	if (onNext) {
-		buttons.push({ text: nextText, title: '下一个', onClick: onNext });
+		buttons.push({ text: nextText, title: i18n.t('toolbar.buttonGroup.nextTitle'), onClick: onNext });
 	}
 	if (onLast) {
-		buttons.push({ text: '»', title: '最后一个', onClick: onLast });
+		buttons.push({ text: '»', title: i18n.t('toolbar.buttonGroup.lastTitle'), onClick: onLast });
 	}
 
 	return renderButtonGroup(container, { buttons, ...rest });

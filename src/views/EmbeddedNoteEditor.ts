@@ -3,6 +3,7 @@ import { findDailyNoteForDate, DailyNoteIndex } from '../utils/dailyNoteSettings
 import type { GanttCalendarSettings } from '../settings/types';
 import { Logger } from '../utils/logger';
 import { EmbeddedEditorClasses, DayViewClasses } from '../utils/bem';
+import { i18n } from '../i18n/i18n';
 
 /**
  * WorkspaceLeaf / WorkspaceSplit 内部接口
@@ -69,7 +70,7 @@ export class EmbeddedNoteEditor {
         const file = findDailyNoteForDate(date, dailyNoteIndex, this.app, settings);
 
         if (!file) {
-            this.showEmpty('未找到 Daily Note');
+            this.showEmpty(i18n.t('embeddedEditor.dailyNoteNotFound'));
             return;
         }
 
@@ -245,7 +246,7 @@ export class EmbeddedNoteEditor {
 
         const content = await this.app.vault.read(file);
         if (!content.trim()) {
-            this.container.createEl('div', { text: '无内容', cls: 'gantt-task-empty' });
+            this.container.createEl('div', { text: i18n.t('common.noContent'), cls: 'gantt-task-empty' });
             return;
         }
 

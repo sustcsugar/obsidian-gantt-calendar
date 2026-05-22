@@ -14,6 +14,7 @@ import { createTaskInDailyNote } from '../utils/dailyNoteHelper';
 import { Logger } from '../utils/logger';
 import type { GCTask } from '../types';
 import { BaseTaskModal, type PriorityOption } from './BaseTaskModal';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 任务创建弹窗选项
@@ -64,7 +65,7 @@ export class CreateTaskModal extends BaseTaskModal {
 	}
 
 	onOpen(): void {
-		this.renderModalContent('创建新任务');
+		this.renderModalContent(i18n.t('modals.createTask.title'));
 
 		// 自动聚焦到描述输入框
 		setTimeout(() => this.descriptionInput.focus(), 100);
@@ -81,18 +82,18 @@ export class CreateTaskModal extends BaseTaskModal {
 
 		const descContainer = section.createDiv(EditTaskModalClasses.elements.descContainer);
 		descContainer.createEl('label', {
-			text: '任务描述 *',
+			text: i18n.t('modals.createTask.descriptionLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 		descContainer.createEl('div', {
-			text: '按 Enter 键可快捷提交',
+			text: i18n.t('modals.createTask.submitHint'),
 			cls: EditTaskModalClasses.elements.sectionHint
 		});
 
 		this.descriptionInput = descContainer.createEl('textarea', {
 			cls: EditTaskModalClasses.elements.descTextarea
 		});
-		this.descriptionInput.placeholder = '输入任务描述...';
+		this.descriptionInput.placeholder = i18n.t('modals.createTask.descriptionPlaceholder');
 
 		// Enter 键触发创建
 		this.descriptionInput.addEventListener('keydown', (e) => {
@@ -110,14 +111,14 @@ export class CreateTaskModal extends BaseTaskModal {
 		// 验证描述
 		const description = this.descriptionInput.value.trim().replace(/[\r\n]+/g, ' ');
 		if (!description) {
-			new Notice('请输入任务描述');
+			new Notice(i18n.t('modals.createTask.errorEmptyDescription'));
 			this.descriptionInput.focus();
 			return;
 		}
 
 		// 验证日期
 		if (this.createdDate && this.dueDate && this.createdDate > this.dueDate) {
-			new Notice('创建日期不能晚于截止日期');
+			new Notice(i18n.t('modals.createTask.errorDateOrder'));
 			return;
 		}
 
@@ -138,12 +139,12 @@ export class CreateTaskModal extends BaseTaskModal {
 
 			await createTaskInDailyNote(this.app, taskData, this.plugin.settings, this.plugin.dailyNoteIndex);
 
-			new Notice('任务创建成功');
+			new Notice(i18n.t('modals.createTask.success'));
 			this.onSuccess();
 			this.close();
 		} catch (error) {
 			Logger.error('CreateTaskModal', 'Error creating task:', error);
-			new Notice('创建任务失败: ' + (error as Error).message);
+			new Notice(i18n.t('modals.createTask.error', { error: (error as Error).message }));
 		}
 	}
 
@@ -165,7 +166,7 @@ export class CreateTaskModal extends BaseTaskModal {
 	 * 获取按钮文本
 	 */
 	protected getButtonTexts(): { cancel: string; save: string } {
-		return { cancel: '取消', save: '创建' };
+		return { cancel: i18n.t('common.cancel'), save: i18n.t('common.add') };
 	}
 }
 

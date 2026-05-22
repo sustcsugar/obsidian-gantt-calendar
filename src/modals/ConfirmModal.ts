@@ -1,4 +1,5 @@
 import { App, Modal } from 'obsidian';
+import { i18n } from '../i18n/i18n';
 
 export interface ConfirmDialogOptions {
 	confirmText?: string;
@@ -51,7 +52,7 @@ export class ConfirmModal extends Modal {
 
 		// 取消按钮 — ghost pill
 		const cancelBtn = btnContainer.createEl('button', {
-			text: this.options.cancelText ?? '取消',
+			text: this.options.cancelText ?? i18n.t('modals.confirm.cancel'),
 		});
 		cancelBtn.style.borderRadius = '9999px';
 		cancelBtn.style.padding = '8px 20px';
@@ -67,7 +68,7 @@ export class ConfirmModal extends Modal {
 
 		// 确认按钮 — filled pill
 		const confirmBtn = btnContainer.createEl('button', {
-			text: this.options.confirmText ?? '确定',
+			text: this.options.confirmText ?? i18n.t('modals.confirm.confirm'),
 		});
 		confirmBtn.style.borderRadius = '9999px';
 		confirmBtn.style.padding = '8px 20px';

@@ -14,6 +14,7 @@ import { restoreTask } from './commands/restoreTask';
 import { setTaskPriority } from './commands/setPriority';
 import { setTaskStatus } from './commands/setTaskStatus';
 import { postponeTask } from './commands/postponeTask';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 注册任务右键菜单
@@ -41,7 +42,7 @@ export function registerTaskContextMenu(
 		// 编辑任务（统一模态框）
 		menu.addItem((item) => {
 			item
-				.setTitle('编辑任务')
+				.setTitle(i18n.t('contextMenu.editTask'))
 				.setIcon('pencil')
 				   .onClick(() => {
 					   openEditTaskModal(app, task, enabledFormats, () => {
@@ -58,7 +59,7 @@ export function registerTaskContextMenu(
 		// 创建任务笔记:同名
 		menu.addItem((item) => {
 			item
-				.setTitle('创建任务笔记:同名')
+				.setTitle(i18n.t('contextMenu.createNote'))
 				.setIcon('file-plus')
 				.onClick(() => {
 					createNoteFromTask(app, task, defaultNotePath, enabledFormats);
@@ -68,7 +69,7 @@ export function registerTaskContextMenu(
 		// 创建任务笔记:别名
 		menu.addItem((item) => {
 			item
-				.setTitle('创建任务笔记:别名')
+				.setTitle(i18n.t('contextMenu.createNoteAlias'))
 				.setIcon('file-plus')
 				.onClick(() => {
 					createNoteFromTaskAlias(app, task, defaultNotePath, enabledFormats);
@@ -80,12 +81,12 @@ export function registerTaskContextMenu(
 
 		// 第一组：设置优先级（6个选项直接显示）
 		const priorities: Array<{ value: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal', label: string, icon: string }> = [
-			{ value: 'highest', label: '最高', icon: '🔺' },
-			{ value: 'high', label: '高', icon: '⏫' },
-			{ value: 'medium', label: '中', icon: '🔼' },
-			{ value: 'normal', label: '普通', icon: '◽' },
-			{ value: 'low', label: '低', icon: '🔽' },
-			{ value: 'lowest', label: '最低', icon: '⏬' },
+			{ value: 'highest', label: i18n.t('common.priority.highest'), icon: '🔺' },
+			{ value: 'high', label: i18n.t('common.priority.high'), icon: '⏫' },
+			{ value: 'medium', label: i18n.t('common.priority.medium'), icon: '🔼' },
+			{ value: 'normal', label: i18n.t('common.priority.normal'), icon: '◽' },
+			{ value: 'low', label: i18n.t('common.priority.low'), icon: '🔽' },
+			{ value: 'lowest', label: i18n.t('common.priority.lowest'), icon: '⏬' },
 		];
 
 		priorities.forEach(p => {
@@ -101,12 +102,12 @@ export function registerTaskContextMenu(
 
 		// 设置任务状态
 		menu.addItem((item) => {
-			item.setTitle('🔴 重要').onClick(() => {
+			item.setTitle(i18n.t('contextMenu.statusImportant')).onClick(() => {
 				setTaskStatus(app, task, 'important', enabledFormats, onRefresh);
 			});
 		});
 		menu.addItem((item) => {
-			item.setTitle('🟠 有疑问').onClick(() => {
+			item.setTitle(i18n.t('contextMenu.statusQuestion')).onClick(() => {
 				setTaskStatus(app, task, 'question', enabledFormats, onRefresh);
 			});
 		});
@@ -116,15 +117,15 @@ export function registerTaskContextMenu(
 
 		// 第二组：任务延期（1天、3天、7天）和设置截止日期
 		const postponeOptions = [
-			{ days: 1, label: '延期 1 天' },
-			{ days: 3, label: '延期 3 天' },
-			{ days: 7, label: '延期 7 天' },
+			{ days: 1, label: i18n.t('contextMenu.postpone.days1') },
+			{ days: 3, label: i18n.t('contextMenu.postpone.days3') },
+			{ days: 7, label: i18n.t('contextMenu.postpone.days7') },
 		];
 
 		const setDueDateOptions = [
-			{ days: 1, label: '延期到明天' },
-			{ days: 3, label: '延期到3天后' },
-			{ days: 7, label: '延期到7天后' },
+			{ days: 1, label: i18n.t('contextMenu.setDueDate.tomorrow') },
+			{ days: 3, label: i18n.t('contextMenu.setDueDate.days3') },
+			{ days: 7, label: i18n.t('contextMenu.setDueDate.days7') },
 		];
 
 		postponeOptions.forEach(option => {
@@ -150,7 +151,7 @@ export function registerTaskContextMenu(
 		const isCancelled = task.cancelled === true;
 		menu.addItem((item) => {
 			item
-				.setTitle(isCancelled ? '恢复任务' : '取消任务')
+				.setTitle(isCancelled ? i18n.t('contextMenu.restoreTask') : i18n.t('contextMenu.cancelTask'))
 				.setIcon(isCancelled ? 'rotate-ccw' : 'x')
 				.onClick(() => {
 					if (isCancelled) {
@@ -164,7 +165,7 @@ export function registerTaskContextMenu(
 		// 删除任务
 		menu.addItem((item) => {
 			item
-				.setTitle('删除任务')
+				.setTitle(i18n.t('contextMenu.deleteTask'))
 				.setIcon('trash')
 				.onClick(() => {
 					deleteTask(app, task, onRefresh);

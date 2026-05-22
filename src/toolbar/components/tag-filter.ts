@@ -7,6 +7,7 @@ import { setIcon } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { TagFilterState } from '../../types';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 export interface TagFilterOptions {
 	getCurrentState: () => TagFilterState;
@@ -52,7 +53,7 @@ export function renderTagFilterButton(
 	// 创建标签筛选按钮
 	const tagBtn = buttonGroup.createDiv({
 		cls: ToolbarClasses.components.navButtons.btn,
-		attr: { 'aria-label': '标签筛选' }
+		attr: { 'aria-label': i18n.t('toolbar.tagFilter.ariaLabel') }
 	});
 
 	const iconSpan = tagBtn.createSpan(classes.icon);
@@ -84,7 +85,7 @@ export function renderTagFilterButton(
 
 		// 面板头部
 		const header = dropdown.createEl('div', classes.dropdownHeader);
-		header.createEl('span', { text: '筛选标签' });
+		header.createEl('span', { text: i18n.t('toolbar.tagFilter.header') });
 
 		// 组合器按钮行
 		const operators = dropdown.createEl('div', classes.operators);
@@ -93,7 +94,7 @@ export function renderTagFilterButton(
 			const btn = operators.createDiv({
 				text,
 				cls: classes.operatorBtn,
-				attr: { title, 'aria-label': `${text} 模式`, 'role': 'button', 'tabindex': '0' }
+				attr: { title, 'aria-label': `${text} ${i18n.t('toolbar.tagFilter.ariaLabel')}`, 'role': 'button', 'tabindex': '0' }
 			});
 			if (state.operator === op) btn.addClass(classes.operatorBtnActive);
 			btn.addEventListener('click', (e) => {
@@ -107,9 +108,9 @@ export function renderTagFilterButton(
 			return btn;
 		};
 
-		andBtnElement = createOpBtn('AND', 'AND', '交集：包含所有选中标签');
-		orBtnElement = createOpBtn('OR', 'OR', '并集：包含任一选中标签');
-		notBtnElement = createOpBtn('NOT', 'NOT', '排除：不包含选中标签');
+		andBtnElement = createOpBtn('AND', 'AND', i18n.t('toolbar.tagFilter.andTitle'));
+		orBtnElement = createOpBtn('OR', 'OR', i18n.t('toolbar.tagFilter.orTitle'));
+		notBtnElement = createOpBtn('NOT', 'NOT', i18n.t('toolbar.tagFilter.notTitle'));
 
 		// 标签列表
 		const list = dropdown.createEl('div', classes.tagsGrid);
@@ -118,7 +119,7 @@ export function renderTagFilterButton(
 			.sort((a, b) => b[1] - a[1]);
 
 		if (sortedTags.length === 0) {
-			list.createEl('div', { text: '暂无标签', cls: classes.empty });
+			list.createEl('div', { text: i18n.t('toolbar.tagFilter.empty'), cls: classes.empty });
 			return;
 		}
 

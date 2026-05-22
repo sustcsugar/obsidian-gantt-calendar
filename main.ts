@@ -8,6 +8,7 @@ import { registerAllCommands } from './src/commands/commandsIndex';
 import { TooltipManager } from './src/utils/tooltipManager';
 import { Logger } from './src/utils/logger';
 import { setTimezoneOffset } from './src/dateUtils/timezone';
+import { i18n, initializeI18n } from './src/i18n/i18n';
 
 import { SettingsManager } from './src/managers/SettingsManager';
 import { ThemeManager } from './src/managers/ThemeManager';
@@ -33,6 +34,8 @@ export default class GanttCalendarPlugin extends Plugin {
 	private lastSyncTime = '';
 
 	async onload() {
+		await initializeI18n();
+
 		this.settingsManager = new SettingsManager(this);
 		this.settings = await this.settingsManager.loadSettings();
 
@@ -200,7 +203,7 @@ export default class GanttCalendarPlugin extends Plugin {
 		const total = tasks.length;
 		const incomplete = tasks.filter(t => !t.completed).length;
 		const lastSync = this.formatLastSync();
-		const syncStatus = this.syncStatusText || '就绪';
+		const syncStatus = this.syncStatusText || i18n.t('common.ready');
 
 		// 始终并列显示：任务统计 | 同步时间 | 同步状态
 		this.statusBarText.setText(` ${incomplete}/${total} | ${lastSync} | ${syncStatus}`);

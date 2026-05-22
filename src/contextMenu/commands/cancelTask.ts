@@ -2,6 +2,7 @@ import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 取消任务
@@ -21,13 +22,13 @@ export async function cancelTask(
 	try {
 		// 如果任务已经是取消状态，则不处理
 		if (task.status === 'canceled' || task.cancelled) {
-			new Notice('任务已经是取消状态');
+			new Notice(i18n.t('contextMenu.commands.cancel.alreadyCancelled'));
 			return;
 		}
 
 		// 如果任务已完成，先询问是否要取消
 		if (task.completed) {
-			new Notice('已完成任务不能直接取消，请先取消完成状态');
+			new Notice(i18n.t('contextMenu.commands.cancel.cannotCancelDone'));
 			return;
 		}
 
@@ -39,10 +40,10 @@ export async function cancelTask(
 			cancelledDate: new Date()
 		}, enabledFormats);
 
-		new Notice('任务已取消');
+		new Notice(i18n.t('contextMenu.commands.cancelled'));
 		onRefresh();
 	} catch (error) {
 		Logger.error('cancelTask', 'Failed to cancel task:', error);
-		new Notice('取消任务失败');
+		new Notice(i18n.t('contextMenu.commands.cancelFailed'));
 	}
 }

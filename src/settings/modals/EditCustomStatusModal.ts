@@ -3,6 +3,7 @@ import type GanttCalendarPlugin from '../../../main';
 import { MacaronColorPicker } from '../components';
 import { SettingsStatusModalClasses } from '../../utils/bem';
 import { TaskStatus, validateStatusSymbol } from '../../tasks/taskStatus';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 编辑自定义状态模态框
@@ -42,24 +43,24 @@ export class EditCustomStatusModal extends Modal {
 		contentEl.empty();
 		const cls = SettingsStatusModalClasses.elements;
 
-		contentEl.createEl('h2', { text: '编辑自定义状态', cls: cls.title });
+		contentEl.createEl('h2', { text: i18n.t('modals.editStatus.title'), cls: cls.title });
 
 		// 状态名称
 		const nameField = contentEl.createDiv(cls.field);
-		nameField.createEl('label', { text: '状态名称', cls: cls.label });
+		nameField.createEl('label', { text: i18n.t('modals.editStatus.name.label'), cls: cls.label });
 		this.nameInput = nameField.createEl('input', {
 			type: 'text',
-			placeholder: '例如：等待审核',
+			placeholder: i18n.t('modals.editStatus.name.placeholder'),
 			cls: cls.input,
 		});
 		this.nameInput.value = this.existingStatus.name;
 
 		// 状态 Key（只读，不可修改）
 		const keyField = contentEl.createDiv(cls.field);
-		keyField.createEl('label', { text: '状态标识（英文，不可修改）', cls: cls.label });
+		keyField.createEl('label', { text: i18n.t('modals.editStatus.key.label'), cls: cls.label });
 		this.keyInput = keyField.createEl('input', {
 			type: 'text',
-			placeholder: '例如：pending_review',
+			placeholder: i18n.t('modals.addStatus.key.placeholder'),
 			cls: cls.input,
 		});
 		this.keyInput.value = this.existingStatus.key;
@@ -67,12 +68,12 @@ export class EditCustomStatusModal extends Modal {
 
 		// 状态符号
 		const symbolField = contentEl.createDiv(cls.field);
-		symbolField.createEl('label', { text: '复选框符号（单个字符）', cls: cls.label });
+		symbolField.createEl('label', { text: i18n.t('modals.editStatus.symbol.label'), cls: cls.label });
 		symbolField.createDiv(cls.hint)
-			.setText('任意单个非空白字符，但不能使用 [、] 或默认符号（空格, x）');
+			.setText(i18n.t('modals.editStatus.symbol.hint'));
 		this.symbolInput = symbolField.createEl('input', {
 			type: 'text',
-			placeholder: '例如：p',
+			placeholder: i18n.t('modals.editStatus.symbol.placeholder'),
 			cls: cls.input,
 		});
 		this.symbolInput.maxLength = 1;
@@ -81,9 +82,9 @@ export class EditCustomStatusModal extends Modal {
 
 		// 状态描述
 		const descField = contentEl.createDiv(cls.field);
-		descField.createEl('label', { text: '状态描述', cls: cls.label });
+		descField.createEl('label', { text: i18n.t('modals.editStatus.description.label'), cls: cls.label });
 		this.descInput = descField.createEl('textarea', {
-			placeholder: '描述此状态的用途',
+			placeholder: i18n.t('modals.editStatus.description.placeholder'),
 			cls: cls.textarea,
 		});
 		this.descInput.rows = 2;
@@ -96,7 +97,7 @@ export class EditCustomStatusModal extends Modal {
 
 		// 马卡龙配色（仅用于亮色背景）
 		const macaronField = contentEl.createDiv(cls.field);
-		macaronField.createEl('label', { text: '快速选择亮色背景颜色', cls: cls.label });
+		macaronField.createEl('label', { text: i18n.t('modals.editStatus.colors.macaronLabel'), cls: cls.label });
 		const macaronContainer = macaronField.createDiv();
 		new MacaronColorPicker({
 			container: macaronContainer,
@@ -111,11 +112,11 @@ export class EditCustomStatusModal extends Modal {
 
 		// 按钮容器
 		const footer = contentEl.createDiv(cls.footer);
-		const cancelBtn = footer.createEl('button', { text: '取消', cls: cls.btn });
+		const cancelBtn = footer.createEl('button', { text: i18n.t('common.cancel'), cls: cls.btn });
 		cancelBtn.addEventListener('click', () => this.close());
 
 		const saveBtn = footer.createEl('button', {
-			text: '保存',
+			text: i18n.t('common.save'),
 			cls: `${cls.btn} ${SettingsStatusModalClasses.modifiers.btnPrimary}`,
 		});
 		saveBtn.addEventListener('click', () => this.saveCustomStatus());
@@ -129,14 +130,14 @@ export class EditCustomStatusModal extends Modal {
 		const section = parent.createDiv(cls.themeSection);
 
 		const header = section.createDiv(cls.themeHeader);
-		header.setText(theme === 'light' ? '☀️ 亮色' : '🌙 暗色');
+		header.setText(theme === 'light' ? i18n.t('modals.editStatus.colors.lightTheme') : i18n.t('modals.editStatus.colors.darkTheme'));
 
 		const colorRow = section.createDiv(cls.colorRow);
 
 		const currentColors = theme === 'dark' ? this.existingStatus.darkColors : this.existingStatus.lightColors;
 
-		const bgInput = this.createColorField(colorRow, '背景', currentColors.backgroundColor);
-		const textInput = this.createColorField(colorRow, '文字', currentColors.textColor);
+		const bgInput = this.createColorField(colorRow, i18n.t('modals.editStatus.colors.background'), currentColors.backgroundColor);
+		const textInput = this.createColorField(colorRow, i18n.t('modals.editStatus.colors.text'), currentColors.textColor);
 
 		if (theme === 'light') {
 			this.lightBgColorInput = bgInput.input;
@@ -184,12 +185,12 @@ export class EditCustomStatusModal extends Modal {
 		const description = this.descInput.value.trim();
 
 		if (!name) {
-			this.showFieldError(this.nameInput, '请输入状态名称');
+			this.showFieldError(this.nameInput, i18n.t('modals.editStatus.name.errorEmpty'));
 			return;
 		}
 
 		if (!symbol) {
-			this.symbolError.textContent = '请输入复选框符号';
+			this.symbolError.textContent = i18n.t('modals.editStatus.symbol.errorEmpty');
 			return;
 		}
 
@@ -197,7 +198,7 @@ export class EditCustomStatusModal extends Modal {
 		if (symbol !== this.existingStatus.symbol) {
 			const validation = validateStatusSymbol(symbol, true);
 			if (!validation.valid) {
-				this.symbolError.textContent = validation.error || '符号无效';
+				this.symbolError.textContent = validation.error || i18n.t('modals.editStatus.symbol.errorInvalid');
 				return;
 			}
 		}
@@ -211,7 +212,7 @@ export class EditCustomStatusModal extends Modal {
 			...this.plugin.settings.taskStatuses[idx],
 			symbol,
 			name,
-			description: description || '自定义状态',
+			description: description || i18n.t('taskStatus.customDefault'),
 			lightColors: {
 				backgroundColor: this.lightBgColorInput.value,
 				textColor: this.lightTextColorInput.value,

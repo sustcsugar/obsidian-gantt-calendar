@@ -1,6 +1,7 @@
 import { Setting, SettingGroup } from 'obsidian';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 月视图设置构建器
@@ -11,7 +12,7 @@ export class MonthViewSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('月视图', (group) => {
+		this.createSettingGroup(i18n.t('settings.monthView.groupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -22,8 +23,8 @@ export class MonthViewSettingsBuilder extends BaseBuilder {
 
 			// 月视图每天显示的任务数量
 			addSetting(setting =>
-				setting.setName('每天显示的任务数量')
-					.setDesc('设置月视图中每个日期卡片最多显示多少个任务（1-10）')
+				setting.setName(i18n.t('settings.monthView.taskLimit.name'))
+					.setDesc(i18n.t('settings.monthView.taskLimit.description'))
 					.addSlider(slider => slider
 						.setLimits(1, 10, 1)
 						.setValue(this.plugin.settings.monthViewTaskLimit)
@@ -36,8 +37,8 @@ export class MonthViewSettingsBuilder extends BaseBuilder {
 
 			// 月视图农历字号
 			addSetting(setting =>
-				setting.setName('月视图农历字号')
-					.setDesc('设置月视图中农历文字的大小（8-18px）')
+				setting.setName(i18n.t('settings.monthView.lunarFontSize.name'))
+					.setDesc(i18n.t('settings.monthView.lunarFontSize.description'))
 					.addSlider(slider => slider
 						.setLimits(8, 18, 1)
 						.setValue(this.plugin.settings.monthLunarFontSize)

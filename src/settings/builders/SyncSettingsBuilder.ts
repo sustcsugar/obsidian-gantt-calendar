@@ -16,13 +16,14 @@ import { PushFilterConfig, DEFAULT_PUSH_FILTER } from '../../utils/taskFilter';
 import { showSyncResultModal } from '../../modals/SyncResultModal';
 import { syncFeishuTasks } from '../../commands/feishuCommands';
 import { BLOCKS, bem } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
- * 同步设置构建器
- * 提供飞书任务同步的配置界面
+ * Sync settings builder
+ * Provides Feishu task sync configuration UI
  */
 export class SyncSettingsBuilder extends BaseBuilder {
-	// 临时存储待处理的授权码
+	// Temporary storage for pending authorization code
 	private pendingAuthCode: string = '';
 
 	constructor(config: BuilderConfig) {
@@ -32,11 +33,11 @@ export class SyncSettingsBuilder extends BaseBuilder {
 	render(): void {
 		const syncConfig = this.getSyncConfiguration();
 
-		// 免责声明横幅（最顶部）
+		// ===== Disclaimer Banner =====
 		this.renderSyncWarningBanner();
 
-		// ===== 分组 1：飞书任务同步 =====
-		this.createSettingGroup('飞书任务同步', (group) => {
+		// ===== Group 1: Feishu Task Sync =====
+		this.createSettingGroup(i18n.t('settings.sync.groupTitle'), (group) => {
 			const container = group instanceof HTMLElement ? group : this.containerEl;
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
@@ -46,29 +47,29 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				}
 			};
 
-			// 飞书账号连接
+			// Feishu account connection
 			this.renderFeishuSettings(group, syncConfig);
 
-			// 获取任务清单按钮
+			// Fetch task lists button
 			addSetting(setting =>
-				setting.setName('任务清单')
-					.setDesc('获取飞书账号中可操作的任务清单')
+				setting.setName(i18n.t('settings.sync.taskList.name'))
+					.setDesc(i18n.t('settings.sync.taskList.description'))
 					.addButton(button => button
-						.setButtonText('获取任务清单')
+						.setButtonText(i18n.t('settings.sync.taskList.buttonText'))
 						.onClick(async () => {
 							await this.fetchFeishuTaskLists();
 						}))
 			);
 
-			// 任务清单提示和卡片
+			// Task list hints and cards
 			this.renderTasklistCards(container, syncConfig);
 		});
 
-		// ===== 推送过滤 =====
+		// ===== Push Filter =====
 		this.renderPushFilter();
 
-		// ===== 分组 2：同步配置 =====
-		this.createSettingGroup('同步配置', (group) => {
+		// ===== Group 2: Sync Config =====
+		this.createSettingGroup(i18n.t('settings.sync.syncConfigGroupTitle'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -77,10 +78,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				}
 			};
 
-			// 飞书同步目标文件
+			// Feishu sync target file
 			addSetting(setting =>
-				setting.setName('飞书同步目标文件')
-					.setDesc('飞书新任务将同步到此文件（不存在时自动创建）')
+				setting.setName(i18n.t('settings.sync.targetFile.name'))
+					.setDesc(i18n.t('settings.sync.targetFile.description'))
 					.addSearch(cb => {
 						new FileSuggest(this.plugin.app, cb.inputEl);
 						cb.setPlaceholder('gantt-calendar-feishu-sync.md')
@@ -92,15 +93,15 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					})
 			);
 
-			// 同步方向
+			// Sync direction
 			addSetting(setting =>
-				setting.setName('同步方向')
-					.setDesc('选择任务同步的方向')
+				setting.setName(i18n.t('settings.sync.direction.name'))
+					.setDesc(i18n.t('settings.sync.direction.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'bidirectional': '双向同步',
-							'import-only': '仅导入（从飞书）',
-							'export-only': '仅导出（到飞书）'
+							'bidirectional': i18n.t('settings.sync.direction.options.bidirectional'),
+							'import-only': i18n.t('settings.sync.direction.options.importOnly'),
+							'export-only': i18n.t('settings.sync.direction.options.exportOnly')
 						})
 						.setValue(syncConfig.syncDirection)
 						.onChange(async (value) => {
@@ -109,15 +110,15 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 冲突解决策略
+			// Conflict resolution
 			addSetting(setting =>
-				setting.setName('冲突解决策略')
-					.setDesc('当本地和飞书任务同时修改时的处理方式')
+				setting.setName(i18n.t('settings.sync.conflictResolution.name'))
+					.setDesc(i18n.t('settings.sync.conflictResolution.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'local-win': '本地优先',
-							'remote-win': '飞书优先',
-							'newest-win': '最新修改优先',
+							'local-win': i18n.t('settings.sync.conflictResolution.options.localWin'),
+							'remote-win': i18n.t('settings.sync.conflictResolution.options.remoteWin'),
+							'newest-win': i18n.t('settings.sync.conflictResolution.options.newestWin'),
 						})
 						.setValue(syncConfig.conflictResolution)
 						.onChange(async (value) => {
@@ -126,10 +127,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 自动同步间隔
+			// Auto sync interval
 			addSetting(setting =>
-				setting.setName('自动同步间隔')
-					.setDesc('自动同步的时间间隔（分钟），设为 0 关闭自动同步')
+				setting.setName(i18n.t('settings.sync.autoSyncInterval.name'))
+					.setDesc(i18n.t('settings.sync.autoSyncInterval.description'))
 					.addSlider(slider => slider
 						.setLimits(0, 120, 5)
 						.setValue(syncConfig.syncInterval)
@@ -140,43 +141,34 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 操作按钮
+			// Action buttons
 			addSetting(setting =>
-				setting.setName('手动同步')
-					.setDesc('立即执行一次同步操作。「测试同步」仅同步截止时间最新的 5 条真实任务，用于调试。')
+				setting.setName(i18n.t('settings.sync.manualSync.name'))
+					.setDesc(i18n.t('settings.sync.manualSync.description'))
 					.addButton(button => button
-						.setButtonText('立即同步')
+						.setButtonText(i18n.t('settings.sync.syncNow.button'))
 						.setClass('mod-cta')
 						.setDisabled(!syncConfig.api?.tasklistGuid)
 						.onClick(async () => {
 							const confirmed = await showConfirmDialog(
 								this.plugin.app,
-								'立即同步',
-								'即将执行全量双向同步：\n\n' +
-								'• Obsidian → 飞书：推送所有未同步的本地任务\n' +
-								'• 飞书 → Obsidian：拉取所有未同步的远程任务\n' +
-								'• 已同步的任务将根据变更情况进行更新\n' +
-								'• 冲突任务将按照当前冲突策略处理\n\n' +
-								'请确保已正确配置同步参数。',
-								{ confirmText: '开始同步', cancelText: '取消' }
+								i18n.t('settings.sync.syncNow.confirmTitle'),
+							i18n.t('settings.sync.syncNow.confirmMessage'),
+								{ confirmText: i18n.t('settings.sync.syncNow.confirmText'), cancelText: i18n.t('settings.sync.syncNow.cancelText') }
 							);
 							if (!confirmed) return;
 							await this.runManualSync();
 						}))
 					.addButton(button => button
-						.setButtonText('测试同步')
-						.setTooltip('双向同步截止时间最新的 5 条真实任务，用于调试')
+						.setButtonText(i18n.t('settings.sync.testSync.button'))
+						.setTooltip(i18n.t('settings.sync.testSync.tooltip'))
 						.setDisabled(!syncConfig.api?.tasklistGuid)
 						.onClick(async () => {
 							const confirmed = await showConfirmDialog(
 								this.plugin.app,
-								'测试同步',
-								'即将执行测试同步（限 5 条任务）：\n\n' +
-								'• 仅同步截止时间最新的 5 条真实任务\n' +
-								'• 双向同步：Obsidian ↔ 飞书\n' +
-								'• 不会影响已同步的任务\n\n' +
-								'确定继续？',
-								{ confirmText: '开始测试', cancelText: '取消' }
+								i18n.t('settings.sync.testSync.confirmTitle'),
+							i18n.t('settings.sync.testSync.confirmMessage'),
+								{ confirmText: i18n.t('settings.sync.testSync.confirmText'), cancelText: i18n.t('settings.sync.syncNow.cancelText') }
 							);
 							if (!confirmed) return;
 							await this.runTestSync();
@@ -185,7 +177,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		});
 	}
 
-	// ==================== 免责声明横幅 ====================
+	// ==================== Disclaimer Banner ====================
 
 	private renderSyncWarningBanner(): void {
 		const banner = this.containerEl.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING));
@@ -196,54 +188,54 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		const body = banner.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'body'));
 
 		const title = body.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'title'));
-		title.setText('同步功能正在开发完善中');
+		title.setText(i18n.t('settings.sync.disclaimer.title'));
 
 		const desc = body.createDiv(bem(BLOCKS.SETTINGS_SYNC_WARNING, 'desc'));
 		const line1 = desc.createDiv();
-		line1.setText('该功能可能存在未知的稳定性问题，使用前请务必备份您的笔记库，以免造成数据丢失。');
+		line1.setText(i18n.t('settings.sync.disclaimer.warning'));
 
 		const line2 = desc.createDiv();
 		const strong = line2.createEl('strong');
-		strong.setText('数据无价，备份为先。');
+		strong.setText(i18n.t('settings.sync.disclaimer.backupReminder'));
 	}
 
-	// ==================== 任务清单卡片 ====================
+	// ==================== Task List Cards ====================
 
 	/**
-	 * 渲染任务清单卡片列表（收入分组内）
+	 * Render task list cards (within group)
 	 */
 	private renderTasklistCards(container: HTMLElement, syncConfig: any): void {
 		const taskLists = syncConfig.api?.taskLists as FeishuTaskList[] || [];
 		const selectedGuid = syncConfig.api?.tasklistGuid || '';
 
-		// 未获取清单时的提示
+		// Hint when no lists fetched
 		if (taskLists.length === 0) {
 			const hintEl = container.createDiv('gc-sync-hint');
-			hintEl.setText('↑ 请先点击上方「获取任务清单」按钮获取清单列表，然后选择同步目标清单。');
+			hintEl.setText(i18n.t('settings.sync.statusHint.fetchFirst'));
 			return;
 		}
 
-		// 清单选择状态提示
+		// Selection status hint
 		if (!selectedGuid) {
 			const hintEl = container.createDiv('gc-sync-hint gc-sync-hint--warning');
-			hintEl.setText('⚠ 未选择任务清单，无法执行任务同步功能。请在下方选择一个任务清单作为同步目标。');
+			hintEl.setText(i18n.t('settings.sync.statusHint.notSelected'));
 		} else {
 			const selectedList = taskLists.find((tl: FeishuTaskList) => tl.guid === selectedGuid);
 			const hintEl = container.createDiv('gc-sync-hint gc-sync-hint--success');
 			const listName = selectedList?.name || selectedGuid;
 			const prefix = hintEl.createSpan();
-			prefix.setText('✓ 已选择任务清单，可以执行任务同步功能。选择任务清单「');
+			hintEl.setText(i18n.t('settings.sync.statusHint.selected', { name: listName }));
 			const nameSpan = hintEl.createSpan('gc-sync-hint__list-name');
 			nameSpan.setText(listName);
 			const suffix = hintEl.createSpan();
-			suffix.setText('」作为同步目标。');
+			// nameSpan removed; text merged into withSelection line above
 		}
 
-		// 清单卡片列表
+		// Task list cards
 		const taskListEl = container.createDiv('gc-sync-tasklist');
 
 		const headerEl = taskListEl.createDiv('gc-sync-tasklist__header');
-		headerEl.textContent = '飞书任务清单列表 (' + taskLists.length + ' 个)';
+		headerEl.textContent = i18n.t('settings.sync.statusHint.listTitle', { count: taskLists.length });
 
 		const listEl = taskListEl.createDiv('gc-sync-tasklist__grid');
 
@@ -254,7 +246,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				itemEl.addClass('gc-sync-tasklist-card--selected');
 			}
 
-			// 标题
+			// Title
 			const titleDiv = itemEl.createDiv('gc-sync-tasklist-card__name');
 			titleDiv.setText((isSelected ? '✓ ' : '') + tl.name);
 
@@ -262,73 +254,72 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const idDiv = itemEl.createDiv('gc-sync-tasklist-card__guid');
 			idDiv.setText(tl.guid);
 
-			// 创建者
+			// Creator
 			if (tl.creator) {
 				const creatorDiv = itemEl.createDiv('gc-sync-tasklist-card__meta');
-				creatorDiv.setText('创建者: ' + tl.creator.id);
+				creatorDiv.setText(i18n.t('settings.sync.taskListCards.creator', { id: tl.creator.id }));
 			}
 
-			// 成员数
+			// Members
 			if (tl.members && tl.members.length > 0) {
 				const memberDiv = itemEl.createDiv('gc-sync-tasklist-card__meta');
-				memberDiv.setText('成员: ' + tl.members.length + ' 人');
+				memberDiv.setText(i18n.t('settings.sync.taskListCards.members', { count: tl.members.length }));
 			}
 
-			// 按钮行
+			// Button row
 			const btnRow = itemEl.createDiv('gc-sync-tasklist-card__actions');
 
-			// 选择/取消选择按钮
+			// Select / Deselect button
 			const selectBtn = btnRow.createEl('button');
 			if (isSelected) {
-				selectBtn.textContent = '取消选择';
+				selectBtn.textContent = i18n.t('settings.sync.taskListCards.deselect');
 				selectBtn.onclick = async () => {
 					if (!syncConfig.api) syncConfig.api = {} as any;
 					syncConfig.api.tasklistGuid = '';
 					await this.saveAndRefreshAll();
-					new Notice('已取消任务清单选择，同步功能已暂停。');
+					new Notice(i18n.t('settings.sync.taskListCards.deselectNotice'));
 				};
 			} else {
-				selectBtn.textContent = '选择';
+				selectBtn.textContent = i18n.t('settings.sync.taskListCards.select');
 				selectBtn.onclick = async () => {
 					const switching = !!selectedGuid;
 					if (switching) {
 							const confirmed = await showConfirmDialog(
 								this.plugin.app,
-								'切换任务清单',
-								'⚠️ 切换任务清单将触发全量同步\n\n' +
-								'为方便管理，Obsidian 中的任务仅会同步到当前选中的目标清单中，\n' +
-								'不会与飞书中其他清单的任务混淆。\n\n' +
-								'确定切换到清单「' + tl.name + '」吗？',
-								{ confirmText: '切换', cancelText: '取消' }
+								i18n.t('settings.sync.taskListCards.switchConfirmTitle'),
+								i18n.t('settings.sync.taskListCards.switchConfirmMessage', { name: tl.name }),
+								{ confirmText: i18n.t('settings.sync.taskListCards.switchConfirmButton'), cancelText: i18n.t('settings.sync.syncNow.cancelText') }
 							);
 						if (!confirmed) return;
 					}
 					if (!syncConfig.api) syncConfig.api = {} as any;
 					syncConfig.api.tasklistGuid = tl.guid;
 					await this.saveAndRefreshAll();
-					new Notice('已切换任务清单：' + tl.name + (switching ? '（将执行全量同步）' : ''));
+					const msg = i18n.t('settings.sync.taskListCards.switchNotice', { name: tl.name });
+					const suffix = switching ? i18n.t('settings.sync.taskListCards.switchNoticeFullSync') : '';
+					new Notice(msg + suffix);
 				};
 			}
 
-			// 测试写入
+			// Test write
 			const testBtn = btnRow.createEl('button');
-			testBtn.textContent = '测试写入';
-			testBtn.title = '向该清单写入 5 条虚拟任务，仅验证 API 连通性';
+			testBtn.textContent = i18n.t('settings.sync.taskListCards.testWrite');
+			testBtn.title = i18n.t('settings.sync.taskListCards.testWriteTitle');
 			testBtn.onclick = async () => {
 				await this.testSyncToTasklist(tl.guid, tl.name);
 			};
 
-			// 清除任务
+			// Clear tasks
 			const clearBtn = btnRow.createEl('button');
-			clearBtn.textContent = '清除任务';
-			clearBtn.title = '删除该清单中的所有飞书任务（不可恢复）';
+			clearBtn.textContent = i18n.t('settings.sync.taskListCards.clearTasks');
+			clearBtn.title = i18n.t('settings.sync.taskListCards.clearTasksTitle');
 			clearBtn.className = 'mod-warning';
 			clearBtn.onclick = async () => {
 					const confirmed = await showConfirmDialog(
 						this.plugin.app,
-						'清除任务',
-						'确定要清除清单「' + tl.name + '」中的所有任务吗？\n\n此操作将删除该清单下的所有飞书任务，不可恢复！',
-						{ confirmText: '清除', cancelText: '取消', isDestructive: true }
+						i18n.t('settings.sync.taskListCards.clearConfirmTitle'),
+						i18n.t('settings.sync.taskListCards.clearConfirmMessage', { name: tl.name }),
+						{ confirmText: i18n.t('settings.sync.taskListCards.clearConfirmButton'), cancelText: i18n.t('settings.sync.syncNow.cancelText'), isDestructive: true }
 					);
 				if (!confirmed) return;
 				await this.clearFeishuTasklistTasks(tl.guid, tl.name);
@@ -336,7 +327,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		});
 	}
 
-	// ==================== 飞书账号设置 ====================
+	// ==================== Feishu Account Settings ====================
 
 	private renderFeishuSettings(group: SettingGroup | HTMLElement, syncConfig: any): void {
 		const container = group instanceof HTMLElement ? group : this.containerEl;
@@ -351,12 +342,12 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 		const isConnected = !!(syncConfig.api?.accessToken);
 
-		// 连接状态 + 授权按钮
+		// Connection status + authorize button
 		addSetting(setting =>
-			setting.setName('飞书账号')
-				.setDesc(isConnected ? '已连接' : '未连接')
+			setting.setName(i18n.t('settings.sync.account.name'))
+				.setDesc(isConnected ? i18n.t('settings.sync.account.connected') : i18n.t('settings.sync.account.disconnected'))
 				.addButton(button => button
-					.setButtonText(isConnected ? '重新授权' : '连接飞书账号')
+					.setButtonText(isConnected ? i18n.t('settings.sync.account.reconnect') : i18n.t('settings.sync.account.connect'))
 					.setClass('mod-cta')
 					.onClick(() => {
 						this.initiateFeishuOAuth(syncConfig);
@@ -366,7 +357,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		// App ID
 		addSetting(setting =>
 			setting.setName('App ID')
-				.setDesc('飞书开放平台应用的 App ID')
+				.setDesc(i18n.t('settings.sync.oauth.appId.description'))
 				.addText(text => text
 					.setPlaceholder('cli_xxxxxxxxxxxxx')
 					.setValue(syncConfig.api?.clientId || syncConfig.api?.appId || '')
@@ -381,7 +372,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		// App Secret
 		addSetting(setting =>
 			setting.setName('App Secret')
-				.setDesc('飞书开放平台应用的 App Secret，用于刷新令牌')
+				.setDesc(i18n.t('settings.sync.oauth.appSecret.description'))
 				.addText(text => text
 					.setPlaceholder('xxxxxxxxxxxxxxxx')
 					.setValue(syncConfig.api?.clientSecret || syncConfig.api?.appSecret || '')
@@ -399,10 +390,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				})
 		);
 
-		// 重定向 URL
+		// Redirect URL
 		addSetting(setting =>
-			setting.setName('重定向 URL')
-				.setDesc('OAuth 授权完成后的回调地址')
+			setting.setName(i18n.t('settings.sync.oauth.redirectUri.label'))
+				.setDesc(i18n.t('settings.sync.oauth.redirectUri.description'))
 				.addText(text => text
 					.setPlaceholder('https://open.feishu.cn/api-explorer/loading')
 					.setValue(syncConfig.api?.redirectUri || FeishuOAuth.getDefaultRedirectUri())
@@ -414,21 +405,21 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					}))
 		);
 
-		// 授权码输入框
+		// Authorization code input
 		addSetting(setting =>
-			setting.setName('授权码')
-				.setDesc('从浏览器回调 URL 中复制 code 参数值并粘贴，然后点击获取令牌')
+			setting.setName(i18n.t('settings.sync.oauth.authCode.label'))
+				.setDesc(i18n.t('settings.sync.oauth.authCode.description'))
 				.addText(text => text
-					.setPlaceholder('粘贴授权码...')
+					.setPlaceholder(i18n.t('settings.sync.oauth.authCode.placeholder'))
 					.onChange((value: string) => {
 						this.pendingAuthCode = value.trim();
 					}))
 				.addButton(button => button
-					.setButtonText('获取令牌')
+					.setButtonText(i18n.t('settings.sync.oauth.getToken'))
 					.setClass('mod-cta')
 					.onClick(async () => {
 						if (!this.pendingAuthCode || this.pendingAuthCode.length < 10) {
-							new Notice('请先输入有效的授权码');
+							new Notice(i18n.t('settings.sync.oauth.invalidCodeNotice'));
 							return;
 						}
 						await this.exchangeFeishuAuthCode(syncConfig, this.pendingAuthCode);
@@ -441,80 +432,80 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					}))
 		);
 
-		// 已授权信息
+		// Authorized info
 		if (isConnected && syncConfig.api?.accessToken) {
 			if (syncConfig.api?.userName || syncConfig.api?.userId) {
 				addSetting(setting =>
-					setting.setName('已授权用户')
+					setting.setName(i18n.t('settings.sync.oauth.authorizedUser.label'))
 						.setDesc(syncConfig.api.userName ? `${syncConfig.api.userName} (${syncConfig.api.userId || 'Unknown'})` : syncConfig.api.userId || 'Unknown')
 						.addExtraButton(button => button
 							.setIcon('user')
-							.setTooltip('测试连接，获取用户信息')
+							.setTooltip(i18n.t('settings.sync.oauth.testConnectionTooltip'))
 							.onClick(() => this.testFeishuConnection(syncConfig)))
 				);
 			}
 
-			// Access Token（部分隐藏）
+			// Access Token (partially hidden)
 			addSetting(setting =>
 				setting.setName('Access Token')
-					.setDesc('请注意保密，不要分享给他人')
+					.setDesc(i18n.t('settings.sync.oauth.accessToken.description'))
 					.addText(text => text
 						.setValue(this.maskToken(syncConfig.api.accessToken))
 						.setDisabled(true))
 					.addExtraButton(button => button
 						.setIcon('copy')
-						.setTooltip('复制完整 Token')
+						.setTooltip(i18n.t('settings.sync.oauth.copyTokenTooltip'))
 						.onClick(() => {
 							navigator.clipboard.writeText(syncConfig.api.accessToken);
-							new Notice('已复制到剪贴板');
+							new Notice(i18n.t('settings.sync.oauth.copiedNotice'));
 						}))
 			);
 
-			// 令牌过期时间
+			// Token expiration
 			if (syncConfig.api?.tokenExpireAt) {
 				const expireTime = new Date(syncConfig.api.tokenExpireAt);
 				const isExpired = Date.now() > syncConfig.api.tokenExpireAt;
 				const remainingText = FeishuOAuth.formatExpireTime(syncConfig.api.tokenExpireAt);
 
 				addSetting(setting =>
-					setting.setName('令牌状态')
-						.setDesc(isExpired ? '令牌已过期，请重新授权' : `过期时间: ${expireTime.toLocaleString()} (${remainingText})`)
+					setting.setName(i18n.t('settings.sync.oauth.tokenStatus.label'))
+						.setDesc(isExpired ? i18n.t('settings.sync.oauth.tokenStatus.expired') : i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: expireTime.toLocaleString(), remaining: remainingText }))
 						.addExtraButton(button => button
 							.setIcon(isExpired ? 'alert-triangle' : 'check-circle')
-							.setTooltip(isExpired ? '已过期' : '有效'))
+							.setTooltip(isExpired ? i18n.t('settings.sync.oauth.tokenStatus.expiredTooltip') : i18n.t('settings.sync.oauth.tokenStatus.validTooltip')))
 						.addButton(btn => btn
-							.setButtonText('刷新')
-							.setTooltip(isExpired ? '重新授权' : '尝试刷新令牌')
+							.setButtonText(i18n.t('settings.sync.oauth.refresh'))
+							.setTooltip(isExpired ? i18n.t('settings.sync.oauth.reauthorize') : i18n.t('settings.sync.oauth.tryRefreshToken'))
 							.onClick(() => isExpired ? this.initiateFeishuOAuth(syncConfig) : this.refreshFeishuToken(syncConfig)))
 				);
 			}
 		}
 
 		
-			// Refresh 令牌状态
+			// Refresh token status
 			if (syncConfig.api?.refreshToken) {
 				addSetting(setting => {
 					const hasExpireAt = !!syncConfig.api?.refreshTokenExpireAt;
 					const isExpired = hasExpireAt && Date.now() > syncConfig.api.refreshTokenExpireAt;
 					const desc = hasExpireAt
 						? (isExpired
-							? 'Refresh 令牌已过期，请重新授权'
-							: `过期时间: ${new Date(syncConfig.api.refreshTokenExpireAt).toLocaleString()} (${FeishuOAuth.formatExpireTime(syncConfig.api.refreshTokenExpireAt)})`)
-						: '过期时间未知（重新授权后可显示）';
-					setting.setName('Refresh 令牌状态')
+							? i18n.t('settings.sync.oauth.refreshTokenStatus.expired')
+							: i18n.t('settings.sync.oauth.refreshTokenStatus.valid', { time: new Date(syncConfig.api.refreshTokenExpireAt).toLocaleString(), remaining: FeishuOAuth.formatExpireTime(syncConfig.api.refreshTokenExpireAt) }))
+						: i18n.t('settings.sync.oauth.refreshTokenStatus.unknown');
+					setting.setName(i18n.t('settings.sync.oauth.refreshTokenStatus.label'))
 						.setDesc(desc)
 						.addExtraButton(button => button
 							.setIcon(isExpired ? 'alert-triangle' : (hasExpireAt ? 'check-circle' : 'info'))
-							.setTooltip(isExpired ? '已过期' : (hasExpireAt ? '有效' : '时间未知')));
+							.setTooltip(isExpired ? i18n.t('settings.sync.oauth.tokenStatus.expiredTooltip') : (hasExpireAt ? i18n.t('settings.sync.oauth.tokenStatus.validTooltip') : i18n.t('settings.sync.oauth.refreshTokenStatus.unknownTooltip'))));
 				});
 			}
-			// 取消授权
+			// Revoke authorization
 		if (isConnected) {
 			addSetting(setting =>
-				setting.setName('取消授权')
-					.setDesc('清除已保存的飞书授权信息')
+				setting.setName(i18n.t('settings.sync.oauth.resetAuth.label'))
+					.setDesc(i18n.t('settings.sync.oauth.resetAuth.description'))
 					.addButton(button => button
-						.setButtonText('取消授权')
+						.setButtonText(i18n.t('settings.sync.oauth.resetAuth.button'))
 						.setWarning()
 						.onClick(async () => {
 							this.updateSyncConfig({
@@ -529,13 +520,13 @@ export class SyncSettingsBuilder extends BaseBuilder {
 							});
 							await this.saveAndRefreshViews();
 							await this.saveAndRefreshAll();
-							new Notice('已取消飞书授权');
+							new Notice(i18n.t('settings.sync.oauth.resetAuth.notice'));
 						}))
 			);
 		}
 	}
 
-	// ==================== OAuth 流程 ====================
+	// ==================== OAuth Flow ====================
 
 	private initiateFeishuOAuth(_syncConfig: any): void {
 		const currentSyncConfig = this.getSyncConfiguration();
@@ -543,7 +534,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		const clientId = apiConfig?.clientId || apiConfig?.appId;
 
 		if (!clientId) {
-			new Notice('请先配置 App ID');
+			new Notice(i18n.t('settings.sync.oauth.pleaseConfigureAppId'));
 			return;
 		}
 
@@ -554,12 +545,12 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		});
 
 		window.open(authUrl, '_blank');
-		new Notice('请在浏览器中完成飞书授权，然后从回调 URL 中复制授权码');
+		new Notice(i18n.t('settings.sync.oauth.completeAuthInBrowser'));
 	}
 
 	private async exchangeFeishuAuthCode(_syncConfig: any, code: string): Promise<void> {
 		try {
-			new Notice('正在交换授权码...');
+			new Notice(i18n.t('settings.sync.oauth.exchangingCode'));
 
 			const currentSyncConfig = this.getSyncConfiguration();
 			const apiConfig = currentSyncConfig.api;
@@ -568,7 +559,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const clientSecret = apiConfig?.clientSecret || apiConfig?.appSecret || '';
 
 			if (!clientId) {
-				new Notice('请先配置 App ID 和 App Secret');
+				new Notice(i18n.t('settings.sync.oauth.pleaseConfigureAppIdAndSecret'));
 				return;
 			}
 
@@ -579,7 +570,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			}, code, requestFetch);
 
 			if (!tokenResponse.access_token) {
-				throw new Error('飞书 API 响应格式错误：缺少 access_token');
+				throw new Error(i18n.t('settings.sync.oauth.apiMissingAccessToken'));
 			}
 
 			const expiresIn = tokenResponse.expires_in || 7200;
@@ -603,27 +594,27 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					updateData.userName = userInfo.name;
 				}
 			} catch (e) {
-				Logger.warn('SyncSettingsBuilder', '获取用户信息失败（非致命）', e);
+				Logger.warn('SyncSettingsBuilder', i18n.t('settings.sync.notices.getUserInfoFailed'), e);
 			}
 
 			this.updateSyncConfig({ api: updateData });
 			await this.saveAndRefreshViews();
-			new Notice('飞书授权成功！');
+			new Notice(i18n.t('settings.sync.oauth.authSuccess'));
 			await this.saveAndRefreshAll();
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 			Logger.error('SyncSettingsBuilder', 'Authorization failed', error);
-			if (errorMsg.includes('过期') || errorMsg.includes('invalid_grant')) {
-				new Notice('授权码已过期，请重新点击授权按钮（授权码有效期约 5 分钟）', 8000);
+			if (errorMsg.includes('invalid_grant') || errorMsg.includes('expired') || errorMsg.includes('过期') || errorMsg.includes('invalid_grant')) {
+				new Notice(i18n.t('settings.sync.oauth.codeExpired'), 8000);
 			} else {
-				new Notice('授权失败: ' + errorMsg, 8000);
+				new Notice(i18n.t('settings.sync.oauth.authFailed', { error: errorMsg }), 8000);
 			}
 		}
 	}
 
 	private async refreshFeishuToken(_syncConfig: any): Promise<void> {
 		try {
-			new Notice('正在刷新令牌...');
+			new Notice(i18n.t('settings.sync.oauth.tokenRefreshing'));
 
 			const currentSyncConfig = this.getSyncConfiguration();
 			const apiConfig = currentSyncConfig.api;
@@ -633,12 +624,12 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const refreshToken = apiConfig?.refreshToken;
 
 			if (!clientId) {
-				new Notice('请先配置 App ID');
+				new Notice(i18n.t('settings.sync.oauth.pleaseConfigureAppId'));
 				return;
 			}
 
 			if (!refreshToken) {
-				new Notice('没有可用的刷新令牌，请重新授权');
+				new Notice(i18n.t('settings.sync.oauth.noRefreshToken'));
 				return;
 			}
 
@@ -650,7 +641,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			}, requestFetch);
 
 			if (!tokenResponse.access_token) {
-				throw new Error('飞书 API 响应格式错误：缺少 access_token');
+				throw new Error(i18n.t('settings.sync.oauth.apiMissingAccessToken'));
 			}
 
 			const expiresIn = tokenResponse.expires_in || 7200;
@@ -669,11 +660,11 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			});
 
 			await this.saveAndRefreshViews();
-			new Notice('令牌刷新成功！');
+			new Notice(i18n.t('settings.sync.oauth.tokenRefreshSuccess'));
 			await this.saveAndRefreshAll();
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			new Notice('刷新失败: ' + errorMsg + '，请重新授权');
+			new Notice(i18n.t('settings.sync.oauth.tokenRefreshFailed', { error: errorMsg }));
 		}
 	}
 
@@ -687,49 +678,49 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		return `${prefix}${'*'.repeat(maskedLength)}${suffix}`;
 	}
 
-	// ==================== 连接测试 ====================
+	// ==================== Connection Test ====================
 
 	private async testFeishuConnection(syncConfig: any): Promise<void> {
 		const apiConfig = syncConfig.api;
 
 		if (!apiConfig?.accessToken) {
-			new Notice('未授权：请先完成飞书授权');
+			new Notice(i18n.t('settings.sync.connectionTest.unauthorized'));
 			return;
 		}
 
 		const isExpired = apiConfig.tokenExpireAt && Date.now() > apiConfig.tokenExpireAt;
 		const expireInfo = apiConfig.tokenExpireAt
 			? FeishuOAuth.formatExpireTime(apiConfig.tokenExpireAt)
-			: '未知';
+			: i18n.t('settings.sync.connectionTest.expireUnknown');
 
-		new Notice('正在测试飞书连接...');
+		new Notice(i18n.t('settings.sync.connectionTest.testing'));
 
 		try {
 			const requestFetch = FeishuHttpClient.createRequestFetch(requestUrl);
 			const userInfo = await FeishuUserApi.getUserInfo(apiConfig.accessToken, requestFetch);
 
 			const parts: string[] = [];
-			parts.push('✅ 飞书连接测试成功');
+			parts.push(i18n.t('settings.sync.connectionTest.success'));
 			parts.push('');
-			parts.push('用户信息:');
-			parts.push(`  名称: ${userInfo.name}`);
-			if (userInfo.enName) parts.push(`  英文名: ${userInfo.enName}`);
-			parts.push(`  用户ID: ${userInfo.userId}`);
+			parts.push(i18n.t('settings.sync.connectionTest.userInfo'));
+			parts.push(i18n.t('settings.sync.connectionTest.userName', { name: userInfo.name }));
+			if (userInfo.enName) parts.push(i18n.t('settings.sync.connectionTest.userEnName', { enName: userInfo.enName }));
+			parts.push(i18n.t('settings.sync.connectionTest.userId', { userId: userInfo.userId }));
 			parts.push(`  OpenID: ${userInfo.openId}`);
-			if (userInfo.email) parts.push(`  邮箱: ${userInfo.email}`);
+			if (userInfo.email) if (userInfo.email) parts.push(i18n.t('settings.sync.connectionTest.email', { email: userInfo.email }));
 
 			parts.push('');
-			parts.push('令牌状态:');
-			parts.push(`  过期时间: ${new Date(apiConfig.tokenExpireAt).toLocaleString()}`);
-			parts.push(`  状态: ${isExpired ? '已过期' : '✅ 有效 (' + expireInfo + ')'}`);
+			parts.push(i18n.t('settings.sync.connectionTest.tokenInfo'));
+			parts.push(i18n.t('settings.sync.connectionTest.expireTime', { time: new Date(apiConfig.tokenExpireAt).toLocaleString() }));
+			parts.push(isExpired ? i18n.t('settings.sync.connectionTest.tokenExpired') : i18n.t('settings.sync.connectionTest.tokenExpiredStatus', { status: i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: new Date(apiConfig.tokenExpireAt).toLocaleString(), remaining: expireInfo }) }));
 
 			parts.push('');
 			const taskListCount = syncConfig.api?.taskLists?.length || 0;
-			parts.push(`已授权清单: ${taskListCount} 个`);
+			parts.push(i18n.t('settings.sync.connectionTest.authorizedLists', { count: taskListCount }));
 			if (syncConfig.api?.tasklistGuid) {
 				const selectedList = syncConfig.api?.taskLists?.find((tl: any) => tl.guid === syncConfig.api.tasklistGuid);
 				if (selectedList) {
-					parts.push(`当前清单: ${selectedList.name}`);
+					parts.push(i18n.t('settings.sync.connectionTest.currentList', { name: selectedList.name }));
 				}
 			}
 
@@ -738,34 +729,35 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 
 			const parts: string[] = [];
-			parts.push('❌ 飞书连接测试失败');
+			parts.push(i18n.t('settings.sync.connectionTest.failed'));
 			parts.push('');
-			parts.push(`错误信息: ${errorMsg}`);
+			parts.push(i18n.t('settings.sync.connectionTest.errorInfo', { error: errorMsg }));
 
-			const codeMatch = errorMsg.match(/错误码[：:]\s*(\d+)/) || errorMsg.match(/code[：:]\s*(\d+)/i);
+			const codeMatch = errorMsg.match(/Error code[：:]\s*(\d+)/i) || errorMsg.match(/错误码[：:]\s*(\d+)/) || errorMsg.match(/code[：:]\s*(\d+)/i);
 			if (codeMatch) {
-				parts.push(`错误码: ${codeMatch[1]}`);
+				parts.push(i18n.t('settings.sync.connectionTest.errorCode', { code: codeMatch[1] }));
 			}
 
 			parts.push('');
-			parts.push('令牌状态:');
+			parts.push(i18n.t('settings.sync.connectionTest.tokenInfo'));
 			if (apiConfig.tokenExpireAt) {
-				parts.push(`  过期时间: ${new Date(apiConfig.tokenExpireAt).toLocaleString()}`);
+				parts.push(i18n.t('settings.sync.connectionTest.expireTime', { time: new Date(apiConfig.tokenExpireAt).toLocaleString() }));
 			}
-			parts.push(`  状态: ${isExpired ? '已过期' : '有效 (' + expireInfo + ')'}`);
+			const tokenStatusText = isExpired ? i18n.t('settings.sync.oauth.tokenStatus.expired') : i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: new Date(apiConfig.tokenExpireAt).toLocaleString(), remaining: expireInfo });
+			parts.push(i18n.t('settings.sync.connectionTest.tokenExpiredStatus', { status: tokenStatusText }));
 
 			if (errorMsg.includes('401')) {
 				parts.push('');
-				parts.push('可能原因: Access Token 无效或已过期');
-				parts.push('建议: 请重新授权获取新的令牌');
+				parts.push(i18n.t('settings.sync.connectionTest.possible401'));
+				parts.push(i18n.t('settings.sync.connectionTest.possible401'));
 			} else if (errorMsg.includes('403')) {
 				parts.push('');
-				parts.push('可能原因: 权限不足或应用未通过审核');
-				parts.push('建议: 检查应用权限配置和应用审核状态');
+				parts.push(i18n.t('settings.sync.connectionTest.possible403'));
+				parts.push(i18n.t('settings.sync.connectionTest.possible403'));
 			} else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
 				parts.push('');
-				parts.push('可能原因: 网络连接问题');
-				parts.push('建议: 检查网络连接或防火墙设置');
+				parts.push(i18n.t('settings.sync.connectionTest.possibleNetwork'));
+				parts.push(i18n.t('settings.sync.connectionTest.possibleNetwork'));
 			}
 
 			new Notice(parts.join('\n'), 12000);
@@ -775,17 +767,17 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 
 
-	// ==================== 推送过滤 ====================
+	// ==================== Push Filter ====================
 
 	/**
-	 * 渲染推送过滤设置
-	 * 提供状态、标签、优先级、路径四个维度的组合过滤条件
+	 * Render push filter settings
+	 * Provides combined filters across status, tags, priority, and path dimensions
 	 */
 	private renderPushFilter(): void {
 		const syncConfig = this.getSyncConfiguration();
 		const pushFilter: PushFilterConfig = syncConfig.pushFilter || DEFAULT_PUSH_FILTER;
 
-		this.createSettingGroup('推送过滤', (group) => {
+		this.createSettingGroup(i18n.t('settings.sync.groupTitles.pushFilter'), (group) => {
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
 					(group as SettingGroup).addSetting(cb);
@@ -794,10 +786,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				}
 			};
 
-			// 启用开关
+			// Enable toggle
 			addSetting(setting =>
-				setting.setName('启用推送过滤')
-					.setDesc('开启后，仅符合条件的新任务会推送到飞书，已同步任务的任何变更仍会同步')
+				setting.setName(i18n.t('settings.sync.pushFilter.enabled.name'))
+					.setDesc(i18n.t('settings.sync.pushFilter.enabled.description'))
 					.addToggle(toggle => toggle
 						.setValue(pushFilter.enabled)
 						.onChange(async (value: boolean) => {
@@ -809,14 +801,14 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 完成状态过滤
+			// Completion status filter
 			addSetting(setting =>
-				setting.setName('完成状态过滤')
-					.setDesc('选择推送哪些任务，已同步任务不受影响')
+				setting.setName(i18n.t('settings.sync.pushFilter.completionStatus.name'))
+					.setDesc(i18n.t('settings.sync.pushFilter.completionStatus.description'))
 					.addDropdown(drop => drop
 						.addOptions({
-							'all': '全部任务',
-							'incomplete-only': '仅未完成任务',
+							'all': i18n.t('settings.sync.pushFilter.completionStatus.options.all'),
+							'incomplete-only': i18n.t('settings.sync.pushFilter.completionStatus.options.incompleteOnly'),
 						})
 						.setValue(pushFilter.completionStatus || 'all')
 						.onChange(async (value: string) => {
@@ -828,10 +820,10 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						}))
 			);
 
-			// 日期过滤
+			// Date filter
 			addSetting(setting => {
-				const dateSetting = setting.setName('日期过滤')
-					.setDesc('仅推送指定日期之后的任务，任务任一日期字段匹配即可')
+				const dateSetting = setting.setName(i18n.t('settings.sync.pushFilter.dateFilter.name'))
+					.setDesc(i18n.t('settings.sync.pushFilter.dateFilter.description'))
 					.addText(text => {
 						text.inputEl.type = 'date';
 						text.setValue(pushFilter.sinceDate || '');
@@ -855,7 +847,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				};
 				dateSetting
 					.addButton(btn => {
-						btn.setButtonText('全部');
+						btn.setButtonText(i18n.t('settings.sync.pushFilter.dateFilter.all'));
 						quickBtns.push(btn.buttonEl);
 						btn.onClick(async () => {
 							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
@@ -866,7 +858,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						});
 					})
 					.addButton(btn => {
-						btn.setButtonText('近一周');
+						btn.setButtonText(i18n.t('settings.sync.pushFilter.dateFilter.lastWeek'));
 						quickBtns.push(btn.buttonEl);
 						btn.onClick(async () => {
 							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
@@ -878,7 +870,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						});
 					})
 					.addButton(btn => {
-						btn.setButtonText('近1月');
+						btn.setButtonText(i18n.t('settings.sync.pushFilter.dateFilter.lastMonth'));
 						quickBtns.push(btn.buttonEl);
 						btn.onClick(async () => {
 							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
@@ -890,7 +882,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						});
 					})
 					.addButton(btn => {
-						btn.setButtonText('近3月');
+						btn.setButtonText(i18n.t('settings.sync.pushFilter.dateFilter.last3Months'));
 						quickBtns.push(btn.buttonEl);
 						btn.onClick(async () => {
 							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
@@ -902,7 +894,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						});
 					})
 					.addButton(btn => {
-						btn.setButtonText('近半年');
+						btn.setButtonText(i18n.t('settings.sync.pushFilter.dateFilter.last6Months'));
 						quickBtns.push(btn.buttonEl);
 						btn.onClick(async () => {
 							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
@@ -914,7 +906,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						});
 					})
 					.addButton(btn => {
-						btn.setButtonText('近1年');
+						btn.setButtonText(i18n.t('settings.sync.pushFilter.dateFilter.lastYear'));
 						quickBtns.push(btn.buttonEl);
 						btn.onClick(async () => {
 							if (!syncConfig.pushFilter) syncConfig.pushFilter = { ...DEFAULT_PUSH_FILTER };
@@ -925,17 +917,17 @@ export class SyncSettingsBuilder extends BaseBuilder {
 							await this.plugin.saveSettings();
 						});
 					});
-				// 初始状态：无日期过滤时高亮"全部"
+				// Initial state: highlight "All" when no date filter
 				if (!pushFilter.sinceDate && quickBtns.length > 0) {
 					quickBtns[0].classList.add('mod-cta');
 				}
 			});
-// 路径过滤
+// Path filter
 			addSetting(setting =>
-				setting.setName('路径过滤')
-					.setDesc('按文件路径过滤，每行一个路径，文件夹以 / 结尾')
+				setting.setName(i18n.t('settings.sync.pushFilter.pathFilter.name'))
+					.setDesc(i18n.t('settings.sync.pushFilter.pathFilter.description'))
 					.addTextArea(text => {
-						text.setPlaceholder('每行一个路径，如：' + String.fromCharCode(10) + 'projects/' + String.fromCharCode(10) + 'Daily/Tasks.md')
+						text.setPlaceholder(i18n.t('settings.sync.pushFilter.pathFilter.placeholder'))
 							.setValue(pushFilter.paths.join(String.fromCharCode(10)));
 						text.inputEl.rows = 3;
 						text.onChange(async (value: string) => {
@@ -995,7 +987,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		}
 	}
 
-	// ==================== 同步操作 ====================
+	// ==================== Sync Operations ====================
 
 		private async runManualSync(): Promise<void> {
 		await syncFeishuTasks(this.plugin);
@@ -1007,7 +999,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const apiConfig = syncConfig.api;
 
 			if (!apiConfig?.accessToken) {
-				new Notice('请先在设置中完成飞书授权');
+				new Notice(i18n.t('settings.sync.notices.authRequired'));
 				return;
 			}
 
@@ -1015,13 +1007,13 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const clientSecret = apiConfig.clientSecret || apiConfig.appSecret;
 
 			if (!clientId || !clientSecret) {
-				new Notice('请先配置飞书 App ID 和 App Secret');
+				new Notice(i18n.t('settings.sync.notices.configRequired'));
 				return;
 			}
 
 			const tasklistGuid = apiConfig.tasklistGuid;
 			if (!tasklistGuid) {
-				new Notice('请先选择一个飞书任务清单作为同步目标');
+				new Notice(i18n.t('settings.sync.notices.selectTaskList'));
 				return;
 			}
 
@@ -1057,7 +1049,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			try {
 				await provider.validateAuth();
 			} catch (authError) {
-				new Notice('飞书授权已失效，请重新授权', 8000);
+				new Notice(i18n.t('settings.sync.connectionTest.authExpired'), 8000);
 				return;
 			}
 
@@ -1077,35 +1069,35 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const result = await syncEngine.testSync(5);
 
 			const parts: string[] = [];
-			if (result.pushed > 0) parts.push('推送 ' + result.pushed + ' 个');
-			if (result.pulled > 0) parts.push('拉取 ' + result.pulled + ' 个');
-			const summary = parts.length > 0 ? parts.join('，') : '无变更';
+			if (result.pushed > 0) parts.push(result.pushed + ' ' + i18n.t('modals.syncResult.pushed'));
+			if (result.pulled > 0) parts.push(result.pulled + ' ' + i18n.t('modals.syncResult.pulled'));
+			const summary = parts.length > 0 ? parts.join(', ') : i18n.t('modals.syncResult.noChange');
 
-			// 有详细变更记录时弹出详细结果弹窗
+			// Show detailed result modal when changes exist
 			if (result.details.length > 0) {
-				showSyncResultModal(this.plugin.app, '测试同步完成: ' + summary, result);
+				showSyncResultModal(this.plugin.app, i18n.t('settings.sync.testSync.complete', { summary }), result);
 			} else if (result.errors.length > 0) {
-				new Notice("测试同步完成: " + summary + "\n" + result.errors.join("\n"), 10000);
+				new Notice(i18n.t('settings.sync.testSync.completeWithErrors', { summary, errors: result.errors.join('\n') }), 10000);
 			} else {
-				new Notice('测试同步完成: ' + summary);
+				new Notice(i18n.t('settings.sync.testSync.complete', { summary }));
 			}
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			new Notice('测试同步出错: ' + errorMsg);
+			new Notice(i18n.t('settings.sync.testSync.error', { error: errorMsg }));
 		}
 	}
 
-	// ==================== 清单操作 ====================
+	// ==================== Task List Operations ====================
 
 	private async fetchFeishuTaskLists(): Promise<void> {
-		new Notice('正在获取飞书任务清单...');
+		new Notice(i18n.t('settings.sync.notices.fetchingTaskLists'));
 
 		try {
 			const config = this.getSyncConfiguration();
 			const accessToken = config.api?.accessToken;
 
 			if (!accessToken) {
-				new Notice('请先完成飞书授权');
+				new Notice(i18n.t('settings.sync.notices.authRequired'));
 				return;
 			}
 
@@ -1123,9 +1115,9 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			await this.saveAndRefreshAll();
 
 			if (taskLists.length === 0) {
-				new Notice('未找到任务清单，请先在飞书中创建至少一个任务清单，然后重新获取');
+				new Notice(i18n.t('settings.sync.notices.noTaskLists'));
 			} else {
-				new Notice('成功获取 ' + taskLists.length + ' 个任务清单');
+				new Notice(i18n.t('settings.sync.notices.taskListsFetched', { count: taskLists.length }));
 			}
 
 			Logger.debug('SyncSettingsBuilder', 'Feishu task lists',
@@ -1141,11 +1133,11 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 
 			if (errorMsg.includes('401') || errorMsg.includes('403')) {
-				new Notice('认证失败：Access Token 无效或已过期，请重新授权');
+				new Notice(i18n.t('settings.sync.notices.authFailed401'));
 			} else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
-				new Notice('网络错误：请检查网络连接');
+				new Notice(i18n.t('settings.sync.notices.networkError'));
 			} else {
-				new Notice('获取任务清单失败: ' + errorMsg);
+				new Notice(i18n.t('settings.sync.notices.fetchFailed', { error: errorMsg }));
 			}
 
 			Logger.error('SyncSettingsBuilder', 'Failed to fetch Feishu task lists', error);
@@ -1157,7 +1149,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		const apiConfig = syncConfig?.api;
 
 		if (!apiConfig?.accessToken) {
-			new Notice('请先完成飞书授权');
+			new Notice(i18n.t('settings.sync.notices.authRequired'));
 			return;
 		}
 
@@ -1165,16 +1157,15 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		const clientSecret = apiConfig.clientSecret || apiConfig.appSecret;
 
 		if (!clientId || !clientSecret) {
-			new Notice('请先配置飞书 App ID 和 App Secret');
+			new Notice(i18n.t('settings.sync.notices.configRequired'));
 			return;
 		}
 
 			const confirmed = await showConfirmDialog(
 				this.plugin.app,
-				'测试写入',
-				'将向清单「' + tasklistName + '」中创建 5 个测试任务，\n' +
-				'用于验证同步功能是否正常。\n\n确定继续？',
-				{ confirmText: '开始写入', cancelText: '取消' }
+				i18n.t('settings.sync.taskListCards.testWrite'),
+				i18n.t('settings.sync.testWrite.confirmMessage', { name: tasklistName }),
+				{ confirmText: i18n.t('settings.sync.testWrite.confirmButton'), cancelText: i18n.t('settings.sync.syncNow.cancelText') }
 			);
 		if (!confirmed) return;
 
@@ -1206,7 +1197,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				await this.plugin.saveSettings();
 			});
 
-			new Notice('正在向「' + tasklistName + '」创建虚拟任务...', 5000);
+			new Notice(i18n.t('settings.sync.testWrite.creating', { name: tasklistName }), 5000);
 
 			let created = 0;
 			let failed = 0;
@@ -1215,8 +1206,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			for (let i = 1; i <= 5; i++) {
 				try {
 					const payload: any = {
-						summary: '虚拟任务 ' + i + '/5 - ' + new Date().toLocaleString('zh-CN'),
-						description: '由 Gantt Calendar 插件创建的连通性测试任务，可安全删除。',
+						summary: i18n.t('settings.sync.testWrite.virtualTaskTitle', { index: i, time: new Date().toLocaleString() }),
+						description: i18n.t('settings.sync.testWrite.virtualTaskDesc'),
 						due: { timestamp: String(now + i * 24 * 60 * 60 * 1000) },
 						priority: i <= 2 ? 'high' : 'normal',
 						completed: false,
@@ -1230,7 +1221,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					created++;
 
 					if (i % 3 === 0) {
-						new Notice('已创建 ' + created + '/5 个测试任务...');
+						new Notice(i18n.t('settings.sync.testWrite.progress', { current: created }));
 					}
 				} catch (err) {
 					failed++;
@@ -1238,15 +1229,14 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				}
 			}
 
-			const msg = '测试写入完成: 成功 ' + created + ' 个' +
-				(failed > 0 ? '，失败 ' + failed + ' 个' : '') +
-				'\n清单: ' + tasklistName;
+			const failedPart = failed > 0 ? i18n.t('settings.sync.testWrite.resultFailed', { failed }) : '';
+				const msg = i18n.t('settings.sync.testWrite.result', { created, failed: failedPart }) + i18n.t('settings.sync.testWrite.listLabel', { name: tasklistName });
 			new Notice(msg, 8000);
 			Logger.info('SyncSettingsBuilder', 'Test write result', { tasklistGuid, created, failed });
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 			Logger.error('SyncSettingsBuilder', 'Test write failed', error);
-			new Notice('测试写入失败: ' + errorMsg);
+			new Notice(i18n.t('settings.sync.testWrite.failed', { error: errorMsg }));
 		}
 	}
 
@@ -1255,7 +1245,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		const apiConfig = syncConfig?.api;
 
 		if (!apiConfig?.accessToken) {
-			new Notice('请先完成飞书授权');
+			new Notice(i18n.t('settings.sync.notices.authRequired'));
 			return;
 		}
 
@@ -1263,12 +1253,12 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		const clientSecret = apiConfig.clientSecret || apiConfig.appSecret;
 
 		if (!clientId || !clientSecret) {
-			new Notice('请先配置飞书 App ID 和 App Secret');
+			new Notice(i18n.t('settings.sync.notices.configRequired'));
 			return;
 		}
 
 		try {
-			new Notice('正在获取清单「' + tasklistName + '」中的任务...');
+			new Notice(i18n.t('settings.sync.clearTasks.fetching', { name: tasklistName }));
 
 			const requestFetch = FeishuHttpClient.createRequestFetch(requestUrl);
 			const tasks = await FeishuTaskApi.getTasksByTaskList(
@@ -1279,11 +1269,11 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			);
 
 			if (tasks.length === 0) {
-				new Notice('清单「' + tasklistName + '」中没有任务');
+				new Notice(i18n.t('settings.sync.clearTasks.empty', { name: tasklistName }));
 				return;
 			}
 
-			new Notice('找到 ' + tasks.length + ' 个任务，正在删除...');
+			new Notice(i18n.t('settings.sync.clearTasks.deleting', { count: tasks.length }));
 
 			const provider = new FeishuProvider({
 				enabled: true,
@@ -1320,7 +1310,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					await provider.deleteFeishuTask(task.task_guid);
 					deleted++;
 					if (deleted % 10 === 0) {
-						new Notice('已删除 ' + deleted + '/' + tasks.length + ' 个任务...');
+						new Notice(i18n.t('settings.sync.clearTasks.progress', { current: deleted, total: tasks.length }));
 					}
 				} catch (err) {
 					failed++;
@@ -1328,13 +1318,14 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				}
 			}
 
-			const msg = '清除完成: 删除 ' + deleted + ' 个' + (failed > 0 ? '，失败 ' + failed + ' 个' : '');
+			const failedPart = failed > 0 ? i18n.t('settings.sync.clearTasks.resultFailed', { failed }) : '';
+				const msg = i18n.t('settings.sync.clearTasks.result', { deleted, failed: failedPart });
 			new Notice(msg, 8000);
 			Logger.info('SyncSettingsBuilder', 'Clear tasklist result:', { deleted, failed });
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : String(error);
 			Logger.error('SyncSettingsBuilder', 'Failed to clear tasklist tasks', error);
-			new Notice('清除任务失败: ' + errorMsg);
+			new Notice(i18n.t('settings.sync.clearTasks.failed', { error: errorMsg }));
 		}
 	}
 }

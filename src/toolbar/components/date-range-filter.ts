@@ -5,6 +5,7 @@
 
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 日期范围类型
@@ -48,12 +49,14 @@ interface DateRangeMode {
 	title: string;
 }
 
-const DEFAULT_MODES: DateRangeMode[] = [
-	{ key: 'all', label: '全', title: '全部时间' },
-	{ key: 'day', label: '日', title: '按日筛选' },
-	{ key: 'week', label: '周', title: '按周筛选' },
-	{ key: 'month', label: '月', title: '按月筛选' }
-];
+function getDefaultModes(): DateRangeMode[] {
+	return [
+		{ key: 'all', label: i18n.t('toolbar.dateFilter.all'), title: i18n.t('toolbar.dateFilter.allTime') },
+		{ key: 'day', label: i18n.t('toolbar.dateFilter.day'), title: i18n.t('toolbar.dateFilter.byDay') },
+		{ key: 'week', label: i18n.t('toolbar.dateFilter.week'), title: i18n.t('toolbar.dateFilter.byWeek') },
+		{ key: 'month', label: i18n.t('toolbar.dateFilter.month'), title: i18n.t('toolbar.dateFilter.byMonth') }
+	];
+}
 
 /**
  * 渲染日期范围筛选器
@@ -81,7 +84,7 @@ export function renderDateRangeFilter(
 		inputClass = ToolbarClasses.components.dateFilter.input,
 		buttonClass = ToolbarClasses.components.dateFilter.modeBtn,
 		showAllOption = true,
-		labelText = '日期'
+		labelText = i18n.t('toolbar.dateFilter.label')
 	} = options;
 
 	// 记录前一个模式（用于清除自定义日期后恢复）
@@ -170,8 +173,8 @@ export function renderDateRangeFilter(
 
 	// 创建模式按钮
 	const modes = showAllOption
-		? DEFAULT_MODES
-		: DEFAULT_MODES.filter(m => m.key !== 'all');
+		? getDefaultModes()
+		: getDefaultModes().filter(m => m.key !== 'all');
 
 	modes.forEach((mode) => {
 		const btn = dateFilterGroup.createEl('button', {

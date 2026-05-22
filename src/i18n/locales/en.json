@@ -1,0 +1,1260 @@
+{
+	"common": {
+		"cancel": "Cancel",
+		"save": "Save",
+		"add": "Add",
+		"ok": "OK",
+		"confirm": "Confirm",
+		"delete": "Delete",
+		"edit": "Edit",
+		"close": "Close",
+		"loading": "Loading...",
+		"noTasks": "No tasks",
+		"error": "Error",
+		"ready": "Ready",
+		"today": "Today",
+		"none": "None",
+		"noContent": "No content",
+		"fileNotFound": "File not found: {{path}}",
+		"priority": {
+			"highest": "Highest",
+			"high": "High",
+			"medium": "Medium",
+			"normal": "Normal",
+			"low": "Low",
+			"lowest": "Lowest"
+		},
+		"weekdays": {
+			"mon": "Mon",
+			"tue": "Tue",
+			"wed": "Wed",
+			"thu": "Thu",
+			"fri": "Fri",
+			"sat": "Sat",
+			"sun": "Sun"
+		},
+		"weekdaysFull": {
+			"mon": "Monday",
+			"tue": "Tuesday",
+			"wed": "Wednesday",
+			"thu": "Thursday",
+			"fri": "Friday",
+			"sat": "Saturday",
+			"sun": "Sunday"
+		},
+		"months": {
+			"jan": "January",
+			"feb": "February",
+			"mar": "March",
+			"apr": "April",
+			"may": "May",
+			"jun": "June",
+			"jul": "July",
+			"aug": "August",
+			"sep": "September",
+			"oct": "October",
+			"nov": "November",
+			"dec": "December"
+		},
+		"dateLabels": {
+			"created": "Created",
+			"start": "Start",
+			"scheduled": "Scheduled",
+			"due": "Due",
+			"done": "Done",
+			"cancelled": "Cancelled"
+		},
+		"dateFields": {
+			"createdDate": "➕ Created Date",
+			"startDate": "🛫 Start Date",
+			"scheduledDate": "⏳ Scheduled Date",
+			"dueDate": "📅 Due Date",
+			"completionDate": "✅ Completion Date",
+			"cancelledDate": "❌ Cancelled Date"
+		},
+		"status": {
+			"todo": "Todo",
+			"done": "Done",
+			"important": "Important",
+			"canceled": "Canceled",
+			"inProgress": "In Progress",
+			"question": "Question",
+			"started": "Started",
+			"custom": "Custom Status"
+		},
+		"recurrence": {
+			"none": "No repeat",
+			"day": "Day",
+			"week": "Week",
+			"month": "Month",
+			"year": "Year",
+			"custom": "Custom",
+			"every": "Every",
+			"clear": "Clear",
+			"lastDay": "Last day",
+			"daySuffix": ""
+		}
+	},
+	"main": {
+		"ribbonTooltip": "Gantt Calendar",
+		"taskCacheInitFailed": "Task cache initialization failed",
+		"notSynced": "— Not synced",
+		"synced": "Synced {{time}}",
+		"yesterday": "Yesterday {{time}}"
+	},
+	"settings": {
+		"tabs": {
+			"general": "General",
+			"calendar": "Calendar",
+			"views": "Views",
+			"tasks": "Tasks",
+			"sync": "Sync"
+		},
+		"general": {
+			"groupTitle": "General",
+			"defaultView": {
+				"name": "Default View",
+				"description": "The view displayed when the plugin opens",
+				"options": {
+					"day": "Day",
+					"week": "Week",
+					"month": "Month",
+					"year": "Year",
+					"task": "Tasks",
+					"gantt": "Gantt Chart"
+				}
+			},
+			"debugMode": {
+				"name": "Developer Mode",
+				"description": "Enable detailed debug logs. When disabled, only statistics and errors are shown"
+			},
+			"showNavButtonText": {
+				"name": "Show Navigation Button Text",
+				"description": "Show text labels on view navigation buttons in the toolbar. When disabled, only icons are shown"
+			},
+			"timezoneFormat": {
+				"groupTitle": "Timezone & Format",
+				"timezone": {
+					"name": "Timezone",
+					"description": "Select the timezone used by calendar views. Affects 'today' determination and calendar highlighting"
+				},
+				"timeFormat": {
+					"name": "Time Format",
+					"description": "Task time display format, affects time presentation in modals and views",
+					"24h": "24-hour (14:30)",
+					"12h": "12-hour (2:30 PM)"
+				}
+			}
+		},
+		"calendar": {
+			"groupTitle": "Daily Notes",
+			"useObsidianDailyNote": {
+				"name": "Use Obsidian Daily Note Settings",
+				"description": "Read folder and format settings from the core 'Daily Notes' plugin or 'Periodic Notes' plugin"
+			},
+			"obsidianMode": {
+				"folder": {
+					"name": "Daily Note Folder",
+					"description": "From Obsidian daily note settings (read-only)"
+				},
+				"format": {
+					"name": "File Name Format",
+					"descriptionReadonly": "Moment.js format (read-only): {{format}}"
+				},
+				"template": {
+					"name": "Template"
+				},
+				"notDetected": {
+					"name": "Daily Note Plugin Not Detected",
+					"description": "Please enable the core 'Daily Notes' plugin or install the 'Periodic Notes' community plugin"
+				}
+			},
+			"manualMode": {
+				"folder": {
+					"name": "Daily Note Folder Path",
+					"description": "Specify the folder path for Daily Note files (relative to vault root)"
+				},
+				"format": {
+					"name": "Daily Note File Name Format",
+					"description": "Specify the Daily Note file name format (e.g., yyyy-MM-dd, auto-replaced with current date in day view)"
+				},
+				"template": {
+					"name": "Daily Note Template Path",
+					"description": "Template file path used when creating Daily Notes (leave empty to create blank files)"
+				}
+			}
+		},
+		"calendarView": {
+			"groupTitle": "Calendar View",
+			"dateFilterField": {
+				"name": "Date Filter Field",
+				"description": "Calendar views always use this field to filter tasks; Task view can switch flexibly in the toolbar"
+			},
+			"weekStart": {
+				"name": "Week Start Day",
+				"description": "Select the first day of the week",
+				"options": {
+					"monday": "Monday",
+					"sunday": "Sunday"
+				}
+			},
+			"lunarFestival": {
+				"groupTitle": "Lunar & Festivals",
+				"showLunar": {
+					"name": "Show Lunar Calendar",
+					"description": "Display lunar date text in year, month, and week views"
+				},
+				"showFestivals": {
+					"name": "Show Festivals & Solar Terms",
+					"description": "Display highlighted colors for festivals and solar terms on lunar text"
+				}
+			}
+		},
+		"tasks": {
+			"basic": {
+				"groupTitle": "Task Basics",
+				"globalFilter": {
+					"name": "Global Task Filter",
+					"description": "Prefix symbol or text used to mark tasks (e.g., '🎯 ', 'TODO ', '#task '). ⚠ Requires Obsidian restart after modification",
+					"placeholder": "Leave empty to disable filter"
+				},
+				"taskFormat": {
+					"name": "Enabled Task Formats",
+					"description": "Select the task format to support (Tasks plugin or Dataview plugin)",
+					"options": {
+						"tasks": "Tasks Plugin Format (emoji for dates)",
+						"dataview": "Dataview Plugin Format (inline fields for dates)",
+						"both": "Both"
+					}
+				},
+				"showGlobalFilter": {
+					"name": "Show Global Filter in Task Text",
+					"description": "Display the global filter prefix in task list text. When disabled, only the task description is shown"
+				},
+				"taskNotePath": {
+					"name": "Task Note Folder Path",
+					"description": "Default folder path for notes created from tasks (relative to vault root)"
+				}
+			},
+			"creation": {
+				"groupTitle": "Task Creation",
+				"newTaskHeading": {
+					"name": "New Task Heading",
+					"description": "Target heading when adding new tasks in Daily Notes (leave empty to append to file end)",
+					"placeholder": "e.g., ## Work Tasks"
+				},
+				"defaultPriority": {
+					"name": "Default Task Priority",
+					"description": "Default priority when creating new tasks",
+					"options": {
+						"highest": "🔺 Highest",
+						"high": "⏫ High",
+						"medium": "🔼 Medium",
+						"low": "🔽 Low",
+						"lowest": "⏬ Lowest",
+						"normal": "None"
+					}
+				},
+				"recurringLimit": {
+					"name": "Recurring Task Instance Display Limit",
+					"description": "Maximum number of future virtual instances displayed per recurring task in week/month views. Set to 0 to hide virtual instances."
+				}
+			}
+		},
+		"taskStatus": {
+			"groupTitle": "Task Status",
+			"defaultStatus": {
+				"name": "Default Status",
+				"description": "Todo and Done are core statuses and cannot be deleted"
+			},
+			"addCustom": {
+				"name": "Add Custom Status",
+				"description": "{{count}} custom statuses added",
+				"button": "Add"
+			},
+			"customStatus": {
+				"name": "Custom Status",
+				"description": "Modify colors or delete freely. Click ✎ to edit"
+			}
+		},
+		"heatmapPalettes": {
+			"blue": "Blue",
+			"green": "Green",
+			"red": "Red",
+			"purple": "Purple",
+			"orange": "Orange",
+			"cyan": "Cyan",
+			"pink": "Pink",
+			"yellow": "Yellow"
+		},
+		"dayView": {
+			"groupTitle": "Day View",
+			"showDailyNote": {
+				"name": "Show Daily Note",
+				"description": "Display Daily Note content in the day view"
+			},
+			"layout": {
+				"name": "Day View Layout",
+				"description": "Choose the layout for Daily Note and task list",
+				"options": {
+					"horizontal": "Split Left/Right (tasks left, note right)",
+					"vertical": "Split Top/Bottom (tasks top, note bottom)"
+				}
+			}
+		},
+		"monthView": {
+			"groupTitle": "Month View",
+			"taskLimit": {
+				"name": "Tasks Per Day",
+				"description": "Set the maximum number of tasks displayed per date card in month view (1-10)"
+			},
+			"lunarFontSize": {
+				"name": "Month Lunar Font Size",
+				"description": "Set the size of lunar calendar text in month view (8-18px)"
+			}
+		},
+		"yearView": {
+			"groupTitle": "Year View",
+			"showTaskCount": {
+				"name": "Show Daily Task Count",
+				"description": "Display total task count (completed + incomplete) below each date in year view"
+			},
+			"lunarFontSize": {
+				"name": "Lunar Font Size",
+				"description": "Adjust lunar text size in year view month cards (8-18px)"
+			},
+			"heatmapEnabled": {
+				"name": "Enable Task Heatmap",
+				"description": "Display date background color intensity based on daily task count"
+			},
+			"heatmapPalette": {
+				"name": "Heatmap Color Scheme",
+				"description": "Select the color gradient for the task heatmap"
+			},
+			"heatmap3D": {
+				"name": "Heatmap 3D Effect",
+				"description": "Add glass bead texture effect to heatmap color cells",
+				"options": {
+					"off": "Off",
+					"slight": "Slight Raised",
+					"obvious": "Obvious Raised"
+				}
+			}
+		},
+		"ganttView": {
+			"groupTitle": "Gantt Chart",
+			"startField": {
+				"name": "Gantt Start Field",
+				"description": "Select the task time field used to determine the gantt bar start position"
+			},
+			"endField": {
+				"name": "Gantt End Field",
+				"description": "Select the task time field used to determine the gantt bar end position"
+			},
+			"dateFieldOptions": {
+				"createdDate": "Created Date",
+				"startDate": "Start Date",
+				"scheduledDate": "Scheduled Date",
+				"dueDate": "Due Date",
+				"completionDate": "Completion Date",
+				"cancelledDate": "Cancelled Date"
+			}
+		},
+		"festivalColor": {
+			"groupTitle": "Festival Colors",
+			"solarFestival": {
+				"name": "Solar Festival Color",
+				"description": "Customize solar festival display color"
+			},
+			"lunarFestival": {
+				"name": "Lunar Festival Color",
+				"description": "Customize lunar festival display color"
+			},
+			"solarTerm": {
+				"name": "Solar Term Color",
+				"description": "Customize solar term display color"
+			}
+		},
+		"cardDisplay": {
+			"groupTitle": "Task Card Display",
+			"chips": {
+				"checkbox": "Checkbox",
+				"tags": "Tags",
+				"priority": "Priority",
+				"extraContent": "Extra Content"
+			},
+			"views": {
+				"week": "Week View",
+				"month": "Month View",
+				"sidebar": "Sidebar"
+			}
+		},
+		"sync": {
+			"groupTitle": "Feishu Task Sync",
+			"syncConfigGroupTitle": "Sync Configuration",
+			"taskList": {
+				"name": "Task List",
+				"description": "Fetch available task lists from Feishu account",
+				"buttonText": "Fetch Task Lists"
+			},
+			"targetFile": {
+				"name": "Feishu Sync Target File",
+				"description": "New Feishu tasks will be synced to this file (auto-created if not exists)",
+				"placeholder": "gantt-calendar-feishu-sync.md"
+			},
+			"direction": {
+				"name": "Sync Direction",
+				"description": "Choose the direction of task synchronization",
+				"options": {
+					"bidirectional": "Bidirectional",
+					"importOnly": "Import Only (from Feishu)",
+					"exportOnly": "Export Only (to Feishu)"
+				}
+			},
+			"conflictResolution": {
+				"name": "Conflict Resolution",
+				"description": "How to handle conflicts when both local and Feishu tasks are modified simultaneously",
+				"options": {
+					"localWin": "Local Wins",
+					"remoteWin": "Feishu Wins",
+					"newestWin": "Newest Wins"
+				}
+			},
+			"autoSyncInterval": {
+				"name": "Auto Sync Interval",
+				"description": "Time interval (minutes) between automatic syncs. Set to 0 to disable auto sync"
+			},
+			"manualSync": {
+				"name": "Manual Sync",
+				"description": "Perform a sync operation immediately. 'Test Sync' only syncs the 5 most recent tasks for debugging."
+			},
+			"syncNow": {
+				"button": "Sync Now",
+				"confirmTitle": "Sync Now",
+				"confirmMessage": "About to perform a full bidirectional sync:\n\n• Obsidian → Feishu: Push all unsynchronized local tasks\n• Feishu → Obsidian: Pull all unsynchronized remote tasks\n• Synced tasks will be updated based on changes\n• Conflicting tasks will be handled according to the current conflict strategy\n\nPlease ensure sync parameters are properly configured.",
+				"confirmText": "Start Sync",
+				"cancelText": "Cancel"
+			},
+			"testSync": {
+				"button": "Test Sync",
+				"tooltip": "Bidirectionally sync the 5 most recent tasks for debugging",
+				"confirmTitle": "Test Sync",
+				"confirmMessage": "About to perform test sync (limited to 5 tasks):\n\n• Only syncs the 5 most recent tasks\n• Bidirectional: Obsidian ↔ Feishu\n• Will not affect already synced tasks\n\nProceed?",
+				"confirmText": "Start Test",
+				"cancelText": "Cancel",
+				"complete": "Test sync complete: {{summary}}",
+				"completeWithErrors": "Test sync finished with errors: {{summary}}",
+				"error": "Test sync error: {{error}}"
+			},
+			"disclaimer": {
+				"title": "Sync feature is under active development",
+				"warning": "This feature may have unknown stability issues. Please back up your vault before use to avoid data loss.",
+				"backupReminder": "Data is priceless. Back up first."
+			},
+			"statusHint": {
+				"fetchFirst": "↑ Please click 'Fetch Task Lists' above to get the list, then select a sync target.",
+				"notSelected": "⚠ No task list selected. Sync cannot proceed. Please select a task list below as the sync target.",
+				"selected": "✓ Task list selected, sync is ready. Target list: 「",
+				"suffix": "」",
+				"listTitle": "Feishu Task Lists ({{count}})"
+			},
+			"taskListCards": {
+				"creator": "Creator: {{id}}",
+				"members": "Members: {{count}}",
+				"deselect": "Deselect",
+				"select": "Select",
+				"testWrite": "Test Write",
+				"testWriteTitle": "Write 5 test tasks to this list to verify API connectivity",
+				"clearTasks": "Clear Tasks",
+				"clearTasksTitle": "Delete all Feishu tasks in this list (irreversible)",
+				"switchConfirm": {
+					"title": "Switch Task List",
+					"message": "⚠️ Switching task lists will trigger a full sync\n\nFor ease of management, tasks in Obsidian will only sync to the currently selected target list\nand will not be mixed with tasks from other Feishu lists.\n\nConfirm switching to list 「{{name}}」?",
+					"confirmText": "Switch",
+					"cancelText": "Cancel"
+				},
+				"clearConfirm": {
+					"title": "Clear Tasks",
+					"message": "Are you sure you want to clear all tasks in list 「{{name}}」?\n\nThis will delete all Feishu tasks in this list and cannot be undone!",
+					"confirmText": "Clear",
+					"cancelText": "Cancel"
+				},
+				"deselectNotice": "Task list deselected, sync paused",
+				"switchConfirmTitle": "Switch Task List",
+				"switchConfirmMessage": "Switching will trigger full sync. Confirm switch to {{name}}?",
+				"switchConfirmButton": "Switch",
+				"switchNotice": "Switched to: {{name}}{{suffix}}",
+				"switchNoticeFullSync": " (full sync will be performed)",
+				"clearConfirmTitle": "Clear Tasks",
+				"clearConfirmMessage": "Delete all tasks in {{name}}? This cannot be undone!",
+				"clearConfirmButton": "Clear All"
+			},
+			"account": {
+				"name": "Feishu Account",
+				"connected": "Connected",
+				"disconnected": "Not Connected",
+				"reconnect": "Re-authorize",
+				"connect": "Connect Feishu Account"
+			},
+			"oauth": {
+				"appId": {
+					"label": "App ID",
+					"description": "App ID from Feishu Open Platform"
+				},
+				"appSecret": {
+					"label": "App Secret",
+					"description": "App Secret from Feishu Open Platform, used to refresh tokens"
+				},
+				"redirectUri": {
+					"label": "Redirect URL",
+					"description": "Callback URL after OAuth authorization"
+				},
+				"authCode": {
+					"label": "Authorization Code",
+					"description": "Copy the code parameter from the browser callback URL and paste here, then click to get token",
+					"placeholder": "Paste authorization code..."
+				},
+				"getToken": "Get Token",
+				"invalidCode": "Please enter a valid authorization code",
+				"authorizedUser": {
+					"label": "Authorized User"
+				},
+				"testConnection": "Test connection, get user info",
+				"accessToken": {
+					"label": "Access Token",
+					"description": "Keep confidential, do not share",
+					"copyTooltip": "Copy full token",
+					"copied": "Copied to clipboard"
+				},
+				"tokenStatus": {
+					"label": "Token Status",
+					"expired": "Token expired. Please re-authorize",
+					"expiresAt": "Expires: {{time}} ({{remaining}})",
+					"expiredTooltip": "Expired",
+					"validTooltip": "Valid",
+					"valid": "Valid"
+				},
+				"refresh": "Refresh",
+				"reauthorizeTooltip": "Re-authorize",
+				"refreshTokenTooltip": "Try refreshing token",
+				"refreshTokenStatus": {
+					"label": "Refresh Token Status",
+					"expired": "Refresh token expired. Please re-authorize",
+					"expiresAt": "Expires: {{time}} ({{remaining}})",
+					"unknownExpiry": "Expiry unknown (will display after re-authorization)",
+					"unknownTooltip": "Time unknown",
+					"valid": "Expires: {{time}} ({{remaining}})",
+					"unknown": "Unknown"
+				},
+				"revokeAuth": {
+					"label": "Revoke Authorization",
+					"description": "Clear saved Feishu authorization info",
+					"button": "Revoke Authorization",
+					"revoked": "Feishu authorization revoked"
+				},
+				"invalidCodeNotice": "Please enter a valid authorization code",
+				"testConnectionTooltip": "Test connection and get user info",
+				"copyTokenTooltip": "Copy full token",
+				"copiedNotice": "Copied to clipboard",
+				"reauthorize": "Re-authorize",
+				"tryRefreshToken": "Try refreshing token",
+				"resetAuth": {
+					"label": "Revoke Authorization",
+					"description": "Clear saved Feishu authorization info",
+					"button": "Revoke Authorization",
+					"notice": "Feishu authorization revoked"
+				},
+				"pleaseConfigureAppId": "Please configure App ID first",
+				"completeAuthInBrowser": "Complete Feishu authorization in browser, then copy the code from the callback URL and paste here",
+				"exchangingCode": "Exchanging authorization code...",
+				"pleaseConfigureAppIdAndSecret": "Please configure Feishu App ID and App Secret first",
+				"apiMissingAccessToken": "Feishu API response error: missing access_token",
+				"authSuccess": "Feishu authorization successful!",
+				"codeExpired": "Authorization code expired. Please re-authorize",
+				"authFailed": "Authorization failed: {{error}}",
+				"tokenRefreshing": "Refreshing token...",
+				"noRefreshToken": "No refresh token. Please re-authorize",
+				"tokenRefreshSuccess": "Token refreshed successfully!",
+				"tokenRefreshFailed": "Refresh failed: {{error}}"
+			},
+			"pushFilter": {
+				"groupTitle": "Push Filter",
+				"enabled": {
+					"name": "Enable Push Filter",
+					"description": "When enabled, only tasks matching filter conditions will be pushed to Feishu. Changes to already synced tasks will still be synced."
+				},
+				"completionStatus": {
+					"name": "Completion Status Filter",
+					"description": "Select which tasks to push. Already synced tasks are unaffected.",
+					"options": {
+						"all": "All Tasks",
+						"incompleteOnly": "Incomplete Only"
+					}
+				},
+				"dateFilter": {
+					"name": "Date Filter",
+					"description": "Only push tasks with dates after the specified date. A task matches if any date field matches.",
+					"all": "All",
+					"lastWeek": "Last Week",
+					"lastMonth": "Last Month",
+					"last3Months": "Last 3 Months",
+					"lastHalfYear": "Last 6 Months",
+					"lastYear": "Last Year",
+					"last6Months": "Last 6 Months"
+				},
+				"pathFilter": {
+					"name": "Path Filter",
+					"description": "Filter by file path, one path per line. Folders end with /",
+					"placeholder": "One path per line, e.g.:\nprojects/\nDaily/Tasks.md"
+				}
+			},
+			"notices": {
+				"cancelled": "Task list selection cancelled, sync paused.",
+				"switched": "Switched to task list: {{name}}{{suffix}}",
+				"fullSyncHint": " (full sync will be performed)",
+				"needAppId": "Please configure App ID first",
+				"browserAuth": "Please complete Feishu authorization in your browser, then copy the authorization code from the callback URL",
+				"exchangingCode": "Exchanging authorization code...",
+				"needAppCredentials": "Please configure Feishu App ID and App Secret first",
+				"feishuApiError": "Feishu API response format error: missing access_token",
+				"authSuccess": "Feishu authorization successful!",
+				"codeExpired": "Authorization code expired. Please re-authorize (code is valid for ~5 minutes)",
+				"authFailed": "Authorization failed: {{error}}",
+				"refreshingToken": "Refreshing token...",
+				"noRefreshToken": "No refresh token available. Please re-authorize",
+				"tokenRefreshed": "Token refreshed successfully!",
+				"refreshFailed": "Refresh failed: {{error}}, please re-authorize",
+				"notAuthorized": "Not authorized: please complete Feishu authorization first",
+				"unknown": "Unknown",
+				"connecting": "Testing Feishu connection...",
+				"connectionSuccess": "✅ Feishu connection test successful",
+				"userInfo": "User Info:",
+				"userName": "  Name: {{name}}",
+				"userEnName": "  English Name: {{name}}",
+				"userId": "  User ID: {{id}}",
+				"userOpenId": "  Open ID: {{id}}",
+				"userEmail": "  Email: {{email}}",
+				"tokenStatus": "Token Status:",
+				"expiryTime": "  Expiry: {{time}}",
+				"tokenStatusLine": "  Status: {{status}}",
+				"expired": "Expired",
+				"valid": "Valid",
+				"authorizedLists": "Authorized Lists: {{count}}",
+				"currentList": "Current List: {{name}}",
+				"connectionFailed": "❌ Feishu connection test failed",
+				"errorInfo": "Error Info: {{message}}",
+				"errorCode": "Error Code: {{code}}",
+				"tokenExpiryHint": "Possible cause: Access Token invalid or expired",
+				"reAuthSuggestion": "Suggestion: Please re-authorize to get a new token",
+				"permissionIssue": "Possible cause: Insufficient permissions or app not approved",
+				"permissionSuggestion": "Suggestion: Check app permission configuration and review status",
+				"networkIssue": "Possible cause: Network connection issue",
+				"networkSuggestion": "Suggestion: Check network connection or firewall settings",
+				"pleaseAuth": "Please complete Feishu authorization in settings first",
+				"selectTaskList": "Please select a Feishu task list as sync target",
+				"authExpiredForSync": "Feishu authorization expired. Please re-authorize",
+				"pushedCount": "Pushed {{count}}",
+				"pulledCount": "Pulled {{count}}",
+				"pushConnector": ", ",
+				"noChange": "No changes",
+				"testSyncCompleteTitle": "Test sync complete: {{summary}}",
+				"testSyncComplete": "Test sync complete: {{summary}}",
+				"testSyncError": "Test sync error: {{error}}",
+				"fetching": "Fetching Feishu task lists...",
+				"noTaskLists": "No task lists found. Please create at least one task list in Feishu and try again.",
+				"fetchSuccess": "Successfully fetched {{count}} task lists",
+				"authExpired": "Authentication failed: Access Token is invalid or expired. Please re-authorize.",
+				"networkError": "Network error: Please check your network connection.",
+				"fetchFailed": "Failed to fetch task lists: {{error}}",
+				"testWriteConfirmTitle": "Test Write",
+				"testWriteConfirmMessage": "About to create 5 test tasks in list 「{{name}}」 to verify sync functionality.\n\nProceed?",
+				"testWriteConfirmOk": "Start Write",
+				"testWriteCancel": "Cancel",
+				"testWriteTo": "Writing test tasks to 「{{name}}」...",
+				"virtualTaskSummary": "Test Task {{index}}/{{total}} - {{date}}",
+				"virtualTaskDesc": "Connectivity test task created by Gantt Calendar plugin. Safe to delete.",
+				"testWriteProgress": "Created {{created}}/5 test tasks...",
+				"testWriteComplete": "Test write complete: {{created}} succeeded",
+				"testWriteFailedCount": ", {{count}} failed",
+				"testWriteListInfo": "\nList: {{name}}",
+				"testWriteError": "Test write failed: {{error}}",
+				"clearingTasks": "Fetching tasks from 「{{name}}」...",
+				"noTasksInList": "No tasks in list 「{{name}}」",
+				"clearingTasksFound": "Found {{count}} tasks, deleting...",
+				"clearingProgress": "Deleted {{current}}/{{total}} tasks...",
+				"clearComplete": "Clear complete: {{deleted}} deleted",
+				"clearFailedCount": ", {{count}} failed",
+				"clearError": "Failed to clear tasks: {{error}}",
+				"getUserInfoFailed": "Failed to get user info",
+				"authRequired": "Please complete Feishu authorization in settings first",
+				"configRequired": "Please configure Feishu App ID and App Secret first",
+				"fetchingTaskLists": "Fetching task lists...",
+				"taskListsFetched": "Task lists fetched: {{count}}",
+				"authFailed401": "Authorization failed (401). Please re-authorize"
+			},
+			"connectionTest": {
+				"unauthorized": "Not authorized: please complete Feishu authorization first",
+				"expireUnknown": "Unknown",
+				"testing": "Testing Feishu connection...",
+				"success": "Feishu connection test successful",
+				"userInfo": "User Info:",
+				"userName": "  Name: {{name}}",
+				"userEnName": "  English Name: {{name}}",
+				"userId": "  User ID: {{id}}",
+				"email": "  Email: {{email}}",
+				"tokenInfo": "Token Status:",
+				"expireTime": "  Expiry: {{time}}",
+				"tokenExpired": "Expired",
+				"tokenValid": "Valid",
+				"authorizedLists": "Authorized Lists: {{count}}",
+				"currentList": "Current List: {{name}}",
+				"failed": "Feishu connection test failed",
+				"errorInfo": "Error Info: {{message}}",
+				"errorCode": "Error Code: {{code}}",
+				"tokenExpiredStatus": "Token Status: {{status}}",
+				"possible401": "Possible cause: Access token invalid or expired",
+				"possible403": "Possible cause: Insufficient permissions",
+				"possibleNetwork": "Possible cause: Network connection issue",
+				"authExpired": "Feishu authorization expired. Please re-authorize"
+			},
+			"groupTitles": {
+				"pushFilter": "Push Filter"
+			},
+			"testWrite": {
+				"confirmMessage": "Write 5 test tasks to test API connectivity?",
+				"confirmButton": "Write Test Tasks",
+				"creating": "Creating test tasks...",
+				"virtualTaskTitle": "Test Task {{index}}",
+				"virtualTaskDesc": "Auto-generated test task {{index}} for API testing",
+				"progress": "Creating {{current}}/{{total}}",
+				"resultFailed": "Test write failed: {{count}}/{{total}}",
+				"result": "Test write complete: success {{success}}/{{total}}",
+				"listLabel": "Task List: {{name}} (ID: {{id}})",
+				"failed": "Test write error: {{error}}"
+			},
+			"clearTasks": {
+				"fetching": "Fetching task list...",
+				"empty": "Task list is empty, nothing to clear",
+				"deleting": "Deleting tasks...",
+				"progress": "Deleting {{current}}/{{total}}",
+				"resultFailed": "Delete failed: {{count}}/{{total}}",
+				"result": "Tasks deleted: {{count}}",
+				"failed": "Clear tasks error: {{error}}"
+			}
+		}
+	},
+	"modals": {
+		"addStatus": {
+			"title": "Add Custom Status",
+			"name": {
+				"label": "Status Name",
+				"placeholder": "e.g., Pending Review"
+			},
+			"key": {
+				"label": "Status Key (English)",
+				"placeholder": "e.g., pending_review"
+			},
+			"symbol": {
+				"label": "Checkbox Symbol (single character)",
+				"hint": "Any single non-whitespace character, but cannot use [, ] or default symbols (space, x)",
+				"placeholder": "e.g., p",
+				"errorEmpty": "Please enter a checkbox symbol",
+				"errorInvalid": "Invalid symbol",
+				"errorDuplicate": "Status key already exists"
+			},
+			"description": {
+				"label": "Status Description",
+				"placeholder": "Describe the purpose of this status"
+			},
+			"colors": {
+				"macaronLabel": "Quick Select Light Background Color",
+				"lightTheme": "☀️ Light",
+				"darkTheme": "🌙 Dark",
+				"background": "Background",
+				"text": "Text"
+			}
+		},
+		"editStatus": {
+			"title": "Edit Custom Status",
+			"name": {
+				"label": "Status Name",
+				"placeholder": "e.g., Pending Review",
+				"errorEmpty": "Please enter a status name"
+			},
+			"key": {
+				"label": "Status Key (English, read-only)"
+			},
+			"symbol": {
+				"label": "Checkbox Symbol (single character)",
+				"hint": "Any single non-whitespace character, but cannot use [, ] or default symbols (space, x)",
+				"placeholder": "e.g., p",
+				"errorEmpty": "Please enter a checkbox symbol",
+				"errorInvalid": "Invalid symbol"
+			},
+			"description": {
+				"label": "Status Description",
+				"placeholder": "Describe the purpose of this status"
+			},
+			"colors": {
+				"macaronLabel": "Quick Select Light Background Color",
+				"lightTheme": "☀️ Light",
+				"darkTheme": "🌙 Dark",
+				"background": "Background",
+				"text": "Text"
+			}
+		},
+		"createTask": {
+			"title": "Create New Task",
+			"descriptionLabel": "Task Description *",
+			"descriptionPlaceholder": "Enter task description...",
+			"submitHint": "Press Enter to submit",
+			"errorEmptyDescription": "Please enter a task description",
+			"errorDateOrder": "Start date cannot be after due date",
+			"success": "Task created",
+			"error": "Failed to create task: {{error}}"
+		},
+		"editTask": {
+			"title": "Edit Task",
+			"descriptionLabel": "Task Description",
+			"priorityLabel": "Priority",
+			"recurrenceLabel": "Recurrence",
+			"datesLabel": "Date Settings",
+			"submitHint": "Press Enter to submit",
+			"datePlaceholder": "Select date and time",
+			"success": "Task updated",
+			"error": "Failed to update task"
+		},
+		"confirm": {
+			"cancel": "Cancel",
+			"confirm": "OK"
+		},
+		"syncResult": {
+			"pushed": "Pushed",
+			"pulled": "Pulled",
+			"conflicted": "Conflicted",
+			"skipped": "Skipped",
+			"noChange": "No changes",
+			"update": "Update",
+			"push": "Push",
+			"pull": "Pull",
+			"conflict": "Conflict"
+		}
+	},
+	"toolbar": {
+		"sort": {
+			"ariaLabel": "Sort Options",
+			"header": "Sort By (click to toggle)",
+			"options": {
+				"dueDate": "Due Date",
+				"priority": "Priority",
+				"status": "Status",
+				"tags": "Tags"
+			}
+		},
+		"fieldSelector": {
+			"defaultLabel": "Field Filter",
+			"createdDate": "Created Time",
+			"startDate": "Start Time",
+			"scheduledDate": "Scheduled Time",
+			"dueDate": "Due Time",
+			"completionDate": "Done Time",
+			"cancelledDate": "Cancelled Time",
+			"startTime": "Start Time",
+			"endTime": "End Time"
+		},
+		"statusFilter": {
+			"ariaLabel": "Status Filter",
+			"header": "Filter Status",
+			"empty": "No statuses available"
+		},
+		"dateFilter": {
+			"label": "Date",
+			"all": "All",
+			"day": "Day",
+			"week": "Week",
+			"month": "Month",
+			"allTime": "All Time",
+			"byDay": "Filter by Day",
+			"byWeek": "Filter by Week",
+			"byMonth": "Filter by Month"
+		},
+		"viewSwitcher": {
+			"year": "Year",
+			"month": "Month",
+			"week": "Week",
+			"day": "Day",
+			"yearFull": "Year View",
+			"monthFull": "Month View",
+			"weekFull": "Week View",
+			"dayFull": "Day View"
+		},
+		"nav": {
+			"today": "Today",
+			"previous": "Previous",
+			"next": "Next",
+			"first": "First",
+			"last": "Last",
+			"goToday": "Go to Today"
+		},
+		"createTask": {
+			"ariaLabel": "Create New Task"
+		},
+		"ganttScroll": {
+			"scrollLeft": "Scroll to Left",
+			"scrollRight": "Scroll to Right",
+			"goToday": "Go to Today"
+		},
+		"refresh": {
+			"defaultTitle": "Refresh",
+			"refreshTask": "Refresh Tasks",
+			"refreshGantt": "Refresh Gantt"
+		},
+		"settingsButton": {
+			"ariaLabel": "Plugin Settings"
+		},
+		"syncButton": {
+			"defaultTitle": "Feishu Sync"
+		},
+		"tagFilter": {
+			"ariaLabel": "Tag Filter",
+			"header": "Filter Tags",
+			"andTitle": "Intersection: contains all selected tags",
+			"orTitle": "Union: contains any selected tag",
+			"notTitle": "Exclude: does not contain selected tags",
+			"empty": "No tags"
+		},
+		"buttonGroup": {
+			"todayText": "Today",
+			"firstTitle": "First",
+			"prevTitle": "Previous",
+			"todayTitle": "Go to Today",
+			"nextTitle": "Next",
+			"lastTitle": "Last"
+		},
+		"modeToggle": {
+			"viewLabels": {
+				"day": {
+					"short": "D",
+					"full": "Day View"
+				},
+				"week": {
+					"short": "W",
+					"full": "Week View"
+				},
+				"month": {
+					"short": "M",
+					"full": "Month View"
+				},
+				"year": {
+					"short": "Y",
+					"full": "Year View"
+				}
+			}
+		},
+		"timeGranularity": {
+			"day": "Day",
+			"week": "Week",
+			"month": "Month"
+		},
+		"fieldFilter": {
+			"label": "Field Filter"
+		},
+		"dateFilterLabel": "Date",
+		"leftButtons": {
+			"day": {
+				"label": "Day",
+				"ariaLabel": "Day View"
+			},
+			"week": {
+				"label": "Week",
+				"ariaLabel": "Week View"
+			},
+			"month": {
+				"label": "Month",
+				"ariaLabel": "Month View"
+			},
+			"year": {
+				"label": "Year",
+				"ariaLabel": "Year View"
+			},
+			"task": {
+				"label": "Tasks",
+				"ariaLabel": "Task View"
+			},
+			"gantt": {
+				"label": "Gantt",
+				"ariaLabel": "Gantt View"
+			}
+		}
+	},
+	"contextMenu": {
+		"editTask": "Edit Task",
+		"createNote": "Create Task Note: Same Name",
+		"createNoteAlias": "Create Task Note: Alias",
+		"priority": {
+			"highest": "Highest",
+			"high": "High",
+			"medium": "Medium",
+			"normal": "Normal",
+			"low": "Low",
+			"lowest": "Lowest"
+		},
+		"statusImportant": "🔴 Important",
+		"statusQuestion": "🟠 Question",
+		"postpone": {
+			"days1": "Postpone 1 Day",
+			"days3": "Postpone 3 Days",
+			"days7": "Postpone 7 Days"
+		},
+		"setDueDate": {
+			"tomorrow": "Set Due to Tomorrow",
+			"days3": "Set Due to 3 Days Later",
+			"days7": "Set Due to 7 Days Later"
+		},
+		"cancelTask": "Cancel Task",
+		"restoreTask": "Restore Task",
+		"deleteTask": "Delete Task",
+		"commands": {
+			"cancelled": "Task cancelled",
+			"cancelFailed": "Failed to cancel task",
+			"noteCreated": "Note created: {{fileName}}",
+			"noteCreateFailed": "Failed to create note",
+			"enterNoteName": "Enter Note Name",
+			"deleted": "Task deleted",
+			"deleteFailed": "Failed to delete task",
+			"dueDateSet": "Due date set to {{date}}",
+			"postponed": "Task postponed {{days}} days, due {{date}}",
+			"postponeFailed": "Failed to postpone task",
+			"restored": "Task restored",
+			"restoreFailed": "Failed to restore task",
+			"priorityUpdated": "Priority updated",
+			"priorityUpdateFailed": "Failed to update priority",
+			"statusUpdated": "Task status updated to: {{label}}",
+			"statusUpdateFailed": "Failed to update task status",
+			"cancel": {
+				"alreadyCancelled": "Task is already cancelled",
+				"cannotCancelDone": "Completed tasks cannot be cancelled directly. Undo completion first"
+			},
+			"createNote": {
+				"alreadyExists": "Task note already exists",
+				"emptyFileName": "File name is empty, cannot create file",
+				"existsInPath": "File with same name already exists: {{fileName}}.md",
+				"existsInDir": "File already exists in specified directory: {{fileName}}.md"
+			},
+			"deleteTask": {
+				"fileNotFound": "Task source file not found",
+				"invalidLineNumber": "Invalid task line number"
+			},
+			"restore": {
+				"alreadyDone": "Restore failed: task is completed",
+				"alreadyRestored": "Restore failed: task is already restored"
+			}
+		}
+	},
+	"dailyNote": {
+		"createCancelled": "Task creation cancelled",
+		"taskAdded": "Task added to Daily Note",
+		"createdAndAdded": "Daily Note created and task added",
+		"createFailed": "Failed to create Daily Note: {{error}}"
+	},
+	"sync": {
+		"feishuAuthRenewed": "Feishu authorization auto-renewed"
+	},
+	"commands": {
+		"openCalendarView": "Open Calendar View",
+		"openTaskView": "Open Task View",
+		"openSidebarView": "Open Sidebar",
+		"feishuSync": "Feishu Task Bidirectional Sync",
+		"sync": {
+			"syncing": "🔄 Syncing...",
+			"syncingFeishu": "🔄 Syncing Feishu tasks...",
+			"stopSync": "Stop Sync",
+			"stopped": "Stopped",
+			"authRequired": "Please complete Feishu authorization in settings first",
+			"configRequired": "Please configure Feishu App ID and App Secret first",
+			"authExpired": "Feishu authorization expired, please re-authorize",
+			"syncFailed": "❌ Sync Failed",
+			"syncSuccess": "✅ Synced",
+			"pushed": "pushed",
+			"pulled": "pulled",
+			"conflicted": "conflicted",
+			"skipped": "skipped",
+			"noChange": "No changes",
+			"autoSyncComplete": "Auto sync complete: {{summary}}",
+			"syncComplete": "Sync complete: {{summary}}",
+			"syncError": "Sync error: {{error}}",
+			"feishuSyncComplete": "Feishu sync complete: {{summary}}"
+		}
+	},
+	"views": {
+		"yearView": {
+			"months": [
+				"January",
+				"February",
+				"March",
+				"April",
+				"May",
+				"June",
+				"July",
+				"August",
+				"September",
+				"October",
+				"November",
+				"December"
+			],
+			"weekdaysShort": [
+				"Sun",
+				"Mon",
+				"Tue",
+				"Wed",
+				"Thu",
+				"Fri",
+				"Sat"
+			],
+			"weekdaysShortMon": [
+				"Mon",
+				"Tue",
+				"Wed",
+				"Thu",
+				"Fri",
+				"Sat",
+				"Sun"
+			],
+			"weekNumber": "W{{week}}"
+		},
+		"monthView": {
+			"weekdays": [
+				"Sun",
+				"Mon",
+				"Tue",
+				"Wed",
+				"Thu",
+				"Fri",
+				"Sat"
+			],
+			"weekdaysMon": [
+				"Mon",
+				"Tue",
+				"Wed",
+				"Thu",
+				"Fri",
+				"Sat",
+				"Sun"
+			]
+		},
+		"weekView": {
+			"weekdays": [
+				"Mon",
+				"Tue",
+				"Wed",
+				"Thu",
+				"Fri",
+				"Sat",
+				"Sun"
+			],
+			"allDay": "All Day"
+		},
+		"dayView": {
+			"todayTasks": "Today's Tasks",
+			"loading": "Loading...",
+			"noTasks": "No tasks",
+			"loadError": "Error loading tasks",
+			"updateTimeFailed": "Failed to update task time",
+			"updateTaskFailed": "Failed to update task",
+			"updateDateFailed": "Failed to update task date",
+			"switchToPreview": "Switch to preview mode",
+			"switchToEdit": "Switch to edit mode"
+		},
+		"taskView": {
+			"loading": "Loading...",
+			"noTasks": "No tasks found matching the criteria",
+			"loadError": "Error loading tasks"
+		},
+		"ganttView": {
+			"invalidDateRange": "Invalid date range",
+			"updateTaskFailed": "Failed to update task",
+			"emptyTitle": "No tasks to display",
+			"possibleReasons": "Possible reasons: ",
+			"checkDatesHint": "Please check if tasks have start and end dates",
+			"renderError": "Error rendering Gantt chart: ",
+			"currentFilter": "Current filter: {{count}} statuses",
+			"tagFilter": "Tag filter: {{tags}}",
+			"missingFieldConfig": "Missing time field configuration"
+		}
+	},
+	"embeddedEditor": {
+		"dailyNoteNotFound": "Daily Note not found"
+	},
+	"sidebar": {
+		"taskList": {
+			"searchPlaceholder": "Search tasks...",
+			"loading": "Loading...",
+			"noTasks": "No tasks",
+			"noMatchingTasks": "No matching tasks",
+			"filterBar": {
+				"statusFilter": "Status Filter",
+				"priorityFilter": "Priority Filter",
+				"tagFilter": "Tag Filter",
+				"sort": "Sort",
+				"dateFilter": "Date Filter"
+			},
+			"priority": {
+				"all": "All",
+				"highest": "Highest",
+				"high": "High",
+				"medium": "Medium",
+				"normal": "Normal",
+				"low": "Low",
+				"lowest": "Lowest"
+			},
+			"sortOptions": {
+				"byPriority": "By Priority",
+				"byDueDate": "By Due Date",
+				"byStartDate": "By Start Date",
+				"ascending": "Ascending",
+				"descending": "Descending"
+			},
+			"dateFilterOptions": {
+				"all": "All",
+				"today": "Today",
+				"thisWeek": "This Week",
+				"thisMonth": "This Month"
+			},
+			"tagFilter": {
+				"matchMode": "Match mode: "
+			}
+		}
+	},
+	"taskStatus": {
+		"todo": "Todo",
+		"done": "Done",
+		"important": "Important",
+		"canceled": "Canceled",
+		"inProgress": "In Progress",
+		"question": "Question",
+		"started": "Started",
+		"customDefault": "Custom Status",
+		"validation": {
+			"symbolEmpty": "Symbol cannot be empty",
+			"symbolSingleChar": "Symbol must be a single character",
+			"symbolReserved": "Symbol \"{{symbol}}\" is used by default status",
+			"symbolSpecial": "Symbol cannot use special characters",
+			"symbolWhitespace": "Symbol cannot be empty or whitespace"
+		}
+	},
+	"taskCard": {
+		"due": "Due",
+		"created": "Created",
+		"start": "Start",
+		"scheduled": "Scheduled",
+		"done": "Done"
+	},
+	"gantt": {
+		"taskInfoIncomplete": "Task information incomplete",
+		"timeUpdated": "Task time updated: {{start}} - {{end}}",
+		"updateFailed": "Update task failed: {{error}}",
+		"markedComplete": "Task marked as complete",
+		"markedIncomplete": "Task marked as incomplete",
+		"updateProgressFailed": "Update progress failed: {{error}}"
+	}
+}

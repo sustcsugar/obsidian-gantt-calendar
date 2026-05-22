@@ -5,6 +5,7 @@ import { AddCustomStatusModal, EditCustomStatusModal } from '../modals';
 import { SettingsStatusCardClasses } from '../../utils/bem';
 import type { BuilderConfig } from '../types';
 import type { TaskStatus } from '../../tasks/taskStatus';
+import { i18n } from '../../i18n/i18n';
 
 export class TaskStatusSettingsBuilder extends BaseBuilder {
 	constructor(config: BuilderConfig) {
@@ -12,7 +13,7 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 	}
 
 	render(): void {
-		this.createSettingGroup('任务状态', (group) => {
+		this.createSettingGroup(i18n.t('settings.taskStatus.groupTitle'), (group) => {
 			const container = group instanceof HTMLElement ? group : this.containerEl;
 			const addSetting = (cb: (setting: Setting) => void) => {
 				if (this.isSettingGroupAvailable()) {
@@ -26,8 +27,8 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 
 			// ── 默认状态 ──
 			addSetting(setting => {
-				setting.setName('默认状态')
-					.setDesc('待办和已完成为核心状态，不可删除');
+				setting.setName(i18n.t('settings.taskStatus.defaultStatus.name'))
+					.setDesc(i18n.t('settings.taskStatus.defaultStatus.description'));
 				setting.controlEl.remove();
 				setting.settingEl.style.flexDirection = 'column';
 				setting.settingEl.style.alignItems = 'flex-start';
@@ -48,10 +49,10 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 			const customStatuses = this.plugin.settings.taskStatuses.filter((s: TaskStatus) => !s.isDefault);
 
 			addSetting(setting =>
-				setting.setName('添加自定义状态')
-					.setDesc(`已添加 ${customStatuses.length} 个自定义状态`)
+				setting.setName(i18n.t('settings.taskStatus.addCustom.name'))
+					.setDesc(i18n.t('settings.taskStatus.addCustom.description', { count: customStatuses.length }))
 					.addButton(button => button
-						.setButtonText('添加')
+						.setButtonText(i18n.t('settings.taskStatus.addCustom.button'))
 						.setCta()
 						.onClick(() => {
 							new AddCustomStatusModal(this.plugin.app, this.plugin, () => {
@@ -62,8 +63,8 @@ export class TaskStatusSettingsBuilder extends BaseBuilder {
 
 			if (customStatuses.length > 0) {
 				addSetting(setting => {
-					setting.setName('自定义状态')
-						.setDesc('可自由修改颜色或删除，点击 ✎ 编辑');
+					setting.setName(i18n.t('settings.taskStatus.customStatus.name'))
+						.setDesc(i18n.t('settings.taskStatus.customStatus.description'));
 					setting.controlEl.remove();
 					setting.settingEl.style.flexDirection = 'column';
 					setting.settingEl.style.alignItems = 'flex-start';

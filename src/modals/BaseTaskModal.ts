@@ -13,6 +13,7 @@
  */
 
 import { App, Modal, setIcon } from 'obsidian';
+import { i18n } from '../i18n/i18n';
 import flatpickr from 'flatpickr';
 import type { GCTask } from '../types';
 import { EditTaskModalClasses } from '../utils/bem';
@@ -63,12 +64,12 @@ export abstract class BaseTaskModal extends Modal {
 
 	// 优先级选项常量
 	protected readonly priorityOptions: PriorityOption[] = [
-		{ value: 'highest', label: '最高', icon: '🔺' },
-		{ value: 'high', label: '高', icon: '⏫' },
-		{ value: 'medium', label: '中', icon: '🔼' },
-		{ value: 'normal', label: '普通', icon: '◽' },
-		{ value: 'low', label: '低', icon: '🔽' },
-		{ value: 'lowest', label: '最低', icon: '⏬' },
+		{ value: 'highest', label: i18n.t('common.priority.highest'), icon: '🔺' },
+		{ value: 'high', label: i18n.t('common.priority.high'), icon: '⏫' },
+		{ value: 'medium', label: i18n.t('common.priority.medium'), icon: '🔼' },
+		{ value: 'normal', label: i18n.t('common.priority.normal'), icon: '◽' },
+		{ value: 'low', label: i18n.t('common.priority.low'), icon: '🔽' },
+		{ value: 'lowest', label: i18n.t('common.priority.lowest'), icon: '⏬' },
 	];
 
 	constructor(app: App) {
@@ -197,7 +198,7 @@ export abstract class BaseTaskModal extends Modal {
 
 		const priorityContainer = section.createDiv(EditTaskModalClasses.elements.priorityContainer);
 		priorityContainer.createEl('label', {
-			text: '优先级',
+			text: i18n.t('modals.editTask.priorityLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 
@@ -236,7 +237,7 @@ export abstract class BaseTaskModal extends Modal {
 
 		const dateContainer = section.createDiv(EditTaskModalClasses.elements.datesContainer);
 		dateContainer.createEl('label', {
-			text: '日期设置',
+			text: i18n.t('modals.editTask.datesLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 
@@ -275,7 +276,7 @@ export abstract class BaseTaskModal extends Modal {
 			const dateInput = dateWrapper.createEl('input', {
 				type: 'text',
 				cls: EditTaskModalClasses.elements.dateInput,
-				attr: { readonly: 'true', placeholder: '选择日期和时间' }
+				attr: { readonly: 'true', placeholder: i18n.t('modals.editTask.datePlaceholder') }
 			});
 			dateInput.style.cursor = 'pointer';
 
@@ -361,13 +362,13 @@ export abstract class BaseTaskModal extends Modal {
 		setIcon(toggleIcon, 'chevron-right');
 
 		headerLeft.createEl('label', {
-			text: '重复设置',
+			text: i18n.t('modals.editTask.recurrenceLabel'),
 			cls: EditTaskModalClasses.elements.sectionLabel
 		});
 		headerLeft.querySelector('label')!.style.marginBottom = '0';
 
 		const repeatSummary = headerLeft.createEl('span', {
-			text: '不重复',
+			text: i18n.t('common.recurrence.none'),
 		});
 		repeatSummary.style.fontSize = 'var(--font-ui-smaller)';
 		repeatSummary.style.color = 'var(--text-muted)';
@@ -402,7 +403,7 @@ export abstract class BaseTaskModal extends Modal {
 		freqSelectRow.style.marginBottom = '12px';
 		freqSelectRow.style.flexWrap = 'wrap';
 
-		freqSelectRow.createEl('span', { text: '每' });
+		freqSelectRow.createEl('span', { text: i18n.t('common.recurrence.every') });
 
 		const intervalInput = freqSelectRow.createEl('input', {
 			type: 'number',
@@ -419,12 +420,12 @@ export abstract class BaseTaskModal extends Modal {
 		freqSelect.style.padding = '4px 8px';
 
 		const freqOptions = [
-			{ value: '', label: '不重复' },
-			{ value: 'daily', label: '天' },
-			{ value: 'weekly', label: '周' },
-			{ value: 'monthly', label: '月' },
-			{ value: 'yearly', label: '年' },
-			{ value: 'custom', label: '自定义' },
+			{ value: '', label: i18n.t('common.recurrence.none') },
+			{ value: 'daily', label: i18n.t('common.recurrence.day') },
+			{ value: 'weekly', label: i18n.t('common.recurrence.week') },
+			{ value: 'monthly', label: i18n.t('common.recurrence.month') },
+			{ value: 'yearly', label: i18n.t('common.recurrence.year') },
+			{ value: 'custom', label: i18n.t('common.recurrence.custom') },
 		];
 		freqOptions.forEach(opt => {
 			freqSelect.createEl('option', { value: opt.value, text: opt.label });
@@ -604,7 +605,7 @@ export abstract class BaseTaskModal extends Modal {
 			if (!freqValue) {
 				this.repeat = null;
 				previewText.textContent = 'no repeat';
-				repeatSummary.textContent = '不重复';
+				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';
 				manualInput.style.display = 'none';
 				weeklyDaysContainer.style.display = 'none';
@@ -628,7 +629,7 @@ export abstract class BaseTaskModal extends Modal {
 				} else {
 					this.repeat = null;
 					previewText.textContent = 'no repeat';
-				repeatSummary.textContent = '不重复';
+				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';
 				}
 				weeklyDaysContainer.style.display = 'none';

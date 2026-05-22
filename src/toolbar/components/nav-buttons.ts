@@ -5,6 +5,7 @@
 
 import { setIcon } from 'obsidian';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 导航按钮组配置选项
@@ -52,7 +53,7 @@ export function renderNavButtons(
 		onNext,
 		containerClass,
 		buttonClass = ToolbarClasses.components.navButtons.btn,
-		todayText = '今',
+		todayText = i18n.t('toolbar.nav.today'),
 		prevText = '',
 		nextText = '',
 		fullText = false
@@ -64,7 +65,7 @@ export function renderNavButtons(
 
 	// 上一期按钮
 	const prevBtn = navButtons.createEl('button', {
-		attr: { 'aria-label': '上一个' }
+		attr: { 'aria-label': i18n.t('toolbar.nav.previous') }
 	});
 	setIcon(prevBtn, 'chevron-left');
 	prevBtn.addClass(buttonClass);
@@ -74,14 +75,14 @@ export function renderNavButtons(
 	// 今天按钮
 	const todayBtn = navButtons.createEl('button', {
 		text: todayText,
-		attr: { 'aria-label': '回到今天' }
+		attr: { 'aria-label': i18n.t('toolbar.nav.goToday') }
 	});
 	todayBtn.addClass(buttonClass);
 	todayBtn.onclick = onToday;
 
 	// 下一期按钮
 	const nextBtn = navButtons.createEl('button', {
-		attr: { 'aria-label': '下一个' }
+		attr: { 'aria-label': i18n.t('toolbar.nav.next') }
 	});
 	setIcon(nextBtn, 'chevron-right');
 	nextBtn.addClass(buttonClass);
@@ -131,7 +132,7 @@ export function renderNavButtonsFull(
 	if (onFirst) {
 		const firstBtn = navButtons.createEl('button', {
 			text: firstText,
-			attr: { 'aria-label': '第一个' }
+			attr: { 'aria-label': i18n.t('toolbar.nav.first') }
 		});
 		firstBtn.addClass(buttonClass);
 		firstBtn.onclick = onFirst;
@@ -140,7 +141,7 @@ export function renderNavButtonsFull(
 
 	// 上一期按钮
 	const prevBtn = navButtons.createEl('button', {
-		attr: { 'aria-label': '上一个' }
+		attr: { 'aria-label': i18n.t('toolbar.nav.previous') }
 	});
 	setIcon(prevBtn, 'chevron-left');
 	prevBtn.addClass(buttonClass);
@@ -150,8 +151,8 @@ export function renderNavButtonsFull(
 
 	// 今天按钮
 	const todayBtn = navButtons.createEl('button', {
-		text: baseOptions.todayText || '今',
-		attr: { title: '回到今天' }
+		text: baseOptions.todayText || i18n.t('toolbar.nav.today'),
+		attr: { title: i18n.t('toolbar.nav.goToday') }
 	});
 	todayBtn.addClass(buttonClass);
 	todayBtn.onclick = baseOptions.onToday;
@@ -159,7 +160,7 @@ export function renderNavButtonsFull(
 
 	// 下一期按钮
 	const nextBtn = navButtons.createEl('button', {
-		attr: { 'aria-label': '下一个' }
+		attr: { 'aria-label': i18n.t('toolbar.nav.next') }
 	});
 	setIcon(nextBtn, 'chevron-right');
 	nextBtn.addClass(buttonClass);
@@ -171,7 +172,7 @@ export function renderNavButtonsFull(
 	if (onLast) {
 		const lastBtn = navButtons.createEl('button', {
 			text: lastText,
-			attr: { 'aria-label': '最后一个' }
+			attr: { 'aria-label': i18n.t('toolbar.nav.last') }
 		});
 		lastBtn.addClass(buttonClass);
 		lastBtn.onclick = onLast;

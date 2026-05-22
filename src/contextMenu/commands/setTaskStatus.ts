@@ -4,6 +4,7 @@ import type { TaskStatusType } from '../../tasks/taskStatus';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { getStatusByKey } from '../../tasks/taskStatus';
 import { Logger } from '../../utils/logger';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 设置任务状态
@@ -25,10 +26,10 @@ export async function setTaskStatus(
 
 		const statusInfo = getStatusByKey(status);
 		const label = statusInfo ? statusInfo.name : status;
-		new Notice(`任务状态已更新为：${label}`);
+		new Notice(i18n.t('contextMenu.commands.statusUpdated', { label }));
 		onRefresh();
 	} catch (err) {
 		Logger.error('setTaskStatus', 'Failed to update task status', err);
-		new Notice('更新任务状态失败');
+		new Notice(i18n.t('contextMenu.commands.statusUpdateFailed'));
 	}
 }

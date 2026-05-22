@@ -4,6 +4,7 @@
  */
 
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 单个模式选项配置
@@ -144,11 +145,11 @@ export interface ViewSwitcherOptions {
 }
 
 const VIEW_LABELS: Record<string, { short: string; full: string }> = {
-	'day': { short: '日', full: '日视图' },
-	'week': { short: '周', full: '周视图' },
-	'month': { short: '月', full: '月视图' },
-	'year': { short: '年', full: '年视图' }
-};
+		'day': { short: i18n.t('toolbar.modeToggle.viewLabels.day.short'), full: i18n.t('toolbar.modeToggle.viewLabels.day.full') },
+		'week': { short: i18n.t('toolbar.modeToggle.viewLabels.week.short'), full: i18n.t('toolbar.modeToggle.viewLabels.week.full') },
+		'month': { short: i18n.t('toolbar.modeToggle.viewLabels.month.short'), full: i18n.t('toolbar.modeToggle.viewLabels.month.full') },
+		'year': { short: i18n.t('toolbar.modeToggle.viewLabels.year.short'), full: i18n.t('toolbar.modeToggle.viewLabels.year.full') }
+	};
 
 export function renderViewSwitcher(
 	container: HTMLElement,

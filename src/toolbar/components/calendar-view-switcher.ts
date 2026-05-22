@@ -5,6 +5,7 @@
 
 import type { CalendarViewType } from '../../types';
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 日历视图切换器配置选项
@@ -23,14 +24,14 @@ export interface CalendarViewSwitcherOptions {
 }
 
 /**
- * 视图类型对应的显示文本
+ * 获取视图类型对应的显示文本
  */
-const VIEW_LABELS: Record<string, { short: string; full: string }> = {
-	'year': { short: '年', full: '年视图' },
-	'month': { short: '月', full: '月视图' },
-	'week': { short: '周', full: '周视图' },
-	'day': { short: '日', full: '日视图' }
-};
+function getViewLabel(type: string) {
+	return {
+		short: i18n.t('toolbar.viewSwitcher.' + type),
+		full: i18n.t('toolbar.viewSwitcher.' + type + 'Full')
+	};
+}
 
 /**
  * 渲染日历视图切换器（日/周/月/年）
@@ -67,7 +68,7 @@ export function renderCalendarViewSwitcher(
 	const viewTypes: Array<'day' | 'week' | 'month' | 'year'> = ['day', 'week', 'month', 'year'];
 
 	viewTypes.forEach((type) => {
-		const labels = VIEW_LABELS[type];
+		const labels = getViewLabel(type);
 		const btn = viewContainer.createEl('button', {
 			text: fullLabel ? labels.full : labels.short,
 			attr: {
@@ -140,14 +141,14 @@ export function renderSimpleViewSwitcher(
 
 	const viewTypes: Array<'week' | 'month'> = ['week', 'month'];
 	const labels: Record<string, string> = {
-		'week': '周',
-		'month': '月'
-	};
+			'week': i18n.t('toolbar.viewSwitcher.week'),
+			'month': i18n.t('toolbar.viewSwitcher.month')
+		};
 
 	viewTypes.forEach((type) => {
 		const btn = viewContainer.createEl('button', {
 			text: labels[type],
-			attr: { 'data-view': type, title: labels[type] + '视图' }
+			attr: { 'data-view': type, title: i18n.t('toolbar.viewSwitcher.' + type + 'Full') }
 		});
 
 		btn.addClass(buttonClass);

@@ -4,6 +4,7 @@ import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { IPluginContext, GCTask, TagFilterState } from '../types';
 import { YearViewClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
+import { i18n } from '../i18n/i18n';
 
 /**
  * 年视图渲染器
@@ -63,14 +64,14 @@ export class YearViewRenderer extends BaseViewRenderer {
 
 			// 月份标题
 			const monthHeader = monthDiv.createDiv(YearViewClasses.elements.monthHeader);
-			const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+			const monthNames = i18n.t('views.yearView.months') as unknown as string[];
 			monthHeader.createEl('h3', { text: monthNames[month - 1] });
 
 			// 星期标签
 			const weekdaysDiv = monthDiv.createDiv(YearViewClasses.elements.weekdays);
 			const startOnMonday = !!(this.plugin?.settings?.startOnMonday);
-			const labelsSunFirst = ['日', '一', '二', '三', '四', '五', '六'];
-			const labelsMonFirst = ['一', '二', '三', '四', '五', '六', '日'];
+			const labelsSunFirst = i18n.t('views.yearView.weekdaysShort') as unknown as string[];
+			const labelsMonFirst = i18n.t('views.yearView.weekdaysShortMon') as unknown as string[];
 			(startOnMonday ? labelsMonFirst : labelsSunFirst).forEach((day) => {
 				weekdaysDiv.createEl('div', { text: day, cls: YearViewClasses.elements.weekday });
 			});

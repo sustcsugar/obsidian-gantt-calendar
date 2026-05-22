@@ -2,6 +2,7 @@ import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * 恢复已取消的任务
@@ -20,13 +21,13 @@ export async function restoreTask(
 	try {
 		// 如果任务已完成，不能恢复
 		if (task.completed) {
-			new Notice('恢复任务失败:任务已完成');
+			new Notice(i18n.t('contextMenu.commands.restore.alreadyDone'));
 			return;
 		}
 
 		// 如果任务不是取消状态（已经是正常状态），提示已经恢复
 		if (!task.cancelled) {
-			new Notice('恢复任务失败:任务已经恢复');
+			new Notice(i18n.t('contextMenu.commands.restore.alreadyRestored'));
 			return;
 		}
 
@@ -37,10 +38,10 @@ export async function restoreTask(
 			cancelledDate: null
 		}, enabledFormats);
 
-		new Notice('任务已恢复');
+		new Notice(i18n.t('contextMenu.commands.restored'));
 		onRefresh();
 	} catch (error) {
 		Logger.error('restoreTask', 'Failed to restore task:', error);
-		new Notice('恢复任务失败');
+		new Notice(i18n.t('contextMenu.commands.restoreFailed'));
 	}
 }

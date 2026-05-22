@@ -4,6 +4,7 @@
  */
 
 import { ToolbarClasses } from '../../utils/bem';
+import { i18n } from '../../i18n/i18n';
 
 export type TimeGranularity = 'day' | 'week' | 'month';
 
@@ -26,9 +27,9 @@ export function renderTimeGranularity(
 	const granularityGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
 
 	const granularities: Array<{ value: TimeGranularity; label: string }> = [
-		{ value: 'day', label: '日' },
-		{ value: 'week', label: '周' },
-		{ value: 'month', label: '月' },
+		{ value: 'day', label: i18n.t('toolbar.timeGranularity.day') },
+		{ value: 'week', label: i18n.t('toolbar.timeGranularity.week') },
+		{ value: 'month', label: i18n.t('toolbar.timeGranularity.month') },
 	];
 
 	granularities.forEach(({ value, label }) => {
