@@ -1103,22 +1103,22 @@
 				"December"
 			],
 			"weekdaysShort": [
-				"Sun",
-				"Mon",
-				"Tue",
-				"Wed",
-				"Thu",
-				"Fri",
-				"Sat"
+				"S",
+				"M",
+				"T",
+				"W",
+				"T",
+				"F",
+				"S"
 			],
 			"weekdaysShortMon": [
-				"Mon",
-				"Tue",
-				"Wed",
-				"Thu",
-				"Fri",
-				"Sat",
-				"Sun"
+				"M",
+				"T",
+				"W",
+				"T",
+				"F",
+				"S",
+				"S"
 			],
 			"weekNumber": "W{{week}}"
 		},
@@ -1144,13 +1144,13 @@
 		},
 		"weekView": {
 			"weekdays": [
+				"Sun",
 				"Mon",
 				"Tue",
 				"Wed",
 				"Thu",
 				"Fri",
-				"Sat",
-				"Sun"
+				"Sat"
 			],
 			"allDay": "All Day"
 		},
