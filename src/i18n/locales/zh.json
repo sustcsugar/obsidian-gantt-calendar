@@ -132,6 +132,15 @@
 				"name": "视图导航按钮显示文本",
 				"description": "工具栏左侧的视图导航按钮是否显示文字标签。关闭后仅显示图标"
 			},
+			"language": {
+				"name": "语言",
+				"description": "选择插件界面语言",
+				"options": {
+					"system": "跟随系统",
+					"en": "English",
+					"zh": "中文"
+				}
+			},
 			"timezoneFormat": {
 				"groupTitle": "时区与格式",
 				"timezone": {
@@ -275,6 +284,12 @@
 			"customStatus": {
 				"name": "自定义状态",
 				"description": "可自由修改颜色或删除，点击 ✎ 编辑"
+			},
+			"colors": {
+				"lightTheme": "亮色",
+				"darkTheme": "暗色",
+				"background": "背景",
+				"text": "文字"
 			}
 		},
 		"heatmapPalettes": {
@@ -1234,6 +1249,13 @@
 		"question": "有疑问",
 		"started": "已开始",
 		"customDefault": "自定义状态",
+		"todoDescription": "待办任务",
+		"doneDescription": "已完成任务",
+		"importantDescription": "重要任务",
+		"canceledDescription": "已取消任务",
+		"inProgressDescription": "进行中任务",
+		"questionDescription": "有疑问任务",
+		"startedDescription": "已开始任务",
 		"validation": {
 			"symbolEmpty": "符号不能为空",
 			"symbolSingleChar": "符号必须是单个字符",

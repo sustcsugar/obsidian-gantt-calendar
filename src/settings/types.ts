@@ -46,6 +46,7 @@ export interface GanttCalendarSettings {
 	timezoneOffset: number | null; // 时区偏移量（分钟），null 表示跟随系统
 	timeFormat: '24h' | '12h'; // 时间显示格式
 	recurringTaskDisplayLimit: number; // 周期任务虚拟实例显示数量上限
+	language: 'system' | 'en' | 'zh'; // 插件界面语言
 
 	// ========== 持久化筛选和排序状态 ==========
 

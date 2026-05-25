@@ -41,6 +41,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	timezoneOffset: null, // 默认跟随系统时区
 	timeFormat: '24h', // 默认24小时制
 			recurringTaskDisplayLimit: 5, // 默认显示5个虚拟实例
+		language: 'system', // 默认跟随系统语言
 
 	// ========== 持久化筛选和排序状态默认值 ==========
 

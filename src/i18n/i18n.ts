@@ -6,9 +6,21 @@ type TranslationMap = Record<string, unknown>;
 const LOCALES: Record<string, TranslationMap> = { en, zh };
 let currentLocale: TranslationMap = en;
 let isInitialized = false;
+let languageOverride: string | null = null;
 
 function getObsidianLanguage(): string {
-	return localStorage.getItem('language') || 'en';
+	try {
+		return localStorage.getItem('language') || 'en';
+	} catch {
+		return 'en';
+	}
+}
+
+function resolveEffectiveLanguage(): string {
+	if (languageOverride && languageOverride !== 'system') {
+		return languageOverride;
+	}
+	return getObsidianLanguage();
 }
 
 function resolve(obj: TranslationMap, path: string): unknown {
@@ -28,18 +40,24 @@ function interpolate(template: string, params?: Record<string, unknown>): string
 	);
 }
 
-export async function initializeI18n(): Promise<void> {
-	if (isInitialized) return;
-	const lang = getObsidianLanguage();
+export async function initializeI18n(language?: string): Promise<void> {
+	if (language) {
+		languageOverride = language;
+	}
+	const lang = resolveEffectiveLanguage();
 	currentLocale = LOCALES[lang] || LOCALES['en'] || en;
 	isInitialized = true;
 }
 
+export function setLanguage(language: string): void {
+	languageOverride = language;
+	const lang = resolveEffectiveLanguage();
+	currentLocale = LOCALES[lang] || LOCALES['en'] || en;
+}
+
 function translate(key: string, params?: Record<string, unknown>): string {
-	// Before initialization: use en as default
-	const locale = isInitialized ? currentLocale : en;
+	const locale = isInitialized ? currentLocale : (LOCALES[getObsidianLanguage()] || en);
 	let value = resolve(locale, key);
-	// Fallback to en if not found in current locale
 	if (value == null && locale !== en) {
 		value = resolve(en, key);
 	}

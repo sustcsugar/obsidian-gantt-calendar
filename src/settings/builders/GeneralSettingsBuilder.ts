@@ -3,6 +3,8 @@ import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
 import { TIMEZONE_OPTIONS } from '../../dateUtils/timezone';
 import { i18n } from '../../i18n/i18n';
+import { setLanguage } from '../../i18n/i18n';
+import { refreshPresetStatusNames } from '../../tasks/taskStatus';
 
 /**
  * 通用设置构建器
@@ -64,6 +66,23 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						.onChange(async (value) => {
 							this.plugin.settings.showViewNavButtonText = value;
 							await this.saveAndRefreshViews();
+						}))
+			);
+
+			// 语言选择
+			addSetting(setting =>
+				setting.setName(i18n.t('settings.general.language.name'))
+					.setDesc(i18n.t('settings.general.language.description'))
+					.addDropdown(drop => drop
+						.addOption('system', i18n.t('settings.general.language.options.system'))
+						.addOption('en', i18n.t('settings.general.language.options.en'))
+						.addOption('zh', i18n.t('settings.general.language.options.zh'))
+						.setValue(this.plugin.settings.language || 'system')
+						.onChange(async (value) => {
+							this.plugin.settings.language = value as 'system' | 'en' | 'zh';
+							setLanguage(value);
+							refreshPresetStatusNames(this.plugin.settings.taskStatuses);
+							await this.saveAndRefreshAll();
 						}))
 			);
 		});

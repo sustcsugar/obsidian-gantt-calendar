@@ -3,6 +3,7 @@ import { TaskStatus, ThemeColors, getCurrentThemeMode } from '../../tasks/taskSt
 import { SettingsStatusCardClasses } from '../../utils/bem';
 import { rgbToHex } from '../utils/color';
 import { MacaronColorPicker } from './MacaronColorPicker';
+import { i18n } from '../../i18n/i18n';
 
 export interface TaskStatusCardConfig {
 	container: HTMLElement;
@@ -71,7 +72,7 @@ export class TaskStatusCard {
 		const section = parent.createDiv(cls.themeSection);
 
 		section.createEl('span', {
-			text: themeMode === 'light' ? '亮色' : '暗色',
+			text: themeMode === 'light' ? i18n.t('settings.taskStatus.colors.lightTheme') : i18n.t('settings.taskStatus.colors.darkTheme'),
 			cls: cls.themeLabel,
 		});
 
@@ -81,8 +82,8 @@ export class TaskStatusCard {
 
 		const row = section.createDiv(cls.colorRow);
 
-		this.renderColorField(row, plugin, status, themeMode, 'backgroundColor', '背景', colors?.backgroundColor || defaultBg);
-		this.renderColorField(row, plugin, status, themeMode, 'textColor', '文字', colors?.textColor || defaultText);
+		this.renderColorField(row, plugin, status, themeMode, 'backgroundColor', i18n.t('settings.taskStatus.colors.background'), colors?.backgroundColor || defaultBg);
+		this.renderColorField(row, plugin, status, themeMode, 'textColor', i18n.t('settings.taskStatus.colors.text'), colors?.textColor || defaultText);
 	}
 
 	private renderColorField(

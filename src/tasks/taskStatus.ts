@@ -86,8 +86,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
     {
         key: 'todo',
         symbol: ' ',
-        name: '待办',
-        description: '待办任务',
+        name: i18n.t('taskStatus.todo'),
+        description: i18n.t('taskStatus.todoDescription'),
         lightColors: {
             backgroundColor: '#FFFFFF',
             textColor: '#333333',
@@ -101,8 +101,8 @@ export const DEFAULT_TASK_STATUSES: TaskStatus[] = [
     {
         key: 'done',
         symbol: 'x',
-        name: '已完成',
-        description: '已完成任务',
+        name: i18n.t('taskStatus.done'),
+        description: i18n.t('taskStatus.doneDescription'),
         lightColors: {
             backgroundColor: '#52c41a',
             textColor: '#FFFFFF',
@@ -124,8 +124,8 @@ export const PRESET_CUSTOM_STATUSES: TaskStatus[] = [
     {
         key: 'important',
         symbol: '!',
-        name: '重要',
-        description: '重要任务',
+        name: i18n.t('taskStatus.important'),
+        description: i18n.t('taskStatus.importantDescription'),
         lightColors: {
             backgroundColor: '#ff4d4f',
             textColor: '#FFFFFF',
@@ -139,8 +139,8 @@ export const PRESET_CUSTOM_STATUSES: TaskStatus[] = [
     {
         key: 'canceled',
         symbol: '-',
-        name: '已取消',
-        description: '已取消任务',
+        name: i18n.t('taskStatus.canceled'),
+        description: i18n.t('taskStatus.canceledDescription'),
         lightColors: {
             backgroundColor: '#d9d9d9',
             textColor: '#666666',
@@ -154,8 +154,8 @@ export const PRESET_CUSTOM_STATUSES: TaskStatus[] = [
     {
         key: 'in_progress',
         symbol: '/',
-        name: '进行中',
-        description: '进行中任务',
+        name: i18n.t('taskStatus.inProgress'),
+        description: i18n.t('taskStatus.inProgressDescription'),
         lightColors: {
             backgroundColor: '#faad14',
             textColor: '#FFFFFF',
@@ -169,8 +169,8 @@ export const PRESET_CUSTOM_STATUSES: TaskStatus[] = [
     {
         key: 'question',
         symbol: '?',
-        name: '有疑问',
-        description: '有疑问任务',
+        name: i18n.t('taskStatus.question'),
+        description: i18n.t('taskStatus.questionDescription'),
         lightColors: {
             backgroundColor: '#ffc069',
             textColor: '#333333',
@@ -184,8 +184,8 @@ export const PRESET_CUSTOM_STATUSES: TaskStatus[] = [
     {
         key: 'start',
         symbol: 'n',
-        name: '已开始',
-        description: '已开始任务',
+        name: i18n.t('taskStatus.started'),
+        description: i18n.t('taskStatus.startedDescription'),
         lightColors: {
             backgroundColor: '#40a9ff',
             textColor: '#FFFFFF',
@@ -245,6 +245,35 @@ export const STATUS_SYMBOL_EXCLUDED = ['[', ']'];
  * 仅待办（空格）和已完成（x）为不可删除的默认状态
  */
 export const RESERVED_SYMBOLS = [' ', 'x'];
+
+/**
+ * 预设状态 key 列表（默认 + 预设自定义）
+ */
+const PRESET_STATUS_KEYS = ['todo', 'done', 'important', 'canceled', 'in_progress', 'question', 'start'];
+
+/**
+ * 根据当前语言刷新默认和预设状态的名称与描述
+ * 用于用户切换语言时更新已持久化的状态配置
+ */
+export function refreshPresetStatusNames(statuses: TaskStatus[]): void {
+	const keyToI18n: Record<string, { nameKey: string; descKey: string }> = {
+		todo: { nameKey: 'taskStatus.todo', descKey: 'taskStatus.todoDescription' },
+		done: { nameKey: 'taskStatus.done', descKey: 'taskStatus.doneDescription' },
+		important: { nameKey: 'taskStatus.important', descKey: 'taskStatus.importantDescription' },
+		canceled: { nameKey: 'taskStatus.canceled', descKey: 'taskStatus.canceledDescription' },
+		in_progress: { nameKey: 'taskStatus.inProgress', descKey: 'taskStatus.inProgressDescription' },
+		question: { nameKey: 'taskStatus.question', descKey: 'taskStatus.questionDescription' },
+		start: { nameKey: 'taskStatus.started', descKey: 'taskStatus.startedDescription' },
+	};
+
+	for (const status of statuses) {
+		const mapping = keyToI18n[status.key];
+		if (mapping) {
+			status.name = i18n.t(mapping.nameKey);
+			status.description = i18n.t(mapping.descKey);
+		}
+	}
+}
 
 // ==================== 工具函数 ====================
 

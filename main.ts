@@ -8,7 +8,8 @@ import { registerAllCommands } from './src/commands/commandsIndex';
 import { TooltipManager } from './src/utils/tooltipManager';
 import { Logger } from './src/utils/logger';
 import { setTimezoneOffset } from './src/dateUtils/timezone';
-import { i18n, initializeI18n } from './src/i18n/i18n';
+import { i18n, initializeI18n, setLanguage } from './src/i18n/i18n';
+import { refreshPresetStatusNames } from './src/tasks/taskStatus';
 
 import { SettingsManager } from './src/managers/SettingsManager';
 import { ThemeManager } from './src/managers/ThemeManager';
@@ -38,6 +39,13 @@ export default class GanttCalendarPlugin extends Plugin {
 
 		this.settingsManager = new SettingsManager(this);
 		this.settings = await this.settingsManager.loadSettings();
+
+		// 应用用户设置的语言（覆盖系统检测）
+		if (this.settings.language && this.settings.language !== 'system') {
+			setLanguage(this.settings.language);
+		}
+		// 刷新预设状态名称以匹配当前语言
+		refreshPresetStatusNames(this.settings.taskStatuses);
 
 		Logger.init(this);
 		setTimezoneOffset(this.settings.timezoneOffset);

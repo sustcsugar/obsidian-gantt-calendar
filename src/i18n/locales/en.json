@@ -132,6 +132,15 @@
 				"name": "Show Navigation Button Text",
 				"description": "Show text labels on view navigation buttons in the toolbar. When disabled, only icons are shown"
 			},
+			"language": {
+				"name": "Language",
+				"description": "Select the plugin interface language",
+				"options": {
+					"system": "Follow System",
+					"en": "English",
+					"zh": "中文"
+				}
+			},
 			"timezoneFormat": {
 				"groupTitle": "Timezone & Format",
 				"timezone": {
@@ -275,6 +284,12 @@
 			"customStatus": {
 				"name": "Custom Status",
 				"description": "Modify colors or delete freely. Click ✎ to edit"
+			},
+			"colors": {
+				"lightTheme": "Light",
+				"darkTheme": "Dark",
+				"background": "Background",
+				"text": "Text"
 			}
 		},
 		"heatmapPalettes": {
@@ -1234,6 +1249,13 @@
 		"question": "Question",
 		"started": "Started",
 		"customDefault": "Custom Status",
+		"todoDescription": "Pending task",
+		"doneDescription": "Completed task",
+		"importantDescription": "Important task",
+		"canceledDescription": "Canceled task",
+		"inProgressDescription": "Task in progress",
+		"questionDescription": "Questionable task",
+		"startedDescription": "Started task",
 		"validation": {
 			"symbolEmpty": "Symbol cannot be empty",
 			"symbolSingleChar": "Symbol must be a single character",
