@@ -610,12 +610,12 @@
 					"name": "Date Filter",
 					"description": "Only push tasks with dates after the specified date. A task matches if any date field matches.",
 					"all": "All",
-					"lastWeek": "Last Week",
-					"lastMonth": "Last Month",
-					"last3Months": "Last 3 Months",
-					"lastHalfYear": "Last 6 Months",
-					"lastYear": "Last Year",
-					"last6Months": "Last 6 Months"
+					"lastWeek": "1 Week",
+					"lastMonth": "1 Month",
+					"last3Months": "3 Months",
+					"lastHalfYear": "6 Months",
+					"lastYear": "1 Year",
+					"last6Months": "6 Months"
 				},
 				"pathFilter": {
 					"name": "Path Filter",
