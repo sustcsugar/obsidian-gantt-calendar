@@ -103,7 +103,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 					.setDesc(i18n.t('settings.general.timezoneFormat.timezone.description'))
 					.addDropdown(drop => {
 						for (const [key, label] of Object.entries(TIMEZONE_OPTIONS)) {
-							drop.addOption(key, label);
+							drop.addOption(key, key === 'null' ? i18n.t('settings.general.timezoneFormat.timezone.followSystem') : label);
 						}
 						const currentValue = this.plugin.settings.timezoneOffset;
 						drop.setValue(currentValue === null ? 'null' : String(currentValue));

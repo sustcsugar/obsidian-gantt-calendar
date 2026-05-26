@@ -10,7 +10,6 @@
  * @module dateUtils/timezone
  */
 
-import { i18n } from '../i18n/i18n';
 
 // ==================== 时区偏移量存储 ====================
 
@@ -178,7 +177,7 @@ export function isValidDate(dateStr: string): boolean {
  * 格式：`(UTC±H:MM) 代表城市`
  */
 export const TIMEZONE_OPTIONS: Record<string, string> = {
-	'null': i18n.t('settings.general.timezoneFormat.timezone.followSystem'),
+	'null': 'Follow System',
 	'-720': '(UTC-12:00) Baker Island',
 	'-660': '(UTC-11:00) Samoa, Midway',
 	'-600': '(UTC-10:00) Hawaii',
