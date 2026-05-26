@@ -145,7 +145,8 @@
 				"groupTitle": "时区与格式",
 				"timezone": {
 					"name": "时区",
-					"description": "选择日历视图使用的时区。影响「今天」的判定和日历高亮"
+					"description": "选择日历视图使用的时区。影响「今天」的判定和日历高亮",
+					"followSystem": "跟随系统"
 				},
 				"timeFormat": {
 					"name": "时间格式",

@@ -145,7 +145,8 @@
 				"groupTitle": "Timezone & Format",
 				"timezone": {
 					"name": "Timezone",
-					"description": "Select the timezone used by calendar views. Affects 'today' determination and calendar highlighting"
+					"description": "Select the timezone used by calendar views. Affects 'today' determination and calendar highlighting",
+					"followSystem": "Follow System"
 				},
 				"timeFormat": {
 					"name": "Time Format",
