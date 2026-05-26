@@ -55,6 +55,11 @@ export function setLanguage(language: string): void {
 	currentLocale = LOCALES[lang] || LOCALES['en'] || en;
 }
 
+export function isChineseLanguage(): boolean {
+	const lang = resolveEffectiveLanguage();
+	return lang === 'zh';
+}
+
 function translate(key: string, params?: Record<string, unknown>): string {
 	const locale = isInitialized ? currentLocale : (LOCALES[getObsidianLanguage()] || en);
 	let value = resolve(locale, key);

@@ -3,7 +3,7 @@ import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
 import { TIMEZONE_OPTIONS } from '../../dateUtils/timezone';
 import { i18n } from '../../i18n/i18n';
-import { setLanguage } from '../../i18n/i18n';
+import { setLanguage, isChineseLanguage } from '../../i18n/i18n';
 import { refreshPresetStatusNames } from '../../tasks/taskStatus';
 
 /**
@@ -82,6 +82,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 							this.plugin.settings.language = value as 'system' | 'en' | 'zh';
 							setLanguage(value);
 							refreshPresetStatusNames(this.plugin.settings.taskStatuses);
+							this.plugin.settings.showLunar = isChineseLanguage();
 							await this.saveAndRefreshAll();
 						}))
 			);

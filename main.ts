@@ -8,7 +8,7 @@ import { registerAllCommands } from './src/commands/commandsIndex';
 import { TooltipManager } from './src/utils/tooltipManager';
 import { Logger } from './src/utils/logger';
 import { setTimezoneOffset } from './src/dateUtils/timezone';
-import { i18n, initializeI18n, setLanguage } from './src/i18n/i18n';
+import { i18n, initializeI18n, setLanguage, isChineseLanguage } from './src/i18n/i18n';
 import { refreshPresetStatusNames } from './src/tasks/taskStatus';
 
 import { SettingsManager } from './src/managers/SettingsManager';
@@ -46,6 +46,8 @@ export default class GanttCalendarPlugin extends Plugin {
 		}
 		// 刷新预设状态名称以匹配当前语言
 		refreshPresetStatusNames(this.settings.taskStatuses);
+		// 英文模式下自动关闭农历显示
+		this.settings.showLunar = isChineseLanguage();
 
 		Logger.init(this);
 		setTimezoneOffset(this.settings.timezoneOffset);
