@@ -243,12 +243,12 @@ export abstract class BaseTaskModal extends Modal {
 
 		const datesGrid = dateContainer.createDiv(EditTaskModalClasses.elements.datesGrid);
 
-		this.renderDateField(datesGrid, '➕ 创建', this.createdDate, (d) => this.createdDate = d, 'createdDate');
-		this.renderDateField(datesGrid, '🛫 开始', this.startDate, (d) => this.startDate = d, 'startDate');
-		this.renderDateField(datesGrid, '⏳ 计划', this.scheduledDate, (d) => this.scheduledDate = d, 'scheduledDate');
-		this.renderDateField(datesGrid, '📅 截止', this.dueDate, (d) => this.dueDate = d, 'dueDate');
-		this.renderDateField(datesGrid, '✅ 完成', this.completionDate, (d) => this.completionDate = d, 'completionDate');
-		this.renderDateField(datesGrid, '❌ 取消', this.cancelledDate, (d) => this.cancelledDate = d, 'cancelledDate');
+		this.renderDateField(datesGrid, i18n.t('modals.createTask.dateFields.created'), this.createdDate, (d) => this.createdDate = d, 'createdDate');
+		this.renderDateField(datesGrid, i18n.t('modals.createTask.dateFields.start'), this.startDate, (d) => this.startDate = d, 'startDate');
+		this.renderDateField(datesGrid, i18n.t('modals.createTask.dateFields.scheduled'), this.scheduledDate, (d) => this.scheduledDate = d, 'scheduledDate');
+		this.renderDateField(datesGrid, i18n.t('modals.createTask.dateFields.due'), this.dueDate, (d) => this.dueDate = d, 'dueDate');
+		this.renderDateField(datesGrid, i18n.t('modals.createTask.dateFields.completion'), this.completionDate, (d) => this.completionDate = d, 'completionDate');
+		this.renderDateField(datesGrid, i18n.t('modals.createTask.dateFields.cancelled'), this.cancelledDate, (d) => this.cancelledDate = d, 'cancelledDate');
 	}
 
 		/**
@@ -434,7 +434,7 @@ export abstract class BaseTaskModal extends Modal {
 		// ========== 自定义规则输入（选择"自定义"时显示，在同一行） ==========
 		const manualInput = freqSelectRow.createEl('input', {
 			type: 'text',
-			placeholder: '如: every week on Monday when done',
+			placeholder: i18n.t('modals.createTask.repeat.customPlaceholder'),
 			cls: EditTaskModalClasses.elements.repeatManualInput
 		});
 		manualInput.style.display = 'none';
@@ -450,7 +450,7 @@ export abstract class BaseTaskModal extends Modal {
 
 		const weekDaysLabel = weeklyDaysContainer.createSpan({ text: '  ' });
 		const dayButtons: HTMLButtonElement[] = [];
-		const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+		const dayNames = (i18n.t("modals.createTask.repeat.weekdays") as any) as string[];
 		dayNames.forEach((dayName) => {
 			const dayBtn = weeklyDaysContainer.createEl('button', {
 				cls: EditTaskModalClasses.elements.repeatDayCheckbox,
@@ -492,7 +492,7 @@ export abstract class BaseTaskModal extends Modal {
 		const monthDayInput = monthlyDayContainer.createEl('input', {
 			type: 'number',
 			cls: EditTaskModalClasses.elements.repeatMonthSelect,
-			placeholder: '日期'
+			placeholder: i18n.t('modals.createTask.repeat.monthlyDayPlaceholder')
 		});
 		monthDayInput.min = '1';
 		monthDayInput.max = '31';
@@ -507,7 +507,7 @@ export abstract class BaseTaskModal extends Modal {
 		whenDoneRow.style.gap = '8px';
 		whenDoneRow.style.marginBottom = '12px';
 
-		whenDoneRow.createEl('span', { text: '重复方式：' });
+		whenDoneRow.createEl('span', { text: i18n.t('modals.createTask.repeat.modeLabel') });
 		whenDoneRow.style.fontSize = 'var(--font-ui-small)';
 		whenDoneRow.style.color = 'var(--text-muted)';
 
@@ -520,7 +520,7 @@ export abstract class BaseTaskModal extends Modal {
 		whenDoneToggle.checked = true;
 
 		const fixedLabel = whenDoneRow.createEl('label', {
-			text: '按固定日期重复'
+			text: i18n.t('modals.createTask.repeat.fixedDate')
 		});
 		fixedLabel.setAttribute('for', 'repeat-fixed');
 		fixedLabel.style.fontSize = 'var(--font-ui-small)';
@@ -533,11 +533,11 @@ export abstract class BaseTaskModal extends Modal {
 		whenDoneToggle2.id = 'repeat-when-done';
 
 		const whenDoneLabel = whenDoneRow.createEl('label', {
-			text: '完成后重新计算'
+			text: i18n.t('modals.createTask.repeat.whenDone')
 		});
 		whenDoneLabel.setAttribute('for', 'repeat-when-done');
 		whenDoneLabel.style.fontSize = 'var(--font-ui-small)';
-		whenDoneLabel.setAttribute('title', '下次任务的日期从完成当天算起，而不是从原计划日期算起');
+		whenDoneLabel.setAttribute('title', i18n.t('modals.createTask.repeat.whenDoneTooltip'));
 
 		// ========== 预览摘要区域 ==========
 		const previewBox = repeatGrid.createDiv(EditTaskModalClasses.elements.repeatPreview);
@@ -565,14 +565,14 @@ export abstract class BaseTaskModal extends Modal {
 		rulesHint.style.fontSize = 'var(--font-ui-smaller)';
 
 		const rulesHintTitle = rulesHint.createEl('div', {
-			text: '支持的规则：',
+			text: i18n.t('modals.createTask.repeat.rulesHintTitle'),
 			cls: EditTaskModalClasses.elements.repeatRulesHintTitle
 		});
 		rulesHintTitle.style.fontWeight = 'var(--font-medium)';
 		rulesHintTitle.style.marginBottom = '4px';
 
 		const rulesHintList = rulesHint.createEl('div', {
-			text: '• every day / every 3 days / every weekday / every weekend\n• every week / every 2 weeks / every week on Monday, Friday\n• every month / every month on the 15th / on the last\n• every year / every January on the 15th\n• 添加 "when done" 表示基于完成日期计算',
+			text: i18n.t('modals.createTask.repeat.rulesHintList'),
 			cls: EditTaskModalClasses.elements.repeatRulesHintList
 		});
 		rulesHintList.style.whiteSpace = 'pre-line';
@@ -623,7 +623,7 @@ export abstract class BaseTaskModal extends Modal {
 						previewText.textContent = manualRule;
 						errorMsg.style.display = 'none';
 					} else {
-						errorMsg.textContent = '规则格式不正确';
+						errorMsg.textContent = i18n.t('modals.createTask.repeat.validationError');
 						errorMsg.style.display = 'block';
 					}
 				} else {

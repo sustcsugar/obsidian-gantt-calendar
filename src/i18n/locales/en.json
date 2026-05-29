@@ -827,7 +827,51 @@
 			"errorEmptyDescription": "Please enter a task description",
 			"errorDateOrder": "Start date cannot be after due date",
 			"success": "Task created",
-			"error": "Failed to create task: {{error}}"
+			"error": "Failed to create task: {{error}}",
+			"dateFields": {
+				"created": "➕ Created",
+				"start": "🛫 Start",
+				"scheduled": "⏳ Scheduled",
+				"due": "📅 Due",
+				"completion": "✅ Done",
+				"cancelled": "❌ Cancelled"
+			},
+			"repeat": {
+				"modeLabel": "Repeat mode:",
+				"fixedDate": "Repeat on fixed date",
+				"whenDone": "Recalculate after completion",
+				"whenDoneTooltip": "Next task date is calculated from the completion date instead of the original planned date",
+				"rulesHintTitle": "Supported rules:",
+				"rulesHintList": "• every day / every week / every month / every year\n• every 2 weeks\n• every week on Monday\n• Add \"when done\" to calculate based on completion date",
+				"customPlaceholder": "e.g.: every week on Monday when done",
+				"monthlyDayPlaceholder": "Day",
+				"intervalTemplate": "Every {{interval}} {{label}}",
+				"frequencies": {
+					"daily": "Daily",
+					"weekly": "Weekly",
+					"monthly": "Monthly",
+					"yearly": "Yearly",
+					"custom": "Custom"
+				},
+				"weekdays": [
+					"Sun",
+					"Mon",
+					"Tue",
+					"Wed",
+					"Thu",
+					"Fri",
+					"Sat"
+				],
+				"validationError": "Invalid rule format"
+			},
+			"tags": {
+				"recommendedLabel": "Recommended Tags:",
+				"noRecommended": "No recommended tags",
+				"selectedLabel": "Selected Tags:",
+				"noSelected": "No tags selected",
+				"inputPlaceholder": "Enter new tag name...",
+				"addButton": "Add"
+			}
 		},
 		"editTask": {
 			"title": "Edit Task",
@@ -838,7 +882,51 @@
 			"submitHint": "Press Enter to submit",
 			"datePlaceholder": "Select date and time",
 			"success": "Task updated",
-			"error": "Failed to update task"
+			"error": "Failed to update task",
+			"dateFields": {
+				"created": "➕ Created",
+				"start": "🛫 Start",
+				"scheduled": "⏳ Scheduled",
+				"due": "📅 Due",
+				"completion": "✅ Done",
+				"cancelled": "❌ Cancelled"
+			},
+			"repeat": {
+				"modeLabel": "Repeat mode:",
+				"fixedDate": "Repeat on fixed date",
+				"whenDone": "Recalculate after completion",
+				"whenDoneTooltip": "Next task date is calculated from the completion date instead of the original planned date",
+				"rulesHintTitle": "Supported rules:",
+				"rulesHintList": "• every day / every week / every month / every year\n• every 2 weeks\n• every week on Monday\n• Add \"when done\" to calculate based on completion date",
+				"customPlaceholder": "e.g.: every week on Monday when done",
+				"monthlyDayPlaceholder": "Day",
+				"intervalTemplate": "Every {{interval}} {{label}}",
+				"frequencies": {
+					"daily": "Daily",
+					"weekly": "Weekly",
+					"monthly": "Monthly",
+					"yearly": "Yearly",
+					"custom": "Custom"
+				},
+				"weekdays": [
+					"Sun",
+					"Mon",
+					"Tue",
+					"Wed",
+					"Thu",
+					"Fri",
+					"Sat"
+				],
+				"validationError": "Invalid rule format"
+			},
+			"tags": {
+				"recommendedLabel": "Recommended Tags:",
+				"noRecommended": "No recommended tags",
+				"selectedLabel": "Selected Tags:",
+				"noSelected": "No tags selected",
+				"inputPlaceholder": "Enter new tag name...",
+				"addButton": "Add"
+			}
 		},
 		"confirm": {
 			"cancel": "Cancel",
@@ -864,7 +952,12 @@
 				"dueDate": "Due Date",
 				"priority": "Priority",
 				"status": "Status",
-				"tags": "Tags"
+				"tags": "Tags",
+				"description": "Description",
+				"createdDate": "Created Time",
+				"startDate": "Start Time",
+				"scheduledDate": "Scheduled Time",
+				"completionDate": "Done Time"
 			}
 		},
 		"fieldSelector": {
@@ -1184,7 +1277,8 @@
 		"taskView": {
 			"loading": "Loading...",
 			"noTasks": "No tasks found matching the criteria",
-			"loadError": "Error loading tasks"
+			"loadError": "Error loading tasks",
+			"title": "Task View"
 		},
 		"ganttView": {
 			"invalidDateRange": "Invalid date range",
@@ -1195,7 +1289,8 @@
 			"renderError": "Error rendering Gantt chart: ",
 			"currentFilter": "Current filter: {{count}} statuses",
 			"tagFilter": "Tag filter: {{tags}}",
-			"missingFieldConfig": "Missing time field configuration"
+			"missingFieldConfig": "Missing time field configuration",
+			"title": "Gantt View"
 		}
 	},
 	"embeddedEditor": {
@@ -1239,6 +1334,23 @@
 			"tagFilter": {
 				"matchMode": "Match mode: "
 			}
+		},
+		"tabTitles": {
+			"taskList": "Task List",
+			"dailyTimeline": "Daily Timeline"
+		},
+		"dailyTimeline": {
+			"weekdays": [
+				"Sun",
+				"Mon",
+				"Tue",
+				"Wed",
+				"Thu",
+				"Fri",
+				"Sat"
+			],
+			"noTasks": "No tasks today",
+			"allDay": "All Day"
 		}
 	},
 	"taskStatus": {
@@ -1270,7 +1382,11 @@
 		"created": "Created",
 		"start": "Start",
 		"scheduled": "Scheduled",
-		"done": "Done"
+		"done": "Done",
+		"cancelled": "Cancelled",
+		"repeat": "Repeat",
+		"emptyValue": "(empty)",
+		"fileLocation": "Location"
 	},
 	"gantt": {
 		"taskInfoIncomplete": "Task information incomplete",
@@ -1278,6 +1394,10 @@
 		"updateFailed": "Update task failed: {{error}}",
 		"markedComplete": "Task marked as complete",
 		"markedIncomplete": "Task marked as incomplete",
-		"updateProgressFailed": "Update progress failed: {{error}}"
+		"updateProgressFailed": "Update progress failed: {{error}}",
+		"headers": {
+			"index": "#",
+			"task": "Task"
+		}
 	}
 }

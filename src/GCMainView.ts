@@ -8,6 +8,7 @@ import { YearViewRenderer } from './views/YearView';
 import { MonthViewRenderer } from './views/MonthView';
 import { WeekViewRenderer } from './views/WeekView';
 import { DayViewRenderer } from './views/DayView';
+import { i18n } from './i18n/i18n';
 import { TaskViewRenderer } from './views/TaskView';
 import { GanttViewRenderer } from './views/GanttView';
 import { Toolbar } from './toolbar/toolbar';
@@ -365,9 +366,9 @@ export class GCMainView extends ItemView {
 			case 'day':
 				return formatDate(this.currentDate, 'MM/dd');
 			case 'task':
-				return '任务视图';
+				return i18n.t('views.taskView.title');
             case 'gantt':
-                return '甘特图视图';
+                return i18n.t('views.ganttView.title');
 		}
 	}
 }

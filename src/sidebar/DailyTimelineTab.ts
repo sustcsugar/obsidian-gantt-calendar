@@ -47,12 +47,12 @@ export class DailyTimelineTab {
 	private renderTimeline(container: HTMLElement): void {
 		const today = getTodayInTimezone();
 		const todayStr = formatDate(today, 'yyyy-MM-dd');
-		const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+		const weekdayNames = i18n.t('sidebar.dailyTimeline.weekdays');
 
 		// 标题
 		const header = container.createDiv(SidebarClasses.elements.timelineHeader);
 		const dateText = header.createSpan({
-			text: `${formatDate(today, 'MM/dd')} ${weekdayNames[today.getDay()]}`
+			text: `${formatDate(today, 'MM/dd')} ${((weekdayNames as any) as string[])[today.getDay()]}`
 		});
 		dateText.style.cssText = 'font-size:14px;font-weight:600;';
 
@@ -64,7 +64,7 @@ export class DailyTimelineTab {
 
 		if (todayTasks.length === 0) {
 			const empty = container.createDiv(SidebarClasses.elements.emptyState);
-			empty.textContent = '今天没有任务';
+			empty.textContent = i18n.t('sidebar.dailyTimeline.noTasks');
 			return;
 		}
 
@@ -94,7 +94,7 @@ export class DailyTimelineTab {
 		// 渲染全天区域（始终显示，作为拖放目标）
 		const allDaySection = container.createDiv(SidebarClasses.elements.timelineAllDay);
 		const allDayLabel = allDaySection.createDiv(SidebarClasses.elements.timelineAllDayLabel);
-		allDayLabel.textContent = '全天';
+		allDayLabel.textContent = i18n.t('sidebar.dailyTimeline.allDay');
 		if (allDayTasks.length > 0) {
 			const allDayTasksEl = allDaySection.createDiv(SidebarClasses.elements.timelineAllDayTasks);
 			this.renderTaskCards(allDayTasksEl, allDayTasks);

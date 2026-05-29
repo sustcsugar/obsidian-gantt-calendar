@@ -827,7 +827,51 @@
 			"errorEmptyDescription": "请输入任务描述",
 			"errorDateOrder": "创建日期不能晚于截止日期",
 			"success": "任务创建成功",
-			"error": "创建任务失败: {{error}}"
+			"error": "创建任务失败: {{error}}",
+			"dateFields": {
+				"created": "➕ 创建",
+				"start": "🛫 开始",
+				"scheduled": "⏳ 计划",
+				"due": "📅 截止",
+				"completion": "✅ 完成",
+				"cancelled": "❌ 取消"
+			},
+			"repeat": {
+				"modeLabel": "重复方式：",
+				"fixedDate": "按固定日期重复",
+				"whenDone": "完成后重新计算",
+				"whenDoneTooltip": "下次任务的日期从完成当天算起，而不是从原计划日期算起",
+				"rulesHintTitle": "支持的规则：",
+				"rulesHintList": "• every day / every week / every month / every year\n• every 2 weeks\n• every week on Monday\n• 添加 \"when done\" 表示基于完成日期计算",
+				"customPlaceholder": "如: every week on Monday when done",
+				"monthlyDayPlaceholder": "日期",
+				"intervalTemplate": "每 {{interval}} {{label}}",
+				"frequencies": {
+					"daily": "每天",
+					"weekly": "每周",
+					"monthly": "每月",
+					"yearly": "每年",
+					"custom": "自定义"
+				},
+				"weekdays": [
+					"日",
+					"一",
+					"二",
+					"三",
+					"四",
+					"五",
+					"六"
+				],
+				"validationError": "规则格式不正确"
+			},
+			"tags": {
+				"recommendedLabel": "推荐标签：",
+				"noRecommended": "暂无推荐标签",
+				"selectedLabel": "已选标签：",
+				"noSelected": "未选择标签",
+				"inputPlaceholder": "输入新标签名称...",
+				"addButton": "添加"
+			}
 		},
 		"editTask": {
 			"title": "编辑任务",
@@ -838,7 +882,51 @@
 			"submitHint": "按 Enter 键可快捷提交",
 			"datePlaceholder": "选择日期和时间",
 			"success": "任务已更新",
-			"error": "更新任务失败"
+			"error": "更新任务失败",
+			"dateFields": {
+				"created": "➕ 创建",
+				"start": "🛫 开始",
+				"scheduled": "⏳ 计划",
+				"due": "📅 截止",
+				"completion": "✅ 完成",
+				"cancelled": "❌ 取消"
+			},
+			"repeat": {
+				"modeLabel": "重复方式：",
+				"fixedDate": "按固定日期重复",
+				"whenDone": "完成后重新计算",
+				"whenDoneTooltip": "下次任务的日期从完成当天算起，而不是从原计划日期算起",
+				"rulesHintTitle": "支持的规则：",
+				"rulesHintList": "• every day / every week / every month / every year\n• every 2 weeks\n• every week on Monday\n• 添加 \"when done\" 表示基于完成日期计算",
+				"customPlaceholder": "如: every week on Monday when done",
+				"monthlyDayPlaceholder": "日期",
+				"intervalTemplate": "每 {{interval}} {{label}}",
+				"frequencies": {
+					"daily": "每天",
+					"weekly": "每周",
+					"monthly": "每月",
+					"yearly": "每年",
+					"custom": "自定义"
+				},
+				"weekdays": [
+					"日",
+					"一",
+					"二",
+					"三",
+					"四",
+					"五",
+					"六"
+				],
+				"validationError": "规则格式不正确"
+			},
+			"tags": {
+				"recommendedLabel": "推荐标签：",
+				"noRecommended": "暂无推荐标签",
+				"selectedLabel": "已选标签：",
+				"noSelected": "未选择标签",
+				"inputPlaceholder": "输入新标签名称...",
+				"addButton": "添加"
+			}
 		},
 		"confirm": {
 			"cancel": "取消",
@@ -864,7 +952,12 @@
 				"dueDate": "截止日期",
 				"priority": "优先级",
 				"status": "状态",
-				"tags": "标签"
+				"tags": "标签",
+				"description": "字母排序",
+				"createdDate": "创建时间",
+				"startDate": "开始时间",
+				"scheduledDate": "规划时间",
+				"completionDate": "完成时间"
 			}
 		},
 		"fieldSelector": {
@@ -1184,7 +1277,8 @@
 		"taskView": {
 			"loading": "加载中...",
 			"noTasks": "未找到符合条件的任务",
-			"loadError": "加载任务时出错"
+			"loadError": "加载任务时出错",
+			"title": "任务视图"
 		},
 		"ganttView": {
 			"invalidDateRange": "无效的日期范围",
@@ -1195,7 +1289,8 @@
 			"renderError": "渲染甘特图时出错: ",
 			"currentFilter": "当前筛选: {{count}} 个状态",
 			"tagFilter": "标签筛选: {{tags}}",
-			"missingFieldConfig": "缺少时间字段配置"
+			"missingFieldConfig": "缺少时间字段配置",
+			"title": "甘特图视图"
 		}
 	},
 	"embeddedEditor": {
@@ -1239,6 +1334,23 @@
 			"tagFilter": {
 				"matchMode": "匹配模式: "
 			}
+		},
+		"tabTitles": {
+			"taskList": "任务列表",
+			"dailyTimeline": "今日时间线"
+		},
+		"dailyTimeline": {
+			"weekdays": [
+				"周日",
+				"周一",
+				"周二",
+				"周三",
+				"周四",
+				"周五",
+				"周六"
+			],
+			"noTasks": "今天没有任务",
+			"allDay": "全天"
 		}
 	},
 	"taskStatus": {
@@ -1270,7 +1382,11 @@
 		"created": "创建",
 		"start": "开始",
 		"scheduled": "计划",
-		"done": "完成"
+		"done": "完成",
+		"cancelled": "取消",
+		"repeat": "重复",
+		"emptyValue": "(空)",
+		"fileLocation": "位置"
 	},
 	"gantt": {
 		"taskInfoIncomplete": "任务信息不完整",
@@ -1278,6 +1394,10 @@
 		"updateFailed": "更新任务失败: {{error}}",
 		"markedComplete": "任务已标记为完成",
 		"markedIncomplete": "任务已标记为未完成",
-		"updateProgressFailed": "更新进度失败: {{error}}"
+		"updateProgressFailed": "更新进度失败: {{error}}",
+		"headers": {
+			"index": "序号",
+			"task": "任务"
+		}
 	}
 }

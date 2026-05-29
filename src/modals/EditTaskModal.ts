@@ -358,7 +358,7 @@ class EditTaskModal extends BaseTaskModal {
 		// ========== 自定义规则输入（选择"自定义"时显示，在同一行） ==========
 		const manualInput = freqSelectRow.createEl('input', {
 			type: 'text',
-			placeholder: '如: every week on Monday when done',
+			placeholder: i18n.t('modals.editTask.repeat.customPlaceholder'),
 			cls: EditTaskModalClasses.elements.repeatManualInput
 		});
 		manualInput.style.display = 'none';
@@ -374,7 +374,7 @@ class EditTaskModal extends BaseTaskModal {
 
 		const weekDaysLabel = weeklyDaysContainer.createSpan({ text: '  ' });
 		const dayButtons: HTMLButtonElement[] = [];
-		const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+		const dayNames = (i18n.t("modals.editTask.repeat.weekdays") as any) as string[];
 		dayNames.forEach((dayName) => {
 			const dayBtn = weeklyDaysContainer.createEl('button', {
 				cls: EditTaskModalClasses.elements.repeatDayCheckbox,
@@ -416,7 +416,7 @@ class EditTaskModal extends BaseTaskModal {
 		const monthDayInput = monthlyDayContainer.createEl('input', {
 			type: 'number',
 			cls: EditTaskModalClasses.elements.repeatMonthSelect,
-			placeholder: '日期'
+			placeholder: i18n.t('modals.editTask.repeat.monthlyDayPlaceholder')
 		});
 		monthDayInput.min = '1';
 		monthDayInput.max = '31';
@@ -431,7 +431,7 @@ class EditTaskModal extends BaseTaskModal {
 		whenDoneRow.style.gap = '8px';
 		whenDoneRow.style.marginBottom = '12px';
 
-		whenDoneRow.createEl('span', { text: '重复方式：' });
+		whenDoneRow.createEl('span', { text: i18n.t('modals.editTask.repeat.modeLabel') });
 		whenDoneRow.style.fontSize = 'var(--font-ui-small)';
 		whenDoneRow.style.color = 'var(--text-muted)';
 
@@ -444,7 +444,7 @@ class EditTaskModal extends BaseTaskModal {
 		whenDoneToggle.checked = true;
 
 		const fixedLabel = whenDoneRow.createEl('label', {
-			text: '按固定日期重复'
+			text: i18n.t('modals.editTask.repeat.fixedDate')
 		});
 		fixedLabel.setAttribute('for', 'repeat-fixed');
 		fixedLabel.style.fontSize = 'var(--font-ui-small)';
@@ -457,11 +457,11 @@ class EditTaskModal extends BaseTaskModal {
 		whenDoneToggle2.id = 'repeat-when-done';
 
 		const whenDoneLabel = whenDoneRow.createEl('label', {
-			text: '完成后重新计算'
+			text: i18n.t('modals.editTask.repeat.whenDone')
 		});
 		whenDoneLabel.setAttribute('for', 'repeat-when-done');
 		whenDoneLabel.style.fontSize = 'var(--font-ui-small)';
-		whenDoneLabel.setAttribute('title', '下次任务的日期从完成当天算起，而不是从原计划日期算起');
+		whenDoneLabel.setAttribute('title', i18n.t('modals.editTask.repeat.whenDoneTooltip'));
 
 		// ========== 预览摘要区域 ==========
 		const previewBox = repeatGrid.createDiv(EditTaskModalClasses.elements.repeatPreview);
@@ -489,14 +489,14 @@ class EditTaskModal extends BaseTaskModal {
 		rulesHint.style.fontSize = 'var(--font-ui-smaller)';
 
 		const rulesHintTitle = rulesHint.createEl('div', {
-			text: '支持的规则：',
+			text: i18n.t('modals.editTask.repeat.rulesHintTitle'),
 			cls: EditTaskModalClasses.elements.repeatRulesHintTitle
 		});
 		rulesHintTitle.style.fontWeight = 'var(--font-medium)';
 		rulesHintTitle.style.marginBottom = '4px';
 
 		const rulesHintList = rulesHint.createEl('div', {
-			text: '• every day / every 3 days / every weekday / every weekend\n• every week / every 2 weeks / every week on Monday, Friday\n• every month / every month on the 15th / on the last\n• every year / every January on the 15th\n• 添加 "when done" 表示基于完成日期计算',
+			text: i18n.t('modals.editTask.repeat.rulesHintList'),
 			cls: EditTaskModalClasses.elements.repeatRulesHintList
 		});
 		rulesHintList.style.whiteSpace = 'pre-line';
@@ -526,7 +526,7 @@ class EditTaskModal extends BaseTaskModal {
 
 			// Update collapsible header summary
 			const freqLabels: Record<string,string> = {
-				daily: '每天', weekly: '每周', monthly: '每月', yearly: '每年', custom: '自定义'
+				daily: i18n.t('modals.editTask.repeat.frequencies.daily'), weekly: i18n.t('modals.editTask.repeat.frequencies.weekly'), monthly: i18n.t('modals.editTask.repeat.frequencies.monthly'), yearly: i18n.t('modals.editTask.repeat.frequencies.yearly'), custom: i18n.t('modals.editTask.repeat.frequencies.custom')
 			};
 			if (!freqSelect.value) {
 				repeatSummary.textContent = i18n.t('common.recurrence.none');
@@ -534,7 +534,7 @@ class EditTaskModal extends BaseTaskModal {
 			} else {
 				const interval = parseInt(intervalInput.value) || 1;
 				const label = freqLabels[freqSelect.value] || freqSelect.value;
-				repeatSummary.textContent = interval > 1 ? `每 ${interval} ${label}` : label;
+				repeatSummary.textContent = interval > 1 ? i18n.t('modals.editTask.repeat.intervalTemplate', { interval: String(interval), label }) : label;
 				clearBtn.style.display = '';
 			}
 
@@ -561,7 +561,7 @@ class EditTaskModal extends BaseTaskModal {
 						previewText.textContent = manualRule;
 						errorMsg.style.display = 'none';
 					} else {
-						errorMsg.textContent = '规则格式不正确';
+						errorMsg.textContent = i18n.t('modals.editTask.repeat.validationError');
 						errorMsg.style.display = 'block';
 					}
 				} else {

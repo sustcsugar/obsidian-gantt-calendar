@@ -20,6 +20,7 @@ import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
 import { Logger } from '../../utils/logger';
 import { LinkRenderer } from '../../utils/linkRenderer';
 import { getTodayInTimezone } from '../../dateUtils/timezone';
+import { i18n } from '../../i18n/i18n';
 
 /**
  * SVG 元素辅助方法
@@ -716,7 +717,7 @@ export class SvgGanttRenderer {
 		numberText.setAttribute('font-size', '11');
 		numberText.setAttribute('font-weight', '600');
 		numberText.setAttribute('fill', 'var(--text-muted)');
-		numberText.textContent = '序号';
+		numberText.textContent = i18n.t('gantt.headers.index');
 		svg.appendChild(numberText);
 
 		// 任务列标题
@@ -727,7 +728,7 @@ export class SvgGanttRenderer {
 		taskText.setAttribute('font-size', '11');
 		taskText.setAttribute('font-weight', '600');
 		taskText.setAttribute('fill', 'var(--text-muted)');
-		taskText.textContent = '任务';
+		taskText.textContent = i18n.t('gantt.headers.task');
 		svg.appendChild(taskText);
 
 		// 序号列和任务列之间的分隔线

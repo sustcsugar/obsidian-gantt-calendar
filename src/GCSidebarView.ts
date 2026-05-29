@@ -3,6 +3,7 @@ import { SidebarClasses, withModifiers } from './utils/bem';
 import { TaskListTab } from './sidebar/TaskListTab';
 import { DailyTimelineTab } from './sidebar/DailyTimelineTab';
 import { Logger } from './utils/logger';
+import { i18n } from './i18n/i18n';
 
 export const GC_SIDEBAR_VIEW_ID = 'gantt-calendar-sidebar-view';
 
@@ -84,7 +85,7 @@ export class GCSidebarView extends ItemView {
 		);
 		const taskListIcon = taskListBtn.createSpan();
 		setIcon(taskListIcon, 'list');
-		taskListBtn.createSpan({ text: ' 任务列表' });
+		taskListBtn.createSpan({ text: ' ' + i18n.t('sidebar.tabTitles.taskList') });
 		taskListBtn.addEventListener('click', () => {
 			this.switchTab('taskList');
 		});
@@ -97,7 +98,7 @@ export class GCSidebarView extends ItemView {
 		);
 		const timelineIcon = timelineBtn.createSpan();
 		setIcon(timelineIcon, 'clock');
-		timelineBtn.createSpan({ text: ' 今日时间线' });
+		timelineBtn.createSpan({ text: ' ' + i18n.t('sidebar.tabTitles.dailyTimeline') });
 		timelineBtn.addEventListener('click', () => {
 			this.switchTab('dailyTimeline');
 		});

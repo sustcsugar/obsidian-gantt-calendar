@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n';
 /**
  * 标签选择器组件
  *
@@ -75,7 +76,7 @@ export class TagSelector {
 	private renderRecommendedSection(): void {
 		const recommendedSection = this.container.createDiv('gc-tag-selector-recommended-section');
 		recommendedSection.createEl('small', {
-			text: '推荐标签：',
+			text: i18n.t('modals.createTask.tags.recommendedLabel'),
 			cls: 'gc-tag-selector-label'
 		});
 
@@ -93,7 +94,7 @@ export class TagSelector {
 		const recommendedTags = this.getRecommendedTags();
 		if (recommendedTags.length === 0) {
 			this.recommendedGrid.createEl('small', {
-				text: '暂无推荐标签'
+				text: i18n.t('modals.createTask.tags.noRecommended')
 			}).style.opacity = '0.5';
 			return;
 		}
@@ -125,7 +126,7 @@ export class TagSelector {
 	private renderSelectedSection(): void {
 		const selectedSection = this.container.createDiv('gc-tag-selector-selected-section');
 		selectedSection.createEl('small', {
-			text: '已选标签：',
+			text: i18n.t('modals.createTask.tags.selectedLabel'),
 			cls: 'gc-tag-selector-label'
 		});
 
@@ -142,7 +143,7 @@ export class TagSelector {
 
 		if (this.selectedTags.size === 0) {
 			this.selectedGrid.createEl('small', {
-				text: '未选择标签'
+				text: i18n.t('modals.createTask.tags.noSelected')
 			}).style.opacity = '0.5';
 			return;
 		}
@@ -176,11 +177,11 @@ export class TagSelector {
 		this.newTagInput = newSection.createEl('input', {
 			type: 'text',
 			cls: 'gc-tag-selector-new-input',
-			attr: { placeholder: '输入新标签名称...' }
+			attr: { placeholder: i18n.t('modals.createTask.tags.inputPlaceholder') }
 		});
 
 		const addButton = newSection.createEl('button', {
-			text: '添加',
+			text: i18n.t('common.add'),
 			cls: 'gc-tag-selector-new-button'
 		});
 

@@ -96,7 +96,7 @@ export function renderSortButton(
 		iconSpan.setText(option.icon);
 
 		const labelSpan = item.createSpan(ToolbarClasses.components.sort.optionLabel);
-		labelSpan.setText(option.label);
+		labelSpan.setText(i18n.t('toolbar.sort.options.' + option.field));
 
 		const indicator = item.createSpan(ToolbarClasses.components.sort.optionIndicator);
 

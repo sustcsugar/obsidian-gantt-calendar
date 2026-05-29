@@ -1,5 +1,6 @@
 import type { IPluginContext, GCTask } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
+import { i18n } from '../i18n/i18n';
 import { TagPill } from '../components/tagPill';
 import { TooltipClasses } from './bem';
 
@@ -141,26 +142,26 @@ export class TooltipManager {
 		// --- 1. 时间组 ---
 		const timeRows: PropRow[] = [];
 		if (task.createdDate) {
-			timeRows.push({ label: '创建', value: formatDate(task.createdDate, task.datePrecision?.createdDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
+			timeRows.push({ label: i18n.t('taskCard.created'), value: formatDate(task.createdDate, task.datePrecision?.createdDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
 		}
 		if (task.startDate) {
-			timeRows.push({ label: '开始', value: formatDate(task.startDate, task.datePrecision?.startDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
+			timeRows.push({ label: i18n.t('taskCard.start'), value: formatDate(task.startDate, task.datePrecision?.startDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
 		}
 		if (task.scheduledDate) {
-			timeRows.push({ label: '计划', value: formatDate(task.scheduledDate, task.datePrecision?.scheduledDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
+			timeRows.push({ label: i18n.t('taskCard.scheduled'), value: formatDate(task.scheduledDate, task.datePrecision?.scheduledDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
 		}
 		if (task.dueDate) {
 			const isOverdue = task.dueDate < new Date() && !task.completed;
-			timeRows.push({ label: '截止', value: formatDate(task.dueDate, task.datePrecision?.dueDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'), isOverdue });
+			timeRows.push({ label: i18n.t('taskCard.due'), value: formatDate(task.dueDate, task.datePrecision?.dueDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'), isOverdue });
 		}
 		if (task.cancelledDate) {
-			timeRows.push({ label: '取消', value: formatDate(task.cancelledDate, task.datePrecision?.cancelledDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
+			timeRows.push({ label: i18n.t('taskCard.cancelled'), value: formatDate(task.cancelledDate, task.datePrecision?.cancelledDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
 		}
 		if (task.completionDate) {
-			timeRows.push({ label: '完成', value: formatDate(task.completionDate, task.datePrecision?.completionDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
+			timeRows.push({ label: i18n.t('taskCard.done'), value: formatDate(task.completionDate, task.datePrecision?.completionDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
 		}
 		if (task.repeat) {
-			timeRows.push({ label: '重复', value: task.repeat });
+			timeRows.push({ label: i18n.t('taskCard.repeat'), value: task.repeat });
 		}
 		if (timeRows.length > 0) {
 			sections.push({ key: 'time', rows: timeRows });
@@ -171,7 +172,7 @@ export class TooltipManager {
 			const priorityIcon = this.getPriorityIcon(task.priority);
 			sections.push({
 				key: 'priority',
-				rows: [{ label: '优先级', value: `${priorityIcon} ${task.priority}`, valueClass: `priority-${task.priority}` }]
+				rows: [{ label: i18n.t('taskCard.priority'), value: `${priorityIcon} ${task.priority}`, valueClass: `priority-${task.priority}` }]
 			});
 		}
 
@@ -184,14 +185,14 @@ export class TooltipManager {
 		if (task.metadataFields && task.metadataFields.length > 0) {
 			sections.push({
 				key: 'metadata',
-				rows: task.metadataFields.map(f => ({ label: f.key, value: f.value || '(空)' }))
+				rows: task.metadataFields.map(f => ({ label: f.key, value: f.value || i18n.t('taskCard.emptyValue') }))
 			});
 		}
 
 		// --- 5. 文件位置组 ---
 		sections.push({
 			key: 'file',
-			rows: [{ label: '位置', value: `${task.fileName}:${task.lineNumber}` }]
+			rows: [{ label: i18n.t('taskCard.fileLocation'), value: `${task.fileName}:${task.lineNumber}` }]
 		});
 
 		// === 分组渲染 ===
