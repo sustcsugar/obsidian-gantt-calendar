@@ -93,6 +93,13 @@
 			"clear": "× 清除",
 			"lastDay": "最后一天",
 			"daySuffix": "号"
+		},
+		"tags": {
+			"expand": "展开",
+			"collapse": "折叠",
+			"noSubTags": "无子标签",
+			"subTagCount": "{{count}} 个子标签",
+			"subTagCountPlural": "{{count}} 个子标签"
 		}
 	},
 	"main": {

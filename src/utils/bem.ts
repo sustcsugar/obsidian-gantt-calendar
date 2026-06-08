@@ -41,6 +41,8 @@ export const BLOCKS = {
 	TASK_TOOLTIP: 'task-tooltip',
 	/** 标签 */
 	TAG: 'tag',
+	/** 标签树形结构（多级标签） */
+	TAG_HIERARCHY: 'tag-hierarchy',
 	/** 链接 */
 	LINK: 'link',
 
@@ -206,6 +208,30 @@ export const TagClasses = {
 
 	/** 颜色修饰符 (0-5) */
 	colors: [0, 1, 2, 3, 4, 5].map(i => bem(BLOCKS.TAG, undefined, `color-${i}`)),
+};
+
+/**
+ * 标签树形结构（多级标签）类名常量
+ */
+export const TagHierarchyClasses = {
+	block: bem(BLOCKS.TAG_HIERARCHY),
+
+	elements: {
+		container: bem(BLOCKS.TAG_HIERARCHY, 'container'),
+		item: bem(BLOCKS.TAG_HIERARCHY, 'item'),
+		toggleBtn: bem(BLOCKS.TAG_HIERARCHY, 'toggle-btn'),
+		label: bem(BLOCKS.TAG_HIERARCHY, 'label'),
+		counter: bem(BLOCKS.TAG_HIERARCHY, 'counter'),
+	},
+
+	/** 状态修饰符 */
+	modifiers: {
+		expanded: bem(BLOCKS.TAG_HIERARCHY, undefined, 'expanded'),
+		collapsed: bem(BLOCKS.TAG_HIERARCHY, undefined, 'collapsed'),
+	},
+
+	/** 深度修饰符工厂函数 */
+	levelModifier: (level: number) => bem(BLOCKS.TAG_HIERARCHY, undefined, `level-${level}`),
 };
 
 /**
@@ -416,9 +442,14 @@ export const ToolbarClasses = {
 			tagsGrid: bem(BLOCKS.TOOLBAR, 'tag-filter-tags-grid'),
 			tagItem: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item'),
 			tagItemSelected: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item', 'selected'),
+			tagItemHasChildren: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item', 'has-children'),
+			tagToggle: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-toggle'),
+			tagToggleExpanded: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-toggle', 'expanded'),
+			tagChildren: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-children'),
 			tagCheckbox: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-checkbox'),
 			tagName: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-name'),
 			tagCount: bem(BLOCKS.TOOLBAR, 'tag-filter-tag-count'),
+			tagLevel: (level: number) => bem(BLOCKS.TOOLBAR, 'tag-filter-tag-item', `level-${level}`),
 			empty: bem(BLOCKS.TOOLBAR, 'tag-filter-empty'),
 		},
 

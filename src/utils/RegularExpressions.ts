@@ -493,7 +493,7 @@ export class RegularExpressions {
          * "#前端 开发任务" -> " 开发任务"
          * "完成任务#tag" -> "完成任务"
          */
-        removeTags: /#([a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9_\u4e00-\u9fa5]*)\s*/g,
+        removeTags: /#([a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9_/\u4e00-\u9fa5]*)\s*/g,
 
         /**
          * 匹配标签（用于提取标签内容）
@@ -502,7 +502,7 @@ export class RegularExpressions {
          * @example
          * "任务 #work #urgent" -> 可以提取出 ["work", "urgent"]
          */
-        matchTags: /#([a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9_\u4e00-\u9fa5]*)/g,
+        matchTags: /#([a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9_/\u4e00-\u9fa5]*)/g,
 
         /**
          * 提取 %%content%% ticktick 内容（非贪婪，支持多个块）

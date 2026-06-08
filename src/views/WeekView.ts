@@ -24,6 +24,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	// 当前渲染日期（供 refreshTasks 使用）
 	private currentDate: Date = new Date();
 
+	// 滚动位置缓存（时间轴模式增量刷新时保存/恢复）
+	private savedScrollTop: number = 0;
+
 	// 当前拖拽悬停行的行元素数组（用于清除上一行的高亮）
 	private dragOverRowEls: HTMLElement[] | null = null;
 
@@ -533,9 +536,21 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 		if (isTimeline) {
 			// 时间轴模式需要完全重新渲染
+			// 真正的滚动容器是 .gc-week-view__tasks-grid（CSS overflow-y: auto）
+			const tasksGrid = container.querySelector('.gc-week-view__tasks-grid') as HTMLElement;
+			if (tasksGrid) {
+				this.savedScrollTop = tasksGrid.scrollTop;
+			}
 			const viewContainer = container.parentElement;
 			if (viewContainer) {
 				this.render(viewContainer, this.currentDate);
+			}
+			// 恢复滚动位置：render 重建 DOM 后需要重新查找 tasksGrid
+			const newTasksGrid = viewContainer?.querySelector('.gc-week-view__tasks-grid') as HTMLElement;
+			if (newTasksGrid) {
+				requestAnimationFrame(() => {
+					newTasksGrid.scrollTop = this.savedScrollTop;
+				});
 			}
 		} else {
 			// 扁平列表模式增量刷新

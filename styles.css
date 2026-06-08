@@ -1156,6 +1156,38 @@ Author: sugar
 	font-size: 12px;
 }
 
+	/* 标签树形结构：展开/折叠箭头 */
+	.gc-toolbar__tag-filter-tag-toggle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+		cursor: pointer;
+		border-radius: 3px;
+		transition: background-color 120ms ease;
+	}
+	.gc-toolbar__tag-filter-tag-toggle:hover {
+		background: var(--background-modifier-hover);
+	}
+	.gc-toolbar__tag-filter-tag-toggle svg {
+		width: 12px;
+		height: 12px;
+	}
+
+	/* 标签树形结构：子节点容器 */
+	.gc-toolbar__tag-filter-tag-children {
+		overflow: hidden;
+	}
+
+	/* 标签树形结构：层级缩进 */
+	.gc-toolbar__tag-filter-tag-item--level-0 { padding-left: 8px; }
+	.gc-toolbar__tag-filter-tag-item--level-1 { padding-left: 24px; }
+	.gc-toolbar__tag-filter-tag-item--level-2 { padding-left: 40px; }
+	.gc-toolbar__tag-filter-tag-item--level-3 { padding-left: 56px; }
+	.gc-toolbar__tag-filter-tag-item--level-4 { padding-left: 72px; }
+
 /* 6.2 Task Card Component (统一任务卡片) */
 /* BEM命名: gc-task-card */
 .gc-task-card {

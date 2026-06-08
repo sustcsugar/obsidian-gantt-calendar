@@ -288,7 +288,9 @@ export abstract class BaseViewRenderer {
 	}
 
 	/**
-	 * 应用标签筛选到任务列表
+	 * 应用标签筛选到任务列表（支持多级标签层级匹配）
+	 * 选中父标签时，会同时匹配带有子标签的任务
+	 * 例如：选中 #project 会匹配带有 #project/frontend 的任务
 	 * @param tasks 原始任务列表
 	 * @returns 筛选后的任务列表
 	 */
@@ -316,19 +318,25 @@ export abstract class BaseViewRenderer {
 			// 将任务标签转换为小写用于匹配
 			const taskTagsLower = task.tags.map(tag => tag.toLowerCase());
 
-			// AND 模式：任务必须包含所有选中标签
+			// 判断任务标签是否匹配某个筛选标签（支持层级）
+			const tagMatches = (selectedTag: string) =>
+				taskTagsLower.some(taskTag =>
+					taskTag === selectedTag || taskTag.startsWith(selectedTag + '/')
+				);
+
+			// AND 模式：任务必须匹配所有选中标签（含层级）
 			if (operator === 'AND') {
-				return selectedTagsLower.every(tag => taskTagsLower.includes(tag));
+				return selectedTagsLower.every(tagMatches);
 			}
 
-			// OR 模式：任务包含任一选中标签即可
+			// OR 模式：任务匹配任一选中标签即可（含层级）
 			if (operator === 'OR') {
-				return selectedTagsLower.some(tag => taskTagsLower.includes(tag));
+				return selectedTagsLower.some(tagMatches);
 			}
 
-			// NOT 模式：排除包含任一选中标签的任务
+			// NOT 模式：排除匹配任一选中标签的任务（含层级）
 			if (operator === 'NOT') {
-				return !selectedTagsLower.some(tag => taskTagsLower.includes(tag));
+				return !selectedTagsLower.some(tagMatches);
 			}
 
 			return false;

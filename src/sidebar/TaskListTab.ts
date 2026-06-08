@@ -12,6 +12,8 @@ import { isThisWeek } from '../dateUtils/week';
 import { isThisMonth } from '../dateUtils/dateCompare';
 import { Logger } from '../utils/logger';
 import { i18n } from '../i18n/i18n';
+import { buildTagHierarchy } from '../tasks/tags/TagHierarchyBuilder';
+import type { TagNode } from '../tasks/tags/TagHierarchy';
 
 /**
  * 侧边栏 — 任务列表 Tab
@@ -302,6 +304,8 @@ export class TaskListTab {
 		setTimeout(() => document.addEventListener('click', closeHandler), 0);
 	}
 
+	private tagExpandedPaths = new Set<string>();
+
 	private toggleTagDropdown(container: HTMLElement, anchor: HTMLElement): void {
 		const existing = container.querySelector('.sidebar-dropdown');
 		if (existing) { existing.remove(); return; }
@@ -309,20 +313,92 @@ export class TaskListTab {
 		const allTasks = this.plugin?.taskCache?.getAllTasks() as GCTask[] | undefined;
 		if (!allTasks) return;
 
-		// 收集所有唯一标签
-		const tagSet = new Set<string>();
+		// 收集所有唯一标签及其计数
+		const tagCounts = new Map<string, number>();
 		for (const task of allTasks) {
 			if (task.tags) {
 				for (const tag of task.tags) {
-					tagSet.add(tag);
+					tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
 				}
 			}
 		}
-		const allTags = Array.from(tagSet).sort();
-		if (allTags.length === 0) return;
+
+		if (tagCounts.size === 0) return;
 
 		const dropdown = container.createDiv('sidebar-dropdown');
-		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);min-width:160px;';
+		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);min-width:160px;max-height:320px;overflow-y:auto;';
+
+		// 计算聚合计数
+		const computeAgg = (node: TagNode): number => {
+			let total = tagCounts.get(node.fullPath) || 0;
+			for (const child of node.children) {
+				total += computeAgg(child);
+			}
+			return total;
+		};
+
+		const aggCounts = new Map<string, number>();
+		const computeAll = (nodes: TagNode[]) => {
+			for (const node of nodes) {
+				aggCounts.set(node.fullPath, computeAgg(node));
+				computeAll(node.children);
+			}
+		};
+
+		// 递归渲染树节点
+		const renderTreeNode = (parent: HTMLElement, node: TagNode, level: number) => {
+			const aggCount = aggCounts.get(node.fullPath) || 0;
+			if (aggCount === 0 && node.children.length > 0) return;
+
+			const isSelected = this.selectedTags.includes(node.fullPath);
+			const hasChildren = node.children.length > 0;
+			const isExpanded = this.tagExpandedPaths.has(node.fullPath);
+
+			const item = parent.createDiv('sidebar-dropdown-item');
+			item.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;border-radius:4px;padding-left:${8 + level * 16}px;`;
+			item.toggleClass('is-selected', isSelected);
+
+			// 展开箭头
+			if (hasChildren) {
+				const toggle = item.createSpan();
+				toggle.style.cssText = 'display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;';
+				setIcon(toggle, isExpanded ? 'chevron-down' : 'chevron-right');
+				toggle.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if (isExpanded) {
+						this.tagExpandedPaths.delete(node.fullPath);
+					} else {
+						this.tagExpandedPaths.add(node.fullPath);
+					}
+					renderTagItems();
+				});
+			} else {
+				const spacer = item.createSpan();
+				spacer.style.cssText = 'display:inline-block;width:14px;flex-shrink:0;';
+			}
+
+			const checkbox = item.createEl('input', { type: 'checkbox' });
+			checkbox.checked = isSelected;
+			checkbox.style.margin = '0';
+			checkbox.style.flexShrink = '0';
+
+			const label = item.createSpan({ text: node.fullPath });
+			label.style.cssText = 'font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+			const countSpan = item.createSpan({ text: String(aggCount) });
+			countSpan.style.cssText = 'font-size:11px;color:var(--text-muted);flex-shrink:0;';
+
+			item.addEventListener('click', (e) => {
+				e.stopPropagation();
+				if (isSelected) {
+					this.selectedTags = this.selectedTags.filter(t => t !== node.fullPath);
+				} else {
+					this.selectedTags.push(node.fullPath);
+				}
+				this.renderTaskList();
+				renderTagItems();
+			});
+		};
 
 		const renderTagItems = () => {
 			dropdown.empty();
@@ -350,30 +426,42 @@ export class TaskListTab {
 				renderTagItems();
 			});
 
-			// 标签列表
-			for (const tag of allTags) {
-				const isSelected = this.selectedTags.includes(tag);
-				const item = dropdown.createDiv('sidebar-dropdown-item');
-				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
-				item.toggleClass('is-selected', isSelected);
+			// 构建标签树
+			const flatTags = Array.from(tagCounts.keys());
+			const tree = buildTagHierarchy(flatTags);
+			computeAll(tree);
 
-				const checkbox = item.createEl('input', { type: 'checkbox' });
-				checkbox.checked = isSelected;
-				checkbox.style.margin = '0';
+			// 按聚合计数排序根节点
+			const sortedRoots = [...tree].sort((a, b) =>
+				(aggCounts.get(b.fullPath) || 0) - (aggCounts.get(a.fullPath) || 0)
+			);
 
-				const label = item.createSpan({ text: tag });
-				label.style.cssText = 'font-size:13px;';
-
-				item.addEventListener('click', (e) => {
-					e.stopPropagation();
-					if (isSelected) {
-						this.selectedTags = this.selectedTags.filter(t => t !== tag);
-					} else {
-						this.selectedTags.push(tag);
+			for (const rootNode of sortedRoots) {
+				renderTreeNode(dropdown, rootNode, 0);
+				// 展开的节点渲染子节点
+				if (rootNode.children.length > 0 && this.tagExpandedPaths.has(rootNode.fullPath)) {
+					const sortedChildren = [...rootNode.children].sort((a, b) =>
+						(aggCounts.get(b.fullPath) || 0) - (aggCounts.get(a.fullPath) || 0)
+					);
+					for (const child of sortedChildren) {
+						renderTreeNode(dropdown, child, 1);
+						// 递归渲染更深层
+						if (child.children.length > 0 && this.tagExpandedPaths.has(child.fullPath)) {
+							const renderDeep = (n: TagNode, lvl: number) => {
+								const sorted = [...n.children].sort((a, b) =>
+									(aggCounts.get(b.fullPath) || 0) - (aggCounts.get(a.fullPath) || 0)
+								);
+								for (const c of sorted) {
+									renderTreeNode(dropdown, c, lvl);
+									if (c.children.length > 0 && this.tagExpandedPaths.has(c.fullPath)) {
+										renderDeep(c, lvl + 1);
+									}
+								}
+							};
+							renderDeep(child, 2);
+						}
 					}
-					this.renderTaskList();
-					renderTagItems();
-				});
+				}
 			}
 		};
 
@@ -557,14 +645,18 @@ export class TaskListTab {
 			result = result.filter(t => t.priority === this.priorityFilter);
 		}
 
-		// 标签筛选
+		// 标签筛选（支持多级标签层级匹配）
 		if (this.selectedTags.length > 0) {
 			result = result.filter(t => {
 				if (!t.tags || t.tags.length === 0) return false;
+				const tagMatches = (selectedTag: string) =>
+					t.tags!.some(taskTag =>
+						taskTag === selectedTag || taskTag.startsWith(selectedTag + '/')
+					);
 				if (this.tagOperator === 'OR') {
-					return this.selectedTags.some(tag => t.tags!.includes(tag));
+					return this.selectedTags.some(tagMatches);
 				} else {
-					return this.selectedTags.every(tag => t.tags!.includes(tag));
+					return this.selectedTags.every(tagMatches);
 				}
 			});
 		}

@@ -412,7 +412,41 @@ export function extractTags(description: string): string[] {
 }
 
 /**
+ * 从任务描述中提取标签并构建树形结构（支持多级标签）
+ *
+ * 将平面标签数组转换为树形结构，支持 Obsidian 原生的多级标签格式。
+ * 使用统一正则入口 RegularExpressions.DescriptionExtraction.matchTags
+ *
+ * @param description - 任务描述
+ * @returns 标签树形结构
+ *
+ * @example
+ * ```ts
+ * extractTagsAsTree("任务 #work #project/frontend #urgent")
+ * // 返回: [
+ * //   { name: 'work', fullPath: 'work', level: 0, children: [] },
+ * //   {
+ * //     name: 'project',
+ * //     fullPath: 'project',
+ * //     level: 0,
+ * //     children: [
+ * //       { name: 'frontend', fullPath: 'project/frontend', level: 1, children: [] }
+ * //     ]
+ * //   },
+ * //   { name: 'urgent', fullPath: 'urgent', level: 0, children: [] }
+ * // ]
+ * ```
+ */
+export function extractTagsAsTree(description: string) {
+    // 动态导入以避免循环依赖
+    const { buildTagHierarchy } = require('../tags/TagHierarchyBuilder');
+    const tags = extractTags(description);
+    return buildTagHierarchy(tags);
+}
+
+/**
  * 从任务描述中移除标签
+
  *
  * 移除所有 #tag 格式的标签，返回清理后的文本。
  * 使用统一正则入口 RegularExpressions.DescriptionExtraction.removeTags

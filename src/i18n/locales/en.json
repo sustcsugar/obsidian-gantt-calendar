@@ -93,6 +93,13 @@
 			"clear": "Clear",
 			"lastDay": "Last day",
 			"daySuffix": ""
+		},
+		"tags": {
+			"expand": "Expand",
+			"collapse": "Collapse",
+			"noSubTags": "No sub-tags",
+			"subTagCount": "{{count}} sub-tag",
+			"subTagCountPlural": "{{count}} sub-tags"
 		}
 	},
 	"main": {
