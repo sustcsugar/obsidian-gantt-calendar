@@ -1003,7 +1003,8 @@ Author: sugar
 
 .gc-toolbar__tag-filter-pane {
 	position: fixed;
-	z-index: 1000;
+	z-index: 999;
+	/* 确保 Obsidian aria-label tooltip 显示在面板之上 */
 	min-width: 200px;
 	max-height: 320px;
 	overflow-y: auto;
@@ -1022,6 +1023,7 @@ Author: sugar
 .gc-toolbar__tag-filter-pane::-webkit-scrollbar {
 	width: 4px;
 }
+
 
 .gc-toolbar__tag-filter-pane::-webkit-scrollbar-track {
 	background: transparent;

@@ -202,7 +202,7 @@ export function renderTagFilterButton(
 			const btn = operators.createDiv({
 				text,
 				cls: classes.operatorBtn,
-				attr: { title, 'aria-label': `${text} ${i18n.t('toolbar.tagFilter.ariaLabel')}`, 'role': 'button', 'tabindex': '0' }
+				attr: { 'aria-label': `${text} ${i18n.t('toolbar.tagFilter.ariaLabel')}`, 'role': 'button', 'tabindex': '0' }
 			});
 			if (state.operator === op) btn.addClass(classes.operatorBtnActive);
 			btn.addEventListener('click', (e) => {
