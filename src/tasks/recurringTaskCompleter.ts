@@ -6,7 +6,8 @@
  */
 
 import { App, TFile } from 'obsidian';
-import { GCTask } from '../types';
+import { GCTask, getTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { determineTaskFormat } from './taskUpdater';
 import { serializeTask, TaskUpdates } from './taskSerializer';
 import { updateTaskCompletion } from './taskUpdater';
@@ -38,7 +39,7 @@ export async function completeRecurringTask(
     // 确定推进基准日期
     const baseDateForAdvance = rule.whenDone
         ? new Date()
-        : (task as any)[dateField] as Date;
+        : getTaskDateField(task, dateField as DateFieldType);
 
     if (!baseDateForAdvance || !(baseDateForAdvance instanceof Date) || isNaN(baseDateForAdvance.getTime())) {
         Logger.warn('recurringTaskCompleter', 'No valid base date for advancing recurring task', { dateField });
@@ -127,7 +128,7 @@ function advanceDateInUpdates(
     dateField: string,
     nextOccurrence: Date
 ): void {
-    const sourceBaseDate = (sourceTask as any)[dateField] as Date | undefined;
+    const sourceBaseDate = getTaskDateField(sourceTask, dateField as DateFieldType);
     if (!sourceBaseDate) return;
 
     // 推进 startDate（如果存在且与主日期不同）

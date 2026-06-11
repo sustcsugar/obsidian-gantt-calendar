@@ -1,5 +1,5 @@
 import { ItemView, WorkspaceLeaf, setIcon, Notice } from 'obsidian';
-import { CalendarViewType } from './types';
+import { CalendarViewType, IPluginContext } from './types';
 
 import { getWeekOfDate, formatDate, formatMonth, getTodayDate } from './dateUtils/dateUtilsIndex';
 import { getTodayInTimezone } from './dateUtils/timezone';
@@ -20,7 +20,7 @@ export class GCMainView extends ItemView {
 	private currentDate: Date = new Date(); // 将在 onOpen 中通过 getTodayInTimezone() 初始化
 	private viewType: CalendarViewType = 'year';
 	private resizeObserver: ResizeObserver | null = null;
-	private plugin: any;
+	private plugin: IPluginContext;
 	private cacheUpdateListener: (() => void) | null = null;
 
 	// 子视图渲染器
@@ -34,13 +34,13 @@ export class GCMainView extends ItemView {
 	// 工具栏控制器
 	private toolbar: Toolbar;
 
-	constructor(leaf: WorkspaceLeaf, plugin: any) {
+	constructor(leaf: WorkspaceLeaf, plugin: IPluginContext) {
 		super(leaf);
 		this.plugin = plugin;
 		// 使用设置中的默认视图
 		this.viewType = plugin.settings.defaultView || 'year';
 		// 存储 calendarView 引用到 plugin,供子渲染器访问
-		this.plugin.calendarView = this;
+		this.plugin.calendarView = this as unknown as IPluginContext['calendarView'];
 
 		// 初始化子视图渲染器
 		this.yearRenderer = new YearViewRenderer(this.app, plugin);

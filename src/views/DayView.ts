@@ -1,6 +1,8 @@
-import { App, setIcon } from 'obsidian';
+import { App, setIcon, Notice } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import { getTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { sortTasks } from '../tasks/taskSorter';
 import { TaskCardClasses, DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, DayViewConfig, type TaskCardConfig } from '../components/TaskCard';
@@ -9,10 +11,11 @@ import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
 import { EmbeddedNoteEditor } from './EmbeddedNoteEditor';
 import { updateTaskDateField } from '../tasks/taskUpdater';
 import { CreateTaskModal } from '../modals/CreateTaskModal';
-import { Notice } from 'obsidian';
-import { isTodayInTimezone } from '../dateUtils/timezone';
-import { renderCurrentTimeLine } from '../utils/currentTimeLine';
+import { TooltipManager } from '../utils/tooltipManager';
 import { i18n } from '../i18n/i18n';
+import { renderCurrentTimeLine } from '../utils/currentTimeLine';
+import { isTodayInTimezone } from '../dateUtils/timezone';
+import { DragDropManager, setupQuickCreateForSlot, type QuickCreateConfig } from '../utils/timelineInteractions';
 
 /**
  * 日视图渲染器
@@ -153,7 +156,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			let currentDayTasks = tasks.filter(task => {
-				const dateValue = (task as any)[dateField];
+				const dateValue = getTaskDateField(task, dateField as DateFieldType);
 				if (!dateValue) return false;
 				const taskDate = new Date(dateValue);
 				if (isNaN(taskDate.getTime())) return false;
@@ -218,7 +221,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			tasksByHour.get(0)!.push(task);
 		}
 		for (const task of timedTasks) {
-			const dateValue = (task as any)[dateField];
+			const dateValue = getTaskDateField(task, dateField as DateFieldType);
 			if (dateValue instanceof Date) {
 				const hour = dateValue.getHours();
 				if (!tasksByHour.has(hour)) tasksByHour.set(hour, []);
@@ -281,101 +284,22 @@ export class DayViewRenderer extends BaseViewRenderer {
 	 * 设置时间格的拖放功能
 	 */
 	private setupDragDropForTimeSlot(slot: HTMLElement, hour: number, targetDate: Date, listContainer: HTMLElement): void {
-		slot.addEventListener('dragover', (e: DragEvent) => {
-			e.preventDefault();
-			if (e.dataTransfer) {
-				e.dataTransfer.dropEffect = 'move';
-			}
-			if (this.dragOverSlot !== slot) {
-				if (this.dragOverSlot) {
-					this.dragOverSlot.removeClass('gc-day-view__time-slot--drag-over');
-				}
-				slot.addClass('gc-day-view__time-slot--drag-over');
-				this.dragOverSlot = slot;
-			}
+		const dragDropManager = new DragDropManager({
+			targets: [slot],
+			highlightClass: DayViewClasses.modifiers.timeSlotDragOver,
+			logTag: 'DayView',
 		});
-
-		slot.addEventListener('dragleave', (e: DragEvent) => {
-			const related = e.relatedTarget as HTMLElement | null;
-			if (related && !slot.contains(related)) {
-				slot.removeClass('gc-day-view__time-slot--drag-over');
-				if (this.dragOverSlot === slot) {
-					this.dragOverSlot = null;
-				}
-			}
-		});
-
-		slot.addEventListener('drop', async (e: DragEvent) => {
-			e.preventDefault();
-			slot.removeClass('gc-day-view__time-slot--drag-over');
-			this.dragOverSlot = null;
-
-			const taskId = e.dataTransfer?.getData('taskId');
-			if (!taskId) return;
-
-			const [filePath, lineNum] = taskId.split(':');
-			const lineNumber = parseInt(lineNum, 10);
-
-			// 查找源任务
-			const allTasks = this.plugin.taskCache.getAllTasks();
-			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
-			if (!sourceTask) {
-				Logger.error('DayView', 'Source task not found:', taskId);
-				return;
-			}
-
-			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
-
-			try {
-				// 构建新的日期时间：保持目标日期 + 新的小时
-				const newDate = new Date(targetDate);
-				newDate.setHours(hour, 0, 0, 0);
-
-				// 更新 datePrecision 为 time（拖拽到时间格表示设定了时间）
-				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'time' };
-
-				// 更新任务的日期字段（带时间）
-				await updateTaskDateField(
-					this.app,
-					sourceTask,
-					dateFieldName,
-					newDate,
-					this.plugin.settings.enabledTaskFormats
-				);
-
-				Logger.debug('DayView', 'Task time updated via drag-drop', { taskId, hour });
-			} catch (error) {
-				Logger.error('DayView', 'Error updating task time:', error);
-				new Notice(i18n.t('views.dayView.updateTimeFailed'));
-			}
-		});
+		dragDropManager.setupForSlot(slot, hour, targetDate, this.app, this.plugin);
 	}
 
 	/**
 	 * 空时间格：hover 显示 "+"，点击创建任务
 	 */
 	private setupQuickCreateForSlot(slot: HTMLElement, hour: number, targetDate: Date): void {
-		const createEl = slot.createDiv('gc-day-view__slot-create');
-		createEl.addEventListener('mouseenter', () => {
-			createEl.empty();
-			setIcon(createEl, 'plus');
-		});
-		createEl.addEventListener('mouseleave', () => {
-			createEl.empty();
-		});
-		createEl.addEventListener('click', (e) => {
-			e.stopPropagation();
-			const modal = new CreateTaskModal({
-				app: this.app,
-				plugin: this.plugin as any,
-				targetDate,
-				targetHour: hour,
-				onSuccess: () => {
-					// vault modify event triggers incremental update automatically
-				},
-			});
-			modal.open();
-		});
+		const config: QuickCreateConfig = {
+			createElClass: DayViewClasses.elements.slotCreate,
+		};
+		setupQuickCreateForSlot(slot, hour, targetDate, this.app, this.plugin, config);
 	}
 
 		private renderTaskItem(task: GCTask, listContainer: HTMLElement, targetDate: Date): void {

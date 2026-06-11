@@ -8,14 +8,16 @@
  * - Logger.stats(tag, ...args)  - 统计信息，始终输出
  * - Logger.debug(tag, ...args)  - 调试日志，仅开发者模式输出
  */
+import type { IPluginContext } from '../types';
+
 export class Logger {
-	private static plugin: any = null;
+	private static plugin: IPluginContext | null = null;
 	private static LOG_PREFIX = '[GanttCalendar]';
 
 	/**
 	 * 初始化 Logger（由插件 main.ts 调用）
 	 */
-	static init(plugin: any): void {
+	static init(plugin: IPluginContext): void {
 		this.plugin = plugin;
 	}
 

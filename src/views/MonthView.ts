@@ -2,6 +2,8 @@ import { Notice, App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import { getTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
 import { MonthViewClasses, TaskCardClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
@@ -231,7 +233,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 			// 筛选当天真实任务
 			let currentDayTasks = tasks.filter(task => {
-				const dateValue = (task as any)[dateField];
+				const dateValue = getTaskDateField(task, dateField as DateFieldType);
 				if (!dateValue) return false;
 
 				const taskDate = new Date(dateValue);
@@ -245,7 +247,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			let virtualForDay: GCTask[] = [];
 			if (precomputedVirtualInstances) {
 				virtualForDay = precomputedVirtualInstances.filter(task => {
-					const dateValue = (task as any)[dateField];
+					const dateValue = getTaskDateField(task, dateField as DateFieldType);
 					if (!dateValue) return false;
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;

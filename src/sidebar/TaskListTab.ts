@@ -1,6 +1,6 @@
 import type { App } from 'obsidian';
 import { setIcon } from 'obsidian';
-import type { GCTask, StatusFilterState } from '../types';
+import type { GCTask, StatusFilterState, IPluginContext } from '../types';
 import { DEFAULT_STATUS_FILTER_STATE } from '../types';
 import { SidebarClasses } from '../utils/bem';
 import { TaskCardComponent, buildSidebarConfig } from '../components/TaskCard';
@@ -21,7 +21,7 @@ import type { TagNode } from '../tasks/tags/TagHierarchy';
  */
 export class TaskListTab {
 	private app: App;
-	private plugin: any;
+	private plugin: IPluginContext;
 
 	private searchQuery: string = '';
 	private statusFilter: StatusFilterState = { ...DEFAULT_STATUS_FILTER_STATE };
@@ -37,7 +37,7 @@ export class TaskListTab {
 	private taskListEl: HTMLElement | null = null;
 	private cardMap: Map<string, { element: HTMLElement; destroy: () => void }> = new Map();
 
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		this.app = app;
 		this.plugin = plugin;
 	}

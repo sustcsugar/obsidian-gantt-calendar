@@ -4,6 +4,8 @@ import { getWeekOfDate } from '../dateUtils/dateUtilsIndex';
 import { updateTaskDateField } from '../tasks/taskUpdater';
 import { CreateTaskModal } from '../modals/CreateTaskModal';
 import type { IPluginContext,  GCTask, TagFilterState, CalendarDay } from '../types';
+import { getTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { sortTasks } from '../tasks/taskSorter';
 import { TaskCardComponent, WeekViewConfig, type TaskCardConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
@@ -13,6 +15,7 @@ import { toISOStringLocal, createDate } from '../dateUtils/timezone';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
 import { renderCurrentTimeLine } from '../utils/currentTimeLine';
 import { i18n } from '../i18n/i18n';
+import { DragDropManager, setupQuickCreateForSlot, type QuickCreateConfig } from '../utils/timelineInteractions';
 
 /**
  * 周视图渲染器
@@ -51,7 +54,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		for (const task of tasks) {
 			const precision = task.datePrecision?.[dateField as keyof NonNullable<typeof task.datePrecision>];
 			if (precision === 'time') {
-				const dateValue = (task as any)[dateField];
+				const dateValue = getTaskDateField(task, dateField as DateFieldType);
 				if (dateValue) {
 					const taskDate = new Date(dateValue);
 					if (!isNaN(taskDate.getTime())) {
@@ -276,7 +279,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 		// 筛选当天任务
 		let currentDayTasks = allRealTasks.filter(task => {
-			const dateValue = (task as any)[dateField];
+			const dateValue = getTaskDateField(task, dateField as DateFieldType);
 			if (!dateValue) return false;
 			const taskDate = new Date(dateValue);
 			if (isNaN(taskDate.getTime())) return false;
@@ -285,7 +288,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		});
 
 		const virtualForDay = allVirtualInstances.filter(task => {
-			const dateValue = (task as any)[dateField];
+			const dateValue = getTaskDateField(task, dateField as DateFieldType);
 			if (!dateValue) return false;
 			const taskDate = new Date(dateValue);
 			if (isNaN(taskDate.getTime())) return false;
@@ -302,7 +305,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		for (const task of currentDayTasks) {
 			const precision = task.datePrecision?.[dateField as keyof NonNullable<typeof task.datePrecision>];
 			if (precision === 'time') {
-				const dateValue = (task as any)[dateField];
+				const dateValue = getTaskDateField(task, dateField as DateFieldType);
 				let hour = 0;
 				if (dateValue instanceof Date) {
 					hour = dateValue.getHours();
@@ -330,33 +333,6 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				this.renderTimelineTaskItem(task, container, targetDate);
 			});
 		}
-	}
-
-	/**
-	 * 空时间格：hover 显示 "+"，点击创建任务
-	 */
-	private setupQuickCreateForSlot(slot: HTMLElement, hour: number, targetDate: Date): void {
-		const createEl = slot.createDiv("gc-week-view__slot-create");
-		createEl.addEventListener("mouseenter", () => {
-			createEl.empty();
-			setIcon(createEl, "plus");
-		});
-		createEl.addEventListener("mouseleave", () => {
-			createEl.empty();
-		});
-		createEl.addEventListener("click", (e) => {
-			e.stopPropagation();
-			const modal = new CreateTaskModal({
-				app: this.app,
-				plugin: this.plugin as any,
-				targetDate,
-				targetHour: hour,
-				onSuccess: () => {
-					// vault modify event triggers incremental update automatically
-				},
-			});
-			modal.open();
-		});
 	}
 
 	/**
@@ -454,75 +430,22 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	 * 设置时间格的拖放功能
 	 */
 	private setupDragDropForTimeSlot(slot: HTMLElement, hour: number, targetDate: Date, rowEls: HTMLElement[]): void {
-		slot.addEventListener('dragover', (e: DragEvent) => {
-			e.preventDefault();
-			if (e.dataTransfer) {
-				e.dataTransfer.dropEffect = 'move';
-			}
-			// 切换高亮：先清除旧的，再设置新的
-			if (this.dragOverRowEls !== rowEls) {
-				if (this.dragOverRowEls) {
-					this.dragOverRowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
-				}
-				rowEls.forEach(el => el.addClass(WeekViewClasses.modifiers.dragOver));
-				this.dragOverRowEls = rowEls;
-			}
+		const dragDropManager = new DragDropManager({
+			targets: rowEls,
+			highlightClass: WeekViewClasses.modifiers.dragOver,
+			logTag: 'WeekView',
 		});
+		dragDropManager.setupForSlot(slot, hour, targetDate, this.app, this.plugin);
+	}
 
-		slot.addEventListener('dragleave', (e: DragEvent) => {
-			const related = e.relatedTarget as HTMLElement | null;
-			if (related && !slot.contains(related)) {
-				rowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
-				if (this.dragOverRowEls === rowEls) {
-					this.dragOverRowEls = null;
-				}
-			}
-		});
-
-		slot.addEventListener('drop', async (e: DragEvent) => {
-			e.preventDefault();
-			rowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.dragOver));
-			this.dragOverRowEls = null;
-
-			const taskId = e.dataTransfer?.getData('taskId');
-			if (!taskId) return;
-
-			const [filePath, lineNum] = taskId.split(':');
-			const lineNumber = parseInt(lineNum, 10);
-
-			const allTasks = this.plugin.taskCache.getAllTasks();
-			const sourceTask = allTasks.find((t: GCTask) => t.filePath === filePath && t.lineNumber === lineNumber);
-			if (!sourceTask) {
-				Logger.error('WeekView', 'Source task not found:', taskId);
-				return;
-			}
-
-			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
-
-			try {
-				this.clearTaskTooltips();
-
-				// 构建新的日期时间：目标日期 + 新的小时
-				const newDate = new Date(targetDate);
-				newDate.setHours(hour, 0, 0, 0);
-
-				// 更新 datePrecision 为 time
-				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'time' };
-
-				await updateTaskDateField(
-					this.app,
-					sourceTask,
-					dateFieldName,
-					newDate,
-					this.plugin.settings.enabledTaskFormats
-				);
-
-				Logger.debug('WeekView', 'Task time updated via drag-drop', { taskId, hour, targetDate });
-			} catch (error) {
-				Logger.error('WeekView', 'Error updating task time:', error);
-				new Notice(i18n.t('views.dayView.updateTimeFailed'));
-			}
-		});
+	/**
+	 * 空时间格：hover 显示 "+"，点击创建任务
+	 */
+	private setupQuickCreateForSlot(slot: HTMLElement, hour: number, targetDate: Date): void {
+		const config: QuickCreateConfig = {
+			createElClass: WeekViewClasses.elements.slotCreate,
+		};
+		setupQuickCreateForSlot(slot, hour, targetDate, this.app, this.plugin, config);
 	}
 
 	/**
@@ -639,7 +562,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			let currentDayTasks = tasks.filter(task => {
-				const dateValue = (task as any)[dateField];
+				const dateValue = getTaskDateField(task, dateField as DateFieldType);
 				if (!dateValue) return false;
 				const taskDate = new Date(dateValue);
 				if (isNaN(taskDate.getTime())) return false;
@@ -650,7 +573,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			let virtualForDay: GCTask[] = [];
 			if (precomputedVirtualInstances) {
 				virtualForDay = precomputedVirtualInstances.filter(task => {
-					const dateValue = (task as any)[dateField];
+					const dateValue = getTaskDateField(task, dateField as DateFieldType);
 					if (!dateValue) return false;
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;

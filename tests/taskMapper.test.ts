@@ -131,16 +131,16 @@ describe('飞书字段映射', () => {
 			expect(payload.summary).toBe('查看 文档');
 		});
 
-		it('FS-20l: 清理 wikilink — 取页面名', () => {
+		it('FS-20l: wikilink 带别名 — 原样保留', () => {
 			const task = makeGCTask({ description: '参考 [[我的笔记|笔记别名]]' });
 			const payload = toFeishuTaskPayload(task);
-			expect(payload.summary).toBe('参考 我的笔记');
+			expect(payload.summary).toBe('参考 [[我的笔记|笔记别名]]');
 		});
 
-		it('FS-20m: 清理 wikilink — 无别名', () => {
+		it('FS-20m: wikilink 无别名 — 原样保留', () => {
 			const task = makeGCTask({ description: '参考 [[我的笔记]]' });
 			const payload = toFeishuTaskPayload(task);
-			expect(payload.summary).toBe('参考 我的笔记');
+			expect(payload.summary).toBe('参考 [[我的笔记]]');
 		});
 	});
 

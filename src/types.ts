@@ -210,7 +210,58 @@ export const DEFAULT_STATUS_FILTER_STATE: StatusFilterState = {
 };
 
 import type { App } from 'obsidian';
-import type { GanttCalendarSettings } from './settings/types';
+import type { GanttCalendarSettings, DateFieldType } from './settings/types';
+
+/**
+ * 安全读取任务的日期字段
+ * 替代 `(task as any)[dateField]` 模式
+ */
+export function getTaskDateField(task: GCTask, field: DateFieldType): Date | undefined {
+	switch (field) {
+		case 'createdDate': return task.createdDate;
+		case 'startDate': return task.startDate;
+		case 'scheduledDate': return task.scheduledDate;
+		case 'dueDate': return task.dueDate;
+		case 'completionDate': return task.completionDate;
+		case 'cancelledDate': return task.cancelledDate;
+	}
+}
+
+/**
+ * 安全写入任务的日期字段
+ * 替代 `(task as any)[dateField] = value` 模式
+ */
+export function setTaskDateField(task: GCTask, field: DateFieldType, value: Date | undefined): void {
+	switch (field) {
+		case 'createdDate': task.createdDate = value; break;
+		case 'startDate': task.startDate = value; break;
+		case 'scheduledDate': task.scheduledDate = value; break;
+		case 'dueDate': task.dueDate = value; break;
+		case 'completionDate': task.completionDate = value; break;
+		case 'cancelledDate': task.cancelledDate = value; break;
+	}
+}
+
+/**
+ * 可合并的任务字段类型（用于同步冲突解决）
+ */
+export type MergeableTaskField = 'description' | 'completed' | 'dueDate' | 'startDate' | 'priority' | 'status' | 'tags';
+
+/**
+ * 安全写入任务的可合并字段
+ * 替代 `(task as any)[field] = value` 模式（用于同步）
+ */
+export function setTaskMergeableField(task: GCTask, field: MergeableTaskField, value: unknown): void {
+	switch (field) {
+		case 'description': task.description = value as string; break;
+		case 'completed': task.completed = value as boolean; break;
+		case 'dueDate': task.dueDate = value as Date | undefined; break;
+		case 'startDate': task.startDate = value as Date | undefined; break;
+		case 'priority': task.priority = value as string; break;
+		case 'status': task.status = value as TaskStatusType | undefined; break;
+		case 'tags': task.tags = value as string[] | undefined; break;
+	}
+}
 
 /**
  * 插件上下文接口
@@ -221,16 +272,16 @@ export interface IPluginContext {
 	saveSettings(): Promise<void>;
 	taskCache: {
 		getAllTasks(): GCTask[];
-		whenReady(): Promise<void>;
-		onUpdate(handler: (filePath?: string) => void): () => void;
+		whenReady?(): Promise<void>;
+		onUpdate(handler: (filePath?: string) => void): void;
 		offUpdate(handler: (filePath?: string) => void): void;
 		initialize(globalTaskFilter: string, enabledFormats?: string[], retryCount?: number): Promise<void>;
 	};
-	calendarView: {
+	calendarView?: {
 		selectDate(date: Date, viewType?: CalendarViewType): void;
 		render(): void;
 	};
 	app: App;
-	dailyNoteIndex: any;
+	dailyNoteIndex?: any;
 	refreshCalendarViews(): void;
 }

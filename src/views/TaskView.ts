@@ -2,6 +2,8 @@ import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { isToday, isThisWeek, isThisMonth } from '../dateUtils/dateUtilsIndex';
 import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import { getTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
 import { sortTasks } from '../tasks/taskSorter';
 import { ViewClasses, withModifiers } from '../utils/bem';
@@ -162,7 +164,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 				}
 
 				tasks = tasks.filter(task => {
-					const dateValue = (task as any)[this.timeFieldFilter];
+					const dateValue = getTaskDateField(task, this.timeFieldFilter as DateFieldType);
 					if (!dateValue) return false;
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;

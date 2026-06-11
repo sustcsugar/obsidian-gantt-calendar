@@ -1,4 +1,5 @@
-import type { GCTask } from '../../types';
+import type { GCTask, IPluginContext } from '../../types';
+import type { App } from 'obsidian';
 
 /**
  * 视图修饰符类型
@@ -94,10 +95,10 @@ export interface TaskCardProps {
 	container: HTMLElement;
 
 	/** 应用实例 */
-	app: any;
+	app: App;
 
 	/** 插件实例 */
-	plugin: any;
+	plugin: IPluginContext;
 
 	/** ===== 事件回调 ===== */
 

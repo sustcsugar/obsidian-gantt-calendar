@@ -1,6 +1,7 @@
-import { setIcon } from 'obsidian';
+import { setIcon, App } from 'obsidian';
 import { ToolbarClasses } from '../../utils/bem';
 import { i18n } from '../../i18n/i18n';
+import type { IPluginContext } from '../../types';
 
 /**
  * 渲染设置按钮（齿轮图标）
@@ -8,7 +9,7 @@ import { i18n } from '../../i18n/i18n';
  */
 export function renderSettingsButton(
 	container: HTMLElement,
-	plugin: any
+	plugin: IPluginContext
 ): void {
 	const buttonGroup = container.createDiv(ToolbarClasses.components.navButtons.group);
 
@@ -18,7 +19,8 @@ export function renderSettingsButton(
 	});
 	setIcon(btn, 'settings');
 	btn.addEventListener('click', () => {
-		plugin?.app?.setting?.open();
-		plugin?.app?.setting?.openTabById('gantt-calendar');
+		const appWithSetting = plugin?.app as App & { setting?: { open(): void; openTabById(id: string): void } };
+		appWithSetting?.setting?.open();
+		appWithSetting?.setting?.openTabById('gantt-calendar');
 	});
 }

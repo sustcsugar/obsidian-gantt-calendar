@@ -74,6 +74,13 @@ export const BLOCKS = {
 	SETTINGS_SYNC_WARNING: 'settings-sync-warning',
 	/** 同步结果弹窗 */
 	SYNC_RESULT_MODAL: 'sync-result-modal',
+	/** 标签选择器 */
+	TAG_SELECTOR: 'tag-selector',
+	/** 设置页 */
+	SETTINGS: 'settings',
+	/** 同步设置 */
+	SYNC_HINT: 'sync-hint',
+	SYNC_TASKLIST: 'sync-tasklist',
 } as const;
 
 /**
@@ -116,6 +123,10 @@ export const TaskCardClasses = {
 		warning: bem(BLOCKS.TASK_CARD, 'warning'),
 		ticktick: bem(BLOCKS.TASK_CARD, 'ticktick'),
 		repeatIndicator: bem(BLOCKS.TASK_CARD, 'repeat-indicator'),
+		metadata: bem(BLOCKS.TASK_CARD, 'metadata'),
+		metadataItem: bem(BLOCKS.TASK_CARD, 'metadata-item'),
+		metadataKey: bem(BLOCKS.TASK_CARD, 'metadata-key'),
+		metadataValue: bem(BLOCKS.TASK_CARD, 'metadata-value'),
 	},
 
 	/** Modifiers */
@@ -132,6 +143,9 @@ export const TaskCardClasses = {
 		// 周期任务修饰符
 		recurring: bem(BLOCKS.TASK_CARD, undefined, 'recurring'),
 		virtual: bem(BLOCKS.TASK_CARD, undefined, 'virtual'),
+		// 显示修饰符
+		compact: bem(BLOCKS.TASK_CARD, undefined, 'compact'),
+		textLimited: bem(BLOCKS.TASK_CARD, 'text', 'limited'),
 	}
 };
 
@@ -182,6 +196,7 @@ export const TooltipClasses = {
 
 		modifiers: {
 			visible: bem(BLOCKS.TASK_TOOLTIP, undefined, 'visible'),
+			initialized: bem(BLOCKS.TASK_TOOLTIP, undefined, 'initialized'),
 			propertyValueOverdue: bem(BLOCKS.TASK_TOOLTIP, 'property-value', 'overdue'),
 		},
 	};
@@ -245,6 +260,7 @@ export const DayViewClasses = {
 		horizontal: bem(BLOCKS.DAY_VIEW, undefined, 'horizontal'),
 		vertical: bem(BLOCKS.DAY_VIEW, undefined, 'vertical'),
 		tasksOnly: bem(BLOCKS.DAY_VIEW, undefined, 'tasks-only'),
+		timeSlotDragOver: bem(BLOCKS.DAY_VIEW, 'time-slot', 'drag-over'),
 	},
 
 	/** Elements */
@@ -268,6 +284,7 @@ export const DayViewClasses = {
 			timeLabel: bem(BLOCKS.DAY_VIEW, 'time-label'),
 			timeTasks: bem(BLOCKS.DAY_VIEW, 'time-tasks'),
 			currentTimeLine: bem(BLOCKS.DAY_VIEW, 'timeline-current-time'),
+			slotCreate: bem(BLOCKS.DAY_VIEW, 'slot-create'),
 	},
 };
 
@@ -347,11 +364,14 @@ export const GanttClasses = {
 		tasklistContainer: bem(BLOCKS.GANTT, 'tasklist-container'),
 		chartContainer: bem(BLOCKS.GANTT, 'chart-container'),
 		stickyHeader: bem(BLOCKS.GANTT, 'sticky-header'),
+		handleLeft: bem(BLOCKS.GANTT, 'handle-left'),
+		handleRight: bem(BLOCKS.GANTT, 'handle-right'),
 	},
 
 	/** Modifiers */
 	modifiers: {
 		dayView: bem(BLOCKS.GANTT, undefined, 'day-view'),
+		chartDropTarget: bem(BLOCKS.GANTT, 'chart', 'drop-target'),
 	},
 };
 
@@ -662,6 +682,7 @@ export const YearViewClasses = {
 	/** Modifiers */
 	modifiers: {
 		showLunar: bem(BLOCKS.YEAR_VIEW, undefined, 'show-lunar'),
+		monthCardShowLunar: bem(BLOCKS.YEAR_VIEW, 'month-card', 'show-lunar'),
 	},
 };
 
@@ -697,6 +718,7 @@ export const MonthViewClasses = {
 		festivalSolar: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival-solar'),
 		festivalLunar: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival-lunar'),
 		festivalSolarTerm: bem(BLOCKS.MONTH_VIEW, 'lunar-text', 'festival-solar-term'),
+		weekdayEmpty: bem(BLOCKS.MONTH_VIEW, 'weekday', 'empty'),
 	},
 };
 
@@ -729,6 +751,7 @@ export const WeekViewClasses = {
 			alldaySlot: bem(BLOCKS.WEEK_VIEW, 'allday-slot'),
 			alldayTasks: bem(BLOCKS.WEEK_VIEW, 'allday-tasks'),
 			currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
+			slotCreate: bem(BLOCKS.WEEK_VIEW, 'slot-create'),
 	},
 
 	/** Modifiers */
@@ -772,6 +795,9 @@ export const SidebarClasses = {
 		timelineTimeTasks: bem(BLOCKS.SIDEBAR, 'timeline-time-tasks'),
 		timelineSlotCreate: bem(BLOCKS.SIDEBAR, 'timeline-slot-create'),
 		timelineCurrentTime: bem(BLOCKS.SIDEBAR, 'timeline-current-time'),
+		// 下拉菜单
+		dropdown: 'sidebar-dropdown',
+		dropdownItem: 'sidebar-dropdown-item',
 	},
 
 	/** Modifiers */
@@ -916,5 +942,67 @@ export const SyncResultModalClasses = {
 		failed: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'failed'),
 		push: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'push'),
 		pull: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'pull'),
+	},
+};
+
+/**
+ * 标签选择器类名常量
+ */
+export const TagSelectorClasses = {
+	block: bem(BLOCKS.TAG_SELECTOR),
+
+	elements: {
+		recommendedSection: bem(BLOCKS.TAG_SELECTOR, 'recommended-section'),
+		selectedSection: bem(BLOCKS.TAG_SELECTOR, 'selected-section'),
+		newSection: bem(BLOCKS.TAG_SELECTOR, 'new-section'),
+		label: bem(BLOCKS.TAG_SELECTOR, 'label'),
+		grid: bem(BLOCKS.TAG_SELECTOR, 'grid'),
+		newInput: bem(BLOCKS.TAG_SELECTOR, 'new-input'),
+		newButton: bem(BLOCKS.TAG_SELECTOR, 'new-button'),
+	},
+};
+
+/**
+ * 设置页类名常量
+ */
+export const SettingsClasses = {
+	block: bem(BLOCKS.SETTINGS),
+
+	elements: {
+		tabNav: bem(BLOCKS.SETTINGS, 'tab-nav'),
+		tabButton: bem(BLOCKS.SETTINGS, 'tab-button'),
+		tabContent: bem(BLOCKS.SETTINGS, 'tab-content'),
+		sectionHidden: bem(BLOCKS.SETTINGS, 'section-hidden'),
+	},
+};
+
+/**
+ * 同步设置类名常量
+ */
+export const SyncHintClasses = {
+	block: bem(BLOCKS.SYNC_HINT),
+
+	modifiers: {
+		warning: bem(BLOCKS.SYNC_HINT, undefined, 'warning'),
+		success: bem(BLOCKS.SYNC_HINT, undefined, 'success'),
+	},
+
+	elements: {
+		listName: bem(BLOCKS.SYNC_HINT, 'list-name'),
+	},
+};
+
+export const SyncTasklistClasses = {
+	block: bem(BLOCKS.SYNC_TASKLIST),
+
+	elements: {
+		header: bem(BLOCKS.SYNC_TASKLIST, 'header'),
+		grid: bem(BLOCKS.SYNC_TASKLIST, 'grid'),
+		card: bem(BLOCKS.SYNC_TASKLIST, 'card'),
+		cardSelected: bem(BLOCKS.SYNC_TASKLIST, 'card', 'selected'),
+		cardName: bem(BLOCKS.SYNC_TASKLIST, 'card-name'),
+		cardGuid: bem(BLOCKS.SYNC_TASKLIST, 'card-guid'),
+		cardMeta: bem(BLOCKS.SYNC_TASKLIST, 'card-meta'),
+		cardActions: bem(BLOCKS.SYNC_TASKLIST, 'card-actions'),
 	},
 };

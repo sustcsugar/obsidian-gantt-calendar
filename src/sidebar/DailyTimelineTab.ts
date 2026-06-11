@@ -1,6 +1,6 @@
 import type { App } from 'obsidian';
 import { Notice, setIcon } from 'obsidian';
-import type { GCTask } from '../types';
+import type { GCTask, IPluginContext } from '../types';
 import { i18n } from '../i18n/i18n';
 import { SidebarClasses } from '../utils/bem';
 import { TaskCardComponent, buildSidebarConfig } from '../components/TaskCard';
@@ -19,11 +19,11 @@ import { renderCurrentTimeLine } from '../utils/currentTimeLine';
  */
 export class DailyTimelineTab {
 	private app: App;
-	private plugin: any;
+	private plugin: IPluginContext;
 	private cardResults: Array<{ element: HTMLElement; destroy: () => void }> = [];
 	private dragOverSlot: HTMLElement | null = null;
 
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		this.app = app;
 		this.plugin = plugin;
 	}

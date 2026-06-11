@@ -12,6 +12,8 @@
 import { EventBus } from '../EventBus';
 import { IDataSource } from '../IDataSource';
 import type { GCTask } from '../../types';
+import { setTaskMergeableField } from '../../types';
+import type { MergeableTaskField } from '../../types';
 import type { GCTaskWithSync, SyncConfiguration, SyncResult, DataSourceType } from './syncTypes';
 import { TaskMatcher } from './taskMatcher';
 import { ConflictResolver } from './conflictResolver';
@@ -315,22 +317,22 @@ export class SyncManager {
                 if (rule) {
                     switch (rule.winner) {
                         case 'local':
-                            (changes as any)[field] = localVal;
+                            setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localVal);
                             break;
                         case 'remote':
                             if (remoteVal !== undefined) {
-                                (changes as any)[field] = remoteVal;
+                                setTaskMergeableField(changes as GCTask, field as MergeableTaskField, remoteVal);
                             }
                             break;
                         case 'newest':
                             const localTime = local.lastModified?.getTime() || 0;
                             const remoteTime = remote.lastModified?.getTime() || 0;
-                            (changes as any)[field] = localTime >= remoteTime ? localVal : remoteVal;
+                            setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localTime >= remoteTime ? localVal : remoteVal);
                             break;
                     }
                 } else {
                     // 默认使用本地值
-                    (changes as any)[field] = localVal;
+                    setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localVal);
                 }
             }
         }

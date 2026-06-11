@@ -5,7 +5,8 @@
  * 使用 WeakMap 追踪虚拟任务元数据，不污染 GCTask 接口。
  */
 
-import { GCTask } from '../types';
+import { GCTask, getTaskDateField, setTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { parseRepeatRule, getOccurrencesInRange, ParsedRecurrenceRule } from './recurrenceCalculator';
 
 /**
@@ -90,7 +91,7 @@ export function generateVirtualInstances(
  * 安全获取任务的日期字段值
  */
 function getDateFieldValue(task: GCTask, field: string): Date | undefined {
-    return (task as any)[field] as Date | undefined;
+    return getTaskDateField(task, field as DateFieldType);
 }
 
 /**
@@ -108,7 +109,7 @@ function createVirtualTask(
     };
 
     // 设置出现日期到指定字段
-    (virtualTask as any)[dateField] = new Date(occurrenceDate);
+    setTaskDateField(virtualTask, dateField as DateFieldType, new Date(occurrenceDate));
 
     // 推进其他日期字段，保持相对偏移
     const sourceDateValue = getDateFieldValue(sourceTask, dateField);
@@ -154,5 +155,5 @@ function advanceDateFieldWithOffset(
     const offset = sourceValue.getTime() - sourceBaseDate.getTime();
     const newValue = new Date(occurrenceDate.getTime() + offset);
 
-    (virtualTask as any)[field] = newValue;
+    setTaskDateField(virtualTask, field as DateFieldType, newValue);
 }

@@ -8,7 +8,7 @@
  */
 
 import { App, Notice } from 'obsidian';
-import type GanttCalendarPlugin from '../../main';
+import type { IPluginContext } from '../types';
 import type { CreateTaskData } from '../utils/dailyNoteHelper';
 import { createTaskInDailyNote } from '../utils/dailyNoteHelper';
 import { Logger } from '../utils/logger';
@@ -21,7 +21,7 @@ import { i18n } from '../i18n/i18n';
  */
 export interface CreateTaskModalOptions {
 	app: App;
-	plugin: GanttCalendarPlugin;
+	plugin: IPluginContext;
 	targetDate?: Date;
 	targetHour?: number;
 	onSuccess: () => void;
@@ -31,7 +31,7 @@ export interface CreateTaskModalOptions {
  * 任务创建弹窗
  */
 export class CreateTaskModal extends BaseTaskModal {
-	private plugin: GanttCalendarPlugin;
+	private plugin: IPluginContext;
 	private targetDate: Date;
 	private onSuccess: () => void;
 

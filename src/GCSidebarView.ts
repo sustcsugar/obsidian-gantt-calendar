@@ -4,20 +4,21 @@ import { TaskListTab } from './sidebar/TaskListTab';
 import { DailyTimelineTab } from './sidebar/DailyTimelineTab';
 import { Logger } from './utils/logger';
 import { i18n } from './i18n/i18n';
+import type { IPluginContext } from './types';
 
 export const GC_SIDEBAR_VIEW_ID = 'gantt-calendar-sidebar-view';
 
 type SidebarTab = 'taskList' | 'dailyTimeline';
 
 export class GCSidebarView extends ItemView {
-	private plugin: any;
+	private plugin: IPluginContext;
 	private currentTab: SidebarTab = 'dailyTimeline';
 	private taskListTab: TaskListTab;
 	private dailyTimelineTab: DailyTimelineTab;
 	private contentContainer: HTMLElement | null = null;
 	private cacheUpdateListener: (() => void) | null = null;
 
-	constructor(leaf: WorkspaceLeaf, plugin: any) {
+	constructor(leaf: WorkspaceLeaf, plugin: IPluginContext) {
 		super(leaf);
 		this.plugin = plugin;
 		this.taskListTab = new TaskListTab(this.app, plugin);

@@ -2,6 +2,8 @@ import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { IPluginContext, GCTask, TagFilterState } from '../types';
+import { getTaskDateField } from '../types';
+import type { DateFieldType } from '../settings/types';
 import { YearViewClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
 import { i18n } from '../i18n/i18n';
@@ -42,7 +44,7 @@ export class YearViewRenderer extends BaseViewRenderer {
 		const endDate = new Date(year, 11, 31);
 
 		for (const t of tasks) {
-			const d = (t as any)[dateField] as Date | undefined;
+			const d = getTaskDateField(t, dateField as DateFieldType);
 			if (!d) continue;
 			if (d < startDate || d > endDate) continue;
 			const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
@@ -152,7 +154,7 @@ export class YearViewRenderer extends BaseViewRenderer {
 		const monthCards = yearGrid.querySelectorAll('.gc-year-view__month-card');
 
 		for (const t of tasks) {
-			const d = (t as any)[dateField] as Date | undefined;
+			const d = getTaskDateField(t, dateField as DateFieldType);
 			if (!d) continue;
 			const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
 			countsMap.set(key, (countsMap.get(key) || 0) + 1);

@@ -1,5 +1,5 @@
 import { App } from 'obsidian';
-import type { GCTask } from '../../types';
+import type { GCTask, IPluginContext } from '../../types';
 import type { TaskCardConfig, TimeFieldConfig } from './TaskCardConfig';
 import { TaskCardClasses, TimeBadgeClasses } from '../../utils/bem';
 import { registerTaskContextMenu } from '../../contextMenu/contextMenuIndex';
@@ -23,9 +23,9 @@ import { LinkRenderer } from '../../utils/linkRenderer';
  */
 export class TaskCardRenderer {
 	private app: App;
-	private plugin: any;
+	private plugin: IPluginContext;
 
-	constructor(app: App, plugin: any) {
+	constructor(app: App, plugin: IPluginContext) {
 		this.app = app;
 		this.plugin = plugin;
 	}

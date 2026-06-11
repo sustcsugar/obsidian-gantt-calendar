@@ -6,6 +6,8 @@
  */
 
 import type { GCTask } from '../../types';
+import { setTaskMergeableField } from '../../types';
+import type { MergeableTaskField } from '../../types';
 import type {
     GCTaskWithSync,
     ConflictResolution,
@@ -216,7 +218,7 @@ export class ConflictResolver {
 
                 case 'remote':
                     if (remoteVal !== undefined) {
-                        (merged as any)[rule.field] = remoteVal;
+                        setTaskMergeableField(merged, rule.field as MergeableTaskField, remoteVal);
                     }
                     break;
 
@@ -226,7 +228,7 @@ export class ConflictResolver {
                     const remoteTime = remote.lastModified?.getTime() || 0;
 
                     if (remoteTime > localTime && remoteVal !== undefined) {
-                        (merged as any)[rule.field] = remoteVal;
+                        setTaskMergeableField(merged, rule.field as MergeableTaskField, remoteVal);
                     }
                     break;
             }
