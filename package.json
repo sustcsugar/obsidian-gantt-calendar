@@ -1,6 +1,6 @@
 {
 	"name": "gantt-calendar",
-	"version": "1.5.21",
+	"version": "1.5.20",
 	"description": "A powerful visual task management plugin. Visualize and manage tasks created by the Tasks plugin, supporting both emoji and Dataview task formats. Support Feishu Task syncing. Support Gantt chart and calendar views.",
 	"main": "main.js",
 	"scripts": {
