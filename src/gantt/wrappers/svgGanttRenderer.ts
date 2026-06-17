@@ -21,6 +21,7 @@ import { Logger } from '../../utils/logger';
 import { LinkRenderer } from '../../utils/linkRenderer';
 import { getTodayInTimezone } from '../../dateUtils/timezone';
 import { i18n } from '../../i18n/i18n';
+import { openFileInExistingLeaf } from '../../utils/fileOpener';
 
 /**
  * SVG 元素辅助方法
@@ -87,8 +88,8 @@ export class SvgGanttRenderer {
 	private currentHighlightRow = -1;
 
 	// 事件回调
-	private onDateChange?: (task: GanttChartTask, start: Date, end: Date) => void;
-	private onProgressChange?: (task: GanttChartTask, progress: number) => void;
+	private onDateChange?: (task: GanttChartTask, start: Date, end: Date) => void | Promise<void>;
+	private onProgressChange?: (task: GanttChartTask, progress: number) => void | Promise<void>;
 	private startField: DateFieldType = 'startDate';
 	private endField: DateFieldType = 'dueDate';
 
@@ -210,8 +211,8 @@ export class SvgGanttRenderer {
 	 * 设置事件处理器
 	 */
 	setEventHandlers(handlers: {
-		onDateChange?: (task: GanttChartTask, start: Date, end: Date) => void;
-		onProgressChange?: (task: GanttChartTask, progress: number) => void;
+		onDateChange?: (task: GanttChartTask, start: Date, end: Date) => void | Promise<void>;
+		onProgressChange?: (task: GanttChartTask, progress: number) => void | Promise<void>;
 	}): void {
 		this.onDateChange = handlers.onDateChange;
 		this.onProgressChange = handlers.onProgressChange;
@@ -393,7 +394,7 @@ export class SvgGanttRenderer {
 			headerContainer.scrollLeft = ganttContainer.scrollLeft;
 			taskListContainer.scrollTop = ganttContainer.scrollTop;
 
-			requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
 				isSyncing = false;
 			});
 		});
@@ -405,7 +406,7 @@ export class SvgGanttRenderer {
 
 			ganttContainer.scrollLeft = headerContainer.scrollLeft;
 
-			requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
 				isSyncing = false;
 			});
 		});
@@ -417,7 +418,7 @@ export class SvgGanttRenderer {
 
 			ganttContainer.scrollTop = taskListContainer.scrollTop;
 
-			requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
 				isSyncing = false;
 			});
 		});
@@ -436,14 +437,14 @@ export class SvgGanttRenderer {
 		// 鼠标按下开始拖动
 		resizer.addEventListener('mousedown', (e) => {
 			this.isResizing = true;
-			document.body.style.cursor = 'col-resize';
-			document.body.style.userSelect = 'none'; // 防止拖动时选中文字
+			activeDocument.body.style.cursor = 'col-resize';
+			activeDocument.body.style.userSelect = 'none'; // 防止拖动时选中文字
 
 			e.preventDefault();
 		});
 
 		// 鼠标移动调整宽度
-		document.addEventListener('mousemove', (e) => {
+		activeDocument.addEventListener('mousemove', (e) => {
 			if (!this.isResizing || !mainGrid) return;
 
 			const layoutRect = mainGrid.getBoundingClientRect();
@@ -493,11 +494,11 @@ export class SvgGanttRenderer {
 		});
 
 		// 鼠标释放结束拖动
-		document.addEventListener('mouseup', () => {
+		activeDocument.addEventListener('mouseup', () => {
 			if (this.isResizing) {
 				this.isResizing = false;
-				document.body.style.cursor = '';
-				document.body.style.userSelect = '';
+				activeDocument.body.style.cursor = '';
+				activeDocument.body.style.userSelect = '';
 			}
 		});
 	}
@@ -701,7 +702,7 @@ export class SvgGanttRenderer {
 		const height = this.headerHeight;
 
 		// 背景
-		const bg = document.createElementNS(ns, 'rect');
+		const bg = activeDocument.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
 		bg.setAttribute('y', '0');
 		bg.setAttribute('width', String(width));
@@ -710,7 +711,7 @@ export class SvgGanttRenderer {
 		svg.appendChild(bg);
 
 		// 序号列标题
-		const numberText = document.createElementNS(ns, 'text');
+		const numberText = activeDocument.createElementNS(ns, 'text');
 		numberText.setAttribute('x', String(this.taskNumberColumnWidth / 2));
 		numberText.setAttribute('y', String(height / 2 + 5));
 		numberText.setAttribute('text-anchor', 'middle');
@@ -721,7 +722,7 @@ export class SvgGanttRenderer {
 		svg.appendChild(numberText);
 
 		// 任务列标题
-		const taskText = document.createElementNS(ns, 'text');
+		const taskText = activeDocument.createElementNS(ns, 'text');
 		taskText.setAttribute('x', String(this.taskNumberColumnWidth + (width - this.taskNumberColumnWidth) / 2));
 		taskText.setAttribute('y', String(height / 2 + 5));
 		taskText.setAttribute('text-anchor', 'middle');
@@ -732,7 +733,7 @@ export class SvgGanttRenderer {
 		svg.appendChild(taskText);
 
 		// 序号列和任务列之间的分隔线
-		const dividerLine = document.createElementNS(ns, 'line');
+		const dividerLine = activeDocument.createElementNS(ns, 'line');
 		dividerLine.setAttribute('x1', String(this.taskNumberColumnWidth));
 		dividerLine.setAttribute('y1', '0');
 		dividerLine.setAttribute('x2', String(this.taskNumberColumnWidth));
@@ -758,7 +759,7 @@ export class SvgGanttRenderer {
 		this.rowBgElements.taskList = [];
 
 		// 背景 - 只需要任务区域的高度
-		const bg = document.createElementNS(ns, 'rect');
+		const bg = activeDocument.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
 		bg.setAttribute('y', '0');
 		bg.setAttribute('width', String(contentWidth + numberWidth));
@@ -775,7 +776,7 @@ export class SvgGanttRenderer {
 			const isCompleted = task.completed || task.progress === 100;
 
 			// 行背景（所有行都添加，用于悬停高亮）
-			const rowBg = document.createElementNS(ns, 'rect') as SVGRectElement;
+			const rowBg = activeDocument.createElementNS(ns, 'rect');
 			rowBg.setAttribute('x', '0');
 			rowBg.setAttribute('y', String(y));
 			rowBg.setAttribute('width', String(contentWidth + numberWidth));
@@ -793,13 +794,13 @@ export class SvgGanttRenderer {
 			this.rowBgElements.taskList.push(rowBg);
 
 			// === 序号列 ===
-			const numberForeignObj = document.createElementNS(ns, 'foreignObject');
+			const numberForeignObj = activeDocument.createElementNS(ns, 'foreignObject');
 			numberForeignObj.setAttribute('x', '0');
 			numberForeignObj.setAttribute('y', String(y));
 			numberForeignObj.setAttribute('width', String(numberWidth));
 			numberForeignObj.setAttribute('height', String(this.rowHeight));
 
-			const numberDiv = document.createElement('div');
+			const numberDiv = activeDocument.createElement('div');
 			numberDiv.className = GanttClasses.elements.taskNumberCell;
 			numberDiv.style.cssText = `
 				display: flex;
@@ -815,14 +816,14 @@ export class SvgGanttRenderer {
 			svg.appendChild(numberForeignObj);
 
 			// === 任务内容列 ===
-			const contentForeignObj = document.createElementNS(ns, 'foreignObject');
+			const contentForeignObj = activeDocument.createElementNS(ns, 'foreignObject');
 			contentForeignObj.setAttribute('x', String(numberWidth));
 			contentForeignObj.setAttribute('y', String(y));
 			contentForeignObj.setAttribute('width', String(contentWidth));
 			contentForeignObj.setAttribute('height', String(this.rowHeight));
 
 			// 创建 HTML 内容容器
-			const contentDiv = document.createElement('div');
+			const contentDiv = activeDocument.createElement('div');
 			contentDiv.className = GanttClasses.elements.taskContentCell;
 			contentDiv.style.cssText = `
 				display: flex;
@@ -840,7 +841,7 @@ export class SvgGanttRenderer {
 			contentDiv.appendChild(checkbox);
 
 			// === 创建可点击的文本容器 ===
-			const textContainer = document.createElement('div');
+			const textContainer = activeDocument.createElement('div');
 			textContainer.className = 'gantt-task-list-item__text';
 			textContainer.style.cssText = `
 				flex: 1;
@@ -868,7 +869,7 @@ export class SvgGanttRenderer {
 			svg.appendChild(contentForeignObj);
 
 			// 序号列和任务列之间的竖线分隔
-			const dividerLine = document.createElementNS(ns, 'line');
+			const dividerLine = activeDocument.createElementNS(ns, 'line');
 			dividerLine.setAttribute('x1', String(numberWidth));
 			dividerLine.setAttribute('y1', String(y));
 			dividerLine.setAttribute('x2', String(numberWidth));
@@ -878,7 +879,7 @@ export class SvgGanttRenderer {
 			svg.appendChild(dividerLine);
 
 			// 底部分隔线
-			const line = document.createElementNS(ns, 'line');
+			const line = activeDocument.createElementNS(ns, 'line');
 			line.setAttribute('x1', '0');
 			line.setAttribute('y1', String((index + 1) * this.rowHeight));
 			line.setAttribute('x2', String(contentWidth + numberWidth));
@@ -904,7 +905,7 @@ export class SvgGanttRenderer {
 		ganttTask: GanttChartTask,
 		isCompleted: boolean
 	): HTMLInputElement {
-		const checkbox = document.createElement('input');
+		const checkbox = activeDocument.createElement('input');
 		checkbox.type = 'checkbox';
 		checkbox.checked = isCompleted;
 		checkbox.className = GanttClasses.elements.taskCheckbox;
@@ -949,7 +950,6 @@ export class SvgGanttRenderer {
 		if (!task.filePath || !task.lineNumber || !this.app) return;
 
 		// 使用 openFileInExistingLeaf 跳转到文件
-		const { openFileInExistingLeaf } = require('../../utils/fileOpener');
 		openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 	}
 
@@ -969,7 +969,7 @@ export class SvgGanttRenderer {
 		const width = totalUnits * this.columnWidth + this.padding * 2;
 
 		// 背景
-		const headerBg = document.createElementNS(ns, 'rect');
+		const headerBg = activeDocument.createElementNS(ns, 'rect');
 		headerBg.setAttribute('x', '0');
 		headerBg.setAttribute('y', '0');
 		headerBg.setAttribute('width', String(width));
@@ -994,7 +994,7 @@ export class SvgGanttRenderer {
 			const isCurrentUnit = this.isSameUnit(unitDate, today, granularity);
 
 			// 绘制标签 - 居中于格子内（两条竖线之间）
-			const text = document.createElementNS(ns, 'text');
+			const text = activeDocument.createElementNS(ns, 'text');
 			// x 坐标在格子中心：左竖线位置 + 半个格子宽度
 			text.setAttribute('x', String(cellCenterX));
 			text.setAttribute('y', String(y + 6));
@@ -1030,7 +1030,7 @@ export class SvgGanttRenderer {
 		const height = fullHeight - this.headerHeight;
 
 		// 背景 - 从 x=0 开始（与任务列表分隔线对齐）
-		const bg = document.createElementNS(ns, 'rect');
+		const bg = activeDocument.createElementNS(ns, 'rect');
 		bg.setAttribute('x', '0');
 		bg.setAttribute('y', '0');
 		bg.setAttribute('width', String(width));
@@ -1148,14 +1148,14 @@ export class SvgGanttRenderer {
 	): void {
 		if (!svg) return;
 
-		const gridGroup = document.createElementNS(ns, 'g');
+		const gridGroup = activeDocument.createElementNS(ns, 'g');
 		addSvgClass(gridGroup, GanttClasses.elements.grid);
 
 		// 垂直线（时间单元分隔）- 从 x=0 开始
 		for (let i = 0; i <= totalUnits; i++) {
 			const x = i * this.columnWidth;
 
-			const line = document.createElementNS(ns, 'line');
+			const line = activeDocument.createElementNS(ns, 'line');
 			line.setAttribute('x1', String(x));
 			line.setAttribute('y1', '0');
 			line.setAttribute('x2', String(x));
@@ -1173,7 +1173,7 @@ export class SvgGanttRenderer {
 		// 行背景（在水平线之前添加，确保线在背景之上）
 		for (let i = 0; i < this.tasks.length; i++) {
 			const y = i * this.rowHeight;
-			const rowBg = document.createElementNS(ns, 'rect') as SVGRectElement;
+			const rowBg = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
 			rowBg.setAttribute('x', '0');
 			rowBg.setAttribute('y', String(y));
 			rowBg.setAttribute('width', String(width));
@@ -1195,7 +1195,7 @@ export class SvgGanttRenderer {
 		for (let i = 0; i <= this.tasks.length; i++) {
 			const y = i * this.rowHeight;
 
-			const line = document.createElementNS(ns, 'line');
+			const line = activeDocument.createElementNS(ns, 'line');
 			line.setAttribute('x1', '0');
 			line.setAttribute('y1', String(y));
 			line.setAttribute('x2', String(width));
@@ -1229,7 +1229,7 @@ export class SvgGanttRenderer {
 		if (unitsDiff >= 0 && unitsDiff <= totalUnits) {
 			const x = unitsDiff * this.columnWidth;
 
-			const line = document.createElementNS(ns, 'line');
+			const line = activeDocument.createElementNS(ns, 'line');
 			line.setAttribute('x1', String(x));
 			line.setAttribute('y1', '0');
 			line.setAttribute('x2', String(x));
@@ -1254,7 +1254,7 @@ export class SvgGanttRenderer {
 	): void {
 		if (!svg) return;
 
-		const tasksGroup = document.createElementNS(ns, 'g');
+		const tasksGroup = activeDocument.createElementNS(ns, 'g');
 		addSvgClass(tasksGroup, GanttClasses.elements.tasks);
 
 		const config = GRANULARITY_CONFIGS[granularity];
@@ -1274,12 +1274,12 @@ export class SvgGanttRenderer {
 			const barWidth = Math.max(duration * this.columnWidth, 20);  // 不减 8，确保右端对齐网格线
 
 			// 任务条组
-			const barGroup = document.createElementNS(ns, 'g');
+			const barGroup = activeDocument.createElementNS(ns, 'g');
 			addSvgClass(barGroup, GanttClasses.elements.barGroup);
 			barGroup.setAttribute('data-task-bar', task.id);
 
 			// 任务条背景
-			const bar = document.createElementNS(ns, 'rect');
+			const bar = activeDocument.createElementNS(ns, 'rect');
 			bar.setAttribute('x', String(x));
 			bar.setAttribute('y', String(y));
 			bar.setAttribute('width', String(Math.max(barWidth, 20)));
@@ -1311,7 +1311,7 @@ export class SvgGanttRenderer {
 			let progressElement: SVGRectElement | null = null;
 			if (task.progress > 0 && task.progress < 100) {
 				const progressWidth = barWidth * task.progress / 100;
-				const elem = document.createElementNS(ns, 'rect') as SVGRectElement;
+				const elem = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
 				elem.setAttribute('x', String(x));
 				elem.setAttribute('y', String(y));
 				elem.setAttribute('width', String(Math.max(progressWidth - 8, 0)));
@@ -1327,7 +1327,7 @@ export class SvgGanttRenderer {
 			const HANDLE_VISUAL_SIZE = 4;
 
 			// 左侧手柄 - 修改开始时间
-			const leftHandle = document.createElementNS(ns, 'rect');
+			const leftHandle = activeDocument.createElementNS(ns, 'rect');
 			leftHandle.setAttribute('x', String(x));
 			leftHandle.setAttribute('y', String(y));
 			leftHandle.setAttribute('width', String(HANDLE_HIT_AREA));
@@ -1337,7 +1337,7 @@ export class SvgGanttRenderer {
 			leftHandle.classList.add('gc-gantt-view__handle-left');
 
 			// 左侧视觉提示
-			const leftVisual = document.createElementNS(ns, 'rect');
+			const leftVisual = activeDocument.createElementNS(ns, 'rect');
 			leftVisual.setAttribute('x', String(x + 2));
 			leftVisual.setAttribute('y', String(y + 8));
 			leftVisual.setAttribute('width', String(HANDLE_VISUAL_SIZE));
@@ -1349,7 +1349,7 @@ export class SvgGanttRenderer {
 
 			// 右侧手柄 - 修改结束时间
 			const rightHandleX = x + Math.max(barWidth, 20) - HANDLE_HIT_AREA;
-			const rightHandle = document.createElementNS(ns, 'rect');
+			const rightHandle = activeDocument.createElementNS(ns, 'rect');
 			rightHandle.setAttribute('x', String(rightHandleX));
 			rightHandle.setAttribute('y', String(y));
 			rightHandle.setAttribute('width', String(HANDLE_HIT_AREA));
@@ -1359,7 +1359,7 @@ export class SvgGanttRenderer {
 			rightHandle.classList.add('gc-gantt-view__handle-right');
 
 			// 右侧视觉提示
-			const rightVisual = document.createElementNS(ns, 'rect');
+			const rightVisual = activeDocument.createElementNS(ns, 'rect');
 			rightVisual.setAttribute('x', String(rightHandleX + HANDLE_HIT_AREA - 2 - HANDLE_VISUAL_SIZE));
 			rightVisual.setAttribute('y', String(y + 8));
 			rightVisual.setAttribute('width', String(HANDLE_VISUAL_SIZE));
@@ -1563,12 +1563,12 @@ export class SvgGanttRenderer {
 			'resize-left': 'w-resize',
 			'resize-right': 'e-resize',
 		};
-		document.body.style.cursor = cursorMap[dragType];
-		document.body.style.userSelect = 'none';
+		activeDocument.body.style.cursor = cursorMap[dragType];
+		activeDocument.body.style.userSelect = 'none';
 
 		// 设置全局事件监听
-		document.addEventListener('mousemove', this.handleDragMove);
-		document.addEventListener('mouseup', this.handleDragEnd);
+		activeDocument.addEventListener('mousemove', this.handleDragMove);
+		activeDocument.addEventListener('mouseup', this.handleDragEnd);
 	}
 
 	/**
@@ -1638,22 +1638,22 @@ export class SvgGanttRenderer {
 
 		// 重置状态
 		this.taskDragState.isDragging = false;
-		document.body.style.cursor = '';
-		document.body.style.userSelect = '';
+		activeDocument.body.style.cursor = '';
+		activeDocument.body.style.userSelect = '';
 
 		// 移除全局事件监听
-		document.removeEventListener('mousemove', this.handleDragMove);
-		document.removeEventListener('mouseup', this.handleDragEnd);
+		activeDocument.removeEventListener('mousemove', this.handleDragMove);
+		activeDocument.removeEventListener('mouseup', this.handleDragEnd);
 
 		if (!hasMoved) {
 			// 没有移动，视为点击，不设置标志位
-			if (task!) this.handleTaskClick(task!);
+			if (task!) this.handleTaskClick(task);
 			return;
 		}
 
 		// 有移动，设置标志位屏蔽点击事件
 		this.taskDragState.justFinishedDragging = true;
-		setTimeout(() => {
+		window.setTimeout(() => {
 			this.taskDragState.justFinishedDragging = false;
 		}, 100); // 100ms 后恢复点击功能
 
@@ -1700,7 +1700,7 @@ export class SvgGanttRenderer {
 			if (this.onDateChange && task!) {
 				// 统一使用 onDateChange 回调处理所有拖动类型
 				// TaskUpdateHandler 会检测哪个字段被修改并正确更新
-				await this.onDateChange(task!, newStart, newEnd);
+				await this.onDateChange(task, newStart, newEnd);
 			}
 		} catch (error) {
 			Logger.error('SvgGanttRenderer', 'Error updating task dates:', error);
@@ -1981,7 +1981,7 @@ export class SvgGanttRenderer {
 	 */
 	setScrollPosition(scrollLeft: number, scrollTop: number): void {
 		if (this.ganttContainer) {
-			requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
 				if (this.ganttContainer) {
 					this.ganttContainer.scrollLeft = scrollLeft;
 					this.ganttContainer.scrollTop = scrollTop;

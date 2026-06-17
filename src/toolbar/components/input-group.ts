@@ -78,7 +78,7 @@ export function renderInputGroup(
 			type: inputType,
 			placeholder: placeholder || ''
 		}
-	}) as HTMLInputElement;
+	});
 
 	inputEl.value = value;
 	if (disabled) inputEl.disabled = true;

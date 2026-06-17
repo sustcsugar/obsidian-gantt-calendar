@@ -26,7 +26,7 @@ export class ThemeManager {
 			}
 		});
 
-		observer.observe(document.body, {
+		observer.observe(activeDocument.body, {
 			attributes: true,
 			attributeFilter: ['class']
 		});

@@ -155,5 +155,5 @@ function advanceDateFieldWithOffset(
     const offset = sourceValue.getTime() - sourceBaseDate.getTime();
     const newValue = new Date(occurrenceDate.getTime() + offset);
 
-    setTaskDateField(virtualTask, field as DateFieldType, newValue);
+    setTaskDateField(virtualTask, field, newValue);
 }

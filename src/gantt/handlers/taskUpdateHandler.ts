@@ -9,6 +9,7 @@ import type { GanttChartTask, DateFieldType } from '../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
+import { openFileInExistingLeaf } from '../../utils/fileOpener';
 
 /**
  * 任务更新回调函数类型
@@ -136,7 +137,6 @@ export class TaskUpdateHandler {
 		}
 
 		// 使用 openFileInExistingLeaf 避免重复打开标签页
-		const { openFileInExistingLeaf } = require('../../utils/fileOpener');
 		openFileInExistingLeaf(this.app, ganttTask.filePath, ganttTask.lineNumber);
 	}
 

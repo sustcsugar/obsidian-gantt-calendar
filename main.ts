@@ -137,8 +137,8 @@ export default class GanttCalendarPlugin extends Plugin {
 			const path = '.feishu-sync-state.json';
 			if (await this.app.vault.adapter.exists(path)) {
 				const raw = await this.app.vault.adapter.read(path);
-				const data = JSON.parse(raw);
-				const times = Object.values(data) as Array<{ lastSyncAt?: string }>;
+				const data = JSON.parse(raw) as Record<string, { lastSyncAt?: string }>;
+				const times = Object.values(data);
 				const latest = times
 					.map(r => r.lastSyncAt || '')
 					.filter(t => t)
@@ -172,7 +172,7 @@ export default class GanttCalendarPlugin extends Plugin {
 
 	private scheduleTaskCacheInit(): void {
 		this.app.workspace.onLayoutReady(() => {
-			setTimeout(() => {
+			window.setTimeout(() => {
 				this.taskCache.initialize(
 					this.settings.globalTaskFilter,
 					this.settings.enabledTaskFormats

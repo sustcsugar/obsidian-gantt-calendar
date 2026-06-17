@@ -38,10 +38,10 @@ export function renderStatusFilterButton(
 	setIcon(iconSpan, 'check-square');
 
 	// 5. 创建下拉面板
-	const dropdown = document.createElement('div');
+	const dropdown = activeDocument.createElement('div');
 	dropdown.addClass(classes.dropdown);
 	dropdown.style.display = 'none';
-	document.body.appendChild(dropdown);
+	activeDocument.body.appendChild(dropdown);
 
 	// 6. 渲染面板内容
 	const renderDropdown = () => {
@@ -124,11 +124,11 @@ export function renderStatusFilterButton(
 			dropdown.style.display = 'none';
 		}
 	};
-	document.addEventListener('click', closeOnClickOutside);
+	activeDocument.addEventListener('click', closeOnClickOutside);
 
 	// 9. 清理函数
 	const cleanup = () => {
-		document.removeEventListener('click', closeOnClickOutside);
+		activeDocument.removeEventListener('click', closeOnClickOutside);
 		dropdown.remove();
 	};
 

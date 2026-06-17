@@ -138,6 +138,6 @@ export function filterTasks(contents: string[], globalTaskFilter?: string): stri
     if (!globalTaskFilter) return contents;
 
     return contents
-        .filter(content => passesGlobalFilter(content, globalTaskFilter!))
-        .map(content => removeGlobalFilter(content, globalTaskFilter!));
+        .filter(content => passesGlobalFilter(content, globalTaskFilter))
+        .map(content => removeGlobalFilter(content, globalTaskFilter));
 }

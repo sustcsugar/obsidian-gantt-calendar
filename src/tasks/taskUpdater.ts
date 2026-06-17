@@ -17,7 +17,7 @@ export function determineTaskFormat(
 	if (!formatToUse) {
 		if (/\[(priority|created|start|scheduled|due|cancelled|completion)::\s*[^\]]+\]/.test(taskLine)) {
 			formatToUse = 'dataview';
-		} else if (/([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}/.test(taskLine)) {
+		} else if (/([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}/u.test(taskLine)) {
 			formatToUse = 'tasks';
 		} else if (enabledFormats.includes('dataview') && enabledFormats.includes('tasks')) {
 			// 两者都支持时：如果行中已有方括号则 dataview，否则 tasks

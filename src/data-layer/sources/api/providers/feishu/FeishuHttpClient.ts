@@ -115,7 +115,7 @@ export class FeishuHttpClient {
         } = {},
         fetchFn?: FetchFunction
     ): Promise<HttpResponse> {
-        const actualFetch = fetchFn || this.defaultFetch;
+        const actualFetch = fetchFn || FeishuHttpClient.defaultFetch;
         return actualFetch(url, options);
     }
 
@@ -138,6 +138,7 @@ export class FeishuHttpClient {
      * @returns HTTP 响应
      */
     private static async defaultFetch(
+        this: void,
         url: string,
         options: {
             method?: string;

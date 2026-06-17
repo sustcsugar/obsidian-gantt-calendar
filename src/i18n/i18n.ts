@@ -1,5 +1,6 @@
 import en from './locales/en.json';
 import zh from './locales/zh.json';
+import { getLanguage } from 'obsidian';
 
 type TranslationMap = Record<string, unknown>;
 
@@ -10,7 +11,7 @@ let languageOverride: string | null = null;
 
 function getObsidianLanguage(): string {
 	try {
-		return localStorage.getItem('language') || 'en';
+		return getLanguage() || 'en';
 	} catch {
 		return 'en';
 	}

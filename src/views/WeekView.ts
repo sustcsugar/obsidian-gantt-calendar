@@ -52,9 +52,9 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	private hasTimedTasks(tasks: GCTask[], weekStart: Date, weekEnd: Date): boolean {
 		const dateField = this.plugin.settings.dateFilterField || 'dueDate';
 		for (const task of tasks) {
-			const precision = task.datePrecision?.[dateField as keyof NonNullable<typeof task.datePrecision>];
+			const precision = task.datePrecision?.[dateField];
 			if (precision === 'time') {
-				const dateValue = getTaskDateField(task, dateField as DateFieldType);
+				const dateValue = getTaskDateField(task, dateField);
 				if (dateValue) {
 					const taskDate = new Date(dateValue);
 					if (!isNaN(taskDate.getTime())) {
@@ -452,7 +452,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 	 * 增量刷新
 	 */
 	public refreshTasks(): void {
-		const container = document.querySelector('.gc-view.gc-view--week') as HTMLElement;
+		const container = activeDocument.querySelector('.gc-view.gc-view--week') as HTMLElement;
 		if (!container) return;
 
 		const isTimeline = container.classList.contains(WeekViewClasses.modifiers.timeline);
@@ -471,7 +471,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			// 恢复滚动位置：render 重建 DOM 后需要重新查找 tasksGrid
 			const newTasksGrid = viewContainer?.querySelector('.gc-week-view__tasks-grid') as HTMLElement;
 			if (newTasksGrid) {
-				requestAnimationFrame(() => {
+				window.requestAnimationFrame(() => {
 					newTasksGrid.scrollTop = this.savedScrollTop;
 				});
 			}
@@ -562,7 +562,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			let currentDayTasks = tasks.filter(task => {
-				const dateValue = getTaskDateField(task, dateField as DateFieldType);
+				const dateValue = getTaskDateField(task, dateField);
 				if (!dateValue) return false;
 				const taskDate = new Date(dateValue);
 				if (isNaN(taskDate.getTime())) return false;
@@ -573,7 +573,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			let virtualForDay: GCTask[] = [];
 			if (precomputedVirtualInstances) {
 				virtualForDay = precomputedVirtualInstances.filter(task => {
-					const dateValue = getTaskDateField(task, dateField as DateFieldType);
+					const dateValue = getTaskDateField(task, dateField);
 					if (!dateValue) return false;
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;

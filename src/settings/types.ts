@@ -1,6 +1,7 @@
 import type GanttCalendarPlugin from '../../main';
 import type { SortField, SortOrder, TagFilterOperator } from '../types';
 import type { TaskStatus } from '../tasks/taskStatus';
+import type { FeishuTaskList } from '../data-layer/sources/api/providers/feishu/FeishuTypes';
 
 /**
  * 日期字段类型
@@ -145,6 +146,8 @@ export interface GanttCalendarSettings {
 
 			// 飞书任务清单
 			tasklistGuid?: string;    // 同步目标任务清单 GUID
+			taskLists?: FeishuTaskList[];   // 可用的任务清单列表(连接测试/选择时缓存)
+			taskListsFetchedAt?: number;  // taskLists 缓存时间戳
 		};
 		caldav?: {
 			provider: 'google' | 'outlook' | 'apple' | 'custom';

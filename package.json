@@ -1,11 +1,12 @@
 {
 	"name": "gantt-calendar",
-	"version": "1.5.19",
+	"version": "1.5.20",
 	"description": "A powerful visual task management plugin. Visualize and manage tasks created by the Tasks plugin, supporting both emoji and Dataview task formats. Support Feishu Task syncing. Support Gantt chart and calendar views.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint .",
 		"postinstall": "node -e \"const fs=require('fs'),p='node_modules/obsidian-daily-notes-interface/node_modules/obsidian';if(fs.existsSync(p))fs.rmSync(p,{recursive:true})\"",
 		"test": "jest --verbose",
 		"test:watch": "jest --watch --verbose",
@@ -18,14 +19,15 @@
 		"@types/jest": "^30.0.0",
 		"@types/node": "^16.11.6",
 		"@types/uuid": "^9.0.0",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
 		"esbuild": "0.17.3",
+		"eslint": "^9.39.4",
+		"eslint-plugin-obsidianmd": "^0.3.0",
 		"jest": "^30.4.0",
 		"obsidian": "latest",
 		"ts-jest": "^29.4.9",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"typescript": "^4.9.5",
+		"typescript-eslint": "^8.61.1"
 	},
 	"dependencies": {
 		"flatpickr": "^4.6.13",

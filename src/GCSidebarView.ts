@@ -30,7 +30,7 @@ export class GCSidebarView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'Gantt Calendar';
+		return 'Gantt calendar';
 	}
 
 	getIcon(): string {

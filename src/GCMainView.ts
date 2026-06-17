@@ -59,7 +59,7 @@ export class GCMainView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'Gantt Calendar';
+		return 'Gantt calendar';
 	}
 
 	getIcon(): string {

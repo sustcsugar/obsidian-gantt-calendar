@@ -576,7 +576,7 @@ export class FeishuProvider extends APIDataSource {
             if (response.status >= 500 && attempt < maxRetries) {
                 const delay = 1000 * (attempt + 1);
                 Logger.warn('FeishuProvider', `API ${response.status} on attempt ${attempt + 1}, retrying in ${delay}ms...`, { path, method });
-                await new Promise(r => setTimeout(r, delay));
+                await new Promise(r => window.setTimeout(r, delay));
                 continue;
             }
 

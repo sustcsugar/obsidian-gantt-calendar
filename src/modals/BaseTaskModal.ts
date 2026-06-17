@@ -552,7 +552,7 @@ export abstract class BaseTaskModal extends Modal {
 		previewBox.style.alignItems = 'center';
 
 		const previewText = previewBox.createEl('span', {
-			text: 'no repeat',
+			text: 'No repeat',
 			cls: EditTaskModalClasses.elements.repeatPreviewText
 		});
 
@@ -604,7 +604,7 @@ export abstract class BaseTaskModal extends Modal {
 			// 不重复
 			if (!freqValue) {
 				this.repeat = null;
-				previewText.textContent = 'no repeat';
+				previewText.textContent = 'No repeat';
 				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';
 				manualInput.style.display = 'none';
@@ -628,7 +628,7 @@ export abstract class BaseTaskModal extends Modal {
 					}
 				} else {
 					this.repeat = null;
-					previewText.textContent = 'no repeat';
+					previewText.textContent = 'No repeat';
 				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';
 				}
@@ -738,7 +738,7 @@ export abstract class BaseTaskModal extends Modal {
 			});
 
 			this.repeat = null;
-			previewText.textContent = 'no repeat';
+			previewText.textContent = 'No repeat';
 			errorMsg.style.display = 'none';
 		});
 
@@ -1036,7 +1036,7 @@ export abstract class BaseTaskModal extends Modal {
 		if (this.styleEl && this.styleEl.parentNode) {
 			return;
 		}
-		this.styleEl = document.createElement('style');
+		this.styleEl = activeDocument.createElement('style');
 		this.styleEl.textContent = `
 			.${EditTaskModalClasses.block} {
 				width: 100%;
@@ -1348,7 +1348,7 @@ export abstract class BaseTaskModal extends Modal {
 				background: var(--interactive-accent-hover);
 			}
 		`;
-		document.head.appendChild(this.styleEl);
+		activeDocument.head.appendChild(this.styleEl);
 	}
 
 	// ==================== 工具方法 ====================

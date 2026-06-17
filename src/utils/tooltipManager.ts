@@ -52,8 +52,8 @@ export class TooltipManager {
 	}
 
 	private ensureTooltip(): HTMLElement {
-		if (!this.tooltip || !document.body.contains(this.tooltip)) {
-			this.tooltip = document.body.createDiv('gc-task-tooltip');
+		if (!this.tooltip || !activeDocument.body.contains(this.tooltip)) {
+			this.tooltip = activeDocument.body.createDiv('gc-task-tooltip');
 			this.tooltip.style.opacity = '0';
 
 			this.cachedElements.description = this.tooltip.createDiv(TooltipClasses.elements.description);

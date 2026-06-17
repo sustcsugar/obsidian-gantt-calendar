@@ -2,6 +2,7 @@ import { Setting, SettingGroup, Notice, requestUrl } from 'obsidian';
 import { showConfirmDialog } from '../../modals/ConfirmModal';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig } from '../types';
+
 import { FeishuOAuth } from '../../data-layer/sources/api/providers/feishu/FeishuOAuth';
 import { FeishuHttpClient } from '../../data-layer/sources/api/providers/feishu/FeishuHttpClient';
 import { FeishuUserApi } from '../../data-layer/sources/api/providers/feishu/FeishuUserApi';
@@ -359,6 +360,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			setting.setName('App ID')
 				.setDesc(i18n.t('settings.sync.oauth.appId.description'))
 				.addText(text => text
+					 
+					// eslint-disable-next-line obsidianmd/ui/sentence-case -- 凭据占位符
 					.setPlaceholder('cli_xxxxxxxxxxxxx')
 					.setValue(syncConfig.api?.clientId || syncConfig.api?.appId || '')
 					.onChange(async (value: string) => {
@@ -371,9 +374,11 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 		// App Secret
 		addSetting(setting =>
-			setting.setName('App Secret')
+			setting.setName('App secret')
 				.setDesc(i18n.t('settings.sync.oauth.appSecret.description'))
 				.addText(text => text
+					 
+					// eslint-disable-next-line obsidianmd/ui/sentence-case -- 凭据占位符
 					.setPlaceholder('xxxxxxxxxxxxxxxx')
 					.setValue(syncConfig.api?.clientSecret || syncConfig.api?.appSecret || '')
 					.onChange(async (value: string) => {
@@ -395,6 +400,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			setting.setName(i18n.t('settings.sync.oauth.redirectUri.label'))
 				.setDesc(i18n.t('settings.sync.oauth.redirectUri.description'))
 				.addText(text => text
+					 
+					// eslint-disable-next-line obsidianmd/ui/sentence-case -- URL 占位符,大小写敏感
 					.setPlaceholder('https://open.feishu.cn/api-explorer/loading')
 					.setValue(syncConfig.api?.redirectUri || FeishuOAuth.getDefaultRedirectUri())
 					.onChange(async (value: string) => {
@@ -437,7 +444,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			if (syncConfig.api?.userName || syncConfig.api?.userId) {
 				addSetting(setting =>
 					setting.setName(i18n.t('settings.sync.oauth.authorizedUser.label'))
-						.setDesc(syncConfig.api.userName ? `${syncConfig.api.userName} (${syncConfig.api.userId || 'Unknown'})` : syncConfig.api.userId || 'Unknown')
+						.setDesc(syncConfig.api?.userName ? `${syncConfig.api?.userName} (${syncConfig.api?.userId || 'Unknown'})` : syncConfig.api?.userId || 'Unknown')
 						.addExtraButton(button => button
 							.setIcon('user')
 							.setTooltip(i18n.t('settings.sync.oauth.testConnectionTooltip'))
@@ -447,25 +454,25 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 			// Access Token (partially hidden)
 			addSetting(setting =>
-				setting.setName('Access Token')
+				setting.setName('Access token')
 					.setDesc(i18n.t('settings.sync.oauth.accessToken.description'))
 					.addText(text => text
-						.setValue(this.maskToken(syncConfig.api.accessToken))
+						.setValue(this.maskToken(syncConfig.api?.accessToken ?? ''))
 						.setDisabled(true))
 					.addExtraButton(button => button
 						.setIcon('copy')
 						.setTooltip(i18n.t('settings.sync.oauth.copyTokenTooltip'))
 						.onClick(() => {
-							navigator.clipboard.writeText(syncConfig.api.accessToken);
+							navigator.clipboard.writeText(syncConfig.api?.accessToken ?? '');
 							new Notice(i18n.t('settings.sync.oauth.copiedNotice'));
 						}))
 			);
 
 			// Token expiration
 			if (syncConfig.api?.tokenExpireAt) {
-				const expireTime = new Date(syncConfig.api.tokenExpireAt);
-				const isExpired = Date.now() > syncConfig.api.tokenExpireAt;
-				const remainingText = FeishuOAuth.formatExpireTime(syncConfig.api.tokenExpireAt);
+				const expireTime = new Date(syncConfig.api?.tokenExpireAt ?? 0);
+				const isExpired = Date.now() > (syncConfig.api?.tokenExpireAt ?? 0);
+				const remainingText = FeishuOAuth.formatExpireTime(syncConfig.api?.tokenExpireAt ?? 0);
 
 				addSetting(setting =>
 					setting.setName(i18n.t('settings.sync.oauth.tokenStatus.label'))
@@ -486,11 +493,11 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			if (syncConfig.api?.refreshToken) {
 				addSetting(setting => {
 					const hasExpireAt = !!syncConfig.api?.refreshTokenExpireAt;
-					const isExpired = hasExpireAt && Date.now() > syncConfig.api.refreshTokenExpireAt;
+					const isExpired = hasExpireAt && Date.now() > (syncConfig.api?.refreshTokenExpireAt ?? 0);
 					const desc = hasExpireAt
 						? (isExpired
 							? i18n.t('settings.sync.oauth.refreshTokenStatus.expired')
-							: i18n.t('settings.sync.oauth.refreshTokenStatus.valid', { time: new Date(syncConfig.api.refreshTokenExpireAt).toLocaleString(), remaining: FeishuOAuth.formatExpireTime(syncConfig.api.refreshTokenExpireAt) }))
+							: i18n.t('settings.sync.oauth.refreshTokenStatus.valid', { time: new Date(syncConfig.api?.refreshTokenExpireAt ?? 0).toLocaleString(), remaining: FeishuOAuth.formatExpireTime(syncConfig.api?.refreshTokenExpireAt ?? 0) }))
 						: i18n.t('settings.sync.oauth.refreshTokenStatus.unknown');
 					setting.setName(i18n.t('settings.sync.oauth.refreshTokenStatus.label'))
 						.setDesc(desc)
@@ -711,14 +718,14 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 			parts.push('');
 			parts.push(i18n.t('settings.sync.connectionTest.tokenInfo'));
-			parts.push(i18n.t('settings.sync.connectionTest.expireTime', { time: new Date(apiConfig.tokenExpireAt).toLocaleString() }));
-			parts.push(isExpired ? i18n.t('settings.sync.connectionTest.tokenExpired') : i18n.t('settings.sync.connectionTest.tokenExpiredStatus', { status: i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: new Date(apiConfig.tokenExpireAt).toLocaleString(), remaining: expireInfo }) }));
+			parts.push(i18n.t('settings.sync.connectionTest.expireTime', { time: new Date(apiConfig.tokenExpireAt ?? 0).toLocaleString() }));
+			parts.push(isExpired ? i18n.t('settings.sync.connectionTest.tokenExpired') : i18n.t('settings.sync.connectionTest.tokenExpiredStatus', { status: i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: new Date(apiConfig.tokenExpireAt ?? 0).toLocaleString(), remaining: expireInfo }) }));
 
 			parts.push('');
 			const taskListCount = syncConfig.api?.taskLists?.length || 0;
 			parts.push(i18n.t('settings.sync.connectionTest.authorizedLists', { count: taskListCount }));
 			if (syncConfig.api?.tasklistGuid) {
-				const selectedList = syncConfig.api?.taskLists?.find((tl: any) => tl.guid === syncConfig.api.tasklistGuid);
+				const selectedList = syncConfig.api?.taskLists?.find((tl: FeishuTaskList) => tl.guid === syncConfig.api?.tasklistGuid);
 				if (selectedList) {
 					parts.push(i18n.t('settings.sync.connectionTest.currentList', { name: selectedList.name }));
 				}
@@ -741,9 +748,9 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			parts.push('');
 			parts.push(i18n.t('settings.sync.connectionTest.tokenInfo'));
 			if (apiConfig.tokenExpireAt) {
-				parts.push(i18n.t('settings.sync.connectionTest.expireTime', { time: new Date(apiConfig.tokenExpireAt).toLocaleString() }));
+				parts.push(i18n.t('settings.sync.connectionTest.expireTime', { time: new Date(apiConfig.tokenExpireAt ?? 0).toLocaleString() }));
 			}
-			const tokenStatusText = isExpired ? i18n.t('settings.sync.oauth.tokenStatus.expired') : i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: new Date(apiConfig.tokenExpireAt).toLocaleString(), remaining: expireInfo });
+			const tokenStatusText = isExpired ? i18n.t('settings.sync.oauth.tokenStatus.expired') : i18n.t('settings.sync.oauth.tokenStatus.expiresAt', { time: new Date(apiConfig.tokenExpireAt ?? 0).toLocaleString(), remaining: expireInfo });
 			parts.push(i18n.t('settings.sync.connectionTest.tokenExpiredStatus', { status: tokenStatusText }));
 
 			if (errorMsg.includes('401')) {

@@ -254,7 +254,7 @@ export class MarkdownDataSource implements IDataSource {
 		this.vaultEventRefs = [];
 		this.fileWatchersRegistered = false;
 
-		this.debounceTimers.forEach((timer) => clearTimeout(timer));
+		this.debounceTimers.forEach((timer) => window.clearTimeout(timer));
 		this.debounceTimers.clear();
 		this.processingFiles.clear();
 		this.pendingFileChecks.clear();  // 清理待处理队列
@@ -298,7 +298,7 @@ export class MarkdownDataSource implements IDataSource {
 			}
 
 			if (batchIndex < batches.length - 1) {
-				await new Promise(resolve => setTimeout(resolve, 0));
+				await new Promise(resolve => window.setTimeout(resolve, 0));
 			}
 		}
 
@@ -404,7 +404,7 @@ export class MarkdownDataSource implements IDataSource {
 
 				const existingTimer = this.debounceTimers.get(file.path);
 				if (existingTimer !== undefined) {
-					clearTimeout(existingTimer);
+					window.clearTimeout(existingTimer);
 					Logger.debug('MarkdownDataSource', `Debouncing file modification: ${file.path}`);
 				}
 
@@ -433,7 +433,7 @@ export class MarkdownDataSource implements IDataSource {
 
 				const existingTimer = this.debounceTimers.get(file.path);
 				if (existingTimer !== undefined) {
-					clearTimeout(existingTimer);
+					window.clearTimeout(existingTimer);
 				}
 
 				const timer = window.setTimeout(async () => {
@@ -517,7 +517,7 @@ export class MarkdownDataSource implements IDataSource {
 					// 使用相同的防抖机制
 					const existingTimer = this.debounceTimers.get(file.path);
 					if (existingTimer !== undefined) {
-						clearTimeout(existingTimer);
+						window.clearTimeout(existingTimer);
 					}
 
 					const timer = window.setTimeout(async () => {
@@ -622,7 +622,7 @@ export class MarkdownDataSource implements IDataSource {
 					description: '',
 					completed: false,
 					priority: 'normal'
-				} as GCTask);
+				});
 			}
 		}
 

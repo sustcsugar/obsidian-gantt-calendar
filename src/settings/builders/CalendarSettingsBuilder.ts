@@ -93,6 +93,8 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 				.setName(i18n.t('settings.calendar.manualMode.format.name'))
 				.setDesc(i18n.t('settings.calendar.manualMode.format.description'))
 				.addText(text => text
+					 
+					// eslint-disable-next-line obsidianmd/ui/sentence-case -- 日期格式占位符,非 UI 散文
 					.setPlaceholder('yyyy-MM-dd')
 					.setValue(this.plugin.settings.dailyNoteNameFormat)
 					.onChange(async (value) => {

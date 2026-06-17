@@ -76,7 +76,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 	 * 增量刷新：只重新加载任务内容，不重建DOM
 	 */
 	public refreshTasks(): void {
-		const container = document.querySelector('.gc-view.gc-view--day') as HTMLElement;
+		const container = activeDocument.querySelector('.gc-view.gc-view--day') as HTMLElement;
 		if (!container) return;
 
 		// 获取任务列表容器
@@ -156,7 +156,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			normalizedTarget.setHours(0, 0, 0, 0);
 
 			let currentDayTasks = tasks.filter(task => {
-				const dateValue = getTaskDateField(task, dateField as DateFieldType);
+				const dateValue = getTaskDateField(task, dateField);
 				if (!dateValue) return false;
 				const taskDate = new Date(dateValue);
 				if (isNaN(taskDate.getTime())) return false;
@@ -179,7 +179,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			const alldayTasks: GCTask[] = [];
 			const timedTasks: GCTask[] = [];
 			for (const task of currentDayTasks) {
-				const precision = task.datePrecision?.[dateField as keyof NonNullable<typeof task.datePrecision>];
+				const precision = task.datePrecision?.[dateField];
 				if (precision === 'time') {
 					timedTasks.push(task);
 				} else {
@@ -221,7 +221,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			tasksByHour.get(0)!.push(task);
 		}
 		for (const task of timedTasks) {
-			const dateValue = getTaskDateField(task, dateField as DateFieldType);
+			const dateValue = getTaskDateField(task, dateField);
 			if (dateValue instanceof Date) {
 				const hour = dateValue.getHours();
 				if (!tasksByHour.has(hour)) tasksByHour.set(hour, []);
@@ -344,12 +344,12 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 			const mouseUpHandler = () => {
 				isResizing = false;
-				document.removeEventListener('mousemove', mouseMoveHandler);
-				document.removeEventListener('mouseup', mouseUpHandler);
+				activeDocument.removeEventListener('mousemove', mouseMoveHandler);
+				activeDocument.removeEventListener('mouseup', mouseUpHandler);
 			};
 
-			document.addEventListener('mousemove', mouseMoveHandler);
-			document.addEventListener('mouseup', mouseUpHandler);
+			activeDocument.addEventListener('mousemove', mouseMoveHandler);
+			activeDocument.addEventListener('mouseup', mouseUpHandler);
 		});
 	}
 
@@ -381,12 +381,12 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 			const mouseUpHandler = () => {
 				isResizing = false;
-				document.removeEventListener('mousemove', mouseMoveHandler);
-				document.removeEventListener('mouseup', mouseUpHandler);
+				activeDocument.removeEventListener('mousemove', mouseMoveHandler);
+				activeDocument.removeEventListener('mouseup', mouseUpHandler);
 			};
 
-			document.addEventListener('mousemove', mouseMoveHandler);
-			document.addEventListener('mouseup', mouseUpHandler);
+			activeDocument.addEventListener('mousemove', mouseMoveHandler);
+			activeDocument.addEventListener('mouseup', mouseUpHandler);
 		});
 	}
 
@@ -427,10 +427,10 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 		const filePath = this.embeddedEditor.getCurrentFilePath();
 		if (filePath) {
-			const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') || 'Daily Note';
+			const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') || 'Daily note';
 			this.notesTitleEl.setText(fileName);
 		} else {
-			this.notesTitleEl.setText('Daily Note');
+			this.notesTitleEl.setText('Daily note');
 		}
 	}
 
@@ -441,7 +441,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		const header = notesSection.createDiv(DayViewClasses.elements.notesHeader);
 
 		// 标题文本
-		const title = header.createEl('h3', { text: 'Daily Note' });
+		const title = header.createEl('h3', { text: 'Daily note' });
 		title.addClass(DayViewClasses.elements.title);
 		this.notesTitleEl = title;
 

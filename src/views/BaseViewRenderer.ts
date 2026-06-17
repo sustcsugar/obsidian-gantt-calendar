@@ -347,7 +347,7 @@ export abstract class BaseViewRenderer {
 	 * 清理悬浮提示
 	 */
 	protected clearTaskTooltips(): void {
-		const tooltips = document.querySelectorAll(`.${TooltipClasses.block}`);
+		const tooltips = activeDocument.querySelectorAll(`.${TooltipClasses.block}`);
 		tooltips.forEach(t => t.remove());
 	}
 

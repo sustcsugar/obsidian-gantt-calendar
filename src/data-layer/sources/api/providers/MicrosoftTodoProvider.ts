@@ -245,7 +245,7 @@ export class MicrosoftTodoProvider extends APIDataSource {
 
             return response.json;
         } catch (error) {
-            const status = (error as any)?.status;
+            const status = (error)?.status;
             if (status === 401) {
                 // Token 过期，需要刷新
                 throw new Error('Access token expired, please re-authenticate');

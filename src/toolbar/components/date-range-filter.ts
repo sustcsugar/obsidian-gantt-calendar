@@ -100,7 +100,7 @@ export function renderDateRangeFilter(
 	const dateInput = dateFilterGroup.createEl('input', {
 		cls: inputClass,
 		attr: { type: 'date' }
-	}) as HTMLInputElement;
+	});
 
 	// 存储模式按钮元素
 	const modeButtons: Map<DateRangeType, HTMLElement> = new Map();

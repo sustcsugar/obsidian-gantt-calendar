@@ -130,7 +130,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 	 */
 	private restoreScrollPosition(): void {
 		if (this.ganttWrapper) {
-			requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
 				this.ganttWrapper?.setScrollPosition(this.scrollLeftPosition, this.scrollTopPosition);
 			});
 		}

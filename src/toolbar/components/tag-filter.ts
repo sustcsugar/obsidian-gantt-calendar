@@ -83,10 +83,10 @@ export function renderTagFilterButton(
 	setIcon(iconSpan, 'tags');
 
 	// 创建下拉面板
-	const dropdown = document.createElement('div');
+	const dropdown = activeDocument.createElement('div');
 	dropdown.addClass(classes.pane);
 	dropdown.style.display = 'none';
-	document.body.appendChild(dropdown);
+	activeDocument.body.appendChild(dropdown);
 
 	let andBtnElement: HTMLElement | null = null;
 	let orBtnElement: HTMLElement | null = null;
@@ -270,10 +270,10 @@ export function renderTagFilterButton(
 			dropdown.style.display = 'none';
 		}
 	};
-	document.addEventListener('click', closeOnClickOutside);
+	activeDocument.addEventListener('click', closeOnClickOutside);
 
 	const cleanup = () => {
-		document.removeEventListener('click', closeOnClickOutside);
+		activeDocument.removeEventListener('click', closeOnClickOutside);
 		dropdown.remove();
 	};
 

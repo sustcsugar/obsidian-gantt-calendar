@@ -51,7 +51,7 @@ export class TaskCardComponent {
 	 */
 	private createCardElement(): HTMLElement {
 		const { config, task } = this.props;
-		const card = document.createElement('div');
+		const card = activeDocument.createElement('div');
 		card.className = TaskCardClasses.block;
 
 		// 应用视图修饰符

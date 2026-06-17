@@ -11,6 +11,8 @@
 import {
     TaskFormatType,
     detectTaskFormat as baseDetectTaskFormat,
+    TASKS_FORMAT_CONFIG,
+    DATAVIEW_FORMAT_CONFIG,
 } from '../taskSerializerSymbols';
 
 // ==================== 类型定义 ====================
@@ -116,13 +118,11 @@ export function detectFormatDetailed(
 
     // 检测 Tasks 格式
     if (enabledFormats.includes('tasks')) {
-        const { TASKS_FORMAT_CONFIG } = require('../taskSerializerSymbols');
         result.hasTasksFormat = TASKS_FORMAT_CONFIG.regex.formatDetection.test(content);
     }
 
     // 检测 Dataview 格式
     if (enabledFormats.includes('dataview')) {
-        const { DATAVIEW_FORMAT_CONFIG } = require('../taskSerializerSymbols');
         result.hasDataviewFormat = DATAVIEW_FORMAT_CONFIG.regex.formatDetection.test(content);
     }
 
@@ -157,7 +157,6 @@ export function detectFormatDetailed(
  * ```
  */
 export function hasTasksFormat(content: string): boolean {
-    const { TASKS_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     return TASKS_FORMAT_CONFIG.regex.formatDetection.test(content);
 }
 
@@ -176,7 +175,6 @@ export function hasTasksFormat(content: string): boolean {
  * ```
  */
 export function hasDataviewFormat(content: string): boolean {
-    const { DATAVIEW_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     return DATAVIEW_FORMAT_CONFIG.regex.formatDetection.test(content);
 }
 

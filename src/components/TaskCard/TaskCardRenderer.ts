@@ -95,7 +95,7 @@ export class TaskCardRenderer {
 	 * 创建任务复选框
 	 */
 	createTaskCheckbox(task: GCTask, taskItem: HTMLElement): HTMLInputElement {
-		const checkbox = taskItem.createEl('input', { type: 'checkbox' }) as HTMLInputElement;
+		const checkbox = taskItem.createEl('input', { type: 'checkbox' });
 		checkbox.checked = task.completed;
 		checkbox.disabled = false;
 		checkbox.addClass(TaskCardClasses.elements.checkbox);

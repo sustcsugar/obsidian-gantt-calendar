@@ -79,7 +79,7 @@ export function renderSortButton(
 	updateButtonDisplay();
 
 	// 创建下拉菜单（添加到 body 以便正确定位）
-	const dropdown = document.createElement('div');
+	const dropdown = activeDocument.createElement('div');
 	dropdown.addClass(ToolbarClasses.components.sort.dropdown);
 	dropdown.style.display = 'none';
 
@@ -122,7 +122,7 @@ export function renderSortButton(
 	updateMenuActiveStates();
 
 	// 将菜单添加到 body
-	document.body.appendChild(dropdown);
+	activeDocument.body.appendChild(dropdown);
 
 	// 切换菜单显示/隐藏
 	sortBtn.addEventListener('click', (e) => {
@@ -149,11 +149,11 @@ export function renderSortButton(
 		}
 	};
 
-	document.addEventListener('click', closeDropdown);
+	activeDocument.addEventListener('click', closeDropdown);
 
 	// 清理函数
 	const cleanup = () => {
-		document.removeEventListener('click', closeDropdown);
+		activeDocument.removeEventListener('click', closeDropdown);
 		dropdown.remove();
 	};
 

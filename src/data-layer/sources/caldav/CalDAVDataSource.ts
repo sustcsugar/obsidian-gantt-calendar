@@ -382,7 +382,7 @@ export class CalDAVDataSource implements IDataSource {
      */
     protected stopPolling(): void {
         if (this.pollTimer) {
-            clearTimeout(this.pollTimer);
+            window.clearTimeout(this.pollTimer);
             this.pollTimer = undefined;
         }
     }

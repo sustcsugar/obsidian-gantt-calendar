@@ -15,6 +15,7 @@ import { Logger } from '../utils/logger';
 import type { GCTask } from '../types';
 import { BaseTaskModal, type PriorityOption } from './BaseTaskModal';
 import { i18n } from '../i18n/i18n';
+import { EditTaskModalClasses } from '../utils/bem';
 
 /**
  * 任务创建弹窗选项
@@ -68,7 +69,7 @@ export class CreateTaskModal extends BaseTaskModal {
 		this.renderModalContent(i18n.t('modals.createTask.title'));
 
 		// 自动聚焦到描述输入框
-		setTimeout(() => this.descriptionInput.focus(), 100);
+		window.setTimeout(() => this.descriptionInput.focus(), 100);
 	}
 
 	// ==================== 实现抽象方法 ====================
@@ -77,7 +78,6 @@ export class CreateTaskModal extends BaseTaskModal {
 	 * 渲染任务描述板块
 	 */
 	protected renderDescriptionSection(container: HTMLElement): void {
-		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
 		const section = container.createDiv(EditTaskModalClasses.elements.section);
 
 		const descContainer = section.createDiv(EditTaskModalClasses.elements.descContainer);

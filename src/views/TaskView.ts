@@ -164,7 +164,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 				}
 
 				tasks = tasks.filter(task => {
-					const dateValue = getTaskDateField(task, this.timeFieldFilter as DateFieldType);
+					const dateValue = getTaskDateField(task, this.timeFieldFilter);
 					if (!dateValue) return false;
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;

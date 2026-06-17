@@ -230,7 +230,7 @@ export class SyncManager {
                         lastModified: task.lastModified || new Date(),
                         lastSyncAt: existing?.lastSyncAt,
                         syncStatus: existing?.syncStatus || 'pending',
-                    } as GCTaskWithSync;
+                    };
                 });
 
                 allTasks.push(...tasksWithMeta);
@@ -324,11 +324,12 @@ export class SyncManager {
                                 setTaskMergeableField(changes as GCTask, field as MergeableTaskField, remoteVal);
                             }
                             break;
-                        case 'newest':
+                        case 'newest': {
                             const localTime = local.lastModified?.getTime() || 0;
                             const remoteTime = remote.lastModified?.getTime() || 0;
                             setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localTime >= remoteTime ? localVal : remoteVal);
                             break;
+                        }
                     }
                 } else {
                     // 默认使用本地值
@@ -390,7 +391,7 @@ export class SyncManager {
 
         for (const [syncId, resolvedTask] of resolved) {
             // 更新版本追踪
-            this.versionTracker.updateSyncMetadata(resolvedTask as GCTaskWithSync);
+            this.versionTracker.updateSyncMetadata(resolvedTask);
         }
     }
 
@@ -404,7 +405,7 @@ export class SyncManager {
         if (this.configuration.syncInterval > 0) {
             // 防抖处理
             if (this.syncTimer) {
-                clearTimeout(this.syncTimer);
+                window.clearTimeout(this.syncTimer);
             }
             this.syncTimer = window.setTimeout(() => {
                 this.sync();
@@ -437,7 +438,7 @@ export class SyncManager {
      */
     stopAutoSync(): void {
         if (this.syncTimer) {
-            clearTimeout(this.syncTimer);
+            window.clearTimeout(this.syncTimer);
             this.syncTimer = undefined;
         }
         Logger.info('SyncManager', 'Auto-sync stopped');

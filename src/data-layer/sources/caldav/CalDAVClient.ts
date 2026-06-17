@@ -101,7 +101,7 @@ export class CalDAVClient {
                 status: response.status,
             };
         } catch (error) {
-            const status = (error as any)?.status;
+            const status = (error)?.status;
             const errorMsg = error instanceof Error ? error.message : String(error);
             return {
                 success: false,

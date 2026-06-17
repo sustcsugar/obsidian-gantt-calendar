@@ -99,7 +99,7 @@ export function renderFieldSelector(
 	// 创建选择器
 	const fieldSelect = fieldFilterGroup.createEl('select', {
 		cls: classes.select
-	}) as HTMLSelectElement;
+	});
 
 	// 获取字段选项
 	const fieldOptions = customOptions || DEFAULT_DATE_FIELD_OPTIONS;
@@ -108,7 +108,7 @@ export function renderFieldSelector(
 	fieldOptions.forEach((option) => {
 		if (excludeFields.includes(option.value)) return;
 
-		const opt = document.createElement('option');
+		const opt = activeDocument.createElement('option');
 		opt.value = option.value;
 		opt.textContent = `${option.icon} ${option.label}`;
 		fieldSelect.appendChild(opt);

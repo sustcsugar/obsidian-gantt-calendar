@@ -44,7 +44,7 @@ export class YearViewRenderer extends BaseViewRenderer {
 		const endDate = new Date(year, 11, 31);
 
 		for (const t of tasks) {
-			const d = getTaskDateField(t, dateField as DateFieldType);
+			const d = getTaskDateField(t, dateField);
 			if (!d) continue;
 			if (d < startDate || d > endDate) continue;
 			const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
@@ -154,7 +154,7 @@ export class YearViewRenderer extends BaseViewRenderer {
 		const monthCards = yearGrid.querySelectorAll('.gc-year-view__month-card');
 
 		for (const t of tasks) {
-			const d = getTaskDateField(t, dateField as DateFieldType);
+			const d = getTaskDateField(t, dateField);
 			if (!d) continue;
 			const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
 			countsMap.set(key, (countsMap.get(key) || 0) + 1);

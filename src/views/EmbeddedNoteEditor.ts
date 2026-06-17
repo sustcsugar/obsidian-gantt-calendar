@@ -28,9 +28,12 @@ type ConstructableWorkspaceSplit = new (ws: App['workspace'], dir: 'horizontal' 
  * Obsidian 1.8.7+ 在 createLeafInParent 时会激活新 leaf，需要阻止
  */
 function suppressSetActiveLeaf(app: App): () => void {
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
     const original = app.workspace.setActiveLeaf.bind(app.workspace);
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
     app.workspace.setActiveLeaf = () => {};
     return () => {
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
         app.workspace.setActiveLeaf = original;
     };
 }
@@ -99,8 +102,8 @@ export class EmbeddedNoteEditor {
             ) as InternalWorkspaceSplit;
 
             // 让 split 能找到正确的 rootSplit 和 container
-            this.rootSplit.getRoot = () => this.app.workspace.rootSplit!;
-            this.rootSplit.getContainer = () => this.app.workspace.rootSplit!;
+            this.rootSplit.getRoot = () => this.app.workspace.rootSplit;
+            this.rootSplit.getContainer = () => this.app.workspace.rootSplit;
 
             // 2. 将 split 的 DOM 挂载到我们的容器中
             this.container.empty();

@@ -136,8 +136,8 @@ export function serializeTask(
 	if (!finalDescription || finalDescription.trim() === '') {
 		if (task.content && task.content.trim() !== '') {
 			let fallbackDesc = task.content;
-			fallbackDesc = fallbackDesc.replace(/[🔺⏫🔼🔽⏬]/g, ' ');
-			fallbackDesc = fallbackDesc.replace(/[➕🛫⏳📅❌✅]\s*\d{4}-\d{2}-\d{2}/g, ' ');
+			fallbackDesc = fallbackDesc.replace(/[🔺⏫🔼🔽⏬]/gu, ' ');
+			fallbackDesc = fallbackDesc.replace(/[➕🛫⏳📅❌✅]\s*\d{4}-\d{2}-\d{2}/gu, ' ');
 			fallbackDesc = fallbackDesc.replace(/\[(priority|created|start|scheduled|due|cancelled|completion)::\s*[^\]]+\]/gi, ' ');
 			fallbackDesc = fallbackDesc.replace(/%%.+?%%/g, " ");
 			fallbackDesc = fallbackDesc.replace(/#[一-龥a-zA-Z0-9_]+/g, ' ');

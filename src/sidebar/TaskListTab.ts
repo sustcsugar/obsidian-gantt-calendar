@@ -54,7 +54,7 @@ export class TaskListTab {
 		});
 		searchInput.value = this.searchQuery;
 		searchInput.addEventListener('input', () => {
-			if (this.debounceTimer) clearTimeout(this.debounceTimer);
+			if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
 			this.debounceTimer = window.setTimeout(() => {
 				this.searchQuery = searchInput.value.trim().toLowerCase();
 				this.renderTaskList();
@@ -77,7 +77,7 @@ export class TaskListTab {
 	cleanup(): void {
 		this.destroyCards();
 		if (this.debounceTimer) {
-			clearTimeout(this.debounceTimer);
+			window.clearTimeout(this.debounceTimer);
 			this.debounceTimer = null;
 		}
 	}
@@ -187,10 +187,10 @@ export class TaskListTab {
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
 				dropdown.remove();
-				document.removeEventListener('click', closeHandler);
+				activeDocument.removeEventListener('click', closeHandler);
 			}
 		};
-		setTimeout(() => document.addEventListener('click', closeHandler), 0);
+		window.setTimeout(() => activeDocument.addEventListener('click', closeHandler), 0);
 	}
 
 	private togglePriorityDropdown(container: HTMLElement, anchor: HTMLElement): void {
@@ -238,10 +238,10 @@ export class TaskListTab {
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
 				dropdown.remove();
-				document.removeEventListener('click', closeHandler);
+				activeDocument.removeEventListener('click', closeHandler);
 			}
 		};
-		setTimeout(() => document.addEventListener('click', closeHandler), 0);
+		window.setTimeout(() => activeDocument.addEventListener('click', closeHandler), 0);
 	}
 
 	private toggleSortDropdown(container: HTMLElement, anchor: HTMLElement): void {
@@ -298,10 +298,10 @@ export class TaskListTab {
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
 				dropdown.remove();
-				document.removeEventListener('click', closeHandler);
+				activeDocument.removeEventListener('click', closeHandler);
 			}
 		};
-		setTimeout(() => document.addEventListener('click', closeHandler), 0);
+		window.setTimeout(() => activeDocument.addEventListener('click', closeHandler), 0);
 	}
 
 	private tagExpandedPaths = new Set<string>();
@@ -470,10 +470,10 @@ export class TaskListTab {
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
 				dropdown.remove();
-				document.removeEventListener('click', closeHandler);
+				activeDocument.removeEventListener('click', closeHandler);
 			}
 		};
-		setTimeout(() => document.addEventListener('click', closeHandler), 0);
+		window.setTimeout(() => activeDocument.addEventListener('click', closeHandler), 0);
 	}
 
 	private toggleDateFilterDropdown(container: HTMLElement, anchor: HTMLElement): void {
@@ -518,10 +518,10 @@ export class TaskListTab {
 		const closeHandler = (e: MouseEvent) => {
 			if (!dropdown.contains(e.target as Node)) {
 				dropdown.remove();
-				document.removeEventListener('click', closeHandler);
+				activeDocument.removeEventListener('click', closeHandler);
 			}
 		};
-		setTimeout(() => document.addEventListener('click', closeHandler), 0);
+		window.setTimeout(() => activeDocument.addEventListener('click', closeHandler), 0);
 	}
 
 	private renderTaskList(): void {
@@ -579,7 +579,7 @@ export class TaskListTab {
 				const card = new TaskCardComponent({
 					task,
 					config,
-					container: this.taskListEl!,
+					container: this.taskListEl,
 					app: this.app,
 					plugin: this.plugin,
 					onClick: () => {

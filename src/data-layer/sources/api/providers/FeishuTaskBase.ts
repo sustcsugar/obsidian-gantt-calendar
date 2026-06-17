@@ -182,7 +182,7 @@ export class FeishuTaskBase {
                 return value;
             }
             // 包含特殊字符需要加引号
-            if (/[:{}\[\],\n]/.test(value)) {
+            if (/[\]:{}[,\n]/.test(value)) {
                 return `"${value.replace(/"/g, '\\"')}"`;
             }
             return value;

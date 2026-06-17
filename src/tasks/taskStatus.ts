@@ -20,7 +20,7 @@ export type DefaultTaskStatusType = 'todo' | 'done';
 /**
  * 任务状态类型（包括用户自定义）
  */
-export type TaskStatusType = DefaultTaskStatusType | string;
+export type TaskStatusType = string;
 
 /**
  * 主题模式类型
@@ -395,10 +395,13 @@ export function getStatusColor(
             bg: colors.backgroundColor || (mode === 'dark' ? '#2d333b' : '#FFFFFF'),
             text: colors.textColor || (mode === 'dark' ? '#adbac7' : '#333333'),
         };
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
     } else if (status.backgroundColor && status.textColor) {
         // 旧格式：使用单一颜色（向后兼容）
         return {
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
             bg: status.backgroundColor,
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
             text: status.textColor,
         };
     }
@@ -417,7 +420,7 @@ export function getStatusColor(
  * @returns 当前主题模式 ('light' | 'dark')
  */
 export function getCurrentThemeMode(): ThemeMode {
-    return document.body.hasClass('theme-dark') ? 'dark' : 'light';
+    return activeDocument.body.hasClass('theme-dark') ? 'dark' : 'light';
 }
 
 /**

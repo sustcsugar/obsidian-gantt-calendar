@@ -105,7 +105,7 @@ export class TaskStatusCard {
 		const hiddenInput = swatchWrapper.createEl('input', {
 			type: 'color',
 			cls: cls.hiddenInput,
-		}) as HTMLInputElement;
+		});
 		hiddenInput.value = currentColor;
 
 		const swatch = swatchWrapper.createDiv(cls.swatch);
@@ -144,7 +144,7 @@ export class TaskStatusCard {
 		this.ensureThemeColors(target);
 
 		const colorKey = themeMode === 'dark' ? 'darkColors' : 'lightColors';
-		(target[colorKey] as ThemeColors)[colorType] = color;
+		(target[colorKey])[colorType] = color;
 
 		swatch.style.backgroundColor = color;
 		this.updatePreview();
@@ -173,7 +173,9 @@ export class TaskStatusCard {
 		if (status.lightColors && status.darkColors) {
 			return themeMode === 'dark' ? status.darkColors : status.lightColors;
 		}
+		// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
 		if (status.backgroundColor && status.textColor) {
+			// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
 			return { backgroundColor: status.backgroundColor, textColor: status.textColor };
 		}
 		return null;
@@ -182,8 +184,10 @@ export class TaskStatusCard {
 	private ensureThemeColors(status: TaskStatus): void {
 		if (status.lightColors && status.darkColors) return;
 
+		// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
 		if (status.backgroundColor && status.textColor) {
 			if (!status.lightColors) {
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
 				status.lightColors = { backgroundColor: status.backgroundColor, textColor: status.textColor };
 			}
 			if (!status.darkColors) {

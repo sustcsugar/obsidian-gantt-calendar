@@ -159,7 +159,7 @@ export class AddCustomStatusModal extends Modal {
 		const input = wrapper.createEl('input', {
 			type: 'color',
 			cls: cls.hiddenInput,
-		}) as HTMLInputElement;
+		});
 		input.value = defaultColor;
 
 		const swatch = wrapper.createDiv(cls.swatch);

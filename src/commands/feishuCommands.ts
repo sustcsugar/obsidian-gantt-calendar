@@ -104,7 +104,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 		plugin.setSyncStatus(i18n.t('commands.sync.syncing'));
 		const controller = new AbortController();
 		const progressNotice = new Notice(i18n.t('commands.sync.syncingFeishu'), 0);
-		const stopBtn = progressNotice.noticeEl.createEl('button', { text: i18n.t('commands.sync.stopSync') });
+		const stopBtn = progressNotice.messageEl.createEl('button', { text: i18n.t('commands.sync.stopSync') });
 		stopBtn.style.cssText = 'margin-left:12px;padding:2px 10px;cursor:pointer;';
 		stopBtn.onclick = () => {
 			controller.abort();
@@ -118,19 +118,21 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 			targetFile: syncConfig.feishuSyncTargetFile || 'gantt-calendar-feishu-sync.md',
 			enabledFormats: (plugin.settings.enabledTaskFormats as ('tasks' | 'dataview')[]) || ['tasks', 'dataview'],
 			globalFilter: plugin.settings.globalTaskFilter,
-			pushFilter: syncConfig.pushFilter as any,
+			pushFilter: syncConfig.pushFilter,
 			tasklistGuid: apiConfig.tasklistGuid,
 			creatorOpenId: apiConfig.userOpenId,
 			creatorUserId: apiConfig.userId,
 			abortSignal: controller.signal,
 			onProgress: (msg: string) => {
-				const btnHtml = stopBtn.disabled ? '' : '<button style="margin-left:12px;padding:2px 10px;cursor:pointer;" onclick="this.previousElementSibling?.click()">' + i18n.t('commands.sync.stopSync') + '</button>';
-				progressNotice.noticeEl.innerHTML = '<span>' + msg + '</span>' + btnHtml;
-				const newBtn = progressNotice.noticeEl.querySelector('button');
-				if (newBtn && !controller.signal.aborted) {
-					newBtn.onclick = () => {
+				const container = progressNotice.messageEl;
+				container.empty();
+				container.createEl('span', { text: msg });
+				if (!stopBtn.disabled && !controller.signal.aborted) {
+					const btn = container.createEl('button', { text: i18n.t('commands.sync.stopSync') });
+					btn.setCssStyles({ marginLeft: '12px', padding: '2px 10px', cursor: 'pointer' });
+					btn.onclick = () => {
 						controller.abort();
-						newBtn.remove();
+						btn.remove();
 					};
 				}
 			},
@@ -149,7 +151,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 			if (result.pulled > 0) parts_status.push(result.pulled + ' ' + i18n.t('commands.sync.pulled'));
 			plugin.setSyncStatus(i18n.t('commands.sync.syncSuccess') + (parts_status.length > 0 ? ' ' + parts_status.join(' ') : ''));
 		}
-		setTimeout(() => plugin.clearSyncStatus(), 10000);
+		window.setTimeout(() => plugin.clearSyncStatus(), 10000);
 
 		const parts: string[] = [];
 		if (result.pushed > 0) parts.push(i18n.t('commands.sync.pushed') + ' ' + result.pushed);
@@ -182,6 +184,6 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 		const errorMsg = error instanceof Error ? error.message : String(error);
 		new Notice(i18n.t('commands.sync.syncError', { error: errorMsg }));
 		plugin.setSyncStatus(i18n.t('commands.sync.syncFailed'));
-		setTimeout(() => plugin.clearSyncStatus(), 10000);
+		window.setTimeout(() => plugin.clearSyncStatus(), 10000);
 	}
 }

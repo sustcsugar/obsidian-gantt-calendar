@@ -61,9 +61,9 @@ export class SettingsManager {
 	 * 更新 CSS 变量
 	 */
 	updateCSSVariables(settings: GanttCalendarSettings): void {
-		document.documentElement.style.setProperty('--festival-solar-color', settings.solarFestivalColor);
-		document.documentElement.style.setProperty('--festival-lunar-color', settings.lunarFestivalColor);
-		document.documentElement.style.setProperty('--festival-solar-term-color', settings.solarTermColor);
+		activeDocument.documentElement.style.setProperty('--festival-solar-color', settings.solarFestivalColor);
+		activeDocument.documentElement.style.setProperty('--festival-lunar-color', settings.lunarFestivalColor);
+		activeDocument.documentElement.style.setProperty('--festival-solar-term-color', settings.solarTermColor);
 	}
 
 	/**
@@ -129,8 +129,10 @@ export class SettingsManager {
 
 				// 清理已弃用的属性
 				// @ts-ignore - 迁移代码，有意删除已弃用属性
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
 				delete status.backgroundColor;
 				// @ts-ignore - 迁移代码，有意删除已弃用属性
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
 				delete status.textColor;
 
 				needsSave = true;
@@ -154,8 +156,10 @@ export class SettingsManager {
 			} else if (hasOldColors) {
 				// 即使已有新格式，也清理已弃用的属性
 				// @ts-ignore - 迁移代码，有意删除已弃用属性
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
 				delete status.backgroundColor;
 				// @ts-ignore - 迁移代码，有意删除已弃用属性
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
 				delete status.textColor;
 				needsSave = true;
 			}

@@ -11,6 +11,7 @@
 import { RegularExpressions } from '../../utils/RegularExpressions';
 import { createDate, isValidDate } from '../../dateUtils/timezone';
 import type { MetadataField } from '../../types';
+import { buildTagHierarchy } from '../tags/TagHierarchyBuilder';
 
 // ==================== 描述提取 ====================
 
@@ -439,7 +440,6 @@ export function extractTags(description: string): string[] {
  */
 export function extractTagsAsTree(description: string) {
     // 动态导入以避免循环依赖
-    const { buildTagHierarchy } = require('../tags/TagHierarchyBuilder');
     const tags = extractTags(description);
     return buildTagHierarchy(tags);
 }

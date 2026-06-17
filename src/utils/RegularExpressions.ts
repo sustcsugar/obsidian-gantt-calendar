@@ -259,7 +259,7 @@ export class RegularExpressions {
          * "任务 ⏫" -> 匹配
          * "🔺 重要" -> 匹配
          */
-        anyPriorityRegex: /[🔺⏫🔼🔽⏬]/,
+        anyPriorityRegex: /[🔺⏫🔼🔽⏬]/u,
 
         /**
          * 格式检测正则
@@ -272,7 +272,7 @@ export class RegularExpressions {
          * "- [ ] 任务 🔁 every day" -> 匹配（Tasks 格式）
          * "- [ ] 普通任务" -> 不匹配
          */
-        formatDetectionRegex: /([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?|[🔺⏫🔼🔽⏬]|🔁\s+every/,
+        formatDetectionRegex: /([➕🛫⏳📅❌✅])\s*\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?|[🔺⏫🔼🔽⏬]|🔁\s+every/u,
     } as const;
 
     // ==================== Dataview 格式正则表达式 ====================
@@ -640,7 +640,7 @@ export class RegularExpressions {
          * "访问 http://example.com 查看" -> 匹配，捕获组1: "http://example.com"
          * "<a href=\"https://example.com\">" -> 不匹配（在引号中）
          */
-        urlLinkRegex: /(https?:\/\/[^\s<>"\)]+)/g,
+        urlLinkRegex: /(https?:\/\/[^\s<>")]+)/g,
 
         /**
          * 综合链接检测正则
@@ -651,6 +651,6 @@ export class RegularExpressions {
          * "访问 [[首页]] 或 https://example.com" -> 匹配（包含链接）
          * "普通文本内容" -> 不匹配
          */
-        anyLinkRegex: /(\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s<>"\)]+)/,
+        anyLinkRegex: /(\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s<>")]+)/,
     } as const;
 }

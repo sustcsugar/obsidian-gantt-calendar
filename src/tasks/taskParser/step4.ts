@@ -18,6 +18,7 @@ import {
 } from '../taskSerializerSymbols';
 import { TaskStatusType, parseStatusFromCheckbox } from '../taskStatus';
 import { createDate } from '../../dateUtils/timezone';
+import { TASKS_FORMAT_CONFIG, DATAVIEW_FORMAT_CONFIG } from '../taskSerializerSymbols';
 
 // ==================== 类型定义 ====================
 
@@ -229,7 +230,6 @@ export function parseTasksPriority(content: string): PriorityLevel | undefined {
 export function parseTasksDates(content: string): { dates: ParsedDates; precisions: ParsedDatePrecisions } {
     const dates: ParsedDates = {};
     const precisions: ParsedDatePrecisions = {};
-    const { TASKS_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     const config = TASKS_FORMAT_CONFIG as { regex: { dates: Record<string, RegExp> } };
 
     for (const [field, regex] of Object.entries(config.regex.dates)) {
@@ -331,7 +331,6 @@ export function parseDataviewPriority(content: string): PriorityLevel | undefine
 export function parseDataviewDates(content: string): { dates: ParsedDates; precisions: ParsedDatePrecisions } {
     const dates: ParsedDates = {};
     const precisions: ParsedDatePrecisions = {};
-    const { DATAVIEW_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     const config = DATAVIEW_FORMAT_CONFIG as { regex: { dates: Record<string, RegExp> } };
 
     for (const [field, regex] of Object.entries(config.regex.dates)) {
@@ -450,7 +449,6 @@ export function parseDateField(
     field: DateFieldType,
     format: TaskFormatType
 ): Date | undefined {
-    const { TASKS_FORMAT_CONFIG, DATAVIEW_FORMAT_CONFIG } = require('../taskSerializerSymbols');
 
     const regex =
         format === 'tasks'
@@ -488,8 +486,8 @@ export function parseDateField(
  * ```
  */
 export function parseTasksRepeat(content: string): string | undefined {
-    const { TASKS_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     const regex = TASKS_FORMAT_CONFIG.regex.repeat;
+    if (!regex) return undefined;
     regex.lastIndex = 0;
     const match = regex.exec(content);
     return match?.[1]?.trim();
@@ -513,8 +511,8 @@ export function parseTasksRepeat(content: string): string | undefined {
  * ```
  */
 export function parseDataviewRepeat(content: string): string | undefined {
-    const { DATAVIEW_FORMAT_CONFIG } = require('../taskSerializerSymbols');
     const regex = DATAVIEW_FORMAT_CONFIG.regex.repeat;
+    if (!regex) return undefined;
     regex.lastIndex = 0;
     const match = regex.exec(content);
     return match?.[1]?.trim();

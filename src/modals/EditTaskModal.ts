@@ -13,6 +13,8 @@ import { updateTaskProperties } from '../tasks/taskUpdater';
 import { Logger } from '../utils/logger';
 import { BaseTaskModal, type PriorityOption, type RepeatConfig } from './BaseTaskModal';
 import { i18n } from '../i18n/i18n';
+import { TagSelector } from '../components/TagSelector';
+import { EditTaskModalClasses } from '../utils/bem';
 
 export function openEditTaskModal(
 	app: App,
@@ -80,7 +82,6 @@ class EditTaskModal extends BaseTaskModal {
 			return;
 		}
 
-		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
 		const section = container.createDiv(EditTaskModalClasses.elements.section);
 
 		const descContainer = section.createDiv(EditTaskModalClasses.elements.descContainer);
@@ -189,7 +190,6 @@ class EditTaskModal extends BaseTaskModal {
 	 * 重写 renderPrioritySection 以跟踪优先级变化
 	 */
 	protected renderPrioritySection(container: HTMLElement): void {
-		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
 		const section = container.createDiv(EditTaskModalClasses.elements.section);
 
 		const priorityContainer = section.createDiv(EditTaskModalClasses.elements.priorityContainer);
@@ -244,8 +244,6 @@ class EditTaskModal extends BaseTaskModal {
 	 * 重写 renderTagsSection 以跟踪标签变化
 	 */
 	protected renderTagsSection(container: HTMLElement): void {
-		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
-		const { TagSelector } = require('../components/TagSelector') as typeof import('../components/TagSelector');
 		const section = container.createDiv(EditTaskModalClasses.elements.section);
 		const tagsContainer = section.createDiv(EditTaskModalClasses.elements.tagsSection);
 
@@ -265,7 +263,6 @@ class EditTaskModal extends BaseTaskModal {
 	 * 重写 renderRepeatSection 以跟踪 repeat 变化
 	 */
 	protected renderRepeatSection(container: HTMLElement): void {
-		const { EditTaskModalClasses } = require('../utils/bem') as typeof import('../utils/bem');
 		const section = container.createDiv(EditTaskModalClasses.elements.section);
 
 		const repeatContainer = section.createDiv(EditTaskModalClasses.elements.repeatSection);
@@ -476,7 +473,7 @@ class EditTaskModal extends BaseTaskModal {
 		previewBox.style.alignItems = 'center';
 
 		const previewText = previewBox.createEl('span', {
-			text: 'no repeat',
+			text: 'No repeat',
 			cls: EditTaskModalClasses.elements.repeatPreviewText
 		});
 
@@ -544,7 +541,7 @@ class EditTaskModal extends BaseTaskModal {
 			// 不重复
 			if (!freqValue) {
 				this.repeat = null;
-				previewText.textContent = 'no repeat';
+				previewText.textContent = 'No repeat';
 				manualInput.style.display = 'none';
 				weeklyDaysContainer.style.display = 'none';
 				monthlyDayContainer.style.display = 'none';
@@ -566,7 +563,7 @@ class EditTaskModal extends BaseTaskModal {
 					}
 				} else {
 					this.repeat = null;
-					previewText.textContent = 'no repeat';
+					previewText.textContent = 'No repeat';
 				}
 				weeklyDaysContainer.style.display = 'none';
 				monthlyDayContainer.style.display = 'none';
@@ -674,7 +671,7 @@ class EditTaskModal extends BaseTaskModal {
 			});
 
 			this.repeat = null;
-			previewText.textContent = 'no repeat';
+			previewText.textContent = 'No repeat';
 			errorMsg.style.display = 'none';
 				repeatSummary.textContent = i18n.t('common.recurrence.none');
 				clearBtn.style.display = 'none';

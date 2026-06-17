@@ -1,8 +1,8 @@
 {
 	"id": "gantt-calendar",
 	"name": "Gantt Calendar",
-	"version": "1.5.19",
-	"minAppVersion": "1.5.0",
+	"version": "1.5.20",
+	"minAppVersion": "1.11.0",
 	"description": "A powerful visual task management plugin. Visualize and manage tasks created by the Tasks plugin, supporting both emoji and Dataview task formats. Support Feishu Task syncing. Support Gantt chart and calendar views.",
 	"author": "Sugar",
 	"authorUrl": "https://github.com/sustcsugar",

@@ -222,7 +222,7 @@ export class ConflictResolver {
                     }
                     break;
 
-                case 'newest':
+                case 'newest': {
                     // 比较修改时间
                     const localTime = local.lastModified?.getTime() || 0;
                     const remoteTime = remote.lastModified?.getTime() || 0;
@@ -231,6 +231,7 @@ export class ConflictResolver {
                         setTaskMergeableField(merged, rule.field as MergeableTaskField, remoteVal);
                     }
                     break;
+                }
             }
         }
 

@@ -111,7 +111,7 @@ export class SyncManagerBridge {
 	 */
 	private stopAutoSync(): void {
 		if (this.autoSyncTimer) {
-			clearInterval(this.autoSyncTimer);
+			window.clearInterval(this.autoSyncTimer);
 			this.autoSyncTimer = undefined;
 			Logger.info('SyncManagerBridge', 'Auto sync stopped');
 		}

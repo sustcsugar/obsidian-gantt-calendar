@@ -266,7 +266,7 @@ export abstract class APIDataSource implements IDataSource {
             tags: dto.tags,
             dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
             startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-            status: dto.status as any,
+            status: dto.status,
             sourceId: dto.id,
         };
     }
@@ -440,7 +440,7 @@ export abstract class APIDataSource implements IDataSource {
      */
     protected stopPolling(): void {
         if (this.pollTimer) {
-            clearTimeout(this.pollTimer);
+            window.clearTimeout(this.pollTimer);
             this.pollTimer = undefined;
         }
     }

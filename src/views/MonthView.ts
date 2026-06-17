@@ -195,7 +195,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 	 * 增量刷新：只重新加载任务内容，不重建DOM
 	 */
 	public refreshTasks(): void {
-		const container = document.querySelector('.gc-view.gc-view--month') as HTMLElement;
+		const container = activeDocument.querySelector('.gc-view.gc-view--month') as HTMLElement;
 		if (!container) return;
 
 		// 获取所有日期格子的任务容器
@@ -233,7 +233,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 			// 筛选当天真实任务
 			let currentDayTasks = tasks.filter(task => {
-				const dateValue = getTaskDateField(task, dateField as DateFieldType);
+				const dateValue = getTaskDateField(task, dateField);
 				if (!dateValue) return false;
 
 				const taskDate = new Date(dateValue);
@@ -247,7 +247,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			let virtualForDay: GCTask[] = [];
 			if (precomputedVirtualInstances) {
 				virtualForDay = precomputedVirtualInstances.filter(task => {
-					const dateValue = getTaskDateField(task, dateField as DateFieldType);
+					const dateValue = getTaskDateField(task, dateField);
 					if (!dateValue) return false;
 					const taskDate = new Date(dateValue);
 					if (isNaN(taskDate.getTime())) return false;
