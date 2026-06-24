@@ -62,7 +62,7 @@ export function registerTaskContextMenu(
 				.setTitle(i18n.t('contextMenu.createNote'))
 				.setIcon('file-plus')
 				.onClick(() => {
-					createNoteFromTask(app, task, defaultNotePath, enabledFormats);
+					void createNoteFromTask(app, task, defaultNotePath, enabledFormats);
 				});
 		});
 
@@ -72,7 +72,7 @@ export function registerTaskContextMenu(
 				.setTitle(i18n.t('contextMenu.createNoteAlias'))
 				.setIcon('file-plus')
 				.onClick(() => {
-					createNoteFromTaskAlias(app, task, defaultNotePath, enabledFormats);
+					void createNoteFromTaskAlias(app, task, defaultNotePath, enabledFormats);
 				});
 		});
 
@@ -92,7 +92,7 @@ export function registerTaskContextMenu(
 		priorities.forEach(p => {
 			menu.addItem((item) => {
 				item.setTitle(`${p.icon} ${p.label}`).onClick(() => {
-					setTaskPriority(app, task, p.value, enabledFormats, onRefresh);
+					void setTaskPriority(app, task, p.value, enabledFormats, onRefresh);
 				});
 			});
 		});
@@ -103,12 +103,12 @@ export function registerTaskContextMenu(
 		// 设置任务状态
 		menu.addItem((item) => {
 			item.setTitle(i18n.t('contextMenu.statusImportant')).onClick(() => {
-				setTaskStatus(app, task, 'important', enabledFormats, onRefresh);
+				void setTaskStatus(app, task, 'important', enabledFormats, onRefresh);
 			});
 		});
 		menu.addItem((item) => {
 			item.setTitle(i18n.t('contextMenu.statusQuestion')).onClick(() => {
-				setTaskStatus(app, task, 'question', enabledFormats, onRefresh);
+				void setTaskStatus(app, task, 'question', enabledFormats, onRefresh);
 			});
 		});
 
@@ -131,7 +131,7 @@ export function registerTaskContextMenu(
 		postponeOptions.forEach(option => {
 			menu.addItem((item) => {
 				item.setTitle(option.label).setIcon('calendar-clock').onClick(() => {
-					postponeTask(app, task, option.days, enabledFormats, onRefresh, false);
+					void postponeTask(app, task, option.days, enabledFormats, onRefresh, false);
 				});
 			});
 		});
@@ -139,7 +139,7 @@ export function registerTaskContextMenu(
 		setDueDateOptions.forEach(option => {
 			menu.addItem((item) => {
 				item.setTitle(option.label).setIcon('calendar-check').onClick(() => {
-					postponeTask(app, task, option.days, enabledFormats, onRefresh, true);
+					void postponeTask(app, task, option.days, enabledFormats, onRefresh, true);
 				});
 			});
 		});
@@ -155,9 +155,9 @@ export function registerTaskContextMenu(
 				.setIcon(isCancelled ? 'rotate-ccw' : 'x')
 				.onClick(() => {
 					if (isCancelled) {
-						restoreTask(app, task, enabledFormats, onRefresh);
+						void restoreTask(app, task, enabledFormats, onRefresh);
 					} else {
-						cancelTask(app, task, enabledFormats, onRefresh);
+						void cancelTask(app, task, enabledFormats, onRefresh);
 					}
 				});
 		});
@@ -168,7 +168,7 @@ export function registerTaskContextMenu(
 				.setTitle(i18n.t('contextMenu.deleteTask'))
 				.setIcon('trash')
 				.onClick(() => {
-					deleteTask(app, task, onRefresh);
+					void deleteTask(app, task, onRefresh);
 				});
 		});
 

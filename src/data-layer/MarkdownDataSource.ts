@@ -118,7 +118,7 @@ export class MarkdownDataSource implements IDataSource {
 			return;
 		}
 
-		this.changeHandler({
+		void this.changeHandler({
 			sourceId: this.sourceId,
 			created: allTasks,
 			updated: [],
@@ -224,7 +224,7 @@ export class MarkdownDataSource implements IDataSource {
 						updated: changes.updated.length,
 						deleted: changes.deleted.length
 					});
-					this.changeHandler(changes);
+					void this.changeHandler(changes);
 				} else {
 					Logger.debug('MarkdownDataSource', `No actual changes detected for ${filePath}`);
 				}
@@ -441,7 +441,7 @@ export class MarkdownDataSource implements IDataSource {
 					if (parseResult && this.changeHandler) {
 						// 新文件的所有任务都是新增的
 						Logger.debug('MarkdownDataSource', `New file created with ${parseResult.tasks.length} tasks: ${file.path}`);
-						this.changeHandler({
+						void this.changeHandler({
 							sourceId: this.sourceId,
 							created: parseResult.tasks,
 							updated: [],
@@ -465,7 +465,7 @@ export class MarkdownDataSource implements IDataSource {
 
 				if (this.changeHandler && oldCache) {
 					// 发送文件路径，让仓库清理该文件的所有任务
-					this.changeHandler({
+					void this.changeHandler({
 						sourceId: this.sourceId,
 						created: [],
 						updated: [],
@@ -490,7 +490,7 @@ export class MarkdownDataSource implements IDataSource {
 
 					// 发布变化事件（任务ID已变化，需要通知）
 					if (this.changeHandler) {
-						this.changeHandler({
+						void this.changeHandler({
 							sourceId: this.sourceId,
 							created: [],
 							updated: [],

@@ -166,7 +166,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 				// 任务列表
 				const tasksContainer = dayEl.createDiv(MonthViewClasses.elements.tasks);
-				this.loadMonthViewTasks(tasksContainer, day.date, allVirtualInstances);
+				void this.loadMonthViewTasks(tasksContainer, day.date, allVirtualInstances);
 
 				// 设置拖放目标
 				this.setupDragDropForDayCell(dayEl, day.date);
@@ -205,7 +205,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			const dateStr = dayCell?.dataset.date;
 			if (dateStr) {
 				const date = createDate(dateStr);
-				this.loadMonthViewTasks(tasksContainer as HTMLElement, date);
+				void this.loadMonthViewTasks(tasksContainer as HTMLElement, date);
 			}
 		});
 	}

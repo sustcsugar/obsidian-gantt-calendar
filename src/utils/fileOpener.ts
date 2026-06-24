@@ -51,5 +51,5 @@ export async function openFileInExistingLeaf(app: App, filePath: string, lineNum
 		}
 	}
 
-	workspace.revealLeaf(leaf);
+	void workspace.revealLeaf(leaf);
 }

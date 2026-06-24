@@ -58,7 +58,7 @@ export class HeatmapPalettePicker {
 			chip.addEventListener('keydown', (e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					select();
+					void select();
 				}
 			});
 		});

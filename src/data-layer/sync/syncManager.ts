@@ -408,7 +408,7 @@ export class SyncManager {
                 window.clearTimeout(this.syncTimer);
             }
             this.syncTimer = window.setTimeout(() => {
-                this.sync();
+                void this.sync();
             }, 5000); // 5秒后同步
         }
     }

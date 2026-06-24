@@ -52,6 +52,8 @@ export const BLOCKS = {
 	CREATE_TASK_BUTTON: 'create-task-btn',
 	/** 编辑任务弹窗 */
 	EDIT_TASK_MODAL: 'edit-task-modal',
+	/** 确认弹窗 */
+	CONFIRM_MODAL: 'confirm-modal',
 
 	/** 嵌入式编辑器 */
 	EMBEDDED_EDITOR: 'embedded-editor',
@@ -935,6 +937,7 @@ export const SyncResultModalClasses = {
 		detailDesc: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-desc'),
 		detailError: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-error'),
 		footer: bem(BLOCKS.SYNC_RESULT_MODAL, 'footer'),
+		footerButton: bem(BLOCKS.SYNC_RESULT_MODAL, 'footer-button'),
 	},
 
 	modifiers: {
@@ -942,6 +945,8 @@ export const SyncResultModalClasses = {
 		failed: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'failed'),
 		push: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'push'),
 		pull: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-item', 'pull'),
+		summaryMuted: bem(BLOCKS.SYNC_RESULT_MODAL, 'summary', 'muted'),
+		detailLabelConflict: bem(BLOCKS.SYNC_RESULT_MODAL, 'detail-label', 'conflict'),
 	},
 };
 

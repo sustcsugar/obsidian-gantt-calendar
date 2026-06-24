@@ -223,7 +223,7 @@ export class EditCustomStatusModal extends Modal {
 			},
 		};
 
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 		this.plugin.refreshCalendarViews();
 		this.close();
 

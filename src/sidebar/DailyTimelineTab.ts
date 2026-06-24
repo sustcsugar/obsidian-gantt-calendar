@@ -316,7 +316,7 @@ export class DailyTimelineTab {
 				app: this.app,
 				plugin: this.plugin,
 				onClick: () => {
-					openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
+					void openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 				},
 				onRefresh: () => {
 					// 刷新通过缓存更新事件自动触发

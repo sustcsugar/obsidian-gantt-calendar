@@ -396,7 +396,7 @@ export abstract class APIDataSource implements IDataSource {
      */
     protected notifyChange(changes: any): void {
         if (this.changeHandler) {
-            this.changeHandler({
+            void this.changeHandler({
                 sourceId: this.sourceId,
                 ...changes,
             });

@@ -950,7 +950,7 @@ export class SvgGanttRenderer {
 		if (!task.filePath || !task.lineNumber || !this.app) return;
 
 		// 使用 openFileInExistingLeaf 跳转到文件
-		openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
+		void openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 	}
 
 	/**

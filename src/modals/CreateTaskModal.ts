@@ -99,7 +99,7 @@ export class CreateTaskModal extends BaseTaskModal {
 		this.descriptionInput.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') {
 				e.preventDefault();
-				this.saveTask();
+				void this.saveTask();
 			}
 		});
 	}

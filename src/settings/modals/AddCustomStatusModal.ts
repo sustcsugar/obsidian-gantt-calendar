@@ -222,7 +222,7 @@ export class AddCustomStatusModal extends Modal {
 		};
 
 		this.plugin.settings.taskStatuses.push(newStatus);
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 		this.plugin.refreshCalendarViews();
 		this.close();
 

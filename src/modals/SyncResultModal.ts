@@ -45,7 +45,7 @@ export class SyncResultModal extends Modal {
 		const activeStats = stats.filter(s => s.hasData);
 		if (activeStats.length === 0) {
 			summaryEl.textContent = i18n.t('modals.syncResult.noChange');
-			summaryEl.style.color = 'var(--text-muted)';
+			summaryEl.addClass(SyncResultModalClasses.modifiers.summaryMuted);
 		} else {
 			for (const stat of activeStats) {
 				const item = summaryEl.createSpan(SyncResultModalClasses.elements.summaryItem);
@@ -90,8 +90,7 @@ export class SyncResultModal extends Modal {
 
 				const conflictBadge = item.createSpan(SyncResultModalClasses.elements.detailLabel);
 				conflictBadge.textContent = i18n.t('modals.syncResult.conflict');
-				conflictBadge.style.background = 'var(--background-modifier-warning)';
-				conflictBadge.style.color = 'var(--text-warning)';
+				conflictBadge.addClass(SyncResultModalClasses.modifiers.detailLabelConflict);
 			} else {
 				const labelEl = item.createSpan(SyncResultModalClasses.elements.detailLabel);
 				labelEl.textContent = detail.label;
@@ -113,13 +112,7 @@ export class SyncResultModal extends Modal {
 		const footer = container.createDiv(SyncResultModalClasses.elements.footer);
 
 		const confirmBtn = footer.createEl('button', { text: i18n.t('common.ok') });
-		confirmBtn.style.borderRadius = '9999px';
-		confirmBtn.style.padding = '8px 24px';
-		confirmBtn.style.background = 'var(--interactive-accent)';
-		confirmBtn.style.color = 'var(--text-on-accent)';
-		confirmBtn.style.border = 'none';
-		confirmBtn.style.cursor = 'pointer';
-		confirmBtn.style.fontSize = 'var(--font-ui-small)';
+		confirmBtn.addClass(SyncResultModalClasses.elements.footerButton);
 		confirmBtn.addEventListener('click', () => this.close());
 	}
 }

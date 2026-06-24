@@ -463,7 +463,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 						.setIcon('copy')
 						.setTooltip(i18n.t('settings.sync.oauth.copyTokenTooltip'))
 						.onClick(() => {
-							navigator.clipboard.writeText(syncConfig.api?.accessToken ?? '');
+							void navigator.clipboard.writeText(syncConfig.api?.accessToken ?? '');
 							new Notice(i18n.t('settings.sync.oauth.copiedNotice'));
 						}))
 			);

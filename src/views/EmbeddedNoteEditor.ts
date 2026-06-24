@@ -216,7 +216,7 @@ export class EmbeddedNoteEditor {
         const state = this.leaf.getViewState();
         if (state?.state) {
             state.state.mode = 'source';
-            this.leaf.setViewState(state);
+            void this.leaf.setViewState(state);
         }
     }
 
@@ -228,7 +228,7 @@ export class EmbeddedNoteEditor {
         const state = this.leaf.getViewState();
         if (state?.state) {
             state.state.mode = 'preview';
-            this.leaf.setViewState(state);
+            void this.leaf.setViewState(state);
         }
     }
 
@@ -236,7 +236,7 @@ export class EmbeddedNoteEditor {
      * 显示空状态消息
      */
     private showEmpty(message: string): void {
-        this.close();
+        void this.close();
         this.container.empty();
         this.container.createEl('div', { text: message, cls: 'gantt-task-empty' });
     }

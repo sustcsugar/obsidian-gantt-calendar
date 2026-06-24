@@ -68,7 +68,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			tasksTitle.addClass(DayViewClasses.elements.title);
 			const tasksList = tasksSection.createDiv(DayViewClasses.elements.taskList);
 
-			this.loadDayViewTasks(tasksList, new Date(currentDate));
+			void this.loadDayViewTasks(tasksList, new Date(currentDate));
 		}
 	}
 
@@ -82,7 +82,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 		// 获取任务列表容器
 		const tasksList = container.querySelector('.gc-day-view__task-list');
 		if (tasksList) {
-			this.loadDayViewTasks(tasksList as HTMLElement, this.currentDate);
+			void this.loadDayViewTasks(tasksList as HTMLElement, this.currentDate);
 		}
 	}
 
@@ -109,8 +109,8 @@ export class DayViewRenderer extends BaseViewRenderer {
 		// 设置可调整大小的分割线
 		this.setupDayViewDivider(divider, tasksSection, notesSection);
 
-		this.loadDayViewTasks(tasksList, new Date(currentDate));
-		this.loadDayViewNotes(notesContent, new Date(currentDate));
+		void this.loadDayViewTasks(tasksList, new Date(currentDate));
+		void this.loadDayViewNotes(notesContent, new Date(currentDate));
 	}
 
 	/**
@@ -135,8 +135,8 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 		this.setupDayViewDividerVertical(divider, tasksSection, notesSection);
 
-		this.loadDayViewTasks(tasksList, new Date(currentDate));
-		this.loadDayViewNotes(notesContent, new Date(currentDate));
+		void this.loadDayViewTasks(tasksList, new Date(currentDate));
+		void this.loadDayViewNotes(notesContent, new Date(currentDate));
 	}
 
 	/**
@@ -271,7 +271,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			plugin: this.plugin,
 			targetDate,
 			onClick: (task) => {
-				this.loadDayViewTasks(
+				void this.loadDayViewTasks(
 					listContainer.closest('.gc-day-view__timeline')?.parentElement as HTMLElement
 						|| listContainer,
 					targetDate
@@ -311,7 +311,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			plugin: this.plugin,
 			onClick: (task) => {
 				// 刷新任务列表
-				this.loadDayViewTasks(listContainer, targetDate);
+				void this.loadDayViewTasks(listContainer, targetDate);
 			},
 		}).render();
 	}
@@ -401,7 +401,7 @@ export class DayViewRenderer extends BaseViewRenderer {
 			this.embeddedEditor = new EmbeddedNoteEditor(this.app, contentContainer);
 			// 注册清理回调，视图切换时自动关闭
 			this.registerDomCleanup(() => {
-				this.embeddedEditor?.close();
+				void this.embeddedEditor?.close();
 				this.embeddedEditor = null;
 			});
 		}

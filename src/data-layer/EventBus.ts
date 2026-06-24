@@ -49,7 +49,7 @@ export class EventBus {
 		if (handlers) {
 			handlers.forEach(handler => {
 				try {
-					handler(data);
+					void handler(data);
 				} catch (error) {
 					Logger.error('EventBus', `Error in ${eventName} handler:`, error);
 				}
@@ -64,7 +64,7 @@ export class EventBus {
 	 */
 	once(eventName: string, handler: EventHandler): void {
 		const wrappedHandler = (data?: any) => {
-			handler(data);
+			void handler(data);
 			this.off(eventName, wrappedHandler);
 		};
 		this.on(eventName, wrappedHandler);

@@ -106,7 +106,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		const taskRoot = container.createDiv(withModifiers(ViewClasses.block, ViewClasses.modifiers.task));
 
 		this.taskListContainer = taskRoot;
-		this.loadTaskList(taskRoot);
+		void this.loadTaskList(taskRoot);
 	}
 
 	/**
@@ -122,7 +122,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 	 */
 	public refreshTaskList(): void {
 		if (this.taskListContainer) {
-			this.loadTaskList(this.taskListContainer);
+			void this.loadTaskList(this.taskListContainer);
 		}
 	}
 
@@ -205,7 +205,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 			plugin: this.plugin,
 			onClick: (task) => {
 				// 刷新任务列表
-				this.loadTaskList(listContainer);
+				void this.loadTaskList(listContainer);
 			},
 		}).render();
 	}

@@ -258,7 +258,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				dayTasksColumn.addClass(W.modifiers.tasksColumnToday);
 			}
 
-			this.loadWeekViewTasks(dayTasksColumn, day.date, allVirtualInstances);
+			void this.loadWeekViewTasks(dayTasksColumn, day.date, allVirtualInstances);
 			this.setupDragDropForColumn(dayTasksColumn, day.date);
 		});
 	}
@@ -482,7 +482,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 				const dateStr = (column as HTMLElement).dataset.date;
 				if (dateStr) {
 					const date = createDate(dateStr);
-					this.loadWeekViewTasks(column as HTMLElement, date);
+					void this.loadWeekViewTasks(column as HTMLElement, date);
 				}
 			});
 		}

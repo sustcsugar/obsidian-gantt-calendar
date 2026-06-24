@@ -583,7 +583,7 @@ export class TaskListTab {
 					app: this.app,
 					plugin: this.plugin,
 					onClick: () => {
-						openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
+						void openFileInExistingLeaf(this.app, task.filePath, task.lineNumber);
 					},
 					onRefresh: () => this.renderTaskList(),
 				});

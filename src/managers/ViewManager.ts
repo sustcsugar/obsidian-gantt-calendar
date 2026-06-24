@@ -32,7 +32,7 @@ export class ViewManager {
 			});
 		}
 
-		this.app.workspace.revealLeaf(leaf);
+		void this.app.workspace.revealLeaf(leaf);
 
 		// 同时打开侧边栏视图
 		await activateSidebarView(this.app);
@@ -86,6 +86,6 @@ export async function activateSidebarView(app: App): Promise<void> {
 	}
 
 	if (leaf) {
-		app.workspace.revealLeaf(leaf);
+		void app.workspace.revealLeaf(leaf);
 	}
 }

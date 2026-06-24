@@ -77,7 +77,7 @@ export default class GanttCalendarPlugin extends Plugin {
 
 		// 启动时自动打开侧边栏
 		this.app.workspace.onLayoutReady(() => {
-			activateSidebarView(this.app);
+			void activateSidebarView(this.app);
 		});
 	}
 
@@ -190,7 +190,7 @@ export default class GanttCalendarPlugin extends Plugin {
 
 	private registerUIElements(): void {
 		const ribbonIconEl = this.addRibbonIcon('goal', '\u7518\u7279\u65E5\u5386', () => {
-			this.activateView();
+			void this.activateView();
 		});
 		ribbonIconEl.addClass('gantt-calendar-ribbon');
 

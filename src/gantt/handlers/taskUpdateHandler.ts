@@ -137,7 +137,7 @@ export class TaskUpdateHandler {
 		}
 
 		// 使用 openFileInExistingLeaf 避免重复打开标签页
-		openFileInExistingLeaf(this.app, ganttTask.filePath, ganttTask.lineNumber);
+		void openFileInExistingLeaf(this.app, ganttTask.filePath, ganttTask.lineNumber);
 	}
 
 	/**

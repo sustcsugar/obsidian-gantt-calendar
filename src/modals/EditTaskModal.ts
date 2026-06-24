@@ -103,7 +103,7 @@ class EditTaskModal extends BaseTaskModal {
 		textArea.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') {
 				e.preventDefault();
-				this.saveTask();
+				void this.saveTask();
 			}
 		});
 

@@ -229,7 +229,7 @@ export class GanttViewRenderer extends BaseViewRenderer {
 		const root = container.createDiv('gc-view gc-view--gantt');
 
 		// 加载并渲染任务
-		this.loadAndRenderGantt(root);
+		void this.loadAndRenderGantt(root);
 	}
 
 	/**
