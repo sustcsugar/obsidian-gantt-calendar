@@ -4,7 +4,7 @@
  */
 
 import { sortTasks, getSortDisplayText, updateSortState, SORT_OPTIONS } from '../src/tasks/taskSorter';
-import type { GCTask, SortState } from '../src/types';
+import type { GCTask, SortState, SortField } from '../src/types';
 
 function makeTask(overrides: Partial<GCTask> & { description: string }): GCTask {
 	return {
@@ -118,7 +118,7 @@ describe('任务排序', () => {
 		});
 
 		it('SR-03b: 未知字段显示默认图标', () => {
-			const text = getSortDisplayText({ field: 'unknown' as any, order: 'asc' });
+			const text = getSortDisplayText({ field: 'unknown' as SortField, order: 'asc' });
 			expect(text).toBe('📊');
 		});
 	});

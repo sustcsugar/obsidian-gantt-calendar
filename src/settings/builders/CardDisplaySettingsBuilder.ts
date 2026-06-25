@@ -85,11 +85,11 @@ export class CardDisplaySettingsBuilder extends BaseBuilder {
 		chip.setAttribute('tabindex', '0');
 		if (active) chip.addClass(cls.modifiers.chipActive);
 
-		chip.addEventListener('click', async () => {
+		chip.addEventListener('click', () => {
 			const next = !chip.hasClass(cls.modifiers.chipActive);
 			chip.toggleClass(cls.modifiers.chipActive, next);
 			chip.setAttribute('aria-checked', String(next));
-			await onChange(next);
+			void onChange(next);
 		});
 		chip.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' || e.key === ' ') {

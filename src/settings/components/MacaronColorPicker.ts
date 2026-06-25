@@ -1,4 +1,4 @@
-import { SettingsStatusCardClasses } from '../../utils/bem';
+import { SettingsStatusCardClasses, setCssProps } from '../../utils/bem';
 import { rgbToHex } from '../utils/color';
 import { MACARON_COLORS } from '../../tasks/taskStatus';
 
@@ -31,33 +31,34 @@ export class MacaronColorPicker {
 		const rows = this.config.rows || 1;
 		const columns = this.config.columns || Math.ceil(colors.length / rows);
 
-		grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+		setCssProps(grid, { gridTemplateColumns: `repeat(${columns}, 1fr)` });
 
 		colors.forEach(color => {
 			const swatch = grid.createDiv(cls.macaronSwatch);
-			swatch.style.backgroundColor = color;
+			setCssProps(swatch, { backgroundColor: color });
 			if (color === this.config.currentColor) {
-				swatch.style.outline = `2px solid var(--interactive-accent)`;
-				swatch.style.outlineOffset = '1px';
+				setCssProps(swatch, { outline: '2px solid var(--interactive-accent)', outlineOffset: '1px' });
 			}
-			swatch.addEventListener('click', async () => {
-				await this.config.onColorChange(color);
-				this.updateDisplay(color);
+			swatch.addEventListener('click', () => {
+				void (async () => {
+					await this.config.onColorChange(color);
+					this.updateDisplay(color);
+				})();
 			});
 		});
 	}
 
 	private updateDisplay(selectedColor: string): void {
 		const swatches = this.config.container.querySelectorAll(`.${SettingsStatusCardClasses.elements.macaronSwatch}`);
-		swatches.forEach(swatch => {
-			const bgColor = (swatch as HTMLElement).style.backgroundColor;
+		swatches.forEach(swatchEl => {
+			const swatch = swatchEl as HTMLElement;
+			const bgColor = swatch.style.backgroundColor;
 			const isSelected = bgColor === selectedColor || rgbToHex(bgColor) === selectedColor;
 
 			if (isSelected) {
-				(swatch as HTMLElement).style.outline = '2px solid var(--interactive-accent)';
-				(swatch as HTMLElement).style.outlineOffset = '1px';
+				setCssProps(swatch, { outline: '2px solid var(--interactive-accent)', outlineOffset: '1px' });
 			} else {
-				(swatch as HTMLElement).style.outline = 'none';
+				setCssProps(swatch, { outline: 'none' });
 			}
 		});
 	}

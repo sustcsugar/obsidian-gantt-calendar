@@ -3,7 +3,7 @@
  * @module tasks/taskSorter
  */
 
-import type { GCTask, SortField, SortOrder, SortState } from '../types';
+import type { GCTask, SortField, SortState } from '../types';
 
 /**
  * 排序选项配置

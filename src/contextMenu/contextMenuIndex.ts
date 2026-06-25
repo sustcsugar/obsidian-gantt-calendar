@@ -3,7 +3,7 @@
  * @module contextMenu/contextMenuIndex
  */
 
-import { App, Menu, setIcon } from 'obsidian';
+import { App, Menu } from 'obsidian';
 import type { GCTask } from '../types';
 import { createNoteFromTask } from './commands/createNoteFromTask';
 import { createNoteFromTaskAlias } from './commands/createNoteFromTaskAlias';

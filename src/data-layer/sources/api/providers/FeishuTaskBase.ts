@@ -4,7 +4,7 @@
  * 负责生成 Obsidian Base 配置文件，用于展示飞书任务
  */
 
-import { TFile } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import { Logger } from '../../../../utils/logger';
 
 /** Base配置选项 */
@@ -25,7 +25,7 @@ export class FeishuTaskBase {
      * @returns YAML内容
      */
     static generateBaseYaml(taskFileName: string = '飞书任务.md'): string {
-        const yamlContent: Record<string, any> = {
+        const yamlContent: Record<string, unknown> = {
             filters: {
                 'or': [
                     { 'file.name': taskFileName.replace('.md', '') },
@@ -132,7 +132,7 @@ export class FeishuTaskBase {
      * @param indent 缩进级别
      * @returns YAML字符串
      */
-    private static toYamlString(obj: any, indent: number = 0): string {
+    private static toYamlString(obj: Record<string, unknown>, indent: number = 0): string {
         const padding = '  '.repeat(indent);
         let result = '';
 
@@ -144,9 +144,9 @@ export class FeishuTaskBase {
             if (Array.isArray(value)) {
                 result += `${padding}${key}:\n`;
                 for (const item of value) {
-                    if (typeof item === 'object') {
+                    if (typeof item === 'object' && item !== null) {
                         result += `${padding}- `;
-                        const itemStr = this.toYamlString(item, 0);
+                        const itemStr = this.toYamlString(item as Record<string, unknown>, 0);
                         // 移除第一行的缩进
                         result += itemStr.split('\n').map((line, i) =>
                             i === 0 ? line : padding + '  ' + line
@@ -158,7 +158,7 @@ export class FeishuTaskBase {
                 }
             } else if (typeof value === 'object') {
                 result += `${padding}${key}:\n`;
-                result += this.toYamlString(value, indent + 1);
+                result += this.toYamlString(value as Record<string, unknown>, indent + 1);
             } else {
                 result += `${padding}${key}: ${this.formatYamlValue(value)}\n`;
             }
@@ -172,7 +172,7 @@ export class FeishuTaskBase {
      * @param value 值
      * @returns 格式化后的字符串
      */
-    private static formatYamlValue(value: any): string {
+    private static formatYamlValue(value: unknown): string {
         if (typeof value === 'string') {
             // 如果是公式表达式（包含运算符、函数调用等），不加引号
             if (/^(?!.*"$).*(==|!=|>=|<=|>|<|\|\||&&|\..*\(|!|\+|-|\*|\/|%).*$/s.test(value) ||
@@ -200,7 +200,7 @@ export class FeishuTaskBase {
      * @returns 创建的文件
      */
     static async createBaseFile(
-        app: any,
+        app: App,
         options: BaseConfigOptions = {}
     ): Promise<TFile | null> {
         const fileName = options.fileName || '飞书任务';
@@ -233,7 +233,7 @@ export class FeishuTaskBase {
      * @returns 更新后的文件
      */
     static async updateBaseFile(
-        app: any,
+        app: App,
         options: BaseConfigOptions = {}
     ): Promise<TFile | null> {
         const fileName = options.fileName || '飞书任务';

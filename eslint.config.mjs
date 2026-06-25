@@ -33,9 +33,37 @@ export default [
 		// 类型信息:供 recommended 里的类型相关规则(no-deprecated 等)在 .ts 上使用
 		languageOptions: {
 			parserOptions: {
-				projectService: true,
+				projectService: {
+					defaultProject: "tsconfig.test.json",
+				},
 				tsconfigRootDir: import.meta.dirname,
 			},
+		},
+	},
+	{
+		// 测试文件:添加 Jest 全局变量
+		files: ["tests/**/*.ts", "src/**/__tests__/**/*.ts"],
+		languageOptions: {
+			globals: {
+				describe: "readonly",
+				it: "readonly",
+				expect: "readonly",
+				beforeEach: "readonly",
+				afterEach: "readonly",
+				beforeAll: "readonly",
+				afterAll: "readonly",
+				jest: "readonly",
+				test: "readonly",
+				fit: "readonly",
+				xit: "readonly",
+				xdescribe: "readonly",
+			},
+		},
+	},
+	{
+		// 禁用 no-explicit-any 的自动修复(any→unknown 会破坏构建)
+		rules: {
+			"@typescript-eslint/no-explicit-any": "warn",
 		},
 	},
 ];

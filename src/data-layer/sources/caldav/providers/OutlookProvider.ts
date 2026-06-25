@@ -92,7 +92,7 @@ export class OutlookProvider extends CalDAVDataSource {
             });
 
             if (response.status >= 200 && response.status < 300) {
-                const data = response.json;
+                const data = response.json as { access_token?: string };
                 this.oauthConfig.accessToken = data.access_token;
 
                 // 更新 CalDAV 客户端配置
@@ -104,7 +104,7 @@ export class OutlookProvider extends CalDAVDataSource {
                 return true;
             }
 
-            const error = response.json;
+            const error = response.json as unknown;
             Logger.error('OutlookProvider', 'Failed to refresh token', error);
             return false;
         } catch (error) {
@@ -149,7 +149,7 @@ export class OutlookProvider extends CalDAVDataSource {
             });
 
             if (response.status >= 200 && response.status < 300) {
-                const data = response.json;
+                const data = response.json as { access_token?: string; refresh_token?: string };
                 this.oauthConfig.accessToken = data.access_token;
                 this.oauthConfig.refreshToken = data.refresh_token;
 
@@ -157,7 +157,7 @@ export class OutlookProvider extends CalDAVDataSource {
                 return true;
             }
 
-            const error = response.json;
+            const error = response.json as unknown;
             Logger.error('OutlookProvider', 'Authorization code exchange failed', error);
             return false;
         } catch (error) {
@@ -181,7 +181,7 @@ export class OutlookProvider extends CalDAVDataSource {
             });
 
             if (response.status >= 200 && response.status < 300) {
-                const data = response.json;
+                const data = response.json as { value?: unknown[] };
                 return data.value || [];
             }
 
@@ -217,8 +217,9 @@ export class OutlookProvider extends CalDAVDataSource {
     protected async fetchTasks(): Promise<void> {
         try {
             await super.fetchTasks();
-        } catch (error: any) {
-            if (error.message?.includes('401') || error.message?.includes('403')) {
+        } catch (error) {
+            const errMsg = error instanceof Error ? error.message : String(error);
+            if (errMsg.includes('401') || errMsg.includes('403')) {
                 Logger.info('OutlookProvider', 'Token expired, attempting refresh');
 
                 const refreshed = await this.refreshAccessToken();

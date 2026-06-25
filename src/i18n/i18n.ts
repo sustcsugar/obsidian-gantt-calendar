@@ -36,7 +36,7 @@ function resolve(obj: TranslationMap, path: string): unknown {
 
 function interpolate(template: string, params?: Record<string, unknown>): string {
 	if (!params) return template;
-	return template.replace(/\{\{(\w+)\}\}/g, (_, key) =>
+	return template.replace(/\{\{(\w+)\}\}/g, (_match: string, key: string) =>
 		params[key] != null ? String(params[key]) : `{{${key}}}`
 	);
 }

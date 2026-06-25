@@ -2,7 +2,7 @@ import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import { SidebarClasses, withModifiers } from './utils/bem';
 import { TaskListTab } from './sidebar/TaskListTab';
 import { DailyTimelineTab } from './sidebar/DailyTimelineTab';
-import { Logger } from './utils/logger';
+
 import { i18n } from './i18n/i18n';
 import type { IPluginContext } from './types';
 

@@ -75,15 +75,17 @@ export class LinkRenderer {
 				link.setAttr('data-href', notePath);
 				link.setAttr('title', `打开：${notePath}`);
 				link.href = 'javascript:void(0)';
-				link.addEventListener('click', async (e) => {
+				link.addEventListener('click', (e) => {
 					e.preventDefault();
 					e.stopPropagation();
-					const file = app.metadataCache.getFirstLinkpathDest(notePath, '');
-					if (file) {
-						await openFileInExistingLeaf(app, file.path, 0);
-					} else {
-						new Notice(i18n.t('common.fileNotFound', { path: notePath }));
-					}
+					void (async () => {
+						const file = app.metadataCache.getFirstLinkpathDest(notePath, '');
+						if (file) {
+							await openFileInExistingLeaf(app, file.path, 0);
+						} else {
+							new Notice(i18n.t('common.fileNotFound', { path: notePath }));
+						}
+					})();
 				});
 			} else if (m.type === 'markdown') {
 				const displayText = m.groups[1]; // [text]

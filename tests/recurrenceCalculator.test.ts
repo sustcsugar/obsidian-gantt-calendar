@@ -8,7 +8,6 @@ import {
 	getNextOccurrence,
 	getOccurrencesInRange,
 } from '../src/tasks/recurrenceCalculator';
-import type { ParsedRecurrenceRule } from '../src/tasks/recurrenceCalculator';
 
 // 辅助函数：创建不含时间的日期
 function d(year: number, month: number, day: number): Date {

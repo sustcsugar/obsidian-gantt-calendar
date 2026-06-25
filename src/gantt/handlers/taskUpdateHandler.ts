@@ -69,7 +69,7 @@ export class TaskUpdateHandler {
 			// 直接使用 ganttTask（已包含完整任务信息）
 			await updateTaskProperties(
 				this.app,
-				ganttTask as any, // 类型断言：GanttChartTask 实际包含完整任务信息
+				ganttTask as unknown as GCTask,
 				updates,
 				this.plugin.settings.enabledTaskFormats
 			);
@@ -110,7 +110,7 @@ export class TaskUpdateHandler {
 			// 直接使用 ganttTask（已包含完整任务信息）
 			await updateTaskCompletion(
 				this.app,
-				ganttTask as any, // 类型断言：GanttChartTask 实际包含完整任务信息
+				ganttTask as unknown as GCTask,
 				completed,
 				this.plugin.settings.enabledTaskFormats
 			);

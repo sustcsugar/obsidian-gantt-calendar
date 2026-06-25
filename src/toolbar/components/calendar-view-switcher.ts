@@ -3,7 +3,6 @@
  * @module toolbar/components/calendar-view-switcher
  */
 
-import type { CalendarViewType } from '../../types';
 import { ToolbarClasses } from '../../utils/bem';
 import { i18n } from '../../i18n/i18n';
 

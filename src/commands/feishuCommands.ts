@@ -8,7 +8,8 @@ import { FeishuProvider } from '../data-layer/sources/api/providers/FeishuProvid
 import { FeishuTaskSync } from '../data-layer/feishu-sync/FeishuTaskSync';
 import { SyncStateManager } from '../data-layer/feishu-sync/syncState';
 import { DEFAULT_PUSH_FILTER } from '../utils/taskFilter';
-import { Logger } from '../utils/logger';
+import { setCssProps } from '../utils/bem';
+
 import { showSyncResultModal } from '../modals/SyncResultModal';
 import { i18n } from '../i18n/i18n';
 
@@ -83,19 +84,21 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 
 		// token 刷新后持久化回 settings
 		const currentSyncConfig = syncConfig;
-		provider.setConfigUpdateCallback(async (data) => {
-			const api = currentSyncConfig.api;
-			if (api) {
-				if (data.accessToken) api.accessToken = data.accessToken;
-				if (data.refreshToken) api.refreshToken = data.refreshToken;
-				if (data.tokenExpireAt) api.tokenExpireAt = data.tokenExpireAt;
-			}
-			await plugin.saveSettings();
+		provider.setConfigUpdateCallback((data) => {
+			void (async () => {
+				const api = currentSyncConfig.api;
+				if (api) {
+					if (data.accessToken) api.accessToken = data.accessToken;
+					if (data.refreshToken) api.refreshToken = data.refreshToken;
+					if (data.tokenExpireAt) api.tokenExpireAt = data.tokenExpireAt;
+				}
+				await plugin.saveSettings();
+			})();
 		});
 
 		try {
 			await provider.validateAuth();
-		} catch (authError) {
+		} catch {
 			new Notice(i18n.t('commands.sync.authExpired'), 8000);
 			return;
 		}
@@ -105,7 +108,7 @@ export async function syncFeishuTasks(plugin: GanttCalendarPlugin, options?: { i
 		const controller = new AbortController();
 		const progressNotice = new Notice(i18n.t('commands.sync.syncingFeishu'), 0);
 		const stopBtn = progressNotice.messageEl.createEl('button', { text: i18n.t('commands.sync.stopSync') });
-		stopBtn.style.cssText = 'margin-left:12px;padding:2px 10px;cursor:pointer;';
+		setCssProps(stopBtn, { marginLeft: '12px', padding: '2px 10px', cursor: 'pointer' });
 		stopBtn.onclick = () => {
 			controller.abort();
 			stopBtn.disabled = true;

@@ -15,10 +15,11 @@
  * - 完整任务由 TaskRepository 统一存储
  */
 
-import { App, TFile, TAbstractFile, EventRef, ListItemCache } from 'obsidian';
+import { App, TFile, EventRef, ListItemCache } from 'obsidian';
 import { parseTasksFromListItems } from '../tasks/taskParser/main';
 import { parseTaskLine } from '../tasks/taskParser/step1';
 import { areTasksEqual } from '../tasks/taskUtils';
+import type { TaskFormatType } from '../tasks/taskSerializerSymbols';
 import { EventBus } from './EventBus';
 import type { GCTask } from '../types';
 import {
@@ -203,7 +204,6 @@ export class MarkdownDataSource implements IDataSource {
 
 		try {
 			const oldCache = this.cache.get(filePath);
-			const oldTaskIds = oldCache?.taskIds || [];
 
 			const parseResult = await this.parseFileFromContent(filePath);
 			if (parseResult) {
@@ -335,7 +335,7 @@ export class MarkdownDataSource implements IDataSource {
 
 		const tasks = parseTasksFromListItems(
 			file, lines, listItems,
-			this.config.enabledFormats as any || ["tasks", "dataview"],
+			this.config.enabledFormats as TaskFormatType[] || ["tasks", "dataview"],
 			this.config.globalFilter
 		);
 
@@ -377,7 +377,7 @@ export class MarkdownDataSource implements IDataSource {
 			file,
 			lines,
 			listItems,
-			this.config.enabledFormats as any || ['tasks', 'dataview'],
+			this.config.enabledFormats as TaskFormatType[] || ['tasks', 'dataview'],
 			this.config.globalFilter
 		);
 
@@ -408,7 +408,7 @@ export class MarkdownDataSource implements IDataSource {
 					Logger.debug('MarkdownDataSource', `Debouncing file modification: ${file.path}`);
 				}
 
-				const timer = window.setTimeout(async () => {
+				const timer = window.setTimeout(() => {
 					// 【修复Bug 2】如果文件正在处理，标记为待处理而非跳过
 					if (this.processingFiles.has(file.path)) {
 						this.pendingFileChecks.add(file.path);
@@ -416,8 +416,9 @@ export class MarkdownDataSource implements IDataSource {
 						return;
 					}
 
-					await this.processFileModification(file.path);
-					this.debounceTimers.delete(file.path);
+					void this.processFileModification(file.path).then(() => {
+						this.debounceTimers.delete(file.path);
+					});
 				}, this.DEBOUNCE_MS);
 
 				this.debounceTimers.set(file.path, timer);
@@ -436,20 +437,21 @@ export class MarkdownDataSource implements IDataSource {
 					window.clearTimeout(existingTimer);
 				}
 
-				const timer = window.setTimeout(async () => {
-					const parseResult = await this.parseFileForScan(file.path);
-					if (parseResult && this.changeHandler) {
-						// 新文件的所有任务都是新增的
-						Logger.debug('MarkdownDataSource', `New file created with ${parseResult.tasks.length} tasks: ${file.path}`);
-						void this.changeHandler({
-							sourceId: this.sourceId,
-							created: parseResult.tasks,
-							updated: [],
-							deleted: []
-						});
-						this.cache.set(file.path, parseResult.cache);
-					}
-					this.debounceTimers.delete(file.path);
+				const timer = window.setTimeout(() => {
+					void this.parseFileForScan(file.path).then((parseResult) => {
+						if (parseResult && this.changeHandler) {
+							// 新文件的所有任务都是新增的
+							Logger.debug('MarkdownDataSource', `New file created with ${parseResult.tasks.length} tasks: ${file.path}`);
+							void this.changeHandler({
+								sourceId: this.sourceId,
+								created: parseResult.tasks,
+								updated: [],
+								deleted: []
+							});
+							this.cache.set(file.path, parseResult.cache);
+						}
+						this.debounceTimers.delete(file.path);
+					});
 				}, this.DEBOUNCE_MS);
 
 				this.debounceTimers.set(file.path, timer);
@@ -505,7 +507,8 @@ export class MarkdownDataSource implements IDataSource {
 		// 【开发模式】监听 metadataCache 变化
 		// 用于调试和验证问题，避免生产环境性能开销
 		// 通过设置插件实例的 __dev_mode__ 属性为 true 来启用
-		const isDev = (this.app as any).plugins?.plugins?.['gantt-calendar']?.['__dev_mode__'] === true;
+		const appWithPlugins = this.app as App & { plugins?: { plugins?: Record<string, Record<string, unknown>> } };
+		const isDev = appWithPlugins.plugins?.plugins?.['gantt-calendar']?.['__dev_mode__'] === true;
 
 		if (isDev) {
 			Logger.debug('MarkdownDataSource', 'Dev mode: Adding metadataCache listener');
@@ -520,14 +523,15 @@ export class MarkdownDataSource implements IDataSource {
 						window.clearTimeout(existingTimer);
 					}
 
-					const timer = window.setTimeout(async () => {
+					const timer = window.setTimeout(() => {
 						// 如果文件正在处理，标记为待处理
 						if (this.processingFiles.has(file.path)) {
 							this.pendingFileChecks.add(file.path);
 							return;
 						}
-						await this.processFileModification(file.path);
-						this.debounceTimers.delete(file.path);
+						void this.processFileModification(file.path).then(() => {
+							this.debounceTimers.delete(file.path);
+						});
 					}, this.DEBOUNCE_MS);
 
 					this.debounceTimers.set(file.path, timer);
@@ -560,7 +564,7 @@ export class MarkdownDataSource implements IDataSource {
 			file,
 			lines,
 			listItems,
-			this.config.enabledFormats as any || ['tasks', 'dataview'],
+			this.config.enabledFormats as TaskFormatType[] || ['tasks', 'dataview'],
 			this.config.globalFilter
 		);
 

@@ -247,11 +247,6 @@ export const STATUS_SYMBOL_EXCLUDED = ['[', ']'];
 export const RESERVED_SYMBOLS = [' ', 'x'];
 
 /**
- * 预设状态 key 列表（默认 + 预设自定义）
- */
-const PRESET_STATUS_KEYS = ['todo', 'done', 'important', 'canceled', 'in_progress', 'question', 'start'];
-
-/**
  * 根据当前语言刷新默认和预设状态的名称与描述
  * 用于用户切换语言时更新已持久化的状态配置
  */

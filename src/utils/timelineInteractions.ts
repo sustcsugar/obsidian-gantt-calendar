@@ -65,14 +65,14 @@ export class DragDropManager {
 			}
 		});
 
-		slot.addEventListener('drop', async (e: DragEvent) => {
+		slot.addEventListener('drop', (e: DragEvent) => {
 			e.preventDefault();
 			this.clearHighlight();
+			void (async () => {
+				const taskId = e.dataTransfer?.getData('taskId');
+				if (!taskId) return;
 
-			const taskId = e.dataTransfer?.getData('taskId');
-			if (!taskId) return;
-
-			const [filePath, lineNum] = taskId.split(':');
+				const [filePath, lineNum] = taskId.split(':');
 			const lineNumber = parseInt(lineNum, 10);
 
 			// 查找源任务
@@ -85,28 +85,29 @@ export class DragDropManager {
 
 			const dateFieldName = plugin.settings.dateFilterField || 'dueDate';
 
-			try {
-				// 构建新的日期时间：保持目标日期 + 新的小时
-				const newDate = new Date(targetDate);
-				newDate.setHours(hour, 0, 0, 0);
+				try {
+					// 构建新的日期时间：保持目标日期 + 新的小时
+					const newDate = new Date(targetDate);
+					newDate.setHours(hour, 0, 0, 0);
 
-				// 更新 datePrecision 为 time（拖拽到时间格表示设定了时间）
-				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'time' };
+					// 更新 datePrecision 为 time（拖拽到时间格表示设定了时间）
+					sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'time' };
 
-				// 更新任务的日期字段（带时间）
-				await updateTaskDateField(
-					app,
-					sourceTask,
-					dateFieldName,
-					newDate,
-					plugin.settings.enabledTaskFormats
-				);
+					// 更新任务的日期字段（带时间）
+					await updateTaskDateField(
+						app,
+						sourceTask,
+						dateFieldName,
+						newDate,
+						plugin.settings.enabledTaskFormats
+					);
 
-				Logger.debug(this.config.logTag, 'Task time updated via drag-drop', { taskId, hour });
-			} catch (error) {
-				Logger.error(this.config.logTag, 'Error updating task time:', error);
-				new Notice(i18n.t('views.dayView.updateTimeFailed'));
-			}
+					Logger.debug(this.config.logTag, 'Task time updated via drag-drop', { taskId, hour });
+				} catch (error) {
+					Logger.error(this.config.logTag, 'Error updating task time:', error);
+					new Notice(i18n.t('views.dayView.updateTimeFailed'));
+				}
+			})();
 		});
 	}
 

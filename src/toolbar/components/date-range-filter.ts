@@ -83,8 +83,7 @@ export function renderDateRangeFilter(
 		containerClass,
 		inputClass = ToolbarClasses.components.dateFilter.input,
 		buttonClass = ToolbarClasses.components.dateFilter.modeBtn,
-		showAllOption = true,
-		labelText = i18n.t('toolbar.dateFilter.label')
+		showAllOption = true
 	} = options;
 
 	// 记录前一个模式（用于清除自定义日期后恢复）

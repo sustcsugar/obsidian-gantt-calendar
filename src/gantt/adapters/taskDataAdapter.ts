@@ -7,7 +7,6 @@ import type { GCTask } from '../../types';
 import { getTaskDateField } from '../../types';
 import type { GanttChartTask, DateFieldType } from '../types';
 import type { StatusFilterState } from '../../types';
-import { formatDate } from '../../dateUtils/dateUtilsIndex';
 
 /**
  * 任务数据适配器

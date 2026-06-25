@@ -19,5 +19,5 @@ export function renderRefreshButton(
     attr: { 'aria-label': title }
   });
   setIcon(btn, 'rotate-ccw');
-  btn.addEventListener('click', onRefresh);
+  btn.addEventListener('click', () => { void onRefresh(); });
 }

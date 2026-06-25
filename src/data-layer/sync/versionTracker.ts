@@ -9,7 +9,6 @@ import type { GCTask } from '../../types';
 import type {
     GCTaskWithSync,
     GCTaskSyncMetadata,
-    TaskSyncStatus,
     DataSourceType,
     SyncStateData,
     TaskMapping,
@@ -276,7 +275,7 @@ export class VersionTracker {
      * 导出状态（用于持久化）
      */
     exportState(): Omit<SyncStateData, 'version' | 'configuration'> {
-        const sourceStates = new Map<string, any>();
+        const sourceStates: SyncStateData['sourceStates'] = new Map();
 
         for (const [sourceId, cursor] of this.sourceCursors) {
             sourceStates.set(sourceId, { cursor });

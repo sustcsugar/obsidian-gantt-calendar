@@ -7,8 +7,8 @@
 
 import { IDataSource, ChangeEventHandler } from '../../IDataSource';
 import type { GCTask } from '../../../types';
-import type { DataSourceConfig, SyncStatus } from '../../types';
-import type { GCTaskWithSync, DataSourceType } from '../../sync/syncTypes';
+import type { DataSourceConfig, DataSourceChanges, SyncStatus, TaskChanges } from '../../types';
+import type { GCTaskWithSync } from '../../sync/syncTypes';
 import { Logger } from '../../../utils/logger';
 
 /**
@@ -24,7 +24,7 @@ export interface APITaskDTO {
     priority?: string;
     tags?: string[];
     status?: string;
-    [key: string]: any;  // 允许扩展字段
+    [key: string]: unknown;  // 允许扩展字段
 }
 
 /**
@@ -120,7 +120,7 @@ export abstract class APIDataSource implements IDataSource {
                 ...task,
                 source: 'api',
                 sourceId: remoteId,
-                syncId: (task as any).syncId || this.generateSyncId(),
+                syncId: (task as GCTaskWithSync).syncId || this.generateSyncId(),
             };
             this.cache.set(remoteId, taskWithSync);
 
@@ -140,13 +140,13 @@ export abstract class APIDataSource implements IDataSource {
     /**
      * 更新任务
      */
-    async updateTask(taskId: string, changes: any): Promise<void> {
+    async updateTask(taskId: string, changes: TaskChanges): Promise<void> {
         const existing = this.cache.get(taskId);
         if (!existing) {
             throw new Error(`Task ${taskId} not found`);
         }
 
-        const updatedTask = { ...existing, ...changes };
+        const updatedTask: GCTaskWithSync = { ...existing, ...changes };
         const dto = this.toAPIDTO(updatedTask);
 
         const response = await this.apiUpdateTask(taskId, dto);
@@ -323,7 +323,7 @@ export abstract class APIDataSource implements IDataSource {
      */
     protected detectChangesAndNotify(oldCache: Map<string, GCTaskWithSync>): void {
         const created: GCTask[] = [];
-        const updated: any[] = [];
+        const updated: Array<{ id: string; changes: Partial<GCTask>; task: GCTaskWithSync }> = [];
         const deleted: GCTask[] = [];
 
         // 检测新增和更新
@@ -369,8 +369,8 @@ export abstract class APIDataSource implements IDataSource {
     /**
      * 获取任务变化
      */
-    protected getTaskChanges(old: GCTask, newTask: GCTask): any {
-        const changes: any = {};
+    protected getTaskChanges(old: GCTask, newTask: GCTask): Partial<GCTask> {
+        const changes: Partial<GCTask> = {};
 
         if (old.description !== newTask.description) {
             changes.description = newTask.description;
@@ -394,7 +394,7 @@ export abstract class APIDataSource implements IDataSource {
     /**
      * 通知变化
      */
-    protected notifyChange(changes: any): void {
+    protected notifyChange(changes: Omit<DataSourceChanges, 'sourceId'>): void {
         if (this.changeHandler) {
             void this.changeHandler({
                 sourceId: this.sourceId,

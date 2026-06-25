@@ -27,7 +27,7 @@
 import { CalendarDay, CalendarMonth, CalendarWeek } from '../types';
 import { solarToLunar, getShortLunarText } from '../lunar/lunar';
 import { getDaysInMonth, getFirstDayOfMonth } from '../dateUtils/format';
-import { startOfWeek, getWeekNumber } from '../dateUtils/week';
+import { getWeekNumber } from '../dateUtils/week';
 import { isToday } from '../dateUtils/dateCompare';
 
 /**

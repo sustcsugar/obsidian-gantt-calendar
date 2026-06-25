@@ -230,10 +230,10 @@ function replaceTemplateVariables(content: string, filePath: string): string {
 	// 先处理带格式和偏移的复杂模式 {{date:FORMAT}}、{{date+1d:FORMAT}}
 	content = content.replace(
 		/{{\s*(date|time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:.+?)?}}/gi,
-		(_, _key, _calc, delta, unit, fmt) => {
+		(_match: string, _key: string, _calc?: string, delta?: string, unit?: string, fmt?: string) => {
 			const current = date.clone();
 			if (delta && unit) {
-				current.add(parseInt(delta, 10), unit);
+				current.add(parseInt(delta, 10), unit as unknown as 'y' | 'Q' | 'M' | 'w' | 'd' | 'h' | 'm' | 's' | 'ms');
 			}
 			if (fmt) {
 				return current.format(fmt.substring(1).trim());
@@ -292,10 +292,13 @@ async function insertTaskToFile(
  * 序列化新任务为文本行
  */
 function serializeNewTask(taskData: CreateTaskData, app: App): string {
-	const plugin = (app as any).plugins.plugins['gantt-calendar'];
-	const globalFilter = plugin?.settings?.globalTaskFilter || '';
-	const enabledFormats = plugin?.settings?.enabledTaskFormats || ['tasks'];
+	// Access Obsidian internal plugin API (not in public types)
+	/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+	const plugin: any = (app as any).plugins.plugins['gantt-calendar'];
+	const globalFilter: string = plugin?.settings?.globalTaskFilter || '';
+	const enabledFormats: string[] = plugin?.settings?.enabledTaskFormats || ['tasks'];
 	const format = enabledFormats.includes('dataview') ? 'dataview' : 'tasks';
+	/* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 
 	const parts: string[] = [];
 

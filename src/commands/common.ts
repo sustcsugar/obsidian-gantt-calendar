@@ -1,5 +1,5 @@
 import { GC_VIEW_ID, GCMainView } from '../GCMainView';
-import { GC_SIDEBAR_VIEW_ID } from '../GCSidebarView';
+
 import { activateSidebarView } from '../managers/ViewManager';
 import type GanttCalendarPlugin from '../../main';
 import { i18n } from '../i18n/i18n';

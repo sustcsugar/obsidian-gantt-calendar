@@ -1,11 +1,10 @@
 import { Notice, App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
-import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import type { IPluginContext,  GCTask } from '../types';
 import { getTaskDateField } from '../types';
-import type { DateFieldType } from '../settings/types';
 import { TaskCardComponent, MonthViewConfig } from '../components/TaskCard';
-import { MonthViewClasses, TaskCardClasses } from '../utils/bem';
+import { MonthViewClasses, TaskCardClasses, setCssProps } from '../utils/bem';
 import { Logger } from '../utils/logger';
 import { TooltipManager } from '../utils/tooltipManager';
 import { updateTaskDateField } from '../tasks/taskUpdater';
@@ -34,18 +33,18 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			if (e.dataTransfer) {
 				e.dataTransfer.dropEffect = 'move';
 			}
-			dayCell.style.backgroundColor = 'var(--background-modifier-hover)';
+			setCssProps(dayCell, { backgroundColor: 'var(--background-modifier-hover)' });
 		});
 
 		dayCell.addEventListener('dragleave', (e: DragEvent) => {
 			if (e.target === dayCell) {
-				dayCell.style.backgroundColor = '';
+				setCssProps(dayCell, { backgroundColor: '' });
 			}
 		});
 
-		dayCell.addEventListener('drop', async (e: DragEvent) => {
+		dayCell.addEventListener('drop', (e: DragEvent) => {
 			e.preventDefault();
-			dayCell.style.backgroundColor = '';
+			setCssProps(dayCell, { backgroundColor: '' });
 
 			const taskId = e.dataTransfer?.getData('taskId');
 			if (!taskId) return;
@@ -62,20 +61,22 @@ export class MonthViewRenderer extends BaseViewRenderer {
 
 			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
 
-			try {
-				this.clearTaskTooltips();
-				await updateTaskDateField(
-					this.app,
-					sourceTask,
-					dateFieldName,
-					targetDate,
-					this.plugin.settings.enabledTaskFormats
-				);
-				Logger.debug('MonthView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
-			} catch (error) {
-				Logger.error('MonthView', 'Error updating task date:', error);
-				new Notice(i18n.t('views.dayView.updateDateFailed'));
-			}
+			void (async () => {
+				try {
+					this.clearTaskTooltips();
+					await updateTaskDateField(
+						this.app,
+						sourceTask,
+						dateFieldName,
+						targetDate,
+						this.plugin.settings.enabledTaskFormats
+					);
+					Logger.debug('MonthView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
+				} catch (error) {
+					Logger.error('MonthView', 'Error updating task date:', error);
+					new Notice(i18n.t('views.dayView.updateDateFailed'));
+				}
+			})();
 		});
 	}
 
@@ -122,8 +123,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 			const weekNum = monthContainer.createDiv(MonthViewClasses.elements.weekNumber);
 			weekNum.createEl('span', { text: `W${week.weekNumber}` });
 			// 设置grid位置：第(weekIndex + 2)行，第1列
-			weekNum.style.gridRow = `${weekIndex + 2}`;
-			weekNum.style.gridColumn = '1';
+			setCssProps(weekNum, { gridRow: `${weekIndex + 2}`, gridColumn: '1' });
 
 			// 一周的日期 - 直接放在容器中，设置grid位置
 			week.days.forEach((day, dayIndex) => {
@@ -132,8 +132,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 				// 添加日期标识，用于增量刷新时定位
 				dayEl.dataset.date = toISOStringLocal(day.date);
 				// 设置grid位置：第(weekIndex + 2)行，第(dayIndex + 2)列
-				dayEl.style.gridRow = `${weekIndex + 2}`;
-				dayEl.style.gridColumn = `${dayIndex + 2}`;
+				setCssProps(dayEl, { gridRow: `${weekIndex + 2}`, gridColumn: `${dayIndex + 2}` });
 
 				// 日期头部：包含日期数字和农历文本
 				const dayHeader = dayEl.createDiv(MonthViewClasses.elements.dayHeader);
@@ -320,7 +319,7 @@ export class MonthViewRenderer extends BaseViewRenderer {
 		const selector = "." + MonthViewClasses.elements.lunarText;
 		const texts = container.querySelectorAll(selector);
 		texts.forEach((el: Element) => {
-			(el as HTMLElement).style.fontSize = fontSize + "px";
+			setCssProps(el as HTMLElement, { fontSize: fontSize + 'px' });
 		});
 	}
 }

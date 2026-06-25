@@ -15,13 +15,14 @@
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
 import { TimeGranularity, GRANULARITY_CONFIGS } from '../types';
 import type { IPluginContext,  GCTask } from '../../types';
-import { GanttClasses } from '../../utils/bem';
+import { GanttClasses, setCssProps } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
 import { Logger } from '../../utils/logger';
 import { LinkRenderer } from '../../utils/linkRenderer';
 import { getTodayInTimezone } from '../../dateUtils/timezone';
 import { i18n } from '../../i18n/i18n';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
+import { App } from 'obsidian';
 
 /**
  * SVG 元素辅助方法
@@ -51,7 +52,7 @@ export class SvgGanttRenderer {
 	private tasks: GanttChartTask[] = [];
 	private container: HTMLElement;
 	private plugin: IPluginContext;
-	private app: any;  // Obsidian App 实例
+	private app: App | null;  // Obsidian App 实例
 
 	// 时间颗粒度
 	private granularity: TimeGranularity = TimeGranularity.WEEK;
@@ -98,7 +99,7 @@ export class SvgGanttRenderer {
 		config: GanttChartConfig,
 		plugin: IPluginContext,
 		_originalTasks: GCTask[] = [],
-		app: any = null,
+		app: App | null = null,
 		startField: DateFieldType = 'startDate',
 		endField: DateFieldType = 'dueDate',
 	) {
@@ -106,7 +107,7 @@ export class SvgGanttRenderer {
 		this.config = config;
 		this.plugin = plugin;
 		// _originalTasks 参数保留以保持向后兼容，但不再使用（GanttChartTask 已包含所有必要信息）
-		this.app = app || plugin?.app;
+		this.app = app ?? plugin?.app ?? null;
 		this.startField = startField;
 		this.endField = endField;
 
@@ -232,7 +233,7 @@ export class SvgGanttRenderer {
 		this.container.empty();
 
 		// 计算日期范围
-		const { minDate, maxDate, totalUnits, granularity } = this.calculateDateRange();
+		const { minDate, totalUnits, granularity } = this.calculateDateRange();
 
 		// 保存日期范围信息（用于滚动到今天）
 		this.minDate = minDate;
@@ -246,7 +247,7 @@ export class SvgGanttRenderer {
 		// 创建单个 Grid 容器
 		this.mainGrid = this.container.createDiv(GanttClasses.elements.mainGrid);
 		// 设置 CSS 变量用于控制任务列宽度
-		this.mainGrid.style.setProperty('--task-column-width', `${this.taskColumnWidth}px`);
+		setCssProps(this.mainGrid, { '--task-column-width': `${this.taskColumnWidth}px` });
 
 		// 1. 左上角空白区域
 		this.cornerContainer = this.mainGrid.createDiv(GanttClasses.elements.corner);
@@ -437,8 +438,7 @@ export class SvgGanttRenderer {
 		// 鼠标按下开始拖动
 		resizer.addEventListener('mousedown', (e) => {
 			this.isResizing = true;
-			activeDocument.body.style.cursor = 'col-resize';
-			activeDocument.body.style.userSelect = 'none'; // 防止拖动时选中文字
+			setCssProps(activeDocument.body, { cursor: 'col-resize', userSelect: 'none' });
 
 			e.preventDefault();
 		});
@@ -458,7 +458,7 @@ export class SvgGanttRenderer {
 				this.taskColumnWidth = newWidth;
 
 				// 更新 CSS 变量，Grid 中所有区域都会同步变化
-				mainGrid.style.setProperty('--task-column-width', `${newWidth}px`);
+				setCssProps(mainGrid, { '--task-column-width': `${newWidth}px` });
 
 				// 更新 corner SVG 元素
 				if (this.cornerSvg) {
@@ -497,8 +497,7 @@ export class SvgGanttRenderer {
 		activeDocument.addEventListener('mouseup', () => {
 			if (this.isResizing) {
 				this.isResizing = false;
-				activeDocument.body.style.cursor = '';
-				activeDocument.body.style.userSelect = '';
+				setCssProps(activeDocument.body, { cursor: '', userSelect: '' });
 			}
 		});
 	}
@@ -650,7 +649,7 @@ export class SvgGanttRenderer {
 			container.removeClass('gc-gantt-view__chart--drop-target');
 		});
 
-		container.addEventListener('drop', async (e: DragEvent) => {
+		container.addEventListener('drop', (e: DragEvent) => {
 			e.preventDefault();
 			container.removeClass('gc-gantt-view__chart--drop-target');
 
@@ -687,7 +686,7 @@ export class SvgGanttRenderer {
 			const newStart = targetDate;
 			const newEnd = new Date(targetDate.getTime() + durationDays * 86400000);
 
-			await this.onDateChange(ganttTask, newStart, newEnd);
+			void this.onDateChange(ganttTask, newStart, newEnd);
 		});
 	}
 
@@ -750,7 +749,6 @@ export class SvgGanttRenderer {
 		if (!svg) return;
 
 		const ns = 'http://www.w3.org/2000/svg';
-		const width = this.taskColumnWidth;
 		const numberWidth = this.taskNumberColumnWidth;
 		// 使用足够大的宽度来显示完整任务描述
 		const contentWidth = 2000;
@@ -802,15 +800,8 @@ export class SvgGanttRenderer {
 
 			const numberDiv = activeDocument.createElement('div');
 			numberDiv.className = GanttClasses.elements.taskNumberCell;
-			numberDiv.style.cssText = `
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				height: 100%;
-				font-size: 11px;
-				color: var(--text-muted);
-				font-weight: 500;
-			`;
+			numberDiv.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-text-muted', 'gc-u-font-medium');
+			setCssProps(numberDiv, { justifyContent: 'center', height: '100%', fontSize: '11px' });
 			numberDiv.textContent = String(taskNumber);
 			numberForeignObj.appendChild(numberDiv);
 			svg.appendChild(numberForeignObj);
@@ -825,16 +816,8 @@ export class SvgGanttRenderer {
 			// 创建 HTML 内容容器
 			const contentDiv = activeDocument.createElement('div');
 			contentDiv.className = GanttClasses.elements.taskContentCell;
-			contentDiv.style.cssText = `
-				display: flex;
-				align-items: center;
-				height: 100%;
-				font-size: 12px;
-				color: var(--text-normal);
-				gap: 8px;
-				padding: 0 8px;
-				width: 100%;
-			`;
+			contentDiv.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-w-full');
+			setCssProps(contentDiv, { height: '100%', fontSize: '12px', color: 'var(--text-normal)', gap: '8px', padding: '0 8px' });
 
 			// === 创建复选框 ===
 			const checkbox = this.createTaskCheckbox(task, isCompleted);
@@ -843,11 +826,8 @@ export class SvgGanttRenderer {
 			// === 创建可点击的文本容器 ===
 			const textContainer = activeDocument.createElement('div');
 			textContainer.className = 'gantt-task-list-item__text';
-			textContainer.style.cssText = `
-				flex: 1;
-				white-space: nowrap;
-				cursor: pointer;
-			`;
+			textContainer.addClass('gc-u-whitespace-nowrap', 'gc-u-pointer');
+			setCssProps(textContainer, { flex: '1' });
 
 			// 设置点击事件用于跳转（阻止链接点击触发）
 			textContainer.addEventListener('click', (e) => {
@@ -895,7 +875,11 @@ export class SvgGanttRenderer {
 	 * 支持与 BaseViewRenderer 相同的链接格式
 	 */
 	private renderTaskDescriptionWithLinks(container: HTMLElement, text: string): void {
-		LinkRenderer.renderTaskDescriptionWithLinks(container, text, this.app);
+		if (this.app) {
+			LinkRenderer.renderTaskDescriptionWithLinks(container, text, this.app);
+		} else {
+			container.textContent = text;
+		}
 	}
 
 	/**
@@ -909,14 +893,8 @@ export class SvgGanttRenderer {
 		checkbox.type = 'checkbox';
 		checkbox.checked = isCompleted;
 		checkbox.className = GanttClasses.elements.taskCheckbox;
-		checkbox.style.cssText = `
-			flex-shrink: 0;
-			width: 16px;
-			height: 16px;
-			cursor: pointer;
-			margin: 0;
-			accent-color: var(--interactive-accent);
-		`;
+		checkbox.addClass('gc-u-pointer');
+		setCssProps(checkbox, { flexShrink: '0', width: '16px', height: '16px', margin: '0', accentColor: 'var(--interactive-accent)' });
 
 		// 阻止点击事件冒泡到任务列表项
 		checkbox.addEventListener('click', (e) => {
@@ -924,19 +902,17 @@ export class SvgGanttRenderer {
 		});
 
 		// 监听复选框变化
-		checkbox.addEventListener('change', async (e) => {
+		checkbox.addEventListener('change', (e) => {
 			e.stopPropagation();
 			const newCompletedState = (e.target as HTMLInputElement).checked;
 
 			// 通过 onProgressChange 回调更新任务
 			if (this.onProgressChange) {
-				try {
-					await this.onProgressChange(ganttTask, newCompletedState ? 100 : 0);
-				} catch (error) {
+				Promise.resolve(this.onProgressChange(ganttTask, newCompletedState ? 100 : 0)).catch((error) => {
 					Logger.error('SvgGanttRenderer', 'Error updating task completion:', error);
 					// 恢复复选框状态
 					checkbox.checked = isCompleted;
-				}
+				});
 			}
 		});
 
@@ -1257,8 +1233,6 @@ export class SvgGanttRenderer {
 		const tasksGroup = activeDocument.createElementNS(ns, 'g');
 		addSvgClass(tasksGroup, GanttClasses.elements.tasks);
 
-		const config = GRANULARITY_CONFIGS[granularity];
-
 		this.tasks.forEach((task, index) => {
 			const taskStart = new Date(task.start);
 			const taskEnd = new Date(task.end);
@@ -1333,7 +1307,7 @@ export class SvgGanttRenderer {
 			leftHandle.setAttribute('width', String(HANDLE_HIT_AREA));
 			leftHandle.setAttribute('height', '24');
 			leftHandle.setAttribute('fill', 'transparent');
-			(leftHandle as any).style.cursor = 'w-resize';
+			setCssProps(leftHandle as unknown as HTMLElement, { cursor: 'w-resize' });
 			leftHandle.classList.add('gc-gantt-view__handle-left');
 
 			// 左侧视觉提示
@@ -1345,7 +1319,7 @@ export class SvgGanttRenderer {
 			leftVisual.setAttribute('rx', '1');
 			leftVisual.setAttribute('fill', 'white');
 			leftVisual.setAttribute('opacity', '0.5');
-			(leftVisual as any).style.pointerEvents = 'none';
+			setCssProps(leftVisual as unknown as HTMLElement, { pointerEvents: 'none' });
 
 			// 右侧手柄 - 修改结束时间
 			const rightHandleX = x + Math.max(barWidth, 20) - HANDLE_HIT_AREA;
@@ -1355,7 +1329,7 @@ export class SvgGanttRenderer {
 			rightHandle.setAttribute('width', String(HANDLE_HIT_AREA));
 			rightHandle.setAttribute('height', '24');
 			rightHandle.setAttribute('fill', 'transparent');
-			(rightHandle as any).style.cursor = 'e-resize';
+			setCssProps(rightHandle as unknown as HTMLElement, { cursor: 'e-resize' });
 			rightHandle.classList.add('gc-gantt-view__handle-right');
 
 			// 右侧视觉提示
@@ -1367,7 +1341,7 @@ export class SvgGanttRenderer {
 			rightVisual.setAttribute('rx', '1');
 			rightVisual.setAttribute('fill', 'white');
 			rightVisual.setAttribute('opacity', '0.5');
-			(rightVisual as any).style.pointerEvents = 'none';
+			setCssProps(rightVisual as unknown as HTMLElement, { pointerEvents: 'none' });
 
 			// 设置拖动事件
 			this.setupTaskBarDragging(barGroup as SVGGElement, bar as SVGRectElement, leftHandle as SVGRectElement, rightHandle as SVGRectElement, task, minDate);
@@ -1433,7 +1407,7 @@ export class SvgGanttRenderer {
 		if (!latestTask) return;
 
 		const tooltipManager = TooltipManager.getInstance(this.plugin);
-		tooltipManager.show(latestTask as any, targetElement as HTMLElement, mousePosition);
+		tooltipManager.show(latestTask as unknown as GCTask, targetElement as HTMLElement, mousePosition);
 	}
 
 	/**
@@ -1540,7 +1514,7 @@ export class SvgGanttRenderer {
 		if (barGroup) {
 			// 获取所有 rect 元素，找到小白点（pointer-events: none）
 			const allRects = Array.from(barGroup.querySelectorAll('rect'));
-			const visuals = allRects.filter(r => (r as any).style?.pointerEvents === 'none');
+			const visuals = allRects.filter(r => r.style?.pointerEvents === 'none');
 
 			// 根据位置区分左侧和右侧小白点
 			const barX = parseFloat(bar.getAttribute('x') || '0');
@@ -1563,8 +1537,7 @@ export class SvgGanttRenderer {
 			'resize-left': 'w-resize',
 			'resize-right': 'e-resize',
 		};
-		activeDocument.body.style.cursor = cursorMap[dragType];
-		activeDocument.body.style.userSelect = 'none';
+		setCssProps(activeDocument.body, { cursor: cursorMap[dragType], userSelect: 'none' });
 
 		// 设置全局事件监听
 		activeDocument.addEventListener('mousemove', this.handleDragMove);
@@ -1630,7 +1603,7 @@ export class SvgGanttRenderer {
 	/**
 	 * 处理拖动结束（绑定方法）
 	 */
-	private handleDragEnd = async (e: MouseEvent): Promise<void> => {
+	private handleDragEnd = (e: MouseEvent): void => {
 		if (!this.taskDragState.isDragging) return;
 
 		const { task, dragType, originalStart, originalEnd, startX, hasMoved } = this.taskDragState;
@@ -1638,8 +1611,7 @@ export class SvgGanttRenderer {
 
 		// 重置状态
 		this.taskDragState.isDragging = false;
-		activeDocument.body.style.cursor = '';
-		activeDocument.body.style.userSelect = '';
+		setCssProps(activeDocument.body, { cursor: '', userSelect: '' });
 
 		// 移除全局事件监听
 		activeDocument.removeEventListener('mousemove', this.handleDragMove);
@@ -1695,15 +1667,13 @@ export class SvgGanttRenderer {
 		}
 
 		// 调用相应的更新方法
-		try {
-			Logger.debug('SvgGanttRenderer', 'handleDragEnd: calling update method', { dragType, taskId: task?.id, newStart, newEnd });
-			if (this.onDateChange && task!) {
-				// 统一使用 onDateChange 回调处理所有拖动类型
-				// TaskUpdateHandler 会检测哪个字段被修改并正确更新
-				await this.onDateChange(task, newStart, newEnd);
-			}
-		} catch (error) {
-			Logger.error('SvgGanttRenderer', 'Error updating task dates:', error);
+		Logger.debug('SvgGanttRenderer', 'handleDragEnd: calling update method', { dragType, taskId: task?.id, newStart, newEnd });
+		if (this.onDateChange && task!) {
+			// 统一使用 onDateChange 回调处理所有拖动类型
+			// TaskUpdateHandler 会检测哪个字段被修改并正确更新
+			Promise.resolve(this.onDateChange(task, newStart, newEnd)).catch((error) => {
+				Logger.error('SvgGanttRenderer', 'Error updating task dates:', error);
+			});
 		}
 	}
 
@@ -1914,9 +1884,9 @@ export class SvgGanttRenderer {
 
 		// 左侧小白点（使用 style 选择器，因为创建时设置了 pointerEvents）
 		const leftVisual = Array.from(barGroup.querySelectorAll('rect')).find(
-			r => (r as any).style?.pointerEvents === 'none' &&
+			r => r.style?.pointerEvents === 'none' &&
 				parseFloat(r.getAttribute('x') || '0') < x + barWidth / 2  // 左侧的小白点
-		) as SVGRectElement;
+		);
 		if (leftVisual) {
 			leftVisual.setAttribute('x', String(x + 2));
 			leftVisual.setAttribute('y', String(y + 8));
@@ -1932,9 +1902,9 @@ export class SvgGanttRenderer {
 
 		// 右侧小白点（使用 style 选择器，因为创建时设置了 pointerEvents）
 		const rightVisual = Array.from(barGroup.querySelectorAll('rect')).find(
-			r => (r as any).style?.pointerEvents === 'none' &&
+			r => r.style?.pointerEvents === 'none' &&
 				parseFloat(r.getAttribute('x') || '0') >= x + barWidth / 2  // 右侧的小白点
-		) as SVGRectElement;
+		);
 		if (rightVisual) {
 			rightVisual.setAttribute('x', String(rightHandleX + HANDLE_HIT_AREA - 2 - HANDLE_VISUAL_SIZE));
 			rightVisual.setAttribute('y', String(y + 8));

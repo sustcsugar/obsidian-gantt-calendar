@@ -22,20 +22,22 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 			};
 
 			// 显示 Daily Note 开关
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.dayView.showDailyNote.name'))
 					.setDesc(i18n.t('settings.dayView.showDailyNote.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.enableDailyNote)
-						.onChange(async (value) => {
-							this.plugin.settings.enableDailyNote = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.enableDailyNote = value;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 
 			// 日视图布局（仅在启用 Daily Note 时显示）
 			if (this.plugin.settings.enableDailyNote) {
-				addSetting(setting =>
+				addSetting(setting => {
 					setting.setName(i18n.t('settings.dayView.layout.name'))
 						.setDesc(i18n.t('settings.dayView.layout.description'))
 						.addDropdown(drop => drop
@@ -44,11 +46,13 @@ export class DayViewSettingsBuilder extends BaseBuilder {
 								'vertical': i18n.t('settings.dayView.layout.options.vertical'),
 							})
 							.setValue(this.plugin.settings.dayViewLayout)
-							.onChange(async (value) => {
-								this.plugin.settings.dayViewLayout = value as 'horizontal' | 'vertical';
-								await this.saveAndRefreshViews();
-							}))
-				);
+							.onChange((value) => {
+								void (async () => {
+									this.plugin.settings.dayViewLayout = value as 'horizontal' | 'vertical';
+									await this.saveAndRefreshViews();
+								})();
+							}));
+				});
 			}
 		});
 	}

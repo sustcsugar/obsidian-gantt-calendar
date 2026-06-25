@@ -31,14 +31,14 @@ export class Logger {
 	/**
 	 * 错误日志（始终输出）
 	 */
-	static error(tag: string, ...args: any[]): void {
+	static error(tag: string, ...args: unknown[]): void {
 		console.error(`${this.LOG_PREFIX}[${tag}]`, ...args);
 	}
 
 	/**
 	 * 警告日志（始终输出）
 	 */
-	static warn(tag: string, ...args: any[]): void {
+	static warn(tag: string, ...args: unknown[]): void {
 		console.warn(`${this.LOG_PREFIX}[${tag}]`, ...args);
 	}
 
@@ -46,14 +46,14 @@ export class Logger {
 	 * 统计信息（始终输出，格式简化）
 	 * 用于显示文件数量、任务数量、性能统计等
 	 */
-	static stats(tag: string, ...args: any[]): void {
+	static stats(tag: string, ...args: unknown[]): void {
 		console.debug(`${this.LOG_PREFIX}[${tag}]`, ...args);
 	}
 
 	/**
 	 * 调试日志（仅开发者模式）
 	 */
-	static debug(tag: string, ...args: any[]): void {
+	static debug(tag: string, ...args: unknown[]): void {
 		if (this.isDebugMode()) {
 			console.debug(`${this.LOG_PREFIX}[${tag}]`, ...args);
 		}
@@ -63,7 +63,7 @@ export class Logger {
 	 * 信息日志（仅开发者模式）
 	 * 与 debug 相同，但语义上用于更重要的信息
 	 */
-	static info(tag: string, ...args: any[]): void {
+	static info(tag: string, ...args: unknown[]): void {
 		if (this.isDebugMode()) {
 			console.debug(`${this.LOG_PREFIX}[${tag}]`, ...args);
 		}

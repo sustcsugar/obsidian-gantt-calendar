@@ -18,7 +18,6 @@ import {
 	getDailyNoteSettings,
 	getAllDailyNotes,
 	getDailyNote,
-	createDailyNote,
 	appHasDailyNotesPluginLoaded,
 } from 'obsidian-daily-notes-interface';
 

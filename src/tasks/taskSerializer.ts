@@ -1,7 +1,13 @@
 import { App } from 'obsidian';
 import { GCTask, MetadataField } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
-import { TaskStatusType, getStatusBySymbol, DEFAULT_TASK_STATUSES } from './taskStatus';
+import { TaskStatusType, DEFAULT_TASK_STATUSES } from './taskStatus';
+
+/** Minimal plugin settings shape needed for serialization */
+interface SerializerPluginSettings {
+	globalTaskFilter?: string;
+	taskStatuses?: Array<{ key: TaskStatusType; symbol: string }>;
+}
 
 /**
  * 任务更新参数
@@ -98,14 +104,6 @@ function getPriorityEmoji(priority: 'highest' | 'high' | 'medium' | 'low' | 'low
 }
 
 /**
- * 检查 metadataFields 中是否已包含某个 key
- */
-function metadataContainsKey(fields: MetadataField[] | undefined, key: string): boolean {
-	if (!fields) return false;
-	return fields.some(f => f.key === key);
-}
-
-/**
  * 序列化任务为文本行
  *
  * 按照固定顺序构建任务行：
@@ -151,7 +149,7 @@ export function serializeTask(
 		status: updates.status !== undefined ? updates.status : task.status,
 		priority: updates.priority !== undefined
 			? getPriorityEmoji(updates.priority)
-			: getPriorityEmoji((task.priority || 'normal') as any),
+			: getPriorityEmoji((task.priority || 'normal') as 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal'),
 		description: finalDescription,
 		tags: updates.tags !== undefined ? updates.tags : task.tags,
 		metadataFields: updates.metadataFields !== undefined ? (updates.metadataFields || undefined) : task.metadataFields,
@@ -167,9 +165,11 @@ export function serializeTask(
 	};
 
 	// 2. 从插件设置中获取全局过滤器和任务状态配置（官方 API）
-	const ganttPlugin = (app as any).plugins?.getPlugin?.('gantt-calendar');
-	const globalFilter = ganttPlugin?.settings?.globalTaskFilter || '';
-	const taskStatuses = ganttPlugin?.settings?.taskStatuses || DEFAULT_TASK_STATUSES;
+	const appWithPlugins = app as App & { plugins?: { getPlugin?: (id: string) => { settings?: SerializerPluginSettings } | null } };
+	const ganttPlugin = appWithPlugins.plugins?.getPlugin?.('gantt-calendar');
+	const pluginSettings: SerializerPluginSettings = ganttPlugin?.settings ?? {};
+	const globalFilter = pluginSettings.globalTaskFilter || '';
+	const taskStatuses: Array<{ key: TaskStatusType; symbol: string }> = pluginSettings.taskStatuses || DEFAULT_TASK_STATUSES;
 
 	// 3. 构建任务行的各个部分
 	const parts: string[] = [];

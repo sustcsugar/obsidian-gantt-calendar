@@ -98,7 +98,7 @@ export async function completeRecurringTask(
     };
 
     // 推进主日期字段
-    (newTaskUpdates as any)[dateField] = nextOccurrence;
+    (newTaskUpdates as unknown as Record<string, unknown>)[dateField] = nextOccurrence;
 
     // 推进其他日期字段（保持相对偏移）
     advanceDateInUpdates(newTaskUpdates, task, dateField, nextOccurrence);

@@ -5,7 +5,7 @@
  * 按任务清单分类，使用表格格式展示
  */
 
-import { TFile } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import type { FeishuTask } from './feishu/FeishuTypes';
 import { Logger } from '../../../../utils/logger';
 
@@ -190,7 +190,7 @@ export class FeishuTaskStorage {
      * @returns 存储结果
      */
     static async saveTasks(
-        app: any,
+        app: App,
         tasks: FeishuTask[],
         config: TaskStorageConfig = {}
     ): Promise<TaskStorageResult> {
@@ -233,7 +233,7 @@ export class FeishuTaskStorage {
      * @returns 存储结果
      */
     static async appendTasks(
-        app: any,
+        app: App,
         tasks: FeishuTask[],
         fileName: string = '飞书任务'
     ): Promise<TaskStorageResult> {

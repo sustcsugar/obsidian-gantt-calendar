@@ -7,13 +7,13 @@
  */
 
 import { App, TFile } from 'obsidian';
+import type { ListItemCache } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { FeishuTaskRaw } from '../sources/api/providers/feishu/FeishuTypes';
 import type { FeishuProvider } from '../sources/api/providers/FeishuProvider';
 import { SyncStateManager, SyncRecord } from './syncState';
 import {
     toFeishuTaskPayload,
-    toFeishuCompleted,
     fromFeishuTask,
     GCTaskUpdates,
 } from './taskMapper';
@@ -21,6 +21,7 @@ import { parseTasksFromFile } from '../../tasks/taskParser/main';
 import { serializeTask, TaskUpdates } from '../../tasks/taskSerializer';
 import { Logger } from '../../utils/logger';
 import { PushFilterConfig, applyPushFilter, passesPushFilter } from '../../utils/taskFilter';
+import type { Priority } from '../types';
 
 /** 冲突解决策略 */
 export type ConflictStrategy = 'newest-win' | 'local-win' | 'remote-win';
@@ -422,7 +423,7 @@ export class FeishuTaskSync {
             return parseTasksFromFile(
                 file,
                 content,
-                listItems,
+                listItems as ListItemCache[],
                 this.options.enabledFormats,
                 this.options.globalFilter
             );
@@ -997,7 +998,7 @@ export class FeishuTaskSync {
             feishuGuid: updates.feishuGuid,
             dueDate: updates.dueDate,
             startDate: updates.startDate,
-            priority: updates.priority as any,
+            priority: updates.priority as Priority,
             datePrecision: updates.datePrecision,
         };
 
@@ -1037,7 +1038,7 @@ export class FeishuTaskSync {
                 feishuGuid: updates.feishuGuid,
                 dueDate: updates.dueDate !== undefined ? updates.dueDate : task.dueDate,
                 startDate: updates.startDate !== undefined ? updates.startDate : task.startDate,
-                priority: updates.priority as any,
+                priority: updates.priority as Priority,
                 datePrecision: updates.datePrecision !== undefined ? updates.datePrecision : task.datePrecision,
             };
 

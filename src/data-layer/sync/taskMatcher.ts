@@ -150,9 +150,9 @@ export class TaskMatcher {
         if (maxLen === 0) return 1;
 
         // 计算编辑距离
-        const dp: number[][] = Array(len1 + 1)
-            .fill(null)
-            .map(() => Array(len2 + 1).fill(0));
+        const dp = Array.from({ length: len1 + 1 }, () =>
+            Array.from<number>({ length: len2 + 1 }).fill(0)
+        );
 
         for (let i = 0; i <= len1; i++) {
             dp[i][0] = i;

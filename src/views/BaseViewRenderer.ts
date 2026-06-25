@@ -1,11 +1,9 @@
-import { App, Notice } from 'obsidian';
+import { App } from 'obsidian';
 import type { IPluginContext,  GCTask } from '../types';
 import { DEFAULT_SORT_STATE, DEFAULT_TAG_FILTER_STATE, DEFAULT_STATUS_FILTER_STATE, type SortState, type TagFilterState, type StatusFilterState } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { openFileInExistingLeaf } from '../utils/fileOpener';
-import { getStatusColor, DEFAULT_TASK_STATUSES, getStatusByKey } from '../tasks/taskStatus';
-import type { TaskStatus } from '../tasks/taskStatus';
-import { RegularExpressions } from '../utils/RegularExpressions';
+import { getStatusColor, DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
 import { Logger } from '../utils/logger';
 import { TooltipClasses } from '../utils/bem';
 import { LinkRenderer } from '../utils/linkRenderer';
@@ -175,15 +173,18 @@ export abstract class BaseViewRenderer {
 		const settings = this.plugin?.settings;
 		if (!settings) return;
 
+		// 使用 Record<string, unknown> 安全访问动态属性，然后显式断言类型
+		const settingsRecord = settings as unknown as Record<string, unknown>;
+
 		// 加载状态筛选
-		const savedStatuses = (settings as Record<string, any>)[`${settingsPrefix}SelectedStatuses`];
+		const savedStatuses = settingsRecord[`${settingsPrefix}SelectedStatuses`] as string[] | undefined;
 		if (savedStatuses !== undefined) {
 			this.statusFilterState = { selectedStatuses: savedStatuses };
 		}
 
 		// 加载标签筛选
-		const savedTags = (settings as Record<string, any>)[`${settingsPrefix}SelectedTags`];
-		const savedOperator = (settings as Record<string, any>)[`${settingsPrefix}TagOperator`];
+		const savedTags = settingsRecord[`${settingsPrefix}SelectedTags`] as string[] | undefined;
+		const savedOperator = settingsRecord[`${settingsPrefix}TagOperator`] as 'AND' | 'OR' | 'NOT' | undefined;
 		if (savedTags !== undefined || savedOperator !== undefined) {
 			this.tagFilterState = {
 				selectedTags: savedTags || [],
@@ -201,8 +202,9 @@ export abstract class BaseViewRenderer {
 		const settings = this.plugin?.settings;
 		if (!settings) return;
 
-		const savedField = (settings as Record<string, any>)[`${this.settingsPrefix}SortField`];
-		const savedOrder = (settings as Record<string, any>)[`${this.settingsPrefix}SortOrder`];
+		const settingsRecord = settings as unknown as Record<string, unknown>;
+		const savedField = settingsRecord[`${this.settingsPrefix}SortField`] as SortState['field'] | undefined;
+		const savedOrder = settingsRecord[`${this.settingsPrefix}SortOrder`] as SortState['order'] | undefined;
 		if (savedField && savedOrder) {
 			this.sortState = { field: savedField, order: savedOrder };
 		} else {
@@ -232,8 +234,9 @@ export abstract class BaseViewRenderer {
 	 */
 	private saveSortState(): void {
 		if (!this.plugin?.settings) return;
-		(this.plugin.settings as Record<string, any>)[`${this.settingsPrefix}SortField`] = this.sortState.field;
-		(this.plugin.settings as Record<string, any>)[`${this.settingsPrefix}SortOrder`] = this.sortState.order;
+		const settingsRecord = this.plugin.settings as unknown as Record<string, unknown>;
+		settingsRecord[`${this.settingsPrefix}SortField`] = this.sortState.field;
+		settingsRecord[`${this.settingsPrefix}SortOrder`] = this.sortState.order;
 		this.plugin.saveSettings().catch((err: unknown) => {
 			Logger.error('BaseViewRenderer', 'Failed to save sort state', err);
 		});
@@ -244,7 +247,8 @@ export abstract class BaseViewRenderer {
 	 */
 	protected async saveStatusFilterState(settingsPrefix: string): Promise<void> {
 		if (!this.plugin?.settings) return;
-		(this.plugin.settings as Record<string, any>)[`${settingsPrefix}SelectedStatuses`] =
+		const settingsRecord = this.plugin.settings as unknown as Record<string, unknown>;
+		settingsRecord[`${settingsPrefix}SelectedStatuses`] =
 			this.statusFilterState.selectedStatuses;
 		await this.plugin.saveSettings();
 	}
@@ -254,9 +258,10 @@ export abstract class BaseViewRenderer {
 	 */
 	protected async saveTagFilterState(settingsPrefix: string): Promise<void> {
 		if (!this.plugin?.settings) return;
-		(this.plugin.settings as Record<string, any>)[`${settingsPrefix}SelectedTags`] =
+		const settingsRecord = this.plugin.settings as unknown as Record<string, unknown>;
+		settingsRecord[`${settingsPrefix}SelectedTags`] =
 			this.tagFilterState.selectedTags;
-		(this.plugin.settings as Record<string, any>)[`${settingsPrefix}TagOperator`] =
+		settingsRecord[`${settingsPrefix}TagOperator`] =
 			this.tagFilterState.operator;
 		await this.plugin.saveSettings();
 	}

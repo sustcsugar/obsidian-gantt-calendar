@@ -18,5 +18,5 @@ export function renderSyncButton(
 		attr: { 'aria-label': title }
 	});
 	setIcon(btn, 'cloud-download');
-	btn.addEventListener('click', onSync);
+	btn.addEventListener('click', () => { void onSync(); });
 }

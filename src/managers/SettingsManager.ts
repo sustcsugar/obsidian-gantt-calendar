@@ -4,12 +4,10 @@
  * 负责设置的加载、保存、迁移和 CSS 变量更新
  */
 
-import { Notice } from 'obsidian';
 import type GanttCalendarPlugin from '../../main';
 import { DEFAULT_SETTINGS } from '../settings/constants';
 import type { GanttCalendarSettings } from '../settings/types';
-import { TaskStatus, ThemeColors } from '../tasks/taskStatus';
-import { Logger } from '../utils/logger';
+import { ThemeColors } from '../tasks/taskStatus';
 import { setTimezoneOffset } from '../dateUtils/timezone';
 
 /**
@@ -72,7 +70,7 @@ export class SettingsManager {
 	private async migrateTemplaterSettings(settings: GanttCalendarSettings): Promise<void> {
 		const data = await this.plugin.loadData() as Record<string, unknown> || {};
 		if ('templaterTemplatePath' in data && !('dailyNoteTemplatePath' in data)) {
-			settings.dailyNoteTemplatePath = (data as any).templaterTemplatePath || '';
+			settings.dailyNoteTemplatePath = (data as Record<string, string>).templaterTemplatePath || '';
 			await this.plugin.saveData(settings);
 		}
 	}

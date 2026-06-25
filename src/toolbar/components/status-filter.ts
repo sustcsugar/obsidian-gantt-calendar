@@ -1,7 +1,7 @@
 import { setIcon } from 'obsidian';
 import type { StatusFilterState } from '../../types';
 import type { TaskStatus } from '../../tasks/taskStatus';
-import { ToolbarClasses } from '../../utils/bem';
+import { setCssProps, ToolbarClasses } from '../../utils/bem';
 import { getStatusColor } from '../../tasks/taskStatus';
 import { i18n } from '../../i18n/i18n';
 
@@ -39,8 +39,7 @@ export function renderStatusFilterButton(
 
 	// 5. 创建下拉面板
 	const dropdown = activeDocument.createElement('div');
-	dropdown.addClass(classes.dropdown);
-	dropdown.style.display = 'none';
+	dropdown.addClass(classes.dropdown, 'gc-u-hidden');
 	activeDocument.body.appendChild(dropdown);
 
 	// 6. 渲染面板内容
@@ -80,8 +79,7 @@ export function renderStatusFilterButton(
 			label.setText(statusConfig.name);
 			const colors = getStatusColor(statusConfig.key, [statusConfig]);
 			if (colors) {
-				label.style.backgroundColor = colors.bg;
-				label.style.color = colors.text;
+				setCssProps(label, { backgroundColor: colors.bg, color: colors.text });
 			}
 
 			// 点击事件 - 阻止冒泡，保持弹窗打开
@@ -106,22 +104,21 @@ export function renderStatusFilterButton(
 	// 7. 切换下拉显示
 	statusBtn.addEventListener('click', (e) => {
 		e.stopPropagation();
-		const isVisible = dropdown.style.display !== 'none';
+		const isVisible = !dropdown.hasClass('gc-u-hidden');
 		if (isVisible) {
-			dropdown.style.display = 'none';
+			dropdown.addClass('gc-u-hidden');
 		} else {
 			renderDropdown();
 			const rect = statusBtn.getBoundingClientRect();
-			dropdown.style.top = `${rect.bottom + 4}px`;
-			dropdown.style.left = `${rect.left}px`;
-			dropdown.style.display = 'block';
+			setCssProps(dropdown, { top: `${rect.bottom + 4}px`, left: `${rect.left}px` });
+			dropdown.removeClass('gc-u-hidden');
 		}
 	});
 
 	// 8. 点击外部关闭
 	const closeOnClickOutside = (e: MouseEvent) => {
 		if (!dropdown.contains(e.target as Node) && !statusBtn.contains(e.target as Node)) {
-			dropdown.style.display = 'none';
+			dropdown.addClass('gc-u-hidden');
 		}
 	};
 	activeDocument.addEventListener('click', closeOnClickOutside);

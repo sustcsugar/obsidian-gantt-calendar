@@ -2,7 +2,7 @@ import type { IPluginContext, GCTask } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { i18n } from '../i18n/i18n';
 import { TagPill } from '../components/tagPill';
-import { TooltipClasses } from './bem';
+import { TooltipClasses, setCssProps } from './bem';
 
 interface TooltipConfig {
 	showDelay?: number;
@@ -54,12 +54,12 @@ export class TooltipManager {
 	private ensureTooltip(): HTMLElement {
 		if (!this.tooltip || !activeDocument.body.contains(this.tooltip)) {
 			this.tooltip = activeDocument.body.createDiv('gc-task-tooltip');
-			this.tooltip.style.opacity = '0';
+			setCssProps(this.tooltip, { opacity: '0' });
 
 			this.cachedElements.description = this.tooltip.createDiv(TooltipClasses.elements.description);
 			this.cachedElements.properties = this.tooltip.createDiv(TooltipClasses.elements.properties);
 
-			this.cachedElements.properties.style.display = 'none';
+			this.cachedElements.properties.addClass('gc-u-hidden');
 
 			this.tooltip.addClass('gc-task-tooltip--initialized');
 		}
@@ -93,7 +93,7 @@ export class TooltipManager {
 		if (isDifferentTask && isVisible) {
 			if (this.tooltip) {
 				this.tooltip.removeClass('gc-task-tooltip--visible');
-				this.tooltip.style.opacity = '0';
+				setCssProps(this.tooltip, { opacity: '0' });
 			}
 		}
 
@@ -116,7 +116,7 @@ export class TooltipManager {
 		const tooltip = this.ensureTooltip();
 		this.updateContent(task);
 		this.updatePosition(card);
-		tooltip.style.opacity = '1';
+		setCssProps(tooltip, { opacity: '1' });
 		tooltip.addClass('gc-task-tooltip--visible');
 	}
 
@@ -237,9 +237,9 @@ export class TooltipManager {
 					}
 				}
 
-				this.cachedElements.properties.style.display = '';
+				this.cachedElements.properties.removeClass('gc-u-hidden');
 			} else {
-				this.cachedElements.properties.style.display = 'none';
+				this.cachedElements.properties.addClass('gc-u-hidden');
 			}
 		}
 	}
@@ -284,8 +284,7 @@ export class TooltipManager {
 			top = 10;
 		}
 
-		this.tooltip.style.left = `${left}px`;
-		this.tooltip.style.top = `${top}px`;
+		setCssProps(this.tooltip, { left: `${left}px`, top: `${top}px` });
 	}
 
 	private estimateTooltipHeight(): number {
@@ -338,7 +337,7 @@ export class TooltipManager {
 		}
 		if (this.tooltip) {
 			this.tooltip.removeClass('gc-task-tooltip--visible');
-			this.tooltip.style.opacity = '0';
+			setCssProps(this.tooltip, { opacity: '0' });
 		}
 	}
 
@@ -350,7 +349,7 @@ export class TooltipManager {
 		this.hideTimeout = window.setTimeout(() => {
 			if (this.tooltip) {
 				this.tooltip.removeClass('gc-task-tooltip--visible');
-				this.tooltip.style.opacity = '0';
+				setCssProps(this.tooltip, { opacity: '0' });
 			}
 		}, this.config.hideDelay);
 	}

@@ -3,7 +3,6 @@ import { BaseViewRenderer } from './BaseViewRenderer';
 import { generateMonthCalendar } from '../calendar/calendarGenerator';
 import type { IPluginContext, GCTask, TagFilterState } from '../types';
 import { getTaskDateField } from '../types';
-import type { DateFieldType } from '../settings/types';
 import { YearViewClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
 import { i18n } from '../i18n/i18n';

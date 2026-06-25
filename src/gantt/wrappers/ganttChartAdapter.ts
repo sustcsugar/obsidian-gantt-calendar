@@ -3,6 +3,7 @@
  * 管理 SVG 甘特图实例的生命周期、渲染和事件处理
  */
 
+import { App } from 'obsidian';
 import { SvgGanttRenderer } from './svgGanttRenderer';
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
 import type { IPluginContext,  GCTask } from '../../types';
@@ -21,7 +22,7 @@ export class GanttChartAdapter {
 	private config: GanttChartConfig;
 	private isInitialized = false;
 	private plugin: IPluginContext;
-	private app: any;  // Obsidian App 实例
+	private app: App;  // Obsidian App 实例
 	private originalTasks: GCTask[] = [];
 	private startField: DateFieldType = 'startDate';
 	private endField: DateFieldType = 'dueDate';

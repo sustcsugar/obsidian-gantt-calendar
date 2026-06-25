@@ -12,6 +12,7 @@ import { i18n } from '../i18n/i18n';
 
 import type { GCTask } from '../types';
 import { TagPill } from './tagPill/TagPill';
+import { setCssProps } from '../utils/bem';
 
 /**
  * 标签选择器配置选项
@@ -93,9 +94,10 @@ export class TagSelector {
 
 		const recommendedTags = this.getRecommendedTags();
 		if (recommendedTags.length === 0) {
-			this.recommendedGrid.createEl('small', {
+			const hintEl = this.recommendedGrid.createEl('small', {
 				text: i18n.t('modals.createTask.tags.noRecommended')
-			}).style.opacity = '0.5';
+			});
+			setCssProps(hintEl, { opacity: '0.5' });
 			return;
 		}
 
@@ -142,9 +144,10 @@ export class TagSelector {
 		this.selectedGrid.empty();
 
 		if (this.selectedTags.size === 0) {
-			this.selectedGrid.createEl('small', {
+			const hintEl = this.selectedGrid.createEl('small', {
 				text: i18n.t('modals.createTask.tags.noSelected')
-			}).style.opacity = '0.5';
+			});
+			setCssProps(hintEl, { opacity: '0.5' });
 			return;
 		}
 

@@ -19,7 +19,6 @@ import {
 } from './taskParser/index';
 
 // 为了兼容性，从 taskSerializerSymbols 导入配置
-import { TASKS_FORMAT_CONFIG, DATAVIEW_FORMAT_CONFIG } from './taskSerializerSymbols';
 import { parsePriorityFromEmoji, parsePriorityFromDataview } from './taskSerializerSymbols';
 
 // ==================== 主解析函数（保留） ====================

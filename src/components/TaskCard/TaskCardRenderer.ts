@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 import type { GCTask, IPluginContext } from '../../types';
 import type { TaskCardConfig, TimeFieldConfig } from './TaskCardConfig';
-import { TaskCardClasses, TimeBadgeClasses } from '../../utils/bem';
+import { TaskCardClasses, TimeBadgeClasses, setCssProps } from '../../utils/bem';
 import { registerTaskContextMenu } from '../../contextMenu/contextMenuIndex';
 import { i18n } from '../../i18n/i18n';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
@@ -9,7 +9,7 @@ import { updateTaskCompletion } from '../../tasks/taskUpdater';
 import { completeRecurringTask } from '../../tasks/recurringTaskCompleter';
 import { isVirtualTask, getVirtualMetadata } from '../../tasks/virtualTaskGenerator';
 import { getStatusColor, DEFAULT_TASK_STATUSES, getCurrentThemeMode } from '../../tasks/taskStatus';
-import { RegularExpressions } from '../../utils/RegularExpressions';
+
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { toISOStringLocal } from '../../dateUtils/timezone';
 import { TooltipManager } from '../../utils/tooltipManager';
@@ -102,50 +102,54 @@ export class TaskCardRenderer {
 
 		// 虚拟任务的 checkbox：点击跳转到源任务
 		if (isVirtualTask(task)) {
-			checkbox.addEventListener('click', async (e) => {
+			checkbox.addEventListener('click', (e) => {
 				e.stopPropagation();
 				e.preventDefault();
-				// 导航到源任务文件
-				const meta = getVirtualMetadata(task);
-				if (meta) {
-					const [filePath, lineStr] = meta.sourceTaskId.split(':');
-					const lineNumber = parseInt(lineStr);
-					await openFileInExistingLeaf(this.app, filePath, lineNumber);
-				}
-				checkbox.checked = false; // 还原 checkbox
+				void (async () => {
+					// 导航到源任务文件
+					const meta = getVirtualMetadata(task);
+					if (meta) {
+						const [filePath, lineStr] = meta.sourceTaskId.split(':');
+						const lineNumber = parseInt(lineStr);
+						await openFileInExistingLeaf(this.app, filePath, lineNumber);
+					}
+					checkbox.checked = false; // 还原 checkbox
+				})();
 			});
 			return checkbox;
 		}
 
 		// 周期性真实任务的 checkbox：完成时创建下一个周期任务
-		checkbox.addEventListener('change', async (e) => {
+		checkbox.addEventListener('change', (e) => {
 			e.stopPropagation();
-			const isNowCompleted = checkbox.checked;
-			try {
-				if (isNowCompleted && task.repeat) {
-					// 周期任务完成流程
-					const dateField = this.plugin.settings.dateFilterField || 'dueDate';
-					await completeRecurringTask(
-						this.app,
-						task,
-						this.plugin.settings.enabledTaskFormats,
-						dateField
-					);
-				} else {
-					// 普通完成流程
-					await updateTaskCompletion(
-						this.app,
-						task,
-						isNowCompleted,
-						this.plugin.settings.enabledTaskFormats
-					);
+			void (async () => {
+				const isNowCompleted = checkbox.checked;
+				try {
+					if (isNowCompleted && task.repeat) {
+						// 周期任务完成流程
+						const dateField = this.plugin.settings.dateFilterField || 'dueDate';
+						await completeRecurringTask(
+							this.app,
+							task,
+							this.plugin.settings.enabledTaskFormats,
+							dateField
+						);
+					} else {
+						// 普通完成流程
+						await updateTaskCompletion(
+							this.app,
+							task,
+							isNowCompleted,
+							this.plugin.settings.enabledTaskFormats
+						);
+					}
+					taskItem.toggleClass(TaskCardClasses.modifiers.completed, isNowCompleted);
+					taskItem.toggleClass(TaskCardClasses.modifiers.pending, !isNowCompleted);
+				} catch (error) {
+					Logger.error('TaskCardRenderer', 'Error updating task:', error);
+					checkbox.checked = task.completed;
 				}
-				taskItem.toggleClass(TaskCardClasses.modifiers.completed, isNowCompleted);
-				taskItem.toggleClass(TaskCardClasses.modifiers.pending, !isNowCompleted);
-			} catch (error) {
-				Logger.error('TaskCardRenderer', 'Error updating task:', error);
-				checkbox.checked = task.completed;
-			}
+			})();
 		});
 
 		checkbox.addEventListener('click', (e) => {
@@ -366,7 +370,7 @@ export class TaskCardRenderer {
 			if (e.dataTransfer) {
 				e.dataTransfer.effectAllowed = 'move';
 				e.dataTransfer.setData('taskId', `${task.filePath}:${task.lineNumber}`);
-				card.style.opacity = '0.6';
+				setCssProps(card, { opacity: '0.6' });
 
 				// 拖动时取消悬浮窗
 				tooltipManager.cancel();
@@ -374,7 +378,7 @@ export class TaskCardRenderer {
 		});
 
 		card.addEventListener('dragend', () => {
-			card.style.opacity = '1';
+			setCssProps(card, { opacity: '1' });
 		});
 	}
 

@@ -1,5 +1,6 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
+import type { TaskUpdates } from '../../tasks/taskSerializer';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
@@ -22,7 +23,7 @@ export async function postponeTask(
 	fromNow = false
 ): Promise<void> {
 	try {
-		const updates: any = {};
+		const updates: TaskUpdates = {};
 		let newDate: Date;
 
 		if (fromNow) {

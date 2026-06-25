@@ -22,7 +22,7 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 			};
 
 			// 起始字段
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.ganttView.startField.name'))
 					.setDesc(i18n.t('settings.ganttView.startField.description'))
 					.addDropdown(drop => drop
@@ -35,14 +35,16 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 						'cancelledDate': i18n.t('settings.ganttView.dateFieldOptions.cancelledDate'),
 						})
 						.setValue(this.plugin.settings.ganttStartField)
-						.onChange(async (value) => {
-							this.plugin.settings.ganttStartField = value as DateFieldType;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.ganttStartField = value as DateFieldType;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 
 			// 结束字段
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.ganttView.endField.name'))
 					.setDesc(i18n.t('settings.ganttView.endField.description'))
 					.addDropdown(drop => drop
@@ -55,11 +57,13 @@ export class GanttViewSettingsBuilder extends BaseBuilder {
 						'cancelledDate': i18n.t('settings.ganttView.dateFieldOptions.cancelledDate'),
 						})
 						.setValue(this.plugin.settings.ganttEndField)
-						.onChange(async (value) => {
-							this.plugin.settings.ganttEndField = value as DateFieldType;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.ganttEndField = value as DateFieldType;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 		});
 	}
 }

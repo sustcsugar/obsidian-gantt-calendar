@@ -4512,3 +4512,71 @@ Author: sugar
     cursor: pointer;
     font-size: var(--font-ui-small);
 }
+
+/* ========================================
+   UTILITY CLASSES (工具类)
+   替代内联 style.xxx = yyy 赋值
+   ======================================== */
+
+/* --- Layout: Flex --- */
+.gc-u-flex          { display: flex; }
+.gc-u-flex-col      { display: flex; flex-direction: column; }
+.gc-u-flex-center   { display: flex; align-items: center; }
+.gc-u-flex-between  { display: flex; justify-content: space-between; align-items: center; }
+.gc-u-flex-wrap     { display: flex; flex-wrap: wrap; }
+.gc-u-items-center  { align-items: center; }
+.gc-u-justify-between { justify-content: space-between; }
+.gc-u-gap-xs        { gap: 4px; }
+.gc-u-gap-sm        { gap: 8px; }
+.gc-u-gap-md        { gap: 12px; }
+
+/* --- Layout: Grid --- */
+.gc-u-grid          { display: grid; }
+
+/* --- Position --- */
+.gc-u-relative      { position: relative; }
+.gc-u-absolute      { position: absolute; }
+
+/* --- Display --- */
+.gc-u-hidden        { display: none; }
+.gc-u-block         { display: block; }
+.gc-u-inline-block  { display: inline-block; }
+
+/* --- Sizing --- */
+.gc-u-w-full        { width: 100%; }
+.gc-u-min-w-0       { min-width: 0; }
+
+/* --- Spacing --- */
+.gc-u-mb-sm         { margin-bottom: 8px; }
+.gc-u-mb-md         { margin-bottom: 16px; }
+.gc-u-mt-sm         { margin-top: 8px; }
+.gc-u-p-xs          { padding: 2px 8px; }
+.gc-u-p-sm          { padding: 4px 0; }
+
+/* --- Typography --- */
+.gc-u-text-sm       { font-size: var(--font-ui-smaller); }
+.gc-u-text-muted    { color: var(--text-muted); }
+.gc-u-text-center   { text-align: center; }
+.gc-u-whitespace-nowrap { white-space: nowrap; }
+.gc-u-font-medium   { font-weight: 500; }
+
+/* --- Interaction --- */
+.gc-u-pointer       { cursor: pointer; }
+.gc-u-select-none   { user-select: none; }
+.gc-u-events-none   { pointer-events: none; }
+
+/* --- Visual --- */
+.gc-u-rounded       { border-radius: 6px; }
+.gc-u-border        { border: 1px solid var(--background-modifier-border); }
+.gc-u-transition    { transition: transform 0.2s ease; }
+
+/* --- Overflow --- */
+.gc-u-overflow-hidden { overflow: hidden; }
+
+/* --- Clear button (date input) --- */
+.gc-u-clear-btn-pos {
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+}

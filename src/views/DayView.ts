@@ -1,17 +1,14 @@
-import { App, setIcon, Notice } from 'obsidian';
+import { App, Component, setIcon } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
-import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import type { IPluginContext,  GCTask } from '../types';
 import { getTaskDateField } from '../types';
-import type { DateFieldType } from '../settings/types';
 import { sortTasks } from '../tasks/taskSorter';
-import { TaskCardClasses, DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../utils/bem';
+import { DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, DayViewConfig, type TaskCardConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
 import { EmbeddedNoteEditor } from './EmbeddedNoteEditor';
-import { updateTaskDateField } from '../tasks/taskUpdater';
-import { CreateTaskModal } from '../modals/CreateTaskModal';
-import { TooltipManager } from '../utils/tooltipManager';
+import type { DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import { i18n } from '../i18n/i18n';
 import { renderCurrentTimeLine } from '../utils/currentTimeLine';
 import { isTodayInTimezone } from '../dateUtils/timezone';
@@ -328,7 +325,6 @@ export class DayViewRenderer extends BaseViewRenderer {
 			isResizing = true;
 			const startX = e.clientX;
 			const startTasksWidth = tasksSection.offsetWidth;
-			const startNotesWidth = notesSection.offsetWidth;
 			const totalWidth = container.offsetWidth;
 
 			const mouseMoveHandler = (moveEvent: MouseEvent) => {
@@ -365,7 +361,6 @@ export class DayViewRenderer extends BaseViewRenderer {
 			isResizing = true;
 			const startY = e.clientY;
 			const startTasksHeight = tasksSection.offsetHeight;
-			const startNotesHeight = notesSection.offsetHeight;
 			const totalHeight = container.offsetHeight;
 
 			const mouseMoveHandler = (moveEvent: MouseEvent) => {
@@ -408,9 +403,9 @@ export class DayViewRenderer extends BaseViewRenderer {
 
 		await this.embeddedEditor.openDate(
 			targetDate,
-			this.plugin.dailyNoteIndex,
+			this.plugin.dailyNoteIndex as DailyNoteIndex,
 			this.plugin.settings,
-			this.plugin.calendarView as any
+			this.plugin.calendarView as unknown as Component
 		);
 
 		// 更新笔记区标题为当前打开的文件名

@@ -9,6 +9,7 @@ import {
 	sanitizeFileName,
 	type CreateNoteOptions,
 } from './createNoteFromTask';
+import { setCssProps } from '../../utils/bem';
 
 /**
  * 创建任务别名笔记
@@ -73,7 +74,7 @@ class AliasInputModal extends Modal {
 
 		const input = contentEl.createEl('input', { type: 'text', value: '' });
 		input.placeholder = '请输入笔记名称(任务描述为笔记别名)';
-		input.style.width = '100%';
+		setCssProps(input, { width: '100%' });
 		input.focus();
 
 		new Setting(contentEl)

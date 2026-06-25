@@ -1,7 +1,7 @@
 // lunarConvert.ts
 // 阳历转农历主函数及API
 import { Gan, Zhi, Animals, lunarMonthNames, lunarDayNames } from './lunarData';
-import { getLunarYearData, getLeapMonth, getLeapDays, getMonthDays, getYearDays } from './lunarUtils';
+import { getLeapMonth, getLeapDays, getMonthDays, getYearDays } from './lunarUtils';
 import { getFestival } from './festival';
 import { getSolarTerm } from './solarTerm';
 import { LunarDate } from './lunarTypes';

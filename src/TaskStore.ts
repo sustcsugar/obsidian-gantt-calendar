@@ -86,21 +86,24 @@ export class TaskStore {
 	 */
 	private setupEventForwarding(): void {
 		this.eventBus.on('task:created', (data) => {
-			const filePath = (data)?.task?.filePath;
+			const taskData = data as { task?: { filePath?: string } } | undefined;
+			const filePath = taskData?.task?.filePath;
 			Logger.debug('TaskStore', `Event: task:created from ${filePath || 'unknown'}`);
 			this.invalidateCache();
 			this.notifyListenersDebounced(filePath);
 		});
 		this.eventBus.on('task:updated', (data) => {
-			const filePath = (data)?.task?.filePath;
+			const taskData = data as { task?: { filePath?: string } } | undefined;
+			const filePath = taskData?.task?.filePath;
 			Logger.debug('TaskStore', `Event: task:updated from ${filePath || 'unknown'}`);
 			this.invalidateCache();
 			this.notifyListenersDebounced(filePath);
 		});
 		this.eventBus.on('task:deleted', (data) => {
 			// 从 taskId 解析 filePath (格式: "filePath:lineNumber")
-			const taskId = (data)?.taskId;
-			const filePath = taskId ? taskId.split(':')[0] : undefined;
+			const deleteData = data as { taskId?: string } | undefined;
+			const taskId = deleteData?.taskId;
+			const filePath = taskId ? String(taskId).split(':')[0] : undefined;
 			Logger.debug('TaskStore', `Event: task:deleted from ${filePath || 'unknown'}`);
 			this.invalidateCache();
 			this.notifyListenersDebounced(filePath);

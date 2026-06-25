@@ -1,10 +1,7 @@
 import { App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
-import { isToday, isThisWeek, isThisMonth } from '../dateUtils/dateUtilsIndex';
-import type { IPluginContext,  GCTask, TagFilterState } from '../types';
+import type { IPluginContext,  GCTask } from '../types';
 import { getTaskDateField } from '../types';
-import type { DateFieldType } from '../settings/types';
-import { registerTaskContextMenu } from '../contextMenu/contextMenuIndex';
 import { sortTasks } from '../tasks/taskSorter';
 import { ViewClasses, withModifiers } from '../utils/bem';
 import { TaskCardComponent, TaskViewConfig } from '../components/TaskCard';
@@ -75,7 +72,7 @@ export class TaskViewRenderer extends BaseViewRenderer {
 		return this.timeFieldFilter;
 	}
 
-	public setTimeFilterField(value: any): void {
+	public setTimeFilterField(value: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate'): void {
 		this.timeFieldFilter = value;
 		this.saveTimeFieldFilter().catch(err => {
 			Logger.error('TaskView', 'Failed to save time field filter', err);

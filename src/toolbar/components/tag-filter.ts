@@ -6,7 +6,7 @@
 import { setIcon } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { TagFilterState } from '../../types';
-import { ToolbarClasses } from '../../utils/bem';
+import { ToolbarClasses, setCssProps } from '../../utils/bem';
 import { i18n } from '../../i18n/i18n';
 import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
 import type { TagNode } from '../../tasks/tags/TagHierarchy';
@@ -84,8 +84,7 @@ export function renderTagFilterButton(
 
 	// 创建下拉面板
 	const dropdown = activeDocument.createElement('div');
-	dropdown.addClass(classes.pane);
-	dropdown.style.display = 'none';
+	dropdown.addClass(classes.pane, 'gc-u-hidden');
 	activeDocument.body.appendChild(dropdown);
 
 	let andBtnElement: HTMLElement | null = null;
@@ -139,8 +138,7 @@ export function renderTagFilterButton(
 		} else {
 			// 占位，保持对齐
 			const spacer = item.createEl('span', classes.tagToggle);
-			spacer.style.opacity = '0';
-			spacer.style.cursor = 'default';
+			setCssProps(spacer, { opacity: '0', cursor: 'default' });
 		}
 
 		// 复选框
@@ -252,22 +250,21 @@ export function renderTagFilterButton(
 	// 切换面板显示
 	tagBtn.addEventListener('click', (e) => {
 		e.stopPropagation();
-		const isVisible = dropdown.style.display !== 'none';
-		if (isVisible) {
-			dropdown.style.display = 'none';
+		const isVisible = dropdown.hasClass('gc-u-hidden');
+		if (!isVisible) {
+			dropdown.addClass('gc-u-hidden');
 		} else {
 			renderDropdown();
 			const rect = tagBtn.getBoundingClientRect();
-			dropdown.style.top = `${rect.bottom + 4}px`;
-			dropdown.style.left = `${rect.left}px`;
-			dropdown.style.display = 'block';
+			setCssProps(dropdown, { top: `${rect.bottom + 4}px`, left: `${rect.left}px` });
+			dropdown.removeClass('gc-u-hidden');
 		}
 	});
 
 	// 点击外部关闭
 	const closeOnClickOutside = (e: MouseEvent) => {
 		if (!dropdown.contains(e.target as Node) && !tagBtn.contains(e.target as Node)) {
-			dropdown.style.display = 'none';
+			dropdown.addClass('gc-u-hidden');
 		}
 	};
 	activeDocument.addEventListener('click', closeOnClickOutside);

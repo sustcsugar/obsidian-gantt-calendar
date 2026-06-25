@@ -7,8 +7,8 @@
 
 import { IDataSource, ChangeEventHandler } from '../../IDataSource';
 import type { GCTask } from '../../../types';
-import type { DataSourceConfig, SyncStatus } from '../../types';
-import type { GCTaskWithSync, DataSourceType } from '../../sync/syncTypes';
+import type { DataSourceConfig, DataSourceChanges, SyncStatus, TaskChanges } from '../../types';
+import type { GCTaskWithSync } from '../../sync/syncTypes';
 import { Logger } from '../../../utils/logger';
 import { CalDAVClient, CalDAVConfig } from './CalDAVClient';
 import { icsToGCTask, gcTaskToICS } from './transformers/ICSTaskTransformer';
@@ -121,7 +121,7 @@ export class CalDAVDataSource implements IDataSource {
                 ...task,
                 source: 'caldav',
                 sourceId: response.data.uid,
-                syncId: (task as any).syncId || response.data.uid,
+                syncId: (task as GCTaskWithSync).syncId || response.data.uid,
             };
             this.cache.set(response.data.uid, taskWithSync);
 
@@ -141,19 +141,19 @@ export class CalDAVDataSource implements IDataSource {
     /**
      * 更新任务
      */
-    async updateTask(taskId: string, changes: any): Promise<void> {
+    async updateTask(taskId: string, changes: TaskChanges): Promise<void> {
         const existing = this.cache.get(taskId);
         if (!existing) {
             throw new Error(`Task ${taskId} not found`);
         }
 
-        const updatedTask = { ...existing, ...changes };
+        const updatedTask: GCTaskWithSync = { ...existing, ...changes };
 
         // 转换为 ICS
         const ics = gcTaskToICS(updatedTask, taskId);
 
         // 获取事件 URL（从缓存或生成）
-        const eventUrl = (existing as any).url || `${this.config.caldav.url}/${taskId}.ics`;
+        const eventUrl = (existing as GCTaskWithSync & { url?: string }).url || `${this.config.caldav.url}/${taskId}.ics`;
 
         const response = await this.client.updateEvent(eventUrl, ics);
 
@@ -176,7 +176,7 @@ export class CalDAVDataSource implements IDataSource {
      */
     async deleteTask(taskId: string): Promise<void> {
         const task = this.cache.get(taskId);
-        const eventUrl = (task as any)?.url || `${this.config.caldav.url}/${taskId}.ics`;
+        const eventUrl = (task as GCTaskWithSync & { url?: string })?.url || `${this.config.caldav.url}/${taskId}.ics`;
 
         const response = await this.client.deleteEvent(eventUrl);
 
@@ -230,7 +230,7 @@ export class CalDAVDataSource implements IDataSource {
                     const task = icsToGCTask(event.ics);
                     const existing = oldCache.get(event.uid);
 
-                    const taskWithSync: GCTaskWithSync = {
+                    const taskWithSync: GCTaskWithSync & { url: string } = {
                         ...task,
                         source: 'caldav',
                         sourceId: event.uid,
@@ -238,7 +238,7 @@ export class CalDAVDataSource implements IDataSource {
                         version: (existing?.version || 0) + 1,
                         lastModified: new Date(),
                         url: event.url,
-                    } as any;
+                    };
 
                     this.cache.set(event.uid, taskWithSync);
                 } catch (error) {
@@ -258,7 +258,7 @@ export class CalDAVDataSource implements IDataSource {
      */
     protected detectChangesAndNotify(oldCache: Map<string, GCTaskWithSync>): void {
         const created: GCTask[] = [];
-        const updated: any[] = [];
+        const updated: Array<{ id: string; changes: Partial<GCTask>; task: GCTaskWithSync }> = [];
         const deleted: GCTask[] = [];
 
         // 检测新增和更新
@@ -304,8 +304,8 @@ export class CalDAVDataSource implements IDataSource {
     /**
      * 获取任务变化
      */
-    protected getTaskChanges(old: GCTask, newTask: GCTask): any {
-        const changes: any = {};
+    protected getTaskChanges(old: GCTask, newTask: GCTask): Partial<GCTask> {
+        const changes: Partial<GCTask> = {};
 
         if (old.description !== newTask.description) {
             changes.description = newTask.description;
@@ -329,7 +329,7 @@ export class CalDAVDataSource implements IDataSource {
     /**
      * 通知变化
      */
-    protected notifyChange(changes: any): void {
+    protected notifyChange(changes: Omit<DataSourceChanges, 'sourceId'>): void {
         if (this.changeHandler) {
             void this.changeHandler({
                 sourceId: this.sourceId,

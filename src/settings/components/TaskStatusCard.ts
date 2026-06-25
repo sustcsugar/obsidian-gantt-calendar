@@ -50,7 +50,7 @@ export class TaskStatusCard {
 			if (onDelete) {
 				const deleteBtn = btnGroup.createEl('button', cls.deleteBtn);
 				deleteBtn.setText('×');
-				deleteBtn.addEventListener('click', onDelete);
+				deleteBtn.addEventListener('click', () => { void onDelete(); });
 			}
 		}
 
@@ -111,8 +111,10 @@ export class TaskStatusCard {
 		const swatch = swatchWrapper.createDiv(cls.swatch);
 		swatch.style.backgroundColor = currentColor;
 
-		hiddenInput.addEventListener('change', async () => {
-			await this.updateColor(plugin, status, themeMode, colorType, hiddenInput.value, swatch);
+		hiddenInput.addEventListener('change', () => {
+			void (async () => {
+				await this.updateColor(plugin, status, themeMode, colorType, hiddenInput.value, swatch);
+			})();
 		});
 
 		const macaronContainer = field.createDiv();

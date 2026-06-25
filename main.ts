@@ -1,4 +1,4 @@
-import { App, Plugin, Notice, setIcon } from 'obsidian';
+import { Plugin, Notice, setIcon } from 'obsidian';
 import { GCMainView, GC_VIEW_ID } from './src/GCMainView';
 import { GCSidebarView, GC_SIDEBAR_VIEW_ID } from './src/GCSidebarView';
 import { GanttCalendarSettingTab } from './src/settings';

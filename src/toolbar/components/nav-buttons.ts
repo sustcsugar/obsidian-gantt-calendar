@@ -53,10 +53,7 @@ export function renderNavButtons(
 		onNext,
 		containerClass,
 		buttonClass = ToolbarClasses.components.navButtons.btn,
-		todayText = i18n.t('toolbar.nav.today'),
-		prevText = '',
-		nextText = '',
-		fullText = false
+		todayText = i18n.t('toolbar.nav.today')
 	} = options;
 
 	// 创建导航按钮组容器

@@ -23,42 +23,42 @@ export class YearViewSettingsBuilder extends BaseBuilder {
 			};
 
 			// 年视图每日任务数量显示
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.yearView.showTaskCount.name'))
 					.setDesc(i18n.t('settings.yearView.showTaskCount.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.yearShowTaskCount)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.yearShowTaskCount = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 
 			// 年视图农历字号
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.yearView.lunarFontSize.name'))
 					.setDesc(i18n.t('settings.yearView.lunarFontSize.description'))
 					.addSlider(slider => slider
 						.setLimits(8, 18, 1)
 						.setValue(this.plugin.settings.yearLunarFontSize)
 						.setDynamicTooltip()
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.yearLunarFontSize = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 
 			// 年视图任务热力图开关
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.yearView.heatmapEnabled.name'))
 					.setDesc(i18n.t('settings.yearView.heatmapEnabled.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.yearHeatmapEnabled)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.yearHeatmapEnabled = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 
 			// 热力图色卡选择
 			if (this.plugin.settings.yearHeatmapEnabled) {
@@ -69,15 +69,15 @@ export class YearViewSettingsBuilder extends BaseBuilder {
 					new HeatmapPalettePicker({
 						container: setting.controlEl,
 						currentPalette: this.plugin.settings.yearHeatmapPalette,
-						onPaletteChange: async (paletteKey) => {
+						onPaletteChange: (paletteKey) => {
 							this.plugin.settings.yearHeatmapPalette = paletteKey;
-							await this.saveAndRefreshViews();
+							void this.saveAndRefreshViews();
 						},
 					}).render();
 				});
 
 				// 热力图3D效果选择
-				addSetting(setting =>
+				addSetting(setting => {
 					setting.setName(i18n.t('settings.yearView.heatmap3D.name'))
 						.setDesc(i18n.t('settings.yearView.heatmap3D.description'))
 						.addDropdown(dropdown => dropdown
@@ -85,11 +85,11 @@ export class YearViewSettingsBuilder extends BaseBuilder {
 							.addOption('1', i18n.t('settings.yearView.heatmap3D.options.slight'))
 							.addOption('2', i18n.t('settings.yearView.heatmap3D.options.obvious'))
 							.setValue(String(this.plugin.settings.yearHeatmap3DEnabled ?? 0))
-							.onChange(async (value) => {
+							.onChange((value) => {
 								this.plugin.settings.yearHeatmap3DEnabled = parseInt(value) as 0 | 1 | 2;
-								await this.saveAndRefreshViews();
-							}))
-				);
+								void this.saveAndRefreshViews();
+							}));
+				});
 			}
 		});
 	}

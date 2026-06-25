@@ -13,7 +13,7 @@
 import { Logger } from '../../../../../utils/logger';
 import type { FeishuOAuthConfig, FeishuTokenResponseV2, FetchFunction } from './FeishuTypes';
 import { API_ENDPOINTS, DEFAULT_REDIRECT_URI, DEFAULT_SCOPES } from './FeishuConstants';
-import { FeishuHttpClient, buildRequestUrlConfig } from './FeishuHttpClient';
+import { FeishuHttpClient } from './FeishuHttpClient';
 
 // ==================== 请求构建函数 ====================
 
@@ -160,13 +160,13 @@ export class FeishuOAuth {
         // HTTP 错误时手动解析 OAuth 错误字段（parseResponse 会直接 throw，跳过下方的 error 检查）
         if (response.status >= 400) {
             try {
-                const errorData = JSON.parse(response.text);
+                const errorData = JSON.parse(response.text) as Record<string, unknown>;
                 if (errorData.error === 'invalid_grant') {
                     Logger.error('FeishuOAuth', 'Authorization code expired', { code: errorData.code });
                     throw new Error('授权码已过期，请重新点击授权按钮完成授权（授权码有效期约 5 分钟）');
                 }
-                const errorMsg = errorData.error_description || errorData.error || '未知错误';
-                const errorCode = errorData.code || -1;
+                const errorMsg = (errorData.error_description as string) || (errorData.error as string) || '未知错误';
+                const errorCode = (errorData.code as number) || -1;
                 Logger.error('FeishuOAuth', 'Token exchange failed', { code: errorCode, msg: errorMsg });
                 throw new Error(`飞书 OAuth 错误: ${errorMsg} (错误码: ${errorCode})`);
             } catch (e) {
@@ -235,9 +235,9 @@ export class FeishuOAuth {
         // HTTP 错误时手动解析 OAuth 错误字段
         if (response.status >= 400) {
             try {
-                const errorData = JSON.parse(response.text);
-                const errorMsg = errorData.error_description || errorData.error || '未知错误';
-                const errorCode = errorData.code || -1;
+                const errorData = JSON.parse(response.text) as Record<string, unknown>;
+                const errorMsg = (errorData.error_description as string) || (errorData.error as string) || '未知错误';
+                const errorCode = (errorData.code as number) || -1;
                 Logger.error('FeishuOAuth', 'Token refresh failed', { code: errorCode, msg: errorMsg });
                 throw new Error(`飞书刷新令牌错误: ${errorMsg} (错误码: ${errorCode})`);
             } catch (e) {

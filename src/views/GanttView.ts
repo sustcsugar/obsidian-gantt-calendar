@@ -7,7 +7,6 @@
 import { Notice } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import type { GCTask, SortState, TagFilterState } from '../types';
-import { DEFAULT_TAG_FILTER_STATE } from '../types';
 import { sortTasks } from '../tasks/taskSorter';
 import { GanttClasses } from '../utils/bem';
 import { Logger } from '../utils/logger';
@@ -288,9 +287,9 @@ export class GanttViewRenderer extends BaseViewRenderer {
 				arrow_curve: 5,
 				padding: 18,
 				date_format: 'YYYY-MM-DD',
-				on_click: (task) => this.handleTaskClick(task),
-				on_date_change: (task, start, end) => this.handleDateChange(task, start, end),
-				on_progress_change: (task, progress) => this.handleProgressChange(task, progress)
+				on_click: (task) => { void this.handleTaskClick(task); },
+				on_date_change: (task, start, end) => { void this.handleDateChange(task, start, end); },
+				on_progress_change: (task, progress) => { void this.handleProgressChange(task, progress); }
 				// tooltip 由全局 TooltipManager 统一管理
 			};
 

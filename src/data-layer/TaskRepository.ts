@@ -15,6 +15,7 @@ import { EventBus } from './EventBus';
 import type { GCTask } from '../types';
 import {
 	DataSourceChanges,
+	Priority,
 	QueryOptions
 } from './types';
 import { IDataSource } from './IDataSource';
@@ -116,11 +117,11 @@ export class TaskRepository {
 		let filtered = tasks;
 
 		if (options.status?.length) {
-			filtered = filtered.filter(t => options.status!.includes(t.status as any));
+			filtered = filtered.filter(t => options.status!.includes(t.status as string));
 		}
 
 		if (options.priority?.length) {
-			filtered = filtered.filter(t => options.priority!.includes(t.priority as any));
+			filtered = filtered.filter(t => options.priority!.includes(t.priority as Priority));
 		}
 
 		if (options.tags?.length) {

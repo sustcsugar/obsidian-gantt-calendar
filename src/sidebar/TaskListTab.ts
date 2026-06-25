@@ -2,15 +2,14 @@ import type { App } from 'obsidian';
 import { setIcon } from 'obsidian';
 import type { GCTask, StatusFilterState, IPluginContext } from '../types';
 import { DEFAULT_STATUS_FILTER_STATE } from '../types';
-import { SidebarClasses } from '../utils/bem';
+import { SidebarClasses, setCssProps } from '../utils/bem';
 import { TaskCardComponent, buildSidebarConfig } from '../components/TaskCard';
 import { sortTasks } from '../tasks/taskSorter';
 import { openFileInExistingLeaf } from '../utils/fileOpener';
-import { getStatusByKey, DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
+import { DEFAULT_TASK_STATUSES } from '../tasks/taskStatus';
 import { isToday } from '../dateUtils/dateCompare';
 import { isThisWeek } from '../dateUtils/week';
 import { isThisMonth } from '../dateUtils/dateCompare';
-import { Logger } from '../utils/logger';
 import { i18n } from '../i18n/i18n';
 import { buildTagHierarchy } from '../tasks/tags/TagHierarchyBuilder';
 import type { TagNode } from '../tasks/tags/TagHierarchy';
@@ -151,22 +150,24 @@ export class TaskListTab {
 		if (existing) { existing.remove(); return; }
 
 		const dropdown = container.createDiv('sidebar-dropdown');
-		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+		dropdown.addClass('gc-u-absolute', 'gc-u-rounded');
+		setCssProps(dropdown, { zIndex: '100', background: 'var(--background-primary)', border: '1px solid var(--background-modifier-border)', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' });
 
 		const renderStatusItems = () => {
 			dropdown.empty();
 			for (const status of DEFAULT_TASK_STATUSES) {
 				const isSelected = this.statusFilter.selectedStatuses.includes(status.key);
 				const item = dropdown.createDiv('sidebar-dropdown-item');
-				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-pointer', 'gc-u-rounded');
+				setCssProps(item, { gap: '8px', padding: '4px 8px' });
 				item.toggleClass('is-selected', isSelected);
 
 				const checkbox = item.createEl('input', { type: 'checkbox' });
 				checkbox.checked = isSelected;
-				checkbox.style.margin = '0';
+				setCssProps(checkbox, { margin: '0' });
 
 				const label = item.createSpan({ text: status.name });
-				label.style.cssText = 'font-size:13px;';
+				setCssProps(label, { fontSize: '13px' });
 
 				item.addEventListener('click', (e) => {
 					e.stopPropagation();
@@ -208,21 +209,23 @@ export class TaskListTab {
 		];
 
 		const dropdown = container.createDiv('sidebar-dropdown');
-		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+		dropdown.addClass('gc-u-absolute', 'gc-u-rounded');
+		setCssProps(dropdown, { zIndex: '100', background: 'var(--background-primary)', border: '1px solid var(--background-modifier-border)', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' });
 
 		const renderPriorityItems = () => {
 			dropdown.empty();
 			for (const p of priorities) {
 				const item = dropdown.createDiv('sidebar-dropdown-item');
-				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-pointer', 'gc-u-rounded');
+				setCssProps(item, { gap: '8px', padding: '4px 8px' });
 				item.toggleClass('is-selected', this.priorityFilter === p.key);
 
 				const icon = item.createSpan();
 				if (p.key !== 'all') setIcon(icon, 'flame');
-				icon.style.width = '16px';
+				setCssProps(icon, { width: '16px' });
 
 				const label = item.createSpan({ text: p.label });
-				label.style.cssText = 'font-size:13px;';
+				setCssProps(label, { fontSize: '13px' });
 
 				item.addEventListener('click', (e) => {
 					e.stopPropagation();
@@ -255,28 +258,31 @@ export class TaskListTab {
 		];
 
 		const dropdown = container.createDiv('sidebar-dropdown');
-		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+		dropdown.addClass('gc-u-absolute', 'gc-u-rounded');
+		setCssProps(dropdown, { zIndex: '100', background: 'var(--background-primary)', border: '1px solid var(--background-modifier-border)', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' });
 
 		const renderSortItems = () => {
 			dropdown.empty();
 			for (const opt of sortOptions) {
 				const isActive = this.sortBy === opt.key;
 				const item = dropdown.createDiv('sidebar-dropdown-item');
-				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-pointer', 'gc-u-rounded');
+				setCssProps(item, { gap: '8px', padding: '4px 8px' });
 				item.toggleClass('is-selected', isActive);
 
 				const icon = item.createSpan();
 				setIcon(icon, isActive
 					? (this.sortOrder === 'asc' ? 'arrow-up' : 'arrow-down')
 					: 'arrow-up-down');
-				icon.style.width = '16px';
+				setCssProps(icon, { width: '16px' });
 
 				const label = item.createSpan({ text: opt.label });
-				label.style.cssText = 'font-size:13px;';
+				setCssProps(label, { fontSize: '13px' });
 
 				if (isActive) {
 					const dirLabel = item.createSpan({ text: this.sortOrder === 'asc' ? i18n.t('sidebar.taskList.sortOptions.ascending') : i18n.t('sidebar.taskList.sortOptions.descending') });
-					dirLabel.style.cssText = 'font-size:11px;color:var(--text-muted);margin-left:auto;';
+					dirLabel.addClass('gc-u-text-muted');
+					setCssProps(dirLabel, { fontSize: '11px', marginLeft: 'auto' });
 				}
 
 				item.addEventListener('click', (e) => {
@@ -326,7 +332,8 @@ export class TaskListTab {
 		if (tagCounts.size === 0) return;
 
 		const dropdown = container.createDiv('sidebar-dropdown');
-		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);min-width:160px;max-height:320px;overflow-y:auto;';
+		dropdown.addClass('gc-u-absolute', 'gc-u-rounded');
+		setCssProps(dropdown, { zIndex: '100', background: 'var(--background-primary)', border: '1px solid var(--background-modifier-border)', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', minWidth: '160px', maxHeight: '320px', overflowY: 'auto' });
 
 		// 计算聚合计数
 		const computeAgg = (node: TagNode): number => {
@@ -355,13 +362,15 @@ export class TaskListTab {
 			const isExpanded = this.tagExpandedPaths.has(node.fullPath);
 
 			const item = parent.createDiv('sidebar-dropdown-item');
-			item.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;border-radius:4px;padding-left:${8 + level * 16}px;`;
+			item.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-pointer', 'gc-u-rounded');
+			setCssProps(item, { gap: '6px', padding: '4px 8px', paddingLeft: `${8 + level * 16}px` });
 			item.toggleClass('is-selected', isSelected);
 
 			// 展开箭头
 			if (hasChildren) {
 				const toggle = item.createSpan();
-				toggle.style.cssText = 'display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;';
+				toggle.addClass('gc-u-items-center', 'gc-u-pointer');
+				setCssProps(toggle, { display: 'inline-flex', width: '14px', height: '14px', justifyContent: 'center', flexShrink: '0' });
 				setIcon(toggle, isExpanded ? 'chevron-down' : 'chevron-right');
 				toggle.addEventListener('click', (e) => {
 					e.stopPropagation();
@@ -374,19 +383,21 @@ export class TaskListTab {
 				});
 			} else {
 				const spacer = item.createSpan();
-				spacer.style.cssText = 'display:inline-block;width:14px;flex-shrink:0;';
+				spacer.addClass('gc-u-inline-block');
+				setCssProps(spacer, { width: '14px', flexShrink: '0' });
 			}
 
 			const checkbox = item.createEl('input', { type: 'checkbox' });
 			checkbox.checked = isSelected;
-			checkbox.style.margin = '0';
-			checkbox.style.flexShrink = '0';
+			setCssProps(checkbox, { margin: '0', flexShrink: '0' });
 
 			const label = item.createSpan({ text: node.fullPath });
-			label.style.cssText = 'font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+			label.addClass('gc-u-whitespace-nowrap', 'gc-u-overflow-hidden');
+			setCssProps(label, { fontSize: '13px', flex: '1', textOverflow: 'ellipsis' });
 
 			const countSpan = item.createSpan({ text: String(aggCount) });
-			countSpan.style.cssText = 'font-size:11px;color:var(--text-muted);flex-shrink:0;';
+			countSpan.addClass('gc-u-text-muted');
+			setCssProps(countSpan, { fontSize: '11px', flexShrink: '0' });
 
 			item.addEventListener('click', (e) => {
 				e.stopPropagation();
@@ -405,13 +416,18 @@ export class TaskListTab {
 
 			// OR/AND 切换
 			const operatorRow = dropdown.createDiv('sidebar-dropdown-item');
-			operatorRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 8px;border-bottom:1px solid var(--background-modifier-border);margin-bottom:4px;';
-			operatorRow.createSpan({ text: i18n.t('sidebar.taskList.tagFilter.matchMode') }).style.cssText = 'font-size:12px;color:var(--text-muted);';
+			operatorRow.addClass('gc-u-flex', 'gc-u-items-center');
+			setCssProps(operatorRow, { gap: '4px', padding: '4px 8px', borderBottom: '1px solid var(--background-modifier-border)', marginBottom: '4px' });
+			const matchModeLabel = operatorRow.createSpan({ text: i18n.t('sidebar.taskList.tagFilter.matchMode') });
+			matchModeLabel.addClass('gc-u-text-muted');
+			setCssProps(matchModeLabel, { fontSize: '12px' });
 			const orBtn = operatorRow.createEl('button', { text: 'OR', cls: 'clickable-icon' });
-			orBtn.style.cssText = 'font-size:11px;padding:2px 6px;border-radius:4px;';
+			orBtn.addClass('gc-u-rounded');
+			setCssProps(orBtn, { fontSize: '11px', padding: '2px 6px' });
 			orBtn.toggleClass('is-selected', this.tagOperator === 'OR');
 			const andBtn = operatorRow.createEl('button', { text: 'AND', cls: 'clickable-icon' });
-			andBtn.style.cssText = 'font-size:11px;padding:2px 6px;border-radius:4px;';
+			andBtn.addClass('gc-u-rounded');
+			setCssProps(andBtn, { fontSize: '11px', padding: '2px 6px' });
 			andBtn.toggleClass('is-selected', this.tagOperator === 'AND');
 			orBtn.addEventListener('click', (e) => {
 				e.stopPropagation();
@@ -488,21 +504,23 @@ export class TaskListTab {
 		];
 
 		const dropdown = container.createDiv('sidebar-dropdown');
-		dropdown.style.cssText = 'position:absolute;z-index:100;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+		dropdown.addClass('gc-u-absolute', 'gc-u-rounded');
+		setCssProps(dropdown, { zIndex: '100', background: 'var(--background-primary)', border: '1px solid var(--background-modifier-border)', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' });
 
 		const renderDateItems = () => {
 			dropdown.empty();
 			for (const opt of options) {
 				const item = dropdown.createDiv('sidebar-dropdown-item');
-				item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;';
+				item.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-pointer', 'gc-u-rounded');
+				setCssProps(item, { gap: '8px', padding: '4px 8px' });
 				item.toggleClass('is-selected', this.dateFilter === opt.key);
 
 				const icon = item.createSpan();
 				setIcon(icon, opt.icon);
-				icon.style.width = '16px';
+				setCssProps(icon, { width: '16px' });
 
 				const label = item.createSpan({ text: opt.label });
-				label.style.cssText = 'font-size:13px;';
+				setCssProps(label, { fontSize: '13px' });
 
 				item.addEventListener('click', (e) => {
 					e.stopPropagation();

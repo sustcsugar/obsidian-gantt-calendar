@@ -1,4 +1,4 @@
-import type { CalendarViewType } from '../types';
+import type { CalendarViewType, IPluginContext } from '../types';
 import type { TaskViewRenderer } from '../views/TaskView';
 import type { GanttViewRenderer } from '../views/GanttView';
 import type { DayViewRenderer } from '../views/DayView';
@@ -135,7 +135,7 @@ export interface ToolbarConfig {
 	weekRenderer?: WeekViewRenderer;
 
 	// 插件实例
-	plugin?: any;
+	plugin?: IPluginContext;
 
 	// 回调函数
 	onViewSwitch: (type: CalendarViewType) => void;

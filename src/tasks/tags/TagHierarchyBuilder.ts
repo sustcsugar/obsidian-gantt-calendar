@@ -3,7 +3,7 @@
  * 负责从平面标签数组构建树，以及进行各种层级查询操作
  */
 
-import { TagNode, FlatTag, TagFilterOptions, TagMatchResult } from './TagHierarchy';
+import { TagNode, TagMatchResult } from './TagHierarchy';
 
 /**
  * 从平面标签数组构建树形结构

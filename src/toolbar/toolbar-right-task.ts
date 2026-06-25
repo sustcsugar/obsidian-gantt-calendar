@@ -1,4 +1,4 @@
-import { formatDate } from '../dateUtils/dateUtilsIndex';
+import type { IPluginContext } from '../types';
 import type { TaskViewRenderer } from '../views/TaskView';
 import { renderStatusFilterButton } from './components/status-filter';
 import { renderRefreshButton } from './components/refresh-button';
@@ -10,6 +10,7 @@ import { renderDateRangeFilter, type DateRangeState } from './components/date-ra
 import { renderCreateTaskButton } from './components/create-task-button';
 import { renderSyncButton } from './components/sync-button';
 import { syncFeishuTasks } from '../commands/feishuCommands';
+import type GanttCalendarPlugin from '../../main';
 import type { DateFieldType } from './components/field-selector';
 import { ToolbarClasses } from '../utils/bem';
 import { i18n } from '../i18n/i18n';
@@ -44,7 +45,7 @@ export class ToolbarRightTask {
 		taskRenderer: TaskViewRenderer,
 		onFilterChange: () => void,
 		onRefresh: () => Promise<void>,
-		plugin?: any
+		plugin?: IPluginContext
 	): void {
 		container.empty();
 
@@ -138,7 +139,7 @@ export class ToolbarRightTask {
 		// 飞书同步按钮
 		if (plugin) {
 			renderSyncButton(container, async () => {
-				await syncFeishuTasks(plugin);
+				await syncFeishuTasks(plugin as GanttCalendarPlugin);
 			});
 		}
 

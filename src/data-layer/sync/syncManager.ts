@@ -14,7 +14,8 @@ import { IDataSource } from '../IDataSource';
 import type { GCTask } from '../../types';
 import { setTaskMergeableField } from '../../types';
 import type { MergeableTaskField } from '../../types';
-import type { GCTaskWithSync, SyncConfiguration, SyncResult, DataSourceType } from './syncTypes';
+import type { GCTaskWithSync, SyncConfiguration, SyncResult, DataSourceType, TaskMatchGroup, SyncChanges, ConflictInfo } from './syncTypes';
+import type { DataSourceChanges } from '../types';
 import { TaskMatcher } from './taskMatcher';
 import { ConflictResolver } from './conflictResolver';
 import { VersionTracker } from './versionTracker';
@@ -246,7 +247,7 @@ export class SyncManager {
      * 计算需要同步的变更
      */
     private calculateChanges(
-        groups: any[],
+        groups: TaskMatchGroup[],
         localTasks: GCTaskWithSync[],
         remoteTasks: GCTaskWithSync[]
     ) {
@@ -344,7 +345,7 @@ export class SyncManager {
     /**
      * 应用远程变更到本地
      */
-    private async applyRemoteChanges(changes: any): Promise<void> {
+    private async applyRemoteChanges(changes: SyncChanges): Promise<void> {
         // 在实际实现中，这里需要更新 Markdown 文件
         // 由于 MarkdownDataSource 暂不支持直接写入，这里暂时只是记录日志
         Logger.debug('SyncManager', 'Applying remote changes:', {
@@ -356,7 +357,7 @@ export class SyncManager {
     /**
      * 推送本地变更到远程
      */
-    private async pushLocalChanges(changes: any): Promise<void> {
+    private async pushLocalChanges(changes: SyncChanges): Promise<void> {
         for (const task of changes.toSync) {
             if (task.source === 'markdown') {
                 // 推送到远程数据源
@@ -386,10 +387,10 @@ export class SyncManager {
     /**
      * 解决冲突
      */
-    private async resolveConflicts(conflicts: any[]): Promise<void> {
+    private async resolveConflicts(conflicts: ConflictInfo[]): Promise<void> {
         const resolved = this.resolver.resolveConflicts(conflicts);
 
-        for (const [syncId, resolvedTask] of resolved) {
+        for (const [, resolvedTask] of resolved) {
             // 更新版本追踪
             this.versionTracker.updateSyncMetadata(resolvedTask);
         }
@@ -398,7 +399,7 @@ export class SyncManager {
     /**
      * 处理数据源变化
      */
-    private async handleSourceChanges(sourceId: string, changes: any): Promise<void> {
+    private async handleSourceChanges(sourceId: string, _changes: DataSourceChanges): Promise<void> {
         Logger.debug('SyncManager', `Handling changes from ${sourceId}`);
 
         // 触发增量同步
@@ -460,7 +461,7 @@ export class SyncManager {
     getStatus(): {
         isSyncing: boolean;
         lastSyncAt?: Date;
-        stats: any;
+        stats: ReturnType<VersionTracker['getStats']>;
     } {
         return {
             isSyncing: this.isSyncing,

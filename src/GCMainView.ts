@@ -1,9 +1,9 @@
-import { ItemView, WorkspaceLeaf, setIcon, Notice } from 'obsidian';
+import { ItemView, WorkspaceLeaf } from 'obsidian';
 import { CalendarViewType, IPluginContext } from './types';
 
-import { getWeekOfDate, formatDate, formatMonth, getTodayDate } from './dateUtils/dateUtilsIndex';
+import { getWeekOfDate, formatDate, getTodayDate } from './dateUtils/dateUtilsIndex';
 import { getTodayInTimezone } from './dateUtils/timezone';
-import { solarToLunar, getShortLunarText } from './lunar/lunar';
+
 import { YearViewRenderer } from './views/YearView';
 import { MonthViewRenderer } from './views/MonthView';
 import { WeekViewRenderer } from './views/WeekView';
@@ -163,7 +163,7 @@ export class GCMainView extends ItemView {
 			});
 
 			this.resizeObserver.observe(content);
-		} catch (e) {
+		} catch {
 			// ResizeObserver not supported, fail silently
 		}
 	}

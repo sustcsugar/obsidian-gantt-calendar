@@ -581,8 +581,9 @@ export class FeishuProvider extends APIDataSource {
             }
 
             if (response.status >= 400) {
-                const feishuMsg = response.json?.msg || '';
-                const feishuCode = response.json?.code || '';
+                const jsonData = response.json as { msg?: string; code?: number } | undefined;
+                const feishuMsg = jsonData?.msg || '';
+                const feishuCode = jsonData?.code || '';
                 const errMsg = feishuMsg
                     ? `Feishu API ${response.status}: code=${feishuCode}, msg=${feishuMsg}`
                     : `Feishu API ${response.status}: ${response.text?.substring(0, 200)}`;
@@ -595,7 +596,7 @@ export class FeishuProvider extends APIDataSource {
                 throw new Error(errMsg);
             }
 
-            return response.json;
+            return response.json as T;
         }
 
         // 理论上不会到达此处（for 循环内部会 return 或 throw）

@@ -51,7 +51,7 @@ export class SyncStateManager {
         try {
             if (await this.app.vault.adapter.exists(this.statePath)) {
                 const raw = await this.app.vault.adapter.read(this.statePath);
-                this.data = JSON.parse(raw);
+                this.data = JSON.parse(raw) as SyncStateData;
             } else {
                 this.data = {};
             }

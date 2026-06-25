@@ -1,16 +1,15 @@
-import { Notice, App, setIcon } from 'obsidian';
+import { Notice, App } from 'obsidian';
 import { BaseViewRenderer } from './BaseViewRenderer';
 import { getWeekOfDate } from '../dateUtils/dateUtilsIndex';
 import { updateTaskDateField } from '../tasks/taskUpdater';
-import { CreateTaskModal } from '../modals/CreateTaskModal';
-import type { IPluginContext,  GCTask, TagFilterState, CalendarDay } from '../types';
+import type { IPluginContext,  GCTask, CalendarDay } from '../types';
 import { getTaskDateField } from '../types';
 import type { DateFieldType } from '../settings/types';
 import { sortTasks } from '../tasks/taskSorter';
 import { TaskCardComponent, WeekViewConfig, type TaskCardConfig } from '../components/TaskCard';
 import { Logger } from '../utils/logger';
 import { TooltipManager } from '../utils/tooltipManager';
-import { WeekViewClasses } from '../utils/bem';
+import { WeekViewClasses, setCssProps } from '../utils/bem';
 import { toISOStringLocal, createDate } from '../dateUtils/timezone';
 import { generateVirtualInstances } from '../tasks/virtualTaskGenerator';
 import { renderCurrentTimeLine } from '../utils/currentTimeLine';
@@ -127,13 +126,11 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 		// === 第一行：header（sticky） ===
 		const spacer = tasksGrid.createDiv(W.elements.headerSpacer);
-			spacer.style.gridColumn = '1';
-			spacer.style.gridRow = '1';
+			setCssProps(spacer, { gridColumn: '1', gridRow: '1' });
 
 		weekData.days.forEach((day, dayIdx) => {
 			const dayHeader = tasksGrid.createDiv(W.elements.headerCell);
-			dayHeader.style.gridColumn = `${dayIdx + 2}`;
-			dayHeader.style.gridRow = '1';
+			setCssProps(dayHeader, { gridColumn: `${dayIdx + 2}`, gridRow: '1' });
 			dayHeader.createEl('div', { text: dayNames[day.weekday], cls: W.elements.dayName });
 			dayHeader.createEl('div', { text: day.day.toString(), cls: W.elements.dayNumber });
 			if (day.lunarText && this.plugin.settings.showLunar) {
@@ -152,8 +149,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 		// === 第 2 行：全天任务行 ===
 		const alldayGutter = tasksGrid.createDiv(W.elements.alldayGutter);
-		alldayGutter.style.gridColumn = '1';
-		alldayGutter.style.gridRow = '2';
+		setCssProps(alldayGutter, { gridColumn: '1', gridRow: '2' });
 		alldayGutter.setText(i18n.t('views.weekView.allDay'));
 
 		const alldaySlotContainers: HTMLElement[] = [];
@@ -161,8 +157,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 		weekData.days.forEach((day, dayIdx) => {
 			const alldaySlot = tasksGrid.createDiv(W.elements.alldaySlot);
-			alldaySlot.style.gridColumn = `${dayIdx + 2}`;
-			alldaySlot.style.gridRow = '2';
+			setCssProps(alldaySlot, { gridColumn: `${dayIdx + 2}`, gridRow: '2' });
 			if (day.isToday) {
 				alldaySlot.addClass(W.modifiers.alldaySlotToday);
 			}
@@ -175,8 +170,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 		// 时间标尺（第 1 列，第 3-26 行）
 		for (let h = 0; h <= 23; h++) {
 			const gutterSlot = tasksGrid.createDiv(W.elements.timeGutterSlot);
-			gutterSlot.style.gridColumn = '1';
-			gutterSlot.style.gridRow = `${h + 3}`;
+			setCssProps(gutterSlot, { gridColumn: '1', gridRow: `${h + 3}` });
 			gutterSlot.createDiv(W.elements.timeGutterLabel)
 				.setText(`${String(h).padStart(2, '0')}:00`);
 			rowElements[h] = [gutterSlot];
@@ -187,8 +181,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			slotContainers[dayIdx] = [];
 			for (let h = 0; h <= 23; h++) {
 				const slot = tasksGrid.createDiv(W.elements.timeSlot);
-				slot.style.gridColumn = `${dayIdx + 2}`;
-				slot.style.gridRow = `${h + 3}`;
+				setCssProps(slot, { gridColumn: `${dayIdx + 2}`, gridRow: `${h + 3}` });
 				if (day.isToday) {
 					slot.addClass(W.modifiers.timeSlotToday);
 				}
@@ -382,7 +375,7 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			}
 		});
 
-		slot.addEventListener('drop', async (e: DragEvent) => {
+		slot.addEventListener('drop', (e: DragEvent) => {
 			e.preventDefault();
 			alldayRowEls.forEach(el => el.removeClass(WeekViewClasses.modifiers.alldayDragOver));
 
@@ -401,28 +394,30 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
 
-			try {
-				this.clearTaskTooltips();
+			void (async () => {
+				try {
+					this.clearTaskTooltips();
 
-				const newDate = new Date(targetDate);
-				newDate.setHours(0, 0, 0, 0);
+					const newDate = new Date(targetDate);
+					newDate.setHours(0, 0, 0, 0);
 
-				// 设置为全天任务
-				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'day' };
+					// 设置为全天任务
+					sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'day' };
 
-				await updateTaskDateField(
-					this.app,
-					sourceTask,
-					dateFieldName,
-					newDate,
-					this.plugin.settings.enabledTaskFormats
-				);
+					await updateTaskDateField(
+						this.app,
+						sourceTask,
+						dateFieldName,
+						newDate,
+						this.plugin.settings.enabledTaskFormats
+					);
 
-				Logger.debug('WeekView', 'Task set to all-day via drag-drop', { taskId, targetDate });
-			} catch (error) {
-				Logger.error('WeekView', 'Error updating task to all-day:', error);
-				new Notice(i18n.t('views.dayView.updateTaskFailed'));
-			}
+					Logger.debug('WeekView', 'Task set to all-day via drag-drop', { taskId, targetDate });
+				} catch (error) {
+					Logger.error('WeekView', 'Error updating task to all-day:', error);
+					new Notice(i18n.t('views.dayView.updateTaskFailed'));
+				}
+			})();
 		});
 	}
 
@@ -497,18 +492,18 @@ export class WeekViewRenderer extends BaseViewRenderer {
 			if (e.dataTransfer) {
 				e.dataTransfer.dropEffect = 'move';
 			}
-			column.style.backgroundColor = 'var(--background-modifier-hover)';
+			setCssProps(column, { backgroundColor: 'var(--background-modifier-hover)' });
 		});
 
 		column.addEventListener('dragleave', (e: DragEvent) => {
 			if (e.target === column) {
-				column.style.backgroundColor = '';
+				setCssProps(column, { backgroundColor: '' });
 			}
 		});
 
-		column.addEventListener('drop', async (e: DragEvent) => {
+		column.addEventListener('drop', (e: DragEvent) => {
 			e.preventDefault();
-			column.style.backgroundColor = '';
+			setCssProps(column, { backgroundColor: '' });
 
 			const taskId = e.dataTransfer?.getData('taskId');
 			if (!taskId) return;
@@ -525,20 +520,22 @@ export class WeekViewRenderer extends BaseViewRenderer {
 
 			const dateFieldName = this.plugin.settings.dateFilterField || 'dueDate';
 
-			try {
-				this.clearTaskTooltips();
-				await updateTaskDateField(
-					this.app,
-					sourceTask,
-					dateFieldName,
-					targetDate,
-					this.plugin.settings.enabledTaskFormats
-				);
-				Logger.debug('WeekView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
-			} catch (error) {
-				Logger.error('WeekView', 'Error updating task date:', error);
-				new Notice(i18n.t('views.dayView.updateDateFailed'));
-			}
+			void (async () => {
+				try {
+					this.clearTaskTooltips();
+					await updateTaskDateField(
+						this.app,
+						sourceTask,
+						dateFieldName,
+						targetDate,
+						this.plugin.settings.enabledTaskFormats
+					);
+					Logger.debug('WeekView', 'Task drag-drop update successful', { taskId, dateField: dateFieldName, targetDate });
+				} catch (error) {
+					Logger.error('WeekView', 'Error updating task date:', error);
+					new Notice(i18n.t('views.dayView.updateDateFailed'));
+				}
+			})();
 		});
 	}
 

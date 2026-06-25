@@ -24,7 +24,7 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 			};
 
 			// 日期筛选字段
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.calendarView.dateFilterField.name'))
 					.setDesc(i18n.t('settings.calendarView.dateFilterField.description'))
 					.addDropdown(drop => drop
@@ -37,11 +37,13 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 							'cancelledDate': i18n.t('common.dateFields.cancelledDate'),
 						})
 						.setValue(this.plugin.settings.dateFilterField)
-						.onChange(async (value) => {
-							this.plugin.settings.dateFilterField = value as 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate';
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.dateFilterField = value as 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate';
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 
 			// 一周开始日
 			addSetting(setting => {
@@ -50,9 +52,11 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 					.addDropdown(drop => {
 						drop.addOptions({ 'monday': i18n.t('settings.calendarView.weekStart.options.monday'), 'sunday': i18n.t('settings.calendarView.weekStart.options.sunday') });
 						drop.setValue(this.plugin.settings.startOnMonday ? 'monday' : 'sunday');
-						drop.onChange(async (value) => {
-							this.plugin.settings.startOnMonday = (value === 'monday');
-							await this.saveAndRefreshViews();
+						drop.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.startOnMonday = (value === 'monday');
+								await this.saveAndRefreshViews();
+							})();
 						});
 					});
 			});
@@ -69,28 +73,32 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 			};
 
 			// 显示农历日期
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.calendarView.lunarFestival.showLunar.name'))
 					.setDesc(i18n.t('settings.calendarView.lunarFestival.showLunar.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.showLunar)
-						.onChange(async (value) => {
-							this.plugin.settings.showLunar = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.showLunar = value;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 
 			// 显示节日与节气
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.calendarView.lunarFestival.showFestivals.name'))
 					.setDesc(i18n.t('settings.calendarView.lunarFestival.showFestivals.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.showFestivals)
-						.onChange(async (value) => {
-							this.plugin.settings.showFestivals = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.showFestivals = value;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 		});
 	}
 }

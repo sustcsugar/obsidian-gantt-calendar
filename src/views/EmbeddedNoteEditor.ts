@@ -2,7 +2,7 @@ import { App, WorkspaceLeaf, WorkspaceSplit, WorkspaceTabs, TFile, MarkdownRende
 import { findDailyNoteForDate, DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import type { GanttCalendarSettings } from '../settings/types';
 import { Logger } from '../utils/logger';
-import { EmbeddedEditorClasses, DayViewClasses } from '../utils/bem';
+import { EmbeddedEditorClasses, DayViewClasses, setCssProps } from '../utils/bem';
 import { i18n } from '../i18n/i18n';
 
 /**
@@ -29,12 +29,12 @@ type ConstructableWorkspaceSplit = new (ws: App['workspace'], dir: 'horizontal' 
  */
 function suppressSetActiveLeaf(app: App): () => void {
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
-    const original = app.workspace.setActiveLeaf.bind(app.workspace);
+    const original = app.workspace.setActiveLeaf.bind(app.workspace); // eslint-disable-line @typescript-eslint/no-unsafe-assignment -- Obsidian internal API returns any
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
     app.workspace.setActiveLeaf = () => {};
     return () => {
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
-        app.workspace.setActiveLeaf = original;
+        app.workspace.setActiveLeaf = original; // eslint-disable-line @typescript-eslint/no-unsafe-assignment -- Obsidian internal API returns any
     };
 }
 
@@ -147,9 +147,9 @@ export class EmbeddedNoteEditor {
     private unwrapTabs(): void {
         if (!this.rootSplit) return;
         try {
-            this.rootSplit.children.forEach((item: any, index: number) => {
-                if (item instanceof WorkspaceTabs && (item as any).children?.length > 0) {
-                    this.rootSplit!.replaceChild(index, (item as any).children[0]);
+            this.rootSplit.children.forEach((item: any, index: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                if (item instanceof WorkspaceTabs && (item as any).children?.length > 0) { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+                    this.rootSplit!.replaceChild(index, (item as any).children[0]); // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
                 }
             });
         } catch (e) {
@@ -274,14 +274,11 @@ export class EmbeddedNoteEditor {
 
         // rootSplit 容器填满
         const splitEl = this.rootSplit.containerEl;
-        splitEl.style.height = '100%';
-        splitEl.style.width = '100%';
+        setCssProps(splitEl, { height: '100%', width: '100%' });
 
         // leaf 容器填满并添加自定义 class
         const leafEl = this.leaf.containerEl;
-        leafEl.style.height = '100%';
-        leafEl.style.width = '100%';
-        leafEl.style.overflow = 'hidden';
+        setCssProps(leafEl, { height: '100%', width: '100%', overflow: 'hidden' });
         leafEl.classList.add(EmbeddedEditorClasses.block);
     }
 }

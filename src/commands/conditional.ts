@@ -1,4 +1,3 @@
-import { MarkdownView } from 'obsidian';
 import type GanttCalendarPlugin from '../../main';
 
 /**

@@ -28,7 +28,7 @@ describe('EventBus', () => {
 		});
 
 		it('should pass data to event handlers', () => {
-			let receivedData: any = null;
+			let receivedData: unknown = null;
 			const testData = { message: 'hello' };
 
 			eventBus.on('test', (data) => {

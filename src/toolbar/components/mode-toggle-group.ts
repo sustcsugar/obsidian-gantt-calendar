@@ -171,7 +171,7 @@ export function renderViewSwitcher(
 	return renderModeToggleGroup(container, {
 		options: modeOptions,
 		currentValue: currentView,
-		onChange: (value) => onViewChange(value as any),
+		onChange: (value) => onViewChange(value as "year" | "month" | "week" | "day"),
 		buttonClass,
 		groupClass
 	});

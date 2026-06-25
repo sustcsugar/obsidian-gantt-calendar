@@ -22,32 +22,36 @@ export class MonthViewSettingsBuilder extends BaseBuilder {
 			};
 
 			// 月视图每天显示的任务数量
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.monthView.taskLimit.name'))
 					.setDesc(i18n.t('settings.monthView.taskLimit.description'))
 					.addSlider(slider => slider
 						.setLimits(1, 10, 1)
 						.setValue(this.plugin.settings.monthViewTaskLimit)
 						.setDynamicTooltip()
-						.onChange(async (value) => {
-							this.plugin.settings.monthViewTaskLimit = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.monthViewTaskLimit = value;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 
 			// 月视图农历字号
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.monthView.lunarFontSize.name'))
 					.setDesc(i18n.t('settings.monthView.lunarFontSize.description'))
 					.addSlider(slider => slider
 						.setLimits(8, 18, 1)
 						.setValue(this.plugin.settings.monthLunarFontSize)
 						.setDynamicTooltip()
-						.onChange(async (value) => {
-							this.plugin.settings.monthLunarFontSize = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.monthLunarFontSize = value;
+								await this.saveAndRefreshViews();
+							})();
+						}));
+			});
 		});
 	}
 }

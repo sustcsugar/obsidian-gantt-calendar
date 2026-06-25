@@ -218,7 +218,6 @@ function parseICS(ics: string): ParsedComponent {
     const dateProperties = new Map<string, Date>();
 
     let currentComponent: ICSComponent | null = null;
-    let inVCalendar = false;
     let continuation = false;
     let lastKey = '';
 
@@ -247,7 +246,7 @@ function parseICS(ics: string): ParsedComponent {
         // 处理 BEGIN/END
         if (key === 'BEGIN') {
             if (value === 'VCALENDAR') {
-                inVCalendar = true;
+                // VCALENDAR begin
             } else if (value === 'VEVENT' || value === 'VTODO') {
                 currentComponent = value;
             }
@@ -256,7 +255,7 @@ function parseICS(ics: string): ParsedComponent {
 
         if (key === 'END') {
             if (value === 'VCALENDAR') {
-                inVCalendar = false;
+                // VCALENDAR end
             } else if (value === 'VEVENT' || value === 'VTODO') {
                 currentComponent = null;
             }

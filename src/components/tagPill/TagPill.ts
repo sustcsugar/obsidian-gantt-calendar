@@ -4,7 +4,7 @@
  * 用于在插件中统一显示任务标签的样式和交互
  */
 
-import { TagPillOptions, TagPillState } from './types';
+import { TagPillOptions } from './types';
 import { TagClasses } from '../../utils/bem';
 
 /**

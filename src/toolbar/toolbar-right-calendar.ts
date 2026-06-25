@@ -7,7 +7,8 @@ import { renderCreateTaskButton } from './components/create-task-button';
 import { renderStatusFilterButton } from './components/status-filter';
 import { renderSyncButton } from './components/sync-button';
 import { syncFeishuTasks } from '../commands/feishuCommands';
-import type { CalendarViewType } from '../types';
+import type { CalendarViewType, IPluginContext } from '../types';
+import type GanttCalendarPlugin from '../../main';
 import type { DayViewRenderer } from '../views/DayView';
 import type { WeekViewRenderer } from '../views/WeekView';
 import type { MonthViewRenderer } from '../views/MonthView';
@@ -64,7 +65,7 @@ export class ToolbarRightCalendar {
 		onNext: () => void,
 		onRefresh: () => Promise<void>,
 		onRender: () => void = () => {},
-		plugin?: any
+		plugin?: IPluginContext
 	): void {
 		container.empty();
 
@@ -157,7 +158,7 @@ export class ToolbarRightCalendar {
 		// 飞书同步按钮
 		if (plugin) {
 			renderSyncButton(container, async () => {
-				await syncFeishuTasks(plugin);
+				await syncFeishuTasks(plugin as GanttCalendarPlugin);
 			});
 		}
 

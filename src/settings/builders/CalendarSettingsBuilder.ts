@@ -34,17 +34,19 @@ export class CalendarSettingsBuilder extends BaseBuilder {
 			};
 
 			// 使用 Obsidian 日记设置开关
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.calendar.useObsidianDailyNote.name'))
 					.setDesc(i18n.t('settings.calendar.useObsidianDailyNote.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.followObsidianDailyNote)
-						.onChange(async (value) => {
-							this.plugin.settings.followObsidianDailyNote = value;
-							await this.saveAndRefreshViews();
-							updateVisibility();
-						}))
-			);
+						.onChange((value) => {
+							void (async () => {
+								this.plugin.settings.followObsidianDailyNote = value;
+								await this.saveAndRefreshViews();
+								updateVisibility();
+							})();
+						}));
+			});
 
 			// === Obsidian 模式设置（只读） ===
 			const available = isObsidianDailyNoteAvailable();

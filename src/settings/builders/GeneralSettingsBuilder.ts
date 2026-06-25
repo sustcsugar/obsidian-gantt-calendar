@@ -26,7 +26,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 			};
 
 			// 默认视图
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.defaultView.name'))
 					.setDesc(i18n.t('settings.general.defaultView.description'))
 					.addDropdown(drop => drop
@@ -39,38 +39,38 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 							'gantt': i18n.t('settings.general.defaultView.options.gantt')
 						})
 						.setValue(this.plugin.settings.defaultView)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.defaultView = value as 'day' | 'week' | 'month' | 'year' | 'task' | 'gantt';
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 
 			// 开发者模式
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.debugMode.name'))
 					.setDesc(i18n.t('settings.general.debugMode.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.enableDebugMode)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.enableDebugMode = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 
 			// 视图导航按钮显示文本
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.showNavButtonText.name'))
 					.setDesc(i18n.t('settings.general.showNavButtonText.description'))
 					.addToggle(toggle => toggle
 						.setValue(this.plugin.settings.showViewNavButtonText)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.showViewNavButtonText = value;
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 
 			// 语言选择
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.language.name'))
 					.setDesc(i18n.t('settings.general.language.description'))
 					.addDropdown(drop => drop
@@ -78,14 +78,14 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						.addOption('en', i18n.t('settings.general.language.options.en'))
 						.addOption('zh', i18n.t('settings.general.language.options.zh'))
 						.setValue(this.plugin.settings.language || 'system')
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.language = value as 'system' | 'en' | 'zh';
 							setLanguage(value);
 							refreshPresetStatusNames(this.plugin.settings.taskStatuses);
 							this.plugin.settings.showLunar = isChineseLanguage();
-							await this.saveAndRefreshAll();
-						}))
-			);
+							void this.saveAndRefreshAll();
+						}));
+			});
 		});
 
 		// ===== 时区与格式 =====
@@ -99,7 +99,7 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 			};
 
 			// 时区设置
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.timezoneFormat.timezone.name'))
 					.setDesc(i18n.t('settings.general.timezoneFormat.timezone.description'))
 					.addDropdown(drop => {
@@ -108,26 +108,26 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						}
 						const currentValue = this.plugin.settings.timezoneOffset;
 						drop.setValue(currentValue === null ? 'null' : String(currentValue));
-						drop.onChange(async (value) => {
+						drop.onChange((value) => {
 							this.plugin.settings.timezoneOffset = value === 'null' ? null : parseInt(value, 10);
-							await this.saveAndRefreshViews();
+							void this.saveAndRefreshViews();
 						});
-					})
-			);
+					});
+			});
 
 			// 时间格式
-			addSetting(setting =>
+			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.timezoneFormat.timeFormat.name'))
 					.setDesc(i18n.t('settings.general.timezoneFormat.timeFormat.description'))
 					.addDropdown(drop => drop
 						.addOption('24h', i18n.t('settings.general.timezoneFormat.timeFormat.24h'))
 						.addOption('12h', i18n.t('settings.general.timezoneFormat.timeFormat.12h'))
 						.setValue(this.plugin.settings.timeFormat || '24h')
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.timeFormat = value as '24h' | '12h';
-							await this.saveAndRefreshViews();
-						}))
-			);
+							void this.saveAndRefreshViews();
+						}));
+			});
 		});
 	}
 }

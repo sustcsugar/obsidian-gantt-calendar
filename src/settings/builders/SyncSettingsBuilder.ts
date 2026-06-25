@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-misused-promises -- 动态 settings API 访问，类型来自 Obsidian 运行时 */
 import { Setting, SettingGroup, Notice, requestUrl } from 'obsidian';
 import { showConfirmDialog } from '../../modals/ConfirmModal';
 import { BaseBuilder } from './BaseBuilder';
@@ -224,11 +225,9 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const selectedList = taskLists.find((tl: FeishuTaskList) => tl.guid === selectedGuid);
 			const hintEl = container.createDiv('gc-sync-hint gc-sync-hint--success');
 			const listName = selectedList?.name || selectedGuid;
-			const prefix = hintEl.createSpan();
 			hintEl.setText(i18n.t('settings.sync.statusHint.selected', { name: listName }));
 			const nameSpan = hintEl.createSpan('gc-sync-hint__list-name');
 			nameSpan.setText(listName);
-			const suffix = hintEl.createSpan();
 			// nameSpan removed; text merged into withSelection line above
 		}
 
@@ -1055,7 +1054,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 			try {
 				await provider.validateAuth();
-			} catch (authError) {
+			} catch {
 				new Notice(i18n.t('settings.sync.connectionTest.authExpired'), 8000);
 				return;
 			}

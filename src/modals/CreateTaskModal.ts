@@ -11,9 +11,10 @@ import { App, Notice } from 'obsidian';
 import type { IPluginContext } from '../types';
 import type { CreateTaskData } from '../utils/dailyNoteHelper';
 import { createTaskInDailyNote } from '../utils/dailyNoteHelper';
+import type { DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import { Logger } from '../utils/logger';
 import type { GCTask } from '../types';
-import { BaseTaskModal, type PriorityOption } from './BaseTaskModal';
+import { BaseTaskModal } from './BaseTaskModal';
 import { i18n } from '../i18n/i18n';
 import { EditTaskModalClasses } from '../utils/bem';
 
@@ -137,7 +138,7 @@ export class CreateTaskModal extends BaseTaskModal {
 				datePrecision: Object.keys(this.datePrecision).length > 0 ? this.datePrecision : undefined
 			};
 
-			await createTaskInDailyNote(this.app, taskData, this.plugin.settings, this.plugin.dailyNoteIndex);
+			await createTaskInDailyNote(this.app, taskData, this.plugin.settings, this.plugin.dailyNoteIndex as DailyNoteIndex | undefined);
 
 			new Notice(i18n.t('modals.createTask.success'));
 			this.onSuccess();

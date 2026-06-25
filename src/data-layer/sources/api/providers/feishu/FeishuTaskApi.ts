@@ -5,10 +5,10 @@
  */
 
 import { Logger } from '../../../../../utils/logger';
-import type { FeishuTask, FeishuTaskList, FeishuTaskRaw, FeishuTaskMember, FetchFunction } from './FeishuTypes';
+import type { FeishuTask, FeishuTaskList, FeishuTaskRaw, FetchFunction } from './FeishuTypes';
 import { API_ENDPOINTS } from './FeishuConstants';
 import { FeishuHttpClient } from './FeishuHttpClient';
-import type { FeishuTaskListResponse, FeishuTaskResponse, FeishuTaskUser } from './FeishuTypes';
+import type { FeishuTaskListResponse, FeishuTaskResponse } from './FeishuTypes';
 
 /**
  * 飞书任务 API

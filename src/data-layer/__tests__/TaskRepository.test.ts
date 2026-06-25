@@ -6,7 +6,7 @@ import { TaskRepository } from '../TaskRepository';
 import { EventBus } from '../EventBus';
 import { IDataSource } from '../IDataSource';
 import type { GCTask } from '../../types';
-import type { DataSourceChanges, DataSourceConfig } from '../types';
+import type { DataSourceChanges, DataSourceConfig, TaskChanges, SyncStatus } from '../types';
 
 // Mock 数据源用于测试
 class MockDataSource implements IDataSource {
@@ -31,7 +31,7 @@ class MockDataSource implements IDataSource {
 
 	async createTask(task: GCTask): Promise<string> {
 		this.tasks.push(task);
-		this.changeHandler?.({
+		void this.changeHandler?.({
 			sourceId: this.sourceId,
 			created: [task],
 			updated: [],
@@ -40,11 +40,11 @@ class MockDataSource implements IDataSource {
 		return `${task.filePath}:${task.lineNumber}`;
 	}
 
-	async updateTask(taskId: string, changes: any): Promise<void> {
+	async updateTask(taskId: string, changes: TaskChanges): Promise<void> {
 		const task = this.tasks.find(t => `${t.filePath}:${t.lineNumber}` === taskId);
 		if (task) {
 			Object.assign(task, changes);
-			this.changeHandler?.({
+			void this.changeHandler?.({
 				sourceId: this.sourceId,
 				created: [],
 				updated: [{ id: taskId, changes }],
@@ -58,7 +58,7 @@ class MockDataSource implements IDataSource {
 		if (index >= 0) {
 			const task = this.tasks[index];
 			this.tasks.splice(index, 1);
-			this.changeHandler?.({
+			void this.changeHandler?.({
 				sourceId: this.sourceId,
 				created: [],
 				updated: [],
@@ -67,7 +67,7 @@ class MockDataSource implements IDataSource {
 		}
 	}
 
-	async getSyncStatus(): Promise<any> {
+	async getSyncStatus(): Promise<SyncStatus> {
 		return {
 			syncDirection: 'bidirectional' as const,
 			conflictResolution: 'local-win' as const
@@ -129,7 +129,7 @@ describe('TaskRepository', () => {
 			await mockSource.createTask(mockTask);
 
 			// 等待事件处理
-			await new Promise(resolve => setTimeout(resolve, 10));
+			await new Promise(resolve => window.setTimeout(resolve, 10));
 
 			const tasks = repository.getAllTasks();
 			expect(tasks).toHaveLength(1);
