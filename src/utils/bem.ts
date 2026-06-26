@@ -1013,9 +1013,18 @@ export const SyncTasklistClasses = {
 };
 
 /**
- * 批量设置 CSS 自定义属性（动态样式）
+ * camelCase 转 kebab-case
+ * gridColumn → grid-column, backgroundColor → background-color
+ */
+function toKebabCase(str: string): string {
+	return str.replace(/([A-Z])/g, '-$1').toLowerCase();
+}
+
+/**
+ * 批量设置 CSS 属性（动态样式）
  *
  * 用于需要运行时计算值的场景。静态样式应优先使用 CSS 类。
+ * 支持 camelCase 和 kebab-case 属性名，自动转换为 kebab-case。
  *
  * @param el 目标元素
  * @param props CSS 属性键值对（camelCase 或 kebab-case 均可）
@@ -1025,6 +1034,6 @@ export const SyncTasklistClasses = {
  */
 export function setCssProps(el: HTMLElement, props: Record<string, string | number>): void {
 	for (const [key, value] of Object.entries(props)) {
-		el.style.setProperty(key, String(value));
+		el.style.setProperty(toKebabCase(key), String(value));
 	}
 }
