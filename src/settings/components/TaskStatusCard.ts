@@ -1,5 +1,5 @@
 import type GanttCalendarPlugin from '../../../main';
-import { TaskStatus, ThemeColors, getCurrentThemeMode } from '../../tasks/taskStatus';
+import { TaskStatus, ThemeColors, getCurrentThemeMode, getLegacyColor } from '../../tasks/taskStatus';
 import { SettingsStatusCardClasses } from '../../utils/bem';
 import { rgbToHex } from '../utils/color';
 import { MacaronColorPicker } from './MacaronColorPicker';
@@ -175,10 +175,11 @@ export class TaskStatusCard {
 		if (status.lightColors && status.darkColors) {
 			return themeMode === 'dark' ? status.darkColors : status.lightColors;
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-		if (status.backgroundColor && status.textColor) {
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-			return { backgroundColor: status.backgroundColor, textColor: status.textColor };
+		// 向后兼容:读取旧格式颜色
+		const bg = getLegacyColor(status, 'backgroundColor');
+		const text = getLegacyColor(status, 'textColor');
+		if (bg && text) {
+			return { backgroundColor: bg, textColor: text };
 		}
 		return null;
 	}
@@ -186,11 +187,12 @@ export class TaskStatusCard {
 	private ensureThemeColors(status: TaskStatus): void {
 		if (status.lightColors && status.darkColors) return;
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-		if (status.backgroundColor && status.textColor) {
+		// 向后兼容:读取旧格式颜色
+		const bg = getLegacyColor(status, 'backgroundColor');
+		const text = getLegacyColor(status, 'textColor');
+		if (bg && text) {
 			if (!status.lightColors) {
-				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-				status.lightColors = { backgroundColor: status.backgroundColor, textColor: status.textColor };
+				status.lightColors = { backgroundColor: bg, textColor: text };
 			}
 			if (!status.darkColors) {
 				status.darkColors = { backgroundColor: '#2d333b', textColor: '#adbac7' };

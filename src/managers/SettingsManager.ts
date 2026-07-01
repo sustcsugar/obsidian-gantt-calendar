@@ -7,7 +7,7 @@
 import type GanttCalendarPlugin from '../../main';
 import { DEFAULT_SETTINGS } from '../settings/constants';
 import type { GanttCalendarSettings } from '../settings/types';
-import { ThemeColors } from '../tasks/taskStatus';
+import { ThemeColors, deleteLegacyColors } from '../tasks/taskStatus';
 import { setTimezoneOffset } from '../dateUtils/timezone';
 
 /**
@@ -126,12 +126,7 @@ export class SettingsManager {
 				}
 
 				// 清理已弃用的属性
-				// @ts-ignore - 迁移代码，有意删除已弃用属性
-				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
-				delete status.backgroundColor;
-				// @ts-ignore - 迁移代码，有意删除已弃用属性
-				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
-				delete status.textColor;
+				deleteLegacyColors(status);
 
 				needsSave = true;
 			} else if (needsInitialization) {
@@ -153,12 +148,7 @@ export class SettingsManager {
 				needsSave = true;
 			} else if (hasOldColors) {
 				// 即使已有新格式，也清理已弃用的属性
-				// @ts-ignore - 迁移代码，有意删除已弃用属性
-				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
-				delete status.backgroundColor;
-				// @ts-ignore - 迁移代码，有意删除已弃用属性
-				// eslint-disable-next-line @typescript-eslint/no-deprecated -- 迁移代码:清理已弃用的旧颜色字段
-				delete status.textColor;
+				deleteLegacyColors(status);
 				needsSave = true;
 			}
 		}

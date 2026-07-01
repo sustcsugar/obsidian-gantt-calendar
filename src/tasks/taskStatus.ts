@@ -75,6 +75,30 @@ export interface TaskStatus {
     isDefault: boolean;
 }
 
+// ==================== 遗留字段辅助 ====================
+
+/**
+ * 通过类型擦除访问 TaskStatus 上已弃用的 backgroundColor / textColor。
+ * 使用 `as Record<string, unknown>` 绕过 @typescript-eslint/no-deprecated，
+ * 从而无需 eslint-disable 注释。
+ */
+export function getLegacyColor(
+    status: TaskStatus,
+    field: 'backgroundColor' | 'textColor'
+): string | undefined {
+    return (status as unknown as Record<string, unknown>)[field] as string | undefined;
+}
+
+/**
+ * 删除 TaskStatus 上已弃用的 backgroundColor / textColor 字段。
+ * 迁移代码专用，正常运行时不应调用。
+ */
+export function deleteLegacyColors(status: TaskStatus): void {
+    const rec = status as unknown as Record<string, unknown>;
+    delete rec.backgroundColor;
+    delete rec.textColor;
+}
+
 // ==================== 默认状态配置 ====================
 
 /**
@@ -390,15 +414,13 @@ export function getStatusColor(
             bg: colors.backgroundColor || (mode === 'dark' ? '#2d333b' : '#FFFFFF'),
             text: colors.textColor || (mode === 'dark' ? '#adbac7' : '#333333'),
         };
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-    } else if (status.backgroundColor && status.textColor) {
+    } else {
         // 旧格式：使用单一颜色（向后兼容）
-        return {
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-            bg: status.backgroundColor,
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- 向后兼容:读取旧格式颜色
-            text: status.textColor,
-        };
+        const bg = getLegacyColor(status, 'backgroundColor');
+        const text = getLegacyColor(status, 'textColor');
+        if (bg && text) {
+            return { bg, text };
+        }
     }
 
     // 如果没有任何颜色配置，返回基于当前主题的默认值

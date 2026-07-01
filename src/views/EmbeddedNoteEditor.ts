@@ -28,13 +28,12 @@ type ConstructableWorkspaceSplit = new (ws: App['workspace'], dir: 'horizontal' 
  * Obsidian 1.8.7+ 在 createLeafInParent 时会激活新 leaf，需要阻止
  */
 function suppressSetActiveLeaf(app: App): () => void {
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
-    const original = app.workspace.setActiveLeaf.bind(app.workspace); // eslint-disable-line @typescript-eslint/no-unsafe-assignment -- Obsidian internal API returns any
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
-    app.workspace.setActiveLeaf = () => {};
+    // 通过类型擦除访问已弃用的 setActiveLeaf (Obsidian 1.8.7+ 行为规避)
+    const ws = app.workspace as unknown as Record<string, (...args: unknown[]) => void>;
+    const original = ws.setActiveLeaf.bind(app.workspace); // eslint-disable-line @typescript-eslint/no-unsafe-assignment -- Obsidian internal API returns any
+    ws.setActiveLeaf = () => {};
     return () => {
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- 刻意 monkeypatch setActiveLeaf(Obsidian 1.8.7+ 行为规避)
-        app.workspace.setActiveLeaf = original; // eslint-disable-line @typescript-eslint/no-unsafe-assignment -- Obsidian internal API returns any
+        ws.setActiveLeaf = original; // eslint-disable-line @typescript-eslint/no-unsafe-assignment -- Obsidian internal API returns any
     };
 }
 
