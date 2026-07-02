@@ -11,7 +11,6 @@ import { App, Notice } from 'obsidian';
 import type { IPluginContext } from '../types';
 import type { CreateTaskData } from '../utils/dailyNoteHelper';
 import { createTaskInDailyNote } from '../utils/dailyNoteHelper';
-import type { DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import { Logger } from '../utils/logger';
 import type { GCTask } from '../types';
 import { BaseTaskModal } from './BaseTaskModal';
@@ -138,7 +137,7 @@ export class CreateTaskModal extends BaseTaskModal {
 				datePrecision: Object.keys(this.datePrecision).length > 0 ? this.datePrecision : undefined
 			};
 
-			await createTaskInDailyNote(this.app, taskData, this.plugin.settings, this.plugin.dailyNoteIndex as DailyNoteIndex | undefined);
+			await createTaskInDailyNote(this.app, taskData, this.plugin.settings, this.plugin.dailyNoteIndex);
 
 			new Notice(i18n.t('modals.createTask.success'));
 			this.onSuccess();

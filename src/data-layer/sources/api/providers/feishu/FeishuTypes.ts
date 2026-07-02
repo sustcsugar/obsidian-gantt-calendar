@@ -267,7 +267,7 @@ export interface FeishuTaskRaw {
     assignee?: FeishuTaskMember;
     members?: FeishuTaskMember[];
     subtask_count?: number;
-    custom_fields?: Record<string, any>;
+    custom_fields?: Record<string, unknown>;
 }
 
 /**

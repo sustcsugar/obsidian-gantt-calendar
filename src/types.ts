@@ -1,5 +1,6 @@
 // 日历视图类型定义
 import { TaskStatusType } from './tasks/taskStatus';
+import type { DailyNoteIndex } from './utils/dailyNoteSettingsBridge';
 
 /**
  * 内联元数据字段
@@ -282,6 +283,6 @@ export interface IPluginContext {
 		render(): void;
 	};
 	app: App;
-	dailyNoteIndex?: any;
+	dailyNoteIndex?: DailyNoteIndex;
 	refreshCalendarViews(): void;
 }

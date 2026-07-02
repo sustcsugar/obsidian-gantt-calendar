@@ -413,7 +413,7 @@ export class FeishuTaskSync {
     /**
      * 从单个文件解析任务
      */
-    private async parseObsidianFile(file: TFile, listItems: any[]): Promise<GCTask[]> {
+    private async parseObsidianFile(file: TFile, listItems: ListItemCache[]): Promise<GCTask[]> {
         if (listItems.length === 0) return [];
 
         try {
@@ -423,7 +423,7 @@ export class FeishuTaskSync {
             return parseTasksFromFile(
                 file,
                 content,
-                listItems as ListItemCache[],
+                listItems,
                 this.options.enabledFormats,
                 this.options.globalFilter
             );

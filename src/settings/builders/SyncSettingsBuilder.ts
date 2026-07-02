@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-misused-promises -- 动态 settings API 访问，类型来自 Obsidian 运行时 */
-import { Setting, SettingGroup, Notice, requestUrl } from 'obsidian';
+/* eslint-disable @typescript-eslint/no-misused-promises -- 动态 settings API 回调中使用 async 函数 */
+import { Setting, SettingGroup, Notice, requestUrl, TextComponent } from 'obsidian';
 import { showConfirmDialog } from '../../modals/ConfirmModal';
 import { BaseBuilder } from './BaseBuilder';
-import type { BuilderConfig } from '../types';
+import type { BuilderConfig, SyncConfiguration } from '../types';
 
 import { FeishuOAuth } from '../../data-layer/sources/api/providers/feishu/FeishuOAuth';
 import { FeishuHttpClient } from '../../data-layer/sources/api/providers/feishu/FeishuHttpClient';
@@ -206,7 +206,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 	/**
 	 * Render task list cards (within group)
 	 */
-	private renderTasklistCards(container: HTMLElement, syncConfig: any): void {
+	private renderTasklistCards(container: HTMLElement, syncConfig: SyncConfiguration): void {
 		const taskLists = syncConfig.api?.taskLists as FeishuTaskList[] || [];
 		const selectedGuid = syncConfig.api?.tasklistGuid || '';
 
@@ -274,7 +274,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			if (isSelected) {
 				selectBtn.textContent = i18n.t('settings.sync.taskListCards.deselect');
 				selectBtn.onclick = async () => {
-					if (!syncConfig.api) syncConfig.api = {} as any;
+					if (!syncConfig.api) syncConfig.api = {} as NonNullable<SyncConfiguration['api']>;
 					syncConfig.api.tasklistGuid = '';
 					await this.saveAndRefreshAll();
 					new Notice(i18n.t('settings.sync.taskListCards.deselectNotice'));
@@ -292,7 +292,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 							);
 						if (!confirmed) return;
 					}
-					if (!syncConfig.api) syncConfig.api = {} as any;
+					if (!syncConfig.api) syncConfig.api = {} as NonNullable<SyncConfiguration['api']>;
 					syncConfig.api.tasklistGuid = tl.guid;
 					await this.saveAndRefreshAll();
 					const msg = i18n.t('settings.sync.taskListCards.switchNotice', { name: tl.name });
@@ -329,7 +329,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 	// ==================== Feishu Account Settings ====================
 
-	private renderFeishuSettings(group: SettingGroup | HTMLElement, syncConfig: any): void {
+	private renderFeishuSettings(group: SettingGroup | HTMLElement, syncConfig: SyncConfiguration): void {
 		const container = group instanceof HTMLElement ? group : this.containerEl;
 
 		const addSetting = (cb: (setting: Setting) => void) => {
@@ -534,7 +534,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 	// ==================== OAuth Flow ====================
 
-	private initiateFeishuOAuth(_syncConfig: any): void {
+	private initiateFeishuOAuth(_syncConfig: SyncConfiguration): void {
 		const currentSyncConfig = this.getSyncConfiguration();
 		const apiConfig = currentSyncConfig.api;
 		const clientId = apiConfig?.clientId || apiConfig?.appId;
@@ -554,7 +554,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		new Notice(i18n.t('settings.sync.oauth.completeAuthInBrowser'));
 	}
 
-	private async exchangeFeishuAuthCode(_syncConfig: any, code: string): Promise<void> {
+	private async exchangeFeishuAuthCode(_syncConfig: SyncConfiguration, code: string): Promise<void> {
 		try {
 			new Notice(i18n.t('settings.sync.oauth.exchangingCode'));
 
@@ -582,7 +582,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			const expiresIn = tokenResponse.expires_in || 7200;
 			const tokenExpireAt = Date.now() + expiresIn * 1000;
 
-			const updateData: any = {
+			const updateData: Record<string, unknown> = {
 				...apiConfig,
 				accessToken: tokenResponse.access_token,
 				refreshToken: tokenResponse.refresh_token,
@@ -618,7 +618,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		}
 	}
 
-	private async refreshFeishuToken(_syncConfig: any): Promise<void> {
+	private async refreshFeishuToken(_syncConfig: SyncConfiguration): Promise<void> {
 		try {
 			new Notice(i18n.t('settings.sync.oauth.tokenRefreshing'));
 
@@ -686,7 +686,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 	// ==================== Connection Test ====================
 
-	private async testFeishuConnection(syncConfig: any): Promise<void> {
+	private async testFeishuConnection(syncConfig: SyncConfiguration): Promise<void> {
 		const apiConfig = syncConfig.api;
 
 		if (!apiConfig?.accessToken) {
@@ -840,7 +840,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 							await this.plugin.saveSettings();
 						});
 					});
-				const dateInputEl = dateSetting.components[0] as any;
+				const dateInputEl = dateSetting.components[0] as TextComponent;
 				const quickBtns: HTMLButtonElement[] = [];
 				const updateActiveBtn = (activeEl?: HTMLButtonElement | null) => {
 					for (const b of quickBtns) {
@@ -948,7 +948,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		});
 	}
 
-		private getSyncConfiguration(): any {
+		private getSyncConfiguration(): SyncConfiguration {
 		if (!this.plugin.settings.syncConfiguration) {
 			this.plugin.settings.syncConfiguration = {
 				enabledSources: {},
@@ -965,7 +965,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 		return config;
 	}
 
-	private updateSyncConfig(updates: any): void {
+	private updateSyncConfig(updates: Partial<Omit<SyncConfiguration, 'api'>> & { api?: Partial<NonNullable<SyncConfiguration['api']>> }): void {
 		const currentConfig = this.getSyncConfiguration();
 
 		if (updates.api) {
@@ -985,7 +985,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 			api: updates.api !== undefined ? {
 				...currentConfig.api,
 				...updates.api,
-			} : currentConfig.api,
+			} as NonNullable<SyncConfiguration['api']> : currentConfig.api,
 		};
 
 		if (updates.api) {
@@ -1065,7 +1065,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 				targetFile: syncConfig.feishuSyncTargetFile || 'gantt-calendar-feishu-sync.md',
 				enabledFormats: (this.plugin.settings.enabledTaskFormats as ('tasks' | 'dataview')[]) || ['tasks', 'dataview'],
 				globalFilter: this.plugin.settings.globalTaskFilter,
-				pushFilter: syncConfig.pushFilter as PushFilterConfig,
+				pushFilter: syncConfig.pushFilter,
 				tasklistGuid,
 				creatorOpenId: apiConfig.userOpenId,
 				creatorUserId: apiConfig.userId,
@@ -1211,7 +1211,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 			for (let i = 1; i <= 5; i++) {
 				try {
-					const payload: any = {
+					const payload: Record<string, unknown> = {
 						summary: i18n.t('settings.sync.testWrite.virtualTaskTitle', { index: i, time: new Date().toLocaleString() }),
 						description: i18n.t('settings.sync.testWrite.virtualTaskDesc'),
 						due: { timestamp: String(now + i * 24 * 60 * 60 * 1000) },

@@ -62,7 +62,7 @@ export class AppleCalendarProvider extends CalDAVDataSource {
     /**
      * 获取可访问的日历列表
      */
-    async getCalendarList(): Promise<any[]> {
+    async getCalendarList(): Promise<{ id: string; name: string; color?: string }[]> {
         const client = this.getClient();
 
         try {

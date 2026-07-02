@@ -1,4 +1,4 @@
-import { App, WorkspaceLeaf, WorkspaceSplit, WorkspaceTabs, TFile, MarkdownRenderer, Component } from 'obsidian';
+import { App, WorkspaceLeaf, WorkspaceSplit, WorkspaceTabs, WorkspaceContainer, WorkspaceItem, TFile, MarkdownRenderer, Component } from 'obsidian';
 import { findDailyNoteForDate, DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import type { GanttCalendarSettings } from '../settings/types';
 import { Logger } from '../utils/logger';
@@ -15,10 +15,14 @@ interface InternalWorkspaceLeaf extends WorkspaceLeaf {
 
 interface InternalWorkspaceSplit extends WorkspaceSplit {
     containerEl: HTMLElement;
-    getRoot: () => any;
-    getContainer: () => any;
-    children: any[];
-    replaceChild: (index: number, child: any) => void;
+    getRoot: () => WorkspaceItem;
+    getContainer: () => WorkspaceContainer;
+    children: WorkspaceItem[];
+    replaceChild: (index: number, child: WorkspaceItem) => void;
+}
+
+interface InternalWorkspaceTabs extends WorkspaceTabs {
+    children: WorkspaceItem[];
 }
 
 type ConstructableWorkspaceSplit = new (ws: App['workspace'], dir: 'horizontal' | 'vertical') => WorkspaceSplit;
@@ -146,9 +150,9 @@ export class EmbeddedNoteEditor {
     private unwrapTabs(): void {
         if (!this.rootSplit) return;
         try {
-            this.rootSplit.children.forEach((item: any, index: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                if (item instanceof WorkspaceTabs && (item as any).children?.length > 0) { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-                    this.rootSplit!.replaceChild(index, (item as any).children[0]); // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+            this.rootSplit.children.forEach((item, index) => {
+                if (item instanceof WorkspaceTabs && (item as InternalWorkspaceTabs).children?.length > 0) {
+                    this.rootSplit!.replaceChild(index, (item as InternalWorkspaceTabs).children[0]);
                 }
             });
         } catch (e) {

@@ -96,7 +96,7 @@ export type TaskEvent =
 /**
  * 事件处理器类型
  */
-export type EventHandler = (data?: any) => void | Promise<void>;
+export type EventHandler = (data?: unknown) => void | Promise<void>;
 
 /**
  * 数据源变化事件

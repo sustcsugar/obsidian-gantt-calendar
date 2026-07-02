@@ -44,7 +44,7 @@ export class EventBus {
 	 * @param eventName - 事件名称
 	 * @param data - 事件数据
 	 */
-	emit(eventName: string, data?: any): void {
+	emit(eventName: string, data?: unknown): void {
 		const handlers = this.listeners.get(eventName);
 		if (handlers) {
 			handlers.forEach(handler => {
@@ -63,7 +63,7 @@ export class EventBus {
 	 * @param handler - 事件处理器（只触发一次后自动取消订阅）
 	 */
 	once(eventName: string, handler: EventHandler): void {
-		const wrappedHandler = (data?: any) => {
+		const wrappedHandler = (data?: unknown) => {
 			void handler(data);
 			this.off(eventName, wrappedHandler);
 		};

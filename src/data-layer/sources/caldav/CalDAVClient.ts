@@ -31,7 +31,7 @@ export interface CalDAVEvent {
 /**
  * CalDAV 响应
  */
-export interface CalDAVResponse<T = any> {
+export interface CalDAVResponse<T = unknown> {
     success: boolean;
     data?: T;
     error?: string;
