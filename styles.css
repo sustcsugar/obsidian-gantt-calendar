@@ -721,6 +721,8 @@ Author: sugar
 	box-shadow: none;
 	backdrop-filter: none;
 	-webkit-backdrop-filter: none;
+	isolation: isolate;
+	transition: none;
 }
 
 .gc-toolbar--auto-collapse .gc-toolbar__center {
@@ -776,16 +778,16 @@ Author: sugar
 	padding: 4px;
 	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 	border-radius: 11px;
-	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	background: var(--background-primary);
 	box-shadow: 0 5px 16px rgba(0, 0, 0, 0.12);
-	backdrop-filter: blur(16px) saturate(150%);
-	-webkit-backdrop-filter: blur(16px) saturate(150%);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	pointer-events: auto;
 }
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__left,
 .gc-toolbar--auto-collapse:focus-within .gc-toolbar__left {
-	transform-origin: center top;
-	animation: gc-toolbar-drop-down 170ms ease-out both;
+	animation: gc-toolbar-drop-down 130ms ease-out both;
 }
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__view-selector-group,
@@ -814,29 +816,24 @@ Author: sugar
 .gc-toolbar--auto-collapse:focus-within .gc-toolbar__right {
 	max-width: calc(100cqw - 104px);
 	flex-wrap: nowrap;
-	transform-origin: left center;
-	animation: gc-toolbar-roll-right 170ms 35ms ease-out both;
+	animation: gc-toolbar-roll-right 130ms 20ms ease-out both;
 }
 
 @keyframes gc-toolbar-drop-down {
 	from {
-		opacity: 0;
-		transform: translateY(-8px) scaleY(0.86);
+		clip-path: inset(0 0 100% 0 round 11px);
 	}
 	to {
-		opacity: 1;
-		transform: translateY(0) scaleY(1);
+		clip-path: inset(0 0 0 0 round 11px);
 	}
 }
 
 @keyframes gc-toolbar-roll-right {
 	from {
-		opacity: 0;
-		transform: translateX(-10px) scaleX(0.84);
+		clip-path: inset(0 100% 0 0 round 11px);
 	}
 	to {
-		opacity: 1;
-		transform: translateX(0) scaleX(1);
+		clip-path: inset(0 0 0 0 round 11px);
 	}
 }
 
