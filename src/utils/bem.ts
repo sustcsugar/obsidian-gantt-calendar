@@ -399,6 +399,8 @@ export const ToolbarClasses = {
 		gantt: bem(BLOCKS.TOOLBAR, undefined, 'gantt'),
 		task: bem(BLOCKS.TOOLBAR, undefined, 'task'),
 		autoCollapse: bem(BLOCKS.TOOLBAR, undefined, 'auto-collapse'),
+		expanded: bem(BLOCKS.TOOLBAR, undefined, 'expanded'),
+		opening: bem(BLOCKS.TOOLBAR, undefined, 'opening'),
 		/** 响应式紧凑模式 - 左侧按钮只显示图标 */
 		compact: bem(BLOCKS.TOOLBAR, undefined, 'compact'),
 	},

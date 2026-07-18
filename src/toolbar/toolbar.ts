@@ -24,6 +24,17 @@ export class Toolbar {
 	private rightTaskSection: ToolbarRightTask;
 	private rightGanttSection: ToolbarRightGantt;
 	private responsiveManager: ToolbarResponsiveManager;
+	private container: HTMLElement | null = null;
+	private isExpanded = false;
+	private currentViewType: CalendarViewType | null = null;
+	private openingTimer: number | null = null;
+	private activeDocument: Document | null = null;
+	private readonly handleDocumentPointerDown = (event: PointerEvent): void => {
+		if (!this.isExpanded || !this.container) return;
+		if (!this.container.contains(event.target as Node)) {
+			this.setExpanded(false);
+		}
+	};
 
 	constructor() {
 		this.leftSection = new ToolbarLeft();
@@ -32,6 +43,26 @@ export class Toolbar {
 		this.rightTaskSection = new ToolbarRightTask();
 		this.rightGanttSection = new ToolbarRightGantt();
 		this.responsiveManager = new ToolbarResponsiveManager();
+	}
+
+	private setExpanded(expanded: boolean, animate = false): void {
+		this.isExpanded = expanded;
+		if (!this.container) return;
+
+		this.container.toggleClass(ToolbarClasses.modifiers.expanded, expanded);
+		this.container.removeClass(ToolbarClasses.modifiers.opening);
+		if (this.openingTimer !== null) {
+			window.clearTimeout(this.openingTimer);
+			this.openingTimer = null;
+		}
+
+		if (expanded && animate) {
+			this.container.addClass(ToolbarClasses.modifiers.opening);
+			this.openingTimer = window.setTimeout(() => {
+				this.container?.removeClass(ToolbarClasses.modifiers.opening);
+				this.openingTimer = null;
+			}, 180);
+		}
 	}
 
 	/**
@@ -52,12 +83,29 @@ export class Toolbar {
 	 * @param config 工具栏配置
 	 */
 	render(container: HTMLElement, config: ToolbarConfig): void {
+		const nextDocument = container.ownerDocument;
+		if (this.activeDocument !== nextDocument) {
+			this.activeDocument?.removeEventListener('pointerdown', this.handleDocumentPointerDown, true);
+			nextDocument.addEventListener('pointerdown', this.handleDocumentPointerDown, true);
+			this.activeDocument = nextDocument;
+		}
+		this.container = container;
+		if (this.currentViewType !== null && this.currentViewType !== config.currentViewType) {
+			this.isExpanded = false;
+		}
+		this.currentViewType = config.currentViewType;
+		if (!config.autoCollapse) {
+			this.isExpanded = false;
+		}
+
 		container.empty();
 		container.addClass(ToolbarClasses.block);
 		container.toggleClass(
 			ToolbarClasses.modifiers.autoCollapse,
 			config.autoCollapse ?? false
 		);
+		container.toggleClass(ToolbarClasses.modifiers.expanded, this.isExpanded);
+		container.removeClass(ToolbarClasses.modifiers.opening);
 
 		// 创建三个区域容器
 		const leftContainer = container.createDiv(ToolbarClasses.elements.left);
@@ -65,10 +113,21 @@ export class Toolbar {
 		const rightContainer = container.createDiv(ToolbarClasses.elements.right);
 
 		// 渲染左侧6视图选择器
+		const handleViewSwitch = (type: CalendarViewType): void => {
+			if (config.autoCollapse) {
+				if (type === config.currentViewType) {
+					this.setExpanded(!this.isExpanded, !this.isExpanded);
+					return;
+				}
+				this.setExpanded(false);
+			}
+			config.onViewSwitch(type);
+		};
+
 		this.leftSection.render(
 			leftContainer,
 			config.currentViewType,
-			config.onViewSwitch,
+			handleViewSwitch,
 			config.showViewNavButtonText ?? true
 		);
 
@@ -118,6 +177,13 @@ export class Toolbar {
 	 */
 	destroy(): void {
 		this.responsiveManager.disconnect();
+		this.activeDocument?.removeEventListener('pointerdown', this.handleDocumentPointerDown, true);
+		this.activeDocument = null;
+		if (this.openingTimer !== null) {
+			window.clearTimeout(this.openingTimer);
+			this.openingTimer = null;
+		}
+		this.container = null;
 	}
 }
 
