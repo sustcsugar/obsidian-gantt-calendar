@@ -787,7 +787,6 @@ Author: sugar
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__left,
 .gc-toolbar--auto-collapse:focus-within .gc-toolbar__left {
-	animation: gc-toolbar-drop-down 130ms ease-out both;
 }
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__view-selector-group,
@@ -816,25 +815,6 @@ Author: sugar
 .gc-toolbar--auto-collapse:focus-within .gc-toolbar__right {
 	max-width: calc(100cqw - 104px);
 	flex-wrap: nowrap;
-	animation: gc-toolbar-roll-right 130ms 20ms ease-out both;
-}
-
-@keyframes gc-toolbar-drop-down {
-	from {
-		clip-path: inset(0 0 100% 0 round 11px);
-	}
-	to {
-		clip-path: inset(0 0 0 0 round 11px);
-	}
-}
-
-@keyframes gc-toolbar-roll-right {
-	from {
-		clip-path: inset(0 100% 0 0 round 11px);
-	}
-	to {
-		clip-path: inset(0 0 0 0 round 11px);
-	}
 }
 
 /* ============================================
