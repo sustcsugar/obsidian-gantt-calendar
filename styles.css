@@ -729,19 +729,19 @@ Author: sugar
 	display: none;
 }
 
-.gc-toolbar--auto-collapse:not(:hover):not(:focus-within) .gc-toolbar__right,
-.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+.gc-toolbar--auto-collapse:not(:hover):not(:has(:focus-visible)) .gc-toolbar__right,
+.gc-toolbar--auto-collapse:not(:hover):not(:has(:focus-visible))
 	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn:not(.gc-toolbar__view-selector-btn--active) {
 	display: none;
 }
 
-.gc-toolbar--auto-collapse:not(:hover):not(:focus-within) .gc-toolbar__view-selector-group {
+.gc-toolbar--auto-collapse:not(:hover):not(:has(:focus-visible)) .gc-toolbar__view-selector-group {
 	padding: 0;
 	background: transparent;
 	box-shadow: none;
 }
 
-.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+.gc-toolbar--auto-collapse:not(:hover):not(:has(:focus-visible))
 	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active {
 	height: 28px;
 	padding: 3px 8px;
@@ -749,12 +749,12 @@ Author: sugar
 	transform: none;
 }
 
-.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+.gc-toolbar--auto-collapse:not(:hover):not(:has(:focus-visible))
 	.gc-toolbar__view-selector-btn--active .view-selector-btn-content {
 	gap: 3px;
 }
 
-.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+.gc-toolbar--auto-collapse:not(:hover):not(:has(:focus-visible))
 	.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-icon {
 	width: 14px;
 	height: 14px;
@@ -762,7 +762,7 @@ Author: sugar
 }
 
 .gc-toolbar--auto-collapse:hover,
-.gc-toolbar--auto-collapse:focus-within {
+.gc-toolbar--auto-collapse:has(:focus-visible) {
 	grid-template-columns: auto auto;
 	justify-items: start;
 	gap: 6px;
@@ -771,8 +771,8 @@ Author: sugar
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__left,
 .gc-toolbar--auto-collapse:hover .gc-toolbar__right,
-.gc-toolbar--auto-collapse:focus-within .gc-toolbar__left,
-.gc-toolbar--auto-collapse:focus-within .gc-toolbar__right {
+.gc-toolbar--auto-collapse:has(:focus-visible) .gc-toolbar__left,
+.gc-toolbar--auto-collapse:has(:focus-visible) .gc-toolbar__right {
 	width: auto;
 	justify-content: flex-start;
 	padding: 4px;
@@ -785,12 +785,8 @@ Author: sugar
 	pointer-events: auto;
 }
 
-.gc-toolbar--auto-collapse:hover .gc-toolbar__left,
-.gc-toolbar--auto-collapse:focus-within .gc-toolbar__left {
-}
-
 .gc-toolbar--auto-collapse:hover .gc-toolbar__view-selector-group,
-.gc-toolbar--auto-collapse:focus-within .gc-toolbar__view-selector-group {
+.gc-toolbar--auto-collapse:has(:focus-visible) .gc-toolbar__view-selector-group {
 	flex-direction: column;
 	align-items: stretch;
 	padding: 0;
@@ -800,19 +796,19 @@ Author: sugar
 
 .gc-toolbar--auto-collapse:hover
 	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn,
-.gc-toolbar--auto-collapse:focus-within
+.gc-toolbar--auto-collapse:has(:focus-visible)
 	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn {
 	width: 100%;
 	justify-content: flex-start;
 }
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__view-selector-label,
-.gc-toolbar--auto-collapse:focus-within .gc-toolbar__view-selector-label {
+.gc-toolbar--auto-collapse:has(:focus-visible) .gc-toolbar__view-selector-label {
 	display: inline;
 }
 
 .gc-toolbar--auto-collapse:hover .gc-toolbar__right,
-.gc-toolbar--auto-collapse:focus-within .gc-toolbar__right {
+.gc-toolbar--auto-collapse:has(:focus-visible) .gc-toolbar__right {
 	max-width: calc(100cqw - 104px);
 	flex-wrap: nowrap;
 }
