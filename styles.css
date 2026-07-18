@@ -693,6 +693,154 @@ Author: sugar
 }
 
 /* ============================================
+   可选：自动收起工具栏
+   收起时仅保留当前视图；展开后显示纵向视图菜单和横向操作栏
+   ============================================ */
+
+.view-content:has(> .gc-toolbar--auto-collapse) {
+	position: relative;
+	container-type: inline-size;
+}
+
+.calendar-toolbar.gc-toolbar--auto-collapse,
+.gc-toolbar.gc-toolbar--auto-collapse {
+	display: grid;
+	grid-template-columns: auto;
+	align-items: start;
+	gap: 0;
+	width: max-content;
+	max-width: calc(100cqw - 12px);
+	margin: 0;
+	padding: 2px;
+	position: absolute;
+	top: 2px;
+	left: 6px;
+	z-index: 120;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+.gc-toolbar--auto-collapse .gc-toolbar__center {
+	display: none;
+}
+
+.gc-toolbar--auto-collapse:not(:hover):not(:focus-within) .gc-toolbar__right,
+.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn:not(.gc-toolbar__view-selector-btn--active) {
+	display: none;
+}
+
+.gc-toolbar--auto-collapse:not(:hover):not(:focus-within) .gc-toolbar__view-selector-group {
+	padding: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn--active {
+	height: 28px;
+	padding: 3px 8px;
+	font-size: 11px;
+	transform: none;
+}
+
+.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+	.gc-toolbar__view-selector-btn--active .view-selector-btn-content {
+	gap: 3px;
+}
+
+.gc-toolbar--auto-collapse:not(:hover):not(:focus-within)
+	.gc-toolbar__view-selector-btn--active .gc-toolbar__view-selector-icon {
+	width: 14px;
+	height: 14px;
+	font-size: 13px;
+}
+
+.gc-toolbar--auto-collapse:hover,
+.gc-toolbar--auto-collapse:focus-within {
+	grid-template-columns: auto auto;
+	justify-items: start;
+	gap: 6px;
+	padding: 0;
+}
+
+.gc-toolbar--auto-collapse:hover .gc-toolbar__left,
+.gc-toolbar--auto-collapse:hover .gc-toolbar__right,
+.gc-toolbar--auto-collapse:focus-within .gc-toolbar__left,
+.gc-toolbar--auto-collapse:focus-within .gc-toolbar__right {
+	width: auto;
+	justify-content: flex-start;
+	padding: 4px;
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+	border-radius: 11px;
+	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	box-shadow: 0 5px 16px rgba(0, 0, 0, 0.12);
+	backdrop-filter: blur(16px) saturate(150%);
+	-webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+
+.gc-toolbar--auto-collapse:hover .gc-toolbar__left,
+.gc-toolbar--auto-collapse:focus-within .gc-toolbar__left {
+	transform-origin: center top;
+	animation: gc-toolbar-drop-down 170ms ease-out both;
+}
+
+.gc-toolbar--auto-collapse:hover .gc-toolbar__view-selector-group,
+.gc-toolbar--auto-collapse:focus-within .gc-toolbar__view-selector-group {
+	flex-direction: column;
+	align-items: stretch;
+	padding: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+.gc-toolbar--auto-collapse:hover
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn,
+.gc-toolbar--auto-collapse:focus-within
+	.gc-toolbar__view-selector-group button.gc-toolbar__view-selector-btn {
+	width: 100%;
+	justify-content: flex-start;
+}
+
+.gc-toolbar--auto-collapse:hover .gc-toolbar__view-selector-label,
+.gc-toolbar--auto-collapse:focus-within .gc-toolbar__view-selector-label {
+	display: inline;
+}
+
+.gc-toolbar--auto-collapse:hover .gc-toolbar__right,
+.gc-toolbar--auto-collapse:focus-within .gc-toolbar__right {
+	max-width: calc(100cqw - 104px);
+	flex-wrap: nowrap;
+	transform-origin: left center;
+	animation: gc-toolbar-roll-right 170ms 35ms ease-out both;
+}
+
+@keyframes gc-toolbar-drop-down {
+	from {
+		opacity: 0;
+		transform: translateY(-8px) scaleY(0.86);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scaleY(1);
+	}
+}
+
+@keyframes gc-toolbar-roll-right {
+	from {
+		opacity: 0;
+		transform: translateX(-10px) scaleX(0.84);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0) scaleX(1);
+	}
+}
+
+/* ============================================
    工具栏组件样式 (BEM: gc-toolbar)
    ============================================ */
 

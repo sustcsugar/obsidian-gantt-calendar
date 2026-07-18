@@ -139,6 +139,10 @@
 				"name": "视图导航按钮显示文本",
 				"description": "工具栏左侧的视图导航按钮是否显示文字标签。关闭后仅显示图标"
 			},
+			"autoCollapseToolbar": {
+				"name": "自动收起工具栏",
+				"description": "将工具栏收起为当前视图按钮；悬停或聚焦后显示纵向视图菜单和横向操作栏"
+			},
 			"language": {
 				"name": "语言",
 				"description": "选择插件界面语言",

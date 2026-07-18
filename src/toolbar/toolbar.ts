@@ -54,6 +54,10 @@ export class Toolbar {
 	render(container: HTMLElement, config: ToolbarConfig): void {
 		container.empty();
 		container.addClass(ToolbarClasses.block);
+		container.toggleClass(
+			ToolbarClasses.modifiers.autoCollapse,
+			config.autoCollapse ?? false
+		);
 
 		// 创建三个区域容器
 		const leftContainer = container.createDiv(ToolbarClasses.elements.left);
@@ -126,6 +130,7 @@ export interface ToolbarConfig {
 	currentDate: Date;
 	titleText: string;
 	showViewNavButtonText?: boolean; // 是否显示视图导航按钮文本
+	autoCollapse?: boolean; // 是否自动收起工具栏
 
 	// 任务视图相关
 	globalFilterText?: string;

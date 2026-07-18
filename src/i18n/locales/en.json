@@ -139,6 +139,10 @@
 				"name": "Show Navigation Button Text",
 				"description": "Show text labels on view navigation buttons in the toolbar. When disabled, only icons are shown"
 			},
+			"autoCollapseToolbar": {
+				"name": "Auto-collapse Toolbar",
+				"description": "Collapse the toolbar to the current view button. Hover or focus it to reveal a vertical view menu and a horizontal action bar"
+			},
 			"language": {
 				"name": "Language",
 				"description": "Select the plugin interface language",
