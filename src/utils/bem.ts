@@ -139,6 +139,7 @@ export const TaskCardClasses = {
 		dayView: bem(BLOCKS.TASK_CARD, undefined, 'day'),
 		taskView: bem(BLOCKS.TASK_CARD, undefined, 'task'),
 		ganttView: bem(BLOCKS.TASK_CARD, undefined, 'gantt'),
+		sidebarView: bem(BLOCKS.TASK_CARD, undefined, 'sidebar'),
 		// 状态修饰符
 		completed: bem(BLOCKS.TASK_CARD, undefined, 'completed'),
 		pending: bem(BLOCKS.TASK_CARD, undefined, 'pending'),
@@ -397,6 +398,9 @@ export const ToolbarClasses = {
 	modifiers: {
 		gantt: bem(BLOCKS.TOOLBAR, undefined, 'gantt'),
 		task: bem(BLOCKS.TOOLBAR, undefined, 'task'),
+		autoCollapse: bem(BLOCKS.TOOLBAR, undefined, 'auto-collapse'),
+		expanded: bem(BLOCKS.TOOLBAR, undefined, 'expanded'),
+		opening: bem(BLOCKS.TOOLBAR, undefined, 'opening'),
 		/** 响应式紧凑模式 - 左侧按钮只显示图标 */
 		compact: bem(BLOCKS.TOOLBAR, undefined, 'compact'),
 	},

@@ -193,6 +193,7 @@ export class GCMainView extends ItemView {
 			currentDate: this.currentDate,
 			titleText: this.getViewTitle(),
 			showViewNavButtonText: this.plugin?.settings?.showViewNavButtonText ?? true,
+			autoCollapse: this.plugin?.settings?.autoCollapseToolbar ?? false,
 			globalFilterText: this.plugin?.settings?.globalTaskFilter,
 			taskRenderer: this.taskRenderer,
 			ganttRenderer: this.ganttRenderer,

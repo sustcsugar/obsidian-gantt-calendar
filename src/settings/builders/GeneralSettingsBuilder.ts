@@ -69,6 +69,18 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						}));
 			});
 
+			// 自动收起工具栏
+			addSetting(setting => {
+				setting.setName(i18n.t('settings.general.autoCollapseToolbar.name'))
+					.setDesc(i18n.t('settings.general.autoCollapseToolbar.description'))
+					.addToggle(toggle => toggle
+						.setValue(this.plugin.settings.autoCollapseToolbar)
+						.onChange((value) => {
+							this.plugin.settings.autoCollapseToolbar = value;
+							void this.saveAndRefreshViews();
+						}));
+			});
+
 			// 语言选择
 			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.language.name'))

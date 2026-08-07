@@ -44,6 +44,7 @@ export interface GanttCalendarSettings {
 	defaultTaskPriority: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal'; // 默认任务优先级
 	enableDebugMode: boolean; // 是否启用开发者模式（详细日志）
 	showViewNavButtonText: boolean; // 是否显示视图导航按钮文本
+	autoCollapseToolbar: boolean; // 是否将工具栏收起为当前视图按钮
 	timezoneOffset: number | null; // 时区偏移量（分钟），null 表示跟随系统
 	timeFormat: '24h' | '12h'; // 时间显示格式
 	recurringTaskDisplayLimit: number; // 周期任务虚拟实例显示数量上限
