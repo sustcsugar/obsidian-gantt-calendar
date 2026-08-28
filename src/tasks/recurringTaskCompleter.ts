@@ -10,7 +10,7 @@ import { GCTask, getTaskDateField } from '../types';
 import type { DateFieldType } from '../settings/types';
 import { determineTaskFormat } from './taskUpdater';
 import { serializeTask, TaskUpdates } from './taskSerializer';
-import { updateTaskCompletion } from './taskUpdater';
+import { updateTaskCompletion, withFileLock } from './taskUpdater';
 import { parseRepeatRule, getNextOccurrence } from './recurrenceCalculator';
 import { Logger } from '../utils/logger';
 
@@ -56,6 +56,8 @@ export async function completeRecurringTask(
         nextOccurrence: nextOccurrence.toISOString(),
     });
 
+    // 使用文件级写锁，防止同一文件的快速连续操作竞态
+    await withFileLock(task.filePath, async () => {
     // 读取文件
     const file = app.vault.getAbstractFileByPath(task.filePath);
     if (!(file instanceof TFile)) {
@@ -117,6 +119,7 @@ export async function completeRecurringTask(
         originalLine: completedLine,
         newLine: newTaskLine,
     });
+    }); // withFileLock
 }
 
 /**

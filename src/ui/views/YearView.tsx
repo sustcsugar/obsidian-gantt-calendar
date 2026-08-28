@@ -6,6 +6,7 @@ import { YearViewClasses } from '../../utils/bem';
 import { usePlugin } from '../pluginContext';
 import { useCalendarStore, selectViewFilter } from '../store/calendarStore';
 import { applyTagFilter } from '../utils/taskFilters';
+import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
 import { i18n } from '../../i18n/i18n';
 
 /**
@@ -26,11 +27,17 @@ export function YearView(): JSX.Element {
 	const showCount = plugin.settings.yearShowTaskCount;
 
 	const data = useMemo(() => {
-		const scoped = applyTagFilter(tasks, filter.tag);
-		const counts = new Map<string, number>();
 		const start = new Date(year, 0, 1);
 		const end = new Date(year, 11, 31);
-		for (const t of scoped) {
+		const scoped = applyTagFilter(tasks, filter.tag);
+
+		// 重复任务：生成虚拟实例并合并计数
+		const recurringLimit = plugin.settings.recurringTaskDisplayLimit ?? 5;
+		const virtuals = generateVirtualInstances(scoped, start, end, dateField, recurringLimit);
+		const allTasks = [...scoped, ...virtuals];
+
+		const counts = new Map<string, number>();
+		for (const t of allTasks) {
 			const d = getTaskDateField(t, dateField);
 			if (!d) continue;
 			if (d < start || d > end) continue;

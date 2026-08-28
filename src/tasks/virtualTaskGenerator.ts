@@ -103,9 +103,12 @@ function createVirtualTask(
     dateField: string,
     rule: ParsedRecurrenceRule
 ): GCTask | null {
-    // 克隆源任务
+    // 克隆源任务（引用类型属性做深拷贝，防止虚拟任务修改意外影响源任务）
     const virtualTask: GCTask = {
         ...sourceTask,
+        tags: sourceTask.tags ? [...sourceTask.tags] : undefined,
+        metadataFields: sourceTask.metadataFields ? sourceTask.metadataFields.map(f => ({ ...f })) : undefined,
+        datePrecision: sourceTask.datePrecision ? { ...sourceTask.datePrecision } : undefined,
     };
 
     // 设置出现日期到指定字段
