@@ -15,6 +15,7 @@
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
 import { TimeGranularity, GRANULARITY_CONFIGS } from '../types';
 import { parseLocalDate, findStartGridUnitIndex as findStartIdx, findEndGridUnitIndex as findEndIdx, getGridUnitX as getX, getDateForUnit as getUnit, isSameUnit as sameUnit, isMajorGridLine as majorLine } from './dateGeometry';
+import { createTaskDragController } from './taskDragController';
 import type { IPluginContext,  GCTask } from '../../types';
 import { GanttClasses, setCssProps } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
@@ -333,6 +334,14 @@ export class SvgGanttRenderer {
 
 		// 设置从侧边栏拖拽任务到甘特图的接收
 		this.setupDropReceiver();
+
+		// 初始化拖拽控制器
+		this.dragController = createTaskDragController(
+			this as unknown as import('./renderContext').IRenderContext,
+			() => this.tasks,
+			this.onDateChange,
+			this.handleTaskClick,
+		);
 
 		if (this.ganttContainer) {
 			this.ganttContainer.scrollLeft = savedScrollLeft;
@@ -1492,6 +1501,9 @@ export class SvgGanttRenderer {
 		tooltipManager.hide();
 	}
 
+	/** 拖拽控制器 */
+	private dragController: ReturnType<typeof createTaskDragController> | null = null;
+
 	/**
 	 * 拖动状态
 	 */
@@ -1523,25 +1535,7 @@ export class SvgGanttRenderer {
 		task: GanttChartTask,
 		minDate: Date
 	): void {
-		// 左手柄拖动 - 只修改开始时间
-		leftHandle.addEventListener('mousedown', (e: MouseEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.startDragging(task, 'resize-left', e.clientX, minDate, bar, leftHandle, null);
-		});
-
-		// 右手柄拖动 - 只修改结束时间
-		rightHandle.addEventListener('mousedown', (e: MouseEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.startDragging(task, 'resize-right', e.clientX, minDate, bar, null, rightHandle);
-		});
-
-		// 任务条整体拖动 - 同时修改开始和结束时间
-		bar.addEventListener('mousedown', (e: MouseEvent) => {
-			e.preventDefault();
-			this.startDragging(task, 'move', e.clientX, minDate, bar, null, null);
-		});
+		this.dragController?.setupTaskBarDragging(barGroup, bar, leftHandle, rightHandle, task, minDate);
 	}
 
 	/**
@@ -1757,9 +1751,7 @@ export class SvgGanttRenderer {
 	 * 日期加减天数
 	 */
 	private addDays(date: Date, days: number): Date {
-		const result = new Date(date);
-		result.setDate(result.getDate() + days);
-		return result;
+		return this.dragController?.addDays(date, days) ?? new Date(date);
 	}
 
 	/**
