@@ -1,6 +1,7 @@
 import { parseSingleTaskLine } from '../src/tasks/taskParser/main';
 import { serializeTask } from '../src/tasks/taskSerializer';
-import type { GCTask, TaskFormatType } from '../src/types';
+import type { GCTask } from '../src/types';
+import type { TaskFormatType } from '../src/tasks/taskSerializerSymbols';
 import { App } from 'obsidian';
 
 // 模拟 App（serializeTask 需要读插件设置）
