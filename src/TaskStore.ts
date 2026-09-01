@@ -318,6 +318,9 @@ export class TaskStore {
 	 */
 	async refreshFile(filePath: string): Promise<void> {
 		await (this.markdownSource as unknown as { processFileModification: (p: string) => Promise<void> }).processFileModification(filePath);
+		// 立即通知视图（跳过 75ms 防抖），确保返回最新数据
+		this.invalidateCache();
+		this.notifyListeners();
 	}
 
 	/**
