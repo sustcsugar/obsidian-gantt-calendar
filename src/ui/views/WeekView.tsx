@@ -243,6 +243,10 @@ export function WeekView(): JSX.Element {
 				// 拖到时间格 = time 精度。传入浅拷贝而非变异 store 中的共享对象
 				const timedTask = { ...sourceTask, datePrecision: { ...sourceTask.datePrecision, [dateField]: 'time' } };
 				await updateTaskDateField(app, timedTask, dateField, newDate, enabledFormats);
+				// 立即刷新指定文件的 Repository 缓存（跳过文件事件 50ms 防抖），
+				// 然后通知视图。Repository 缓存更新后 getAllTasks() 返回最新数据。
+				await plugin.taskCache.refreshFile(sourceTask.filePath);
+				refreshTasks();
 				Logger.debug('WeekView', 'Task time updated via drag-drop', {
 					taskId: `${sourceTask.filePath}:${sourceTask.lineNumber}`,
 					hour,
@@ -283,6 +287,8 @@ export function WeekView(): JSX.Element {
 				// 拖到全天行 = day 精度。同样走浅拷贝
 				const dayTask = { ...sourceTask, datePrecision: { ...sourceTask.datePrecision, [dateField]: 'day' } };
 				await updateTaskDateField(app, dayTask, dateField, newDate, enabledFormats);
+				await plugin.taskCache.refreshFile(sourceTask.filePath);
+				refreshTasks();
 				Logger.debug('WeekView', 'Task set to all-day via drag-drop', {
 					taskId: `${sourceTask.filePath}:${sourceTask.lineNumber}`,
 					targetDate,
@@ -327,6 +333,8 @@ export function WeekView(): JSX.Element {
 					}
 				}
 				await updateTaskDateField(app, sourceTask, dateField, newDate, enabledFormats);
+				await plugin.taskCache.refreshFile(sourceTask.filePath);
+				refreshTasks();
 				Logger.debug('WeekView', 'Task drag-drop update successful', {
 					taskId: `${sourceTask.filePath}:${sourceTask.lineNumber}`,
 					dateField,

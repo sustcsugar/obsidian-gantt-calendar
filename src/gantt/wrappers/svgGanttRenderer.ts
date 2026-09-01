@@ -14,6 +14,8 @@
 
 import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
 import { TimeGranularity, GRANULARITY_CONFIGS } from '../types';
+import { parseLocalDate, findStartGridUnitIndex as findStartIdx, findEndGridUnitIndex as findEndIdx, getGridUnitX as getX, getDateForUnit as getUnit, isSameUnit as sameUnit, isMajorGridLine as majorLine } from './dateGeometry';
+import { createTaskDragController } from './taskDragController';
 import type { IPluginContext,  GCTask } from '../../types';
 import { GanttClasses, setCssProps } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
@@ -333,6 +335,14 @@ export class SvgGanttRenderer {
 		// 设置从侧边栏拖拽任务到甘特图的接收
 		this.setupDropReceiver();
 
+		// 初始化拖拽控制器
+		this.dragController = createTaskDragController(
+			this as unknown as import('./renderContext').IRenderContext,
+			() => this.tasks,
+			this.onDateChange,
+			this.handleTaskClick,
+		);
+
 		if (this.ganttContainer) {
 			this.ganttContainer.scrollLeft = savedScrollLeft;
 			this.ganttContainer.scrollTop = savedScrollTop;
@@ -400,11 +410,7 @@ export class SvgGanttRenderer {
 	 * local midnight, matching how tasks are serialized back to markdown.
 	 */
 	private static parseLocalDate(dateStr: string): Date {
-		const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr);
-		if (match) {
-			return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-		}
-		return new Date(dateStr);
+		return parseLocalDate(dateStr);
 	}
 
 	private createSvgElement(
@@ -1109,26 +1115,21 @@ export class SvgGanttRenderer {
 	 * 获取指定单元的日期 - 辅助方法
 	 */
 	private getDateForUnit(minDate: Date, unitIndex: number, granularity: TimeGranularity): Date {
-		const config = GRANULARITY_CONFIGS[granularity];
-		return new Date(minDate.getTime() + unitIndex * config.milliseconds);
+		return getUnit(minDate, unitIndex, granularity);
 	}
 
 	/**
 	 * 判断两个日期是否在同一颗粒度单元 - 辅助方法（仅周视图）
 	 */
-	private isSameUnit(date1: Date, date2: Date, _granularity: TimeGranularity): boolean {
-		// 只支持周视图
-		return date1.getFullYear() === date2.getFullYear() &&
-			   date1.getMonth() === date2.getMonth() &&
-			   date1.getDate() === date2.getDate();
+	private isSameUnit(date1: Date, date2: Date, granularity: TimeGranularity): boolean {
+		return sameUnit(date1, date2, granularity);
 	}
 
 	/**
 	 * 判断是否为主要网格线 - 辅助方法（仅周视图）
 	 */
-	private isMajorGridLine(unitIndex: number, _granularity: TimeGranularity): boolean {
-		// 只支持周视图，每7天（每周）加粗
-		return unitIndex % 7 === 0;
+	private isMajorGridLine(unitIndex: number, granularity: TimeGranularity): boolean {
+		return majorLine(unitIndex, granularity);
 	}
 
 	/**
@@ -1140,17 +1141,7 @@ export class SvgGanttRenderer {
 	 * @returns 网格单元索引（整数，与 renderGrid 中的 i 对应）
 	 */
 	private findStartGridUnitIndex(startDate: Date, minDate: Date): number {
-		const config = GRANULARITY_CONFIGS[this.granularity];
-
-		// 规范化开始日期到当天的 00:00:00
-		const normalized = new Date(startDate);
-		normalized.setHours(0, 0, 0, 0);
-
-		// 计算偏移的单元数
-		const offsetUnits = (normalized.getTime() - minDate.getTime()) / config.milliseconds;
-
-		// 向上取整，确保任务从正确的网格单元开始
-		return Math.ceil(offsetUnits);
+		return findStartIdx(startDate, minDate, { columnWidth: this.columnWidth, granularity: this.granularity });
 	}
 
 	/**
@@ -1162,19 +1153,7 @@ export class SvgGanttRenderer {
 	 * @returns 网格单元索引（整数，表示结束网格线的位置）
 	 */
 	private findEndGridUnitIndex(endDate: Date, minDate: Date): number {
-		const config = GRANULARITY_CONFIGS[this.granularity];
-
-		// 规范化结束日期到当天的 00:00:00，然后加一天
-		// 这样确保任务条覆盖到结束日期当天的结束位置
-		const normalized = new Date(endDate);
-		normalized.setHours(0, 0, 0, 0);
-		normalized.setDate(normalized.getDate() + 1);  // 加一天，包含结束日期当天
-
-		// 计算偏移的单元数
-		const offsetUnits = (normalized.getTime() - minDate.getTime()) / config.milliseconds;
-
-		// 向上取整，确保包含完整的结束日期
-		return Math.ceil(offsetUnits);
+		return findEndIdx(endDate, minDate, { columnWidth: this.columnWidth, granularity: this.granularity });
 	}
 
 	/**
@@ -1185,7 +1164,7 @@ export class SvgGanttRenderer {
 	 * @returns x 坐标
 	 */
 	private getGridUnitX(unitIndex: number): number {
-		return unitIndex * this.columnWidth;
+		return getX(unitIndex, this.columnWidth);
 	}
 
 	/**
@@ -1522,6 +1501,9 @@ export class SvgGanttRenderer {
 		tooltipManager.hide();
 	}
 
+	/** 拖拽控制器 */
+	private dragController: ReturnType<typeof createTaskDragController> | null = null;
+
 	/**
 	 * 拖动状态
 	 */
@@ -1553,25 +1535,7 @@ export class SvgGanttRenderer {
 		task: GanttChartTask,
 		minDate: Date
 	): void {
-		// 左手柄拖动 - 只修改开始时间
-		leftHandle.addEventListener('mousedown', (e: MouseEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.startDragging(task, 'resize-left', e.clientX, minDate, bar, leftHandle, null);
-		});
-
-		// 右手柄拖动 - 只修改结束时间
-		rightHandle.addEventListener('mousedown', (e: MouseEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.startDragging(task, 'resize-right', e.clientX, minDate, bar, null, rightHandle);
-		});
-
-		// 任务条整体拖动 - 同时修改开始和结束时间
-		bar.addEventListener('mousedown', (e: MouseEvent) => {
-			e.preventDefault();
-			this.startDragging(task, 'move', e.clientX, minDate, bar, null, null);
-		});
+		this.dragController?.setupTaskBarDragging(barGroup, bar, leftHandle, rightHandle, task, minDate);
 	}
 
 	/**
@@ -1787,9 +1751,7 @@ export class SvgGanttRenderer {
 	 * 日期加减天数
 	 */
 	private addDays(date: Date, days: number): Date {
-		const result = new Date(date);
-		result.setDate(result.getDate() + days);
-		return result;
+		return this.dragController?.addDays(date, days) ?? new Date(date);
 	}
 
 	/**

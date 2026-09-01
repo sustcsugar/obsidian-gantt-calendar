@@ -286,7 +286,7 @@ export class MarkdownDataSource implements IDataSource {
 						updated: changes.updated.length,
 						deleted: changes.deleted.length
 					});
-					void this.changeHandler(changes);
+					await this.changeHandler(changes);
 				} else {
 					Logger.debug('MarkdownDataSource', `No actual changes detected for ${filePath}`);
 				}

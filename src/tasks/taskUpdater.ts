@@ -9,7 +9,7 @@ import { Logger } from '../utils/logger';
 // 否则后一次读取会基于前一次写入前的旧内容，整文件覆盖时丢失修改。
 const fileWriteLocks = new Map<string, Promise<unknown>>();
 
-async function withFileLock<T>(filePath: string, fn: () => Promise<T>): Promise<T> {
+export async function withFileLock<T>(filePath: string, fn: () => Promise<T>): Promise<T> {
 	const previous = fileWriteLocks.get(filePath) ?? Promise.resolve();
 	const run = previous.then(fn, fn);
 	const tail = run.catch(() => { });

@@ -276,6 +276,7 @@ export interface IPluginContext {
 		whenReady?(): Promise<void>;
 		onUpdate(handler: (filePath?: string) => void): void;
 		offUpdate(handler: (filePath?: string) => void): void;
+		refreshFile(filePath: string): Promise<void>;
 		initialize(globalTaskFilter: string, enabledFormats?: string[], retryCount?: number): Promise<void>;
 	};
 	calendarView?: {

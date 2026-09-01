@@ -4,6 +4,7 @@ import { Notice } from 'obsidian';
 import { sortTasks } from '../../tasks/taskSorter';
 import { GanttClasses, ViewClasses } from '../../utils/bem';
 import { Logger } from '../../utils/logger';
+import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
 import {
 	GanttChartAdapter,
 	TaskUpdateHandler,
@@ -63,9 +64,22 @@ export function GanttView(): JSX.Element {
 		return sortTasks(withAssigned, filter.sort);
 	}, [tasks, filter]);
 
+	// 重复任务：为甘特图生成虚拟实例
+	const tasksWithVirtuals = useMemo(() => {
+		const recurringLimit = plugin.settings.recurringTaskDisplayLimit ?? 5;
+		const ref = new Date();
+		const rangeStart = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+		const rangeEnd = new Date(ref.getFullYear() + 1, ref.getMonth(), ref.getDate());
+		const virtuals = generateVirtualInstances(
+			filteredTasks, rangeStart, rangeEnd,
+			startField, recurringLimit,
+		);
+		return [...filteredTasks, ...virtuals];
+	}, [filteredTasks, startField, plugin.settings.recurringTaskDisplayLimit]);
+
 	const ganttTasks = useMemo(() => (
-		TaskDataAdapter.toGanttChartTasks(filteredTasks, startField, endField)
-	), [filteredTasks, startField, endField]);
+		TaskDataAdapter.toGanttChartTasks(tasksWithVirtuals, startField, endField)
+	), [tasksWithVirtuals, startField, endField]);
 
 	const hasTasks = ganttTasks.length > 0;
 

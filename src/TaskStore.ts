@@ -313,6 +313,28 @@ export class TaskStore {
 	}
 
 	/**
+	 * 立即刷新指定文件的 Repository 缓存（跳过文件事件的 50ms 防抖）。
+	 * 写回完成后立即调用此方法，确保 getAllTasks() 返回最新数据。
+	 */
+	async refreshFile(filePath: string): Promise<void> {
+		await (this.markdownSource as unknown as { processFileModification: (p: string) => Promise<void> }).processFileModification(filePath);
+		// 立即通知视图（跳过 75ms 防抖），确保返回最新数据
+		this.invalidateCache();
+		this.notifyListeners();
+	}
+
+	/**
+	 * 立即通知所有监听器（跳过防抖）。
+	 * 用于写回完成后立即刷新视图，避免等待文件修改事件的间接回流。
+	 * 第二次调用时（文件修改事件到达）数组引用相同，zustand 跳过。
+	 */
+	notifyNow(): void {
+		// 确保缓存最新
+		this.invalidateCache();
+		this.notifyListeners();
+	}
+
+	/**
 	 * 使缓存失效
 	 */
 	private invalidateCache(): void {
