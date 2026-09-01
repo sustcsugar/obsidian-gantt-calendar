@@ -313,6 +313,17 @@ export class TaskStore {
 	}
 
 	/**
+	 * 立即通知所有监听器（跳过防抖）。
+	 * 用于写回完成后立即刷新视图，避免等待文件修改事件的间接回流。
+	 * 第二次调用时（文件修改事件到达）数组引用相同，zustand 跳过。
+	 */
+	notifyNow(): void {
+		// 确保缓存最新
+		this.invalidateCache();
+		this.notifyListeners();
+	}
+
+	/**
 	 * 使缓存失效
 	 */
 	private invalidateCache(): void {
