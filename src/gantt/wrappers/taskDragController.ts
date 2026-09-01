@@ -15,7 +15,7 @@
  *                        └── hasMoved  → onDateChange（拖拽语义）
  */
 
-import { parseLocalDate } from './dateGeometry';
+import { parseLocalDate, findStartGridUnitIndex, findEndGridUnitIndex, getGridUnitX } from './dateGeometry';
 import type { IRenderContext, TaskDragState } from './renderContext';
 import type { GanttChartTask } from '../types';
 import { Logger } from '../../utils/logger';
@@ -38,11 +38,11 @@ function updateTaskBarVisual(
 	// 重新导入几何函数（ESM 静态 import，避免循环）
 	const { findStartGridUnitIndex: findStart, findEndGridUnitIndex: findEnd, getGridUnitX: getX } = require('./dateGeometry') as typeof import('./dateGeometry');
 
-	const startUnitIndex = findStart(newStart, minDate, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
-	const endUnitIndex = findEnd(newEnd, minDate, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
+	const startUnitIndex = findStartGridUnitIndex(newStart, minDate, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
+	const endUnitIndex = findEndGridUnitIndex(newEnd, minDate, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
 	const rowIndex = ctx.tasks.findIndex(t => t.id === dragState.task?.id);
 
-	const x = getX(startUnitIndex, ctx.columnWidth);
+	const x = getGridUnitX(startUnitIndex, ctx.columnWidth);
 	const y = rowIndex * ctx.rowHeight + (ctx.rowHeight - 24) / 2;
 	const duration = endUnitIndex - startUnitIndex;
 	const barWidth = Math.max(duration * ctx.columnWidth, 20);
@@ -97,8 +97,8 @@ function updateTaskBarVisual(
 			}
 			if (leadStart) {
 				const leadStartDate = parseLocalDate(leadStart);
-				const leadUnitIdx = findStart(leadStartDate, ctx.minDate!, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
-				const leadX = getX(leadUnitIdx, ctx.columnWidth);
+				const leadUnitIdx = findStartGridUnitIndex(leadStartDate, ctx.minDate!, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
+				const leadX = getGridUnitX(leadUnitIdx, ctx.columnWidth);
 				const leadWidth = Math.max(x - leadX, 0);
 				leadBar.setAttribute('x', String(leadX));
 				leadBar.setAttribute('y', String(y));
@@ -180,7 +180,7 @@ export function createTaskDragController(
 			return;
 		}
 
-		const { parseLocalDate } = require('./dateGeometry') as typeof import('./dateGeometry');
+
 
 		Object.assign(state, {
 			isDragging: true,
@@ -297,7 +297,7 @@ export function createTaskDragController(
 		const daysDelta = Math.round((e.clientX - startX) / ctx.columnWidth);
 		if (daysDelta === 0) return;
 
-		const { parseLocalDate } = require('./dateGeometry') as typeof import('./dateGeometry');
+
 		const os = parseLocalDate(task!.start);
 		const oe = parseLocalDate(task!.end);
 
