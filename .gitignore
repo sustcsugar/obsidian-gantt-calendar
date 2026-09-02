@@ -36,3 +36,6 @@ drag-event-chain-analysis.html
 
 
 lint-report.txt
+
+# git worktrees
+.worktrees/
