@@ -1502,7 +1502,7 @@ export class SvgGanttRenderer {
 		const minDate = this.minDate;
 		const startDate = SvgGanttRenderer.parseLocalDate(task.start);
 		const endDate = SvgGanttRenderer.parseLocalDate(task.end);
-		const rowIndex = this.tasks.findIndex(t => t.id === task.id);
+		const rowIndex = Math.max(0, this.tasks.findIndex(t => t.id === task.id));
 		const HANDLE_HIT_AREA = 12;
 		const HANDLE_VISUAL_SIZE = 4;
 

@@ -40,7 +40,7 @@ function updateTaskBarVisual(
 
 	const startUnitIndex = findStartGridUnitIndex(newStart, minDate, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
 	const endUnitIndex = findEndGridUnitIndex(newEnd, minDate, { columnWidth: ctx.columnWidth, granularity: ctx.granularity });
-	const rowIndex = ctx.tasks.findIndex(t => t.id === dragState.task?.id);
+	const rowIndex = Math.max(0, ctx.tasks.findIndex(t => t.id === dragState.task?.id));
 
 	const x = getGridUnitX(startUnitIndex, ctx.columnWidth);
 	const y = rowIndex * ctx.rowHeight + (ctx.rowHeight - 24) / 2;
