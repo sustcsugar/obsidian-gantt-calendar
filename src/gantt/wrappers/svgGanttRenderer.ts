@@ -16,6 +16,9 @@ import type { GanttChartTask, GanttChartConfig, DateFieldType } from '../types';
 import { TimeGranularity, GRANULARITY_CONFIGS } from '../types';
 import { parseLocalDate, findStartGridUnitIndex as findStartIdx, findEndGridUnitIndex as findEndIdx, getGridUnitX as getX, getDateForUnit as getUnit, isSameUnit as sameUnit, isMajorGridLine as majorLine } from './dateGeometry';
 import { createTaskDragController } from './taskDragController';
+import { renderHeader } from './headerRenderer';
+import { renderCorner } from './cornerRenderer';
+import { renderGrid, renderTodayLine } from './gridRenderer';
 import type { IPluginContext,  GCTask } from '../../types';
 import { GanttClasses, setCssProps } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
@@ -772,52 +775,12 @@ export class SvgGanttRenderer {
 	 * 渲染左上角空白区域（包含序号和任务列标题）
 	 */
 	private renderCorner(svg: SVGSVGElement | null): void {
-		if (!svg) return;
-
-		const ns = 'http://www.w3.org/2000/svg';
-		const width = this.taskColumnWidth;
-		const height = this.headerHeight;
-
-		// 背景
-		const bg = activeDocument.createElementNS(ns, 'rect');
-		bg.setAttribute('x', '0');
-		bg.setAttribute('y', '0');
-		bg.setAttribute('width', String(width));
-		bg.setAttribute('height', String(height));
-		bg.setAttribute('fill', 'var(--background-secondary)');
-		svg.appendChild(bg);
-
-		// 序号列标题
-		const numberText = activeDocument.createElementNS(ns, 'text');
-		numberText.setAttribute('x', String(this.taskNumberColumnWidth / 2));
-		numberText.setAttribute('y', String(height / 2 + 5));
-		numberText.setAttribute('text-anchor', 'middle');
-		numberText.setAttribute('font-size', '11');
-		numberText.setAttribute('font-weight', '600');
-		numberText.setAttribute('fill', 'var(--text-muted)');
-		numberText.textContent = i18n.t('gantt.headers.index');
-		svg.appendChild(numberText);
-
-		// 任务列标题
-		const taskText = activeDocument.createElementNS(ns, 'text');
-		taskText.setAttribute('x', String(this.taskNumberColumnWidth + (width - this.taskNumberColumnWidth) / 2));
-		taskText.setAttribute('y', String(height / 2 + 5));
-		taskText.setAttribute('text-anchor', 'middle');
-		taskText.setAttribute('font-size', '11');
-		taskText.setAttribute('font-weight', '600');
-		taskText.setAttribute('fill', 'var(--text-muted)');
-		taskText.textContent = i18n.t('gantt.headers.task');
-		svg.appendChild(taskText);
-
-		// 序号列和任务列之间的分隔线
-		const dividerLine = activeDocument.createElementNS(ns, 'line');
-		dividerLine.setAttribute('x1', String(this.taskNumberColumnWidth));
-		dividerLine.setAttribute('y1', '0');
-		dividerLine.setAttribute('x2', String(this.taskNumberColumnWidth));
-		dividerLine.setAttribute('y2', String(height));
-		dividerLine.setAttribute('stroke', 'var(--background-modifier-border)');
-		dividerLine.setAttribute('stroke-width', '1');
-		svg.appendChild(dividerLine);
+		renderCorner({
+			svg,
+			taskNumberColumnWidth: this.taskNumberColumnWidth,
+			taskColumnWidth: this.taskColumnWidth,
+			headerHeight: this.headerHeight,
+		});
 	}
 
 	/**
@@ -1022,54 +985,12 @@ export class SvgGanttRenderer {
 		totalUnits: number,
 		granularity: TimeGranularity
 	): void {
-		if (!svg) return;
-
-		const ns = 'http://www.w3.org/2000/svg';
-		const config = GRANULARITY_CONFIGS[granularity];
-		const width = totalUnits * this.columnWidth + this.padding * 2;
-
-		// 背景
-		const headerBg = activeDocument.createElementNS(ns, 'rect');
-		headerBg.setAttribute('x', '0');
-		headerBg.setAttribute('y', '0');
-		headerBg.setAttribute('width', String(width));
-		headerBg.setAttribute('height', String(this.headerHeight));
-		headerBg.setAttribute('fill', 'var(--background-secondary)');
-		svg.appendChild(headerBg);
-
-		// 绘制时间单元标签
-		// 文本应该居中显示在格子内（两条竖线之间），指示当天的格子范围
-		// 网格竖线从 x=0 开始（i * columnWidth），所以文本也需要从 x=0 开始计算
-		for (let i = 0; i < totalUnits; i++) {
-			const unitDate = this.getDateForUnit(minDate, i, granularity);
-			// 第 i 个格子的左竖线在 i * columnWidth，右竖线在 (i+1) * columnWidth
-			// 格子中心在两者中间：i * columnWidth + columnWidth / 2
-			// 注意：不使用 this.padding，与网格竖线保持一致
-			const gridLineX = i * this.columnWidth;
-			const cellCenterX = gridLineX + this.columnWidth / 2;
-			const y = this.headerHeight / 2;
-
-			// 判断是否是今天所在的单元
-			const today = getTodayInTimezone();
-			const isCurrentUnit = this.isSameUnit(unitDate, today, granularity);
-
-			// 绘制标签 - 居中于格子内（两条竖线之间）
-			const text = activeDocument.createElementNS(ns, 'text');
-			// x 坐标在格子中心：左竖线位置 + 半个格子宽度
-			text.setAttribute('x', String(cellCenterX));
-			text.setAttribute('y', String(y + 6));
-			text.setAttribute('text-anchor', 'middle');
-			text.setAttribute('font-size', '11');
-			text.setAttribute('fill', isCurrentUnit ? 'var(--interactive-accent)' : 'var(--text-muted)');
-			text.setAttribute('font-weight', isCurrentUnit ? '600' : '400');
-
-			// 使用颗粒度配置的标签格式化器
-			const label = config.labelFormatter(unitDate, i);
-			if (label) {  // 只渲染非空标签
-				text.textContent = label;
-				svg.appendChild(text);
-			}
-		}
+		renderHeader({
+			svg, minDate, totalUnits, granularity,
+			columnWidth: this.columnWidth,
+			headerHeight: this.headerHeight,
+			padding: this.padding,
+		});
 	}
 
 	/**
@@ -1171,6 +1092,22 @@ export class SvgGanttRenderer {
 	 * 渲染网格线 - 支持颗粒度
 	 */
 	private renderGrid(
+		ns: string,
+		svg: SVGSVGElement | null,
+		minDate: Date,
+		totalUnits: number,
+		width: number,
+		height: number,
+		granularity: TimeGranularity
+	): void {
+		renderGrid(
+			ns,
+			{ svg, minDate, totalUnits, granularity, columnWidth: this.columnWidth, rowHeight: this.rowHeight,
+			  tasksLength: this.tasks.length, width, height, padding: this.padding },
+			this.rowBgElements.gantt,
+		);
+	}
+	private _renderGridLegacy(
 		ns: string,
 		svg: SVGSVGElement | null,
 		minDate: Date,
