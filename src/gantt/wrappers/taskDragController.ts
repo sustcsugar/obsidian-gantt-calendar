@@ -136,6 +136,7 @@ export function createTaskDragController(
 	handleDragMove: (e: MouseEvent) => void;
 	handleDragEnd: (e: MouseEvent) => void;
 	addDays: (date: Date, days: number) => Date;
+	destroy: () => void;
 } {
 	const state = ctx.taskDragState;
 
@@ -336,5 +337,14 @@ export function createTaskDragController(
 		}
 	}
 
-	return { setupTaskBarDragging, startDragging, handleDragMove, handleDragEnd, addDays };
+	/** 强制结束拖拽并清理监听器（用于 renderer destroy / 重渲染前） */
+	function destroy(): void {
+		activeDocument.removeEventListener('mousemove', handleDragMove);
+		activeDocument.removeEventListener('mouseup', handleDragEnd);
+		state.isDragging = false;
+		state.justFinishedDragging = false;
+		setCssProps(activeDocument.body, { cursor: '', userSelect: '' });
+	}
+
+	return { setupTaskBarDragging, startDragging, handleDragMove, handleDragEnd, addDays, destroy };
 }

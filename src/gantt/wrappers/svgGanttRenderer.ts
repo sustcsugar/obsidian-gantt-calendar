@@ -256,6 +256,10 @@ export class SvgGanttRenderer {
 	 * └────────────┴──────────────────────────────┘
 	 */
 	private render(): void {
+		if (this.taskDragState.isDragging) {
+			this.dragController?.destroy();
+			this.taskDragState.isDragging = false;
+		}
 		// Preserve scroll across full re-renders (config change / bulk task change).
 		// First render starts at 0 and GanttView then explicitly scrolls to today.
 		const savedScrollLeft = this.ganttContainer?.scrollLeft ?? 0;
@@ -321,30 +325,22 @@ export class SvgGanttRenderer {
 			ganttHeight,  // 使用完整高度以保持y坐标系统一致
 			GanttClasses.elements.chartSvg
 		);
-		this.renderGanttChart(this.ganttSvg, minDate, totalUnits, ganttHeight, granularity);
-
-		// 5. 创建分隔条（覆盖在 Grid 上）
-		this.resizer = this.mainGrid.createDiv(GanttClasses.elements.resizer);
-
-		// 设置同步滚动
-		this.setupSyncScrolling();
-
-		// 设置分隔条拖动
-		this.setupResizer();
-
-		// 设置行悬停高亮
-		this.setupRowHighlight();
-
-		// 设置从侧边栏拖拽任务到甘特图的接收
-		this.setupDropReceiver();
-
-		// 初始化拖拽控制器
+		// 初始化拖拽控制器（必须在 renderGanttChart 之前）
 		this.dragController = createTaskDragController(
 			this as unknown as import('./renderContext').IRenderContext,
 			() => this.tasks,
 			this.onDateChange,
-			this.handleTaskClick,
+			this.handleTaskClick.bind(this),
 		);
+
+		this.renderGanttChart(this.ganttSvg, minDate, totalUnits, ganttHeight, granularity);
+
+		// 5. 创建分隔条（覆盖在 Grid 上）
+		this.resizer = this.mainGrid.createDiv(GanttClasses.elements.resizer);
+		this.setupSyncScrolling();
+		this.setupResizer();
+		this.setupRowHighlight();
+		this.setupDropReceiver();
 
 		if (this.ganttContainer) {
 			this.ganttContainer.scrollLeft = savedScrollLeft;
@@ -1822,7 +1818,7 @@ export class SvgGanttRenderer {
 	): void {
 		if (!this.ganttSvg) return;
 
-		const tasksGroup = this.ganttSvg.querySelector('.gantt-tasks-group') as SVGGElement;
+		const tasksGroup = this.ganttSvg.querySelector(`.${GanttClasses.elements.tasks}`) as SVGGElement;
 		if (!tasksGroup) return;
 
 		// 1. 移除删除的任务条
@@ -2113,8 +2109,8 @@ export class SvgGanttRenderer {
 
 		// Detach document-level listeners: destroying the view during an active
 		// drag/resize would otherwise keep this renderer alive forever.
-		activeDocument.removeEventListener('mousemove', this.handleDragMove);
-		activeDocument.removeEventListener('mouseup', this.handleDragEnd);
+		this.dragController?.destroy();
+		this.dragController = null;
 		this.removeResizeListeners();
 		setCssProps(activeDocument.body, { cursor: '', userSelect: '' });
 		this.taskDragState.isDragging = false;
