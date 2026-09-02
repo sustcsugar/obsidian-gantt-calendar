@@ -12,7 +12,7 @@ A powerful visual task management plugin for Obsidian.
 
 **Data Visualization** — Task heatmap, daily task counts, 8 gradient palettes
 
-**Smart Task Management** — Global filter, priority tags, 6 date fields, time precision (HH:mm)
+**Smart Task Management** — Global filter, priority tags, 6 date fields, time precision (HH:mm), smart write-back with line drift protection
 
 **Timeline View** — Day/Week views with 24-hour timeline layout, drag & drop, quick create
 
@@ -24,7 +24,7 @@ A powerful visual task management plugin for Obsidian.
 
 **Dual Format** — Full support for Tasks plugin (emoji) and Dataview plugin (inline field) formats
 
-**Recurring Tasks** — daily/weekly/monthly/yearly repeat with virtual instance display
+**Recurring Tasks** — daily/weekly/monthly/yearly repeat with virtual instances shown across all views (Year/Month/Week/Day/Task/Gantt)
 
 **Feishu Sync** — Bidirectional task sync with Feishu (Lark) via OAuth 2.0
 
@@ -196,6 +196,7 @@ The plugin uses a **toolbar + content area** layout:
 - **Multi-dimensional Filtering** — Status, priority, and tags (AND/OR/NOT operators)
 - **Sorting** — 7 sort fields with asc/desc toggle
 - **Persistent State** — Filter and sort settings persist across refreshes
+- **Recurring Tasks** — Virtual instances for repeating tasks are expanded and sorted by date
 
 ### Gantt View
 
@@ -205,7 +206,7 @@ The plugin uses a **toolbar + content area** layout:
   - Drag to change progress percentage
   - Click to open task edit modal
 - **Navigation** — Jump to today / scroll left / scroll right
-- **Incremental Refresh** — Smart update strategy to avoid full redraws
+- **Incremental Refresh** — Fingerprint-based diff (O(1) events) + immediate drag-write-back (no delay)
 - **Tag & Status Filtering** — Filter gantt bars by tags and status
 - **Configurable Fields** — Choose which date fields map to gantt start/end
 
@@ -257,6 +258,8 @@ Right-click any task for:
 - [x] 6 priority levels
 - [x] 6 date fields with time precision (HH:mm)
 - [x] Recurring task recognition and display
+- [x] Recurring task virtual instances across all views (Year/Month/Week/Day/Task/Gantt)
+- [x] Smart write-back (line drift protection, file-level locking, mixed-format preservation)
 - [ ] Nested tag recognition
 - [ ] Multi-line task recognition
 - [ ] Sub-task recognition
@@ -268,8 +271,8 @@ Right-click any task for:
 - [x] Week View dual mode (list + timeline)
 - [x] Week/Month View drag & drop
 - [x] Year View heatmap and task count
-- [x] Task View (multi-dimensional filter + date range)
-- [x] Gantt View (drag + incremental refresh + navigation)
+- [x] Task View (multi-dimensional filter + date range + recurring task virtual instances)
+- [x] Gantt View (drag + incremental refresh + navigation + recurring task virtual instances)
 - [x] Sidebar View (task list + daily timeline)
 
 ### Toolbar
