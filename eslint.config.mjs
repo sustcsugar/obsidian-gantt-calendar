@@ -15,12 +15,14 @@ import obsidian from "eslint-plugin-obsidianmd";
 export default [
 	{
 		// 只 lint TypeScript 源码;忽略构建产物、example vault 副本、
+		// git worktree 嵌套检出(同一份代码会被扫两遍)、
 		// 根级配置/脚本、文档,以及任何非 .ts 文件(避免全局类型规则在无类型
 		// 信息的文件上崩溃)
 		ignores: [
 			"node_modules/",
 			"example/",
 			"docs/",
+			".worktrees/",
 			"main.js",
 			"**/*.mjs",
 			"**/*.cjs",
