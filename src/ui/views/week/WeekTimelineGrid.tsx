@@ -371,6 +371,10 @@ export function WeekTimelineGrid({
 							onClick={() => tooltip.hide()}
 							onRefresh={handleCardRefresh}
 						/>
+						{/* 长区间任务的起止时刻标注（如 "22:00 → 03:00"） */}
+						{bar.timeLabel ? (
+							<span className={WeekViewClasses.elements.alldayBarTime}>{bar.timeLabel}</span>
+						) : null}
 					</div>
 				))}
 			</div>
@@ -452,6 +456,20 @@ function DayColumn({
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
 	/** 拖拽选区创建状态（mousedown 于空白处时激活） */
 	const createRef = useRef<{ anchorMin: number; lastMin: number; moved: boolean } | null>(null);
+	/** 右键菜单打开期间抑制 hover ghost（菜单为 body 级浮层，hover 逻辑感知不到） */
+	const menuOpenRef = useRef(false);
+
+	// 菜单关闭（点击菜单项/外部/Escape）后恢复 hover 提示。
+	// mousedown 先于 contextmenu 触发，清零-置位的顺序天然正确
+	useEffect(() => {
+		const clear = () => { menuOpenRef.current = false; };
+		document.addEventListener('mousedown', clear, true);
+		document.addEventListener('keydown', clear, true);
+		return () => {
+			document.removeEventListener('mousedown', clear, true);
+			document.removeEventListener('keydown', clear, true);
+		};
+	}, []);
 
 	const minutesFromEvent = useCallback((clientY: number): number => {
 		const col = colRef.current;
@@ -480,6 +498,17 @@ function DayColumn({
 		if (ghost) setCssProps(ghost, { display: 'none' });
 	}, []);
 
+	// 右键（气泡自卡片冒泡）：菜单打开期间不再提示"点击添加任务"
+	const handleContextMenu = useCallback(() => {
+		menuOpenRef.current = true;
+		hideGhost();
+	}, [hideGhost]);
+
+	/** hover 时段 [min, min+默认时长) 是否与任一已有块重叠（重叠则不显示"+ 可添加"提示） */
+	const isTimeBusy = useCallback((min: number): boolean => {
+		return daySegs.some((s) => min < s.seg.endMin && min + DEFAULT_POINT_DURATION_MIN > s.seg.startMin);
+	}, [daySegs]);
+
 	// ===== hover ghost / 拖拽选区 =====
 	const handleMouseMove = useCallback((e: ReactMouseEvent) => {
 		if (isInsideBlock(e.target)) {
@@ -497,9 +526,14 @@ function DayColumn({
 			showGhost(start, end, true);
 			return;
 		}
+		// 菜单打开期间或时段已被占用：不出 hover 提示（点击仍可创建）
+		if (menuOpenRef.current || isTimeBusy(minutes)) {
+			hideGhost();
+			return;
+		}
 		// hover：默认时长 ghost + 时刻标签
 		showGhost(minutes, minutes + DEFAULT_POINT_DURATION_MIN, false);
-	}, [minutesFromEvent, showGhost, hideGhost]);
+	}, [minutesFromEvent, showGhost, hideGhost, isTimeBusy]);
 
 	const handleMouseLeave = useCallback(() => {
 		if (!createRef.current) hideGhost();
@@ -568,6 +602,7 @@ function DayColumn({
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
 			onMouseDown={handleMouseDown}
+			onContextMenu={handleContextMenu}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
