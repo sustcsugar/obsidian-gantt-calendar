@@ -26,6 +26,7 @@ import { setTaskStatus } from '../../contextMenu/commands/setTaskStatus';
 import { setTaskPriority } from '../../contextMenu/commands/setPriority';
 import { i18n } from '../../i18n/i18n';
 import { Logger } from '../../utils/logger';
+import { useCalendarStore } from '../store/calendarStore';
 
 export interface ReactTaskCardProps {
 	task: GCTask;
@@ -282,6 +283,13 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 				} else if (!virtual) {
 					await updateTaskCompletion(app, task, checked, plugin.settings.enabledTaskFormats);
 				}
+				// 写回完成后立即刷新 Repository 缓存并推送最新数据到视图，
+				// 跳过文件修改事件的 50+75ms 防抖回流（与拖拽修复同模式）
+				await plugin.taskCache.refreshFile(task.filePath);
+				const { useCalendarStore } = await import('../store/calendarStore');
+				useCalendarStore.getState().notifyTasksUpdated(
+					plugin.taskCache.getAllTasks(), task.filePath
+				);
 				onRefresh?.();
 			} catch (error) {
 				Logger.error('TaskCard', 'Error updating task:', error);
