@@ -199,6 +199,11 @@
 	border-right: 1px solid var(--background-modifier-border);
 	background-color: var(--background-primary-alt);
 	transition: background-color 0.15s ease;
+	/* 网格轨道为 1fr(=minmax(auto,1fr))，grid item 的 min-width:auto 会让
+	   卡片内 nowrap 长文本把整列撑宽；overflow 非 visible 将自动最小尺寸归零，
+	   与 time-slot 同款约束 */
+	min-width: 0;
+	overflow: hidden;
 }
 
 .gc-week-view__allday-tasks {
@@ -206,6 +211,8 @@
 	flex-direction: column;
 	gap: var(--gc-tl-card-gap);
 	min-height: var(--gc-tl-card-h);
+	min-width: 0;
+	max-width: 100%;
 }
 
 .gc-week-view__allday-slot--drag-over {
