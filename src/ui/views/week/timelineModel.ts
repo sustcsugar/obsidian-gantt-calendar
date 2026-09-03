@@ -126,10 +126,12 @@ function nextDayStart(d: Date): Date {
 
 /**
  * 提取任务在时间线中的区间语义：
- * - 区间任务：ganttStartField 与 ganttEndField 都有值且至少一个带时刻；
- *   day 精度端点取 00:00 / 当日 24:00（闭区间，对齐甘特语义）
+ * - 双端带时刻 → 区间任务；day 精度终点 = 当日 24:00（闭区间，对齐甘特语义）
+ * - day 起点 + 时刻终点：day 起点不含时刻信息，**不得虚构 00:00 起点**——
+ *   同日按点任务锚定在截止时刻（与"仅 📅 带时刻"的任务渲染一致，兼容遗留数据）；
+ *   跨日维持区间（时长必 ≥24h，由上层路由为全天横跨条）
+ * - day 起点 + day 终点 → 返回 null（全天行横跨条）
  * - 点任务：仅 dateFilterField 带 time 精度，end = start + 默认时长
- * - 返回 null：全天任务或不参与本周时间线
  */
 export function getTaskInterval(
 	task: GCTask,
@@ -145,8 +147,24 @@ export function getTaskInterval(
 		const endPrecision = task.datePrecision?.[endField];
 		// 两个端点都是 day 精度 → 全天横跨条，不进时间网格
 		if (startPrecision !== 'time' && endPrecision !== 'time') return null;
-		const start = startPrecision === 'time' ? new Date(startVal) : dayStart(startVal);
-		// day 精度的结束端 = 当日结束（次日 00:00）
+
+		// day 起点 + 时刻终点（遗留数据常见：🛫 仅日期 + 📅 带时刻）
+		if (startPrecision !== 'time') {
+			const startDay = dayStart(startVal);
+			const endDay = dayStart(endVal);
+			if (startDay.getTime() >= endDay.getTime()) {
+				// 同日（或数据倒置）：锚定截止时刻的点任务
+				const start = new Date(endVal);
+				const end = new Date(start);
+				end.setMinutes(end.getMinutes() + DEFAULT_POINT_DURATION_MIN);
+				return { kind: 'point', start, end, pointField: endField };
+			}
+			// 跨日：[起点日 00:00, 截止时刻]，时长必 ≥24h → 全天横跨条
+			return { kind: 'interval', start: startDay, end: new Date(endVal), pointField: startField };
+		}
+
+		// 起点带时刻（终点 time 或 day；day 终点 = 当日 24:00）
+		const start = new Date(startVal);
 		const end = endPrecision === 'time' ? new Date(endVal) : nextDayStart(endVal);
 		// end < start 时钳制（对齐甘特 taskDataAdapter 的归一化）
 		return { kind: 'interval', start, end: end < start ? new Date(start) : end, pointField: startField };
