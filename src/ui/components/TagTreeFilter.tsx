@@ -1,59 +1,92 @@
 /**
- * 标签树形筛选器（共享组件）
+ * 标签树形筛选器（Linear 风格）
  *
- * 从 TaskListPanel 侧边栏的标签树渲染逻辑提取，
- * 供主视图工具栏和侧边栏统一复用。
- *
- * 功能：
- * - buildTagHierarchy 树形层级展示
- * - 父节点 chevron 展开/收起
- * - 子树计数聚合徽章
- * - OR/AND 匹配模式切换
- * - 按聚合计数排序
+ * 视觉特征：
+ * - 彩色圆点（hash 取色，与任务卡片标签胶囊同色）
+ * - 圆角计数徽章（右对齐）
+ * - 选中行 accent 背景高亮 + ✓ 图标
+ * - 底部胶囊切换器（OR/AND/NOT）
  */
 
 import { useMemo, useState, type JSX } from 'react';
 import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
 import type { TagNode } from '../../tasks/tags/TagHierarchy';
-import { DropdownMenuClasses } from '../../utils/bem';
 import { Icon } from './Icon';
+import { TagPill } from '../../components/tagPill';
 import { i18n } from '../../i18n/i18n';
 
 export interface TagTreeFilterProps {
-	/** 所有可用标签（扁平字符串数组，如 ['work', 'project/frontend']） */
 	allTags: string[];
-	/** 当前选中的标签 fullPath 列表 */
 	selectedTags: string[];
-	/** 标签选中/取消回调 */
 	onToggle: (fullPath: string) => void;
-	/** 匹配模式 */
 	operator: 'OR' | 'AND' | 'NOT';
-	/** 匹配模式变更回调 */
 	onOperatorChange: (op: 'OR' | 'AND' | 'NOT') => void;
-	/** 任务计数映射（fullPath → 数量），用于徽章显示和排序 */
 	taskCounts?: Map<string, number>;
-	/** 是否显示 OR/AND 切换行（侧边栏显示，工具栏可能已有独立控件） */
 	showOperator?: boolean;
 }
 
-/**
- * 计算每个节点的聚合计数（自身 + 所有子树）
- */
-function computeAggCounts(
-	tree: TagNode[],
-	tagCounts: Map<string, number>
-): Map<string, number> {
-	const agg = new Map<string, number>();
-	const compute = (node: TagNode): number => {
-		let total = tagCounts.get(node.fullPath) || 0;
-		for (const child of node.children) {
-			total += compute(child);
-		}
-		agg.set(node.fullPath, total);
-		return total;
-	};
-	for (const node of tree) compute(node);
-	return agg;
+/** 标签专属颜色圆点 */
+function ColorDot({ fullPath }: { fullPath: string }): JSX.Element {
+	const idx = TagPill.getColorIndex(fullPath);
+	const names = ['blue', 'green', 'orange', 'yellow', 'purple', 'pink'];
+	const colorVar = `var(--gc-color-${names[idx] ?? 'blue'}, #3884ff)`;
+	return (
+		<span
+			aria-hidden
+			style={{
+				width: '8px', height: '8px', borderRadius: '50%',
+				backgroundColor: colorVar, flexShrink: 0,
+			}}
+		/>
+	);
+}
+
+/** 计数徽章 */
+function CountBadge({ count }: { count: number }): JSX.Element {
+	return (
+		<span
+			style={{
+				minWidth: '20px', textAlign: 'center',
+				padding: '0 5px', borderRadius: '8px',
+				fontSize: '10px', fontWeight: '500', lineHeight: '16px',
+				color: 'var(--text-muted)',
+				background: 'var(--background-modifier-border)',
+			}}
+		>
+			{count}
+		</span>
+	);
+}
+
+/** 底部胶囊切换器 */
+function SegmentedToggle({
+	options, value, onChange,
+}: { options: readonly string[]; value: string; onChange: (v: string) => void }): JSX.Element {
+	return (
+		<div style={{
+			display: 'flex', gap: '1px',
+			background: 'var(--background-secondary)',
+			borderRadius: 'var(--gc-radius-full, 999px)',
+			padding: '2px',
+		}}>
+			{options.map(op => (
+				<button
+					key={op}
+					style={{
+						flex: 1, padding: '3px 0', border: 'none', borderRadius: 'var(--gc-radius-full, 999px)',
+						fontSize: '11px', fontWeight: value === op ? '600' : '400',
+						cursor: 'pointer', transition: 'all 0.15s ease',
+						background: value === op ? 'var(--background-primary)' : 'transparent',
+						color: value === op ? 'var(--text-normal)' : 'var(--text-muted)',
+						boxShadow: value === op ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+					}}
+					onClick={() => onChange(op)}
+				>
+					{op}
+				</button>
+			))}
+		</div>
+	);
 }
 
 export function TagTreeFilter({
@@ -76,10 +109,17 @@ export function TagTreeFilter({
 
 	const tree = useMemo(() => buildTagHierarchy(allTags), [allTags]);
 
-	const aggCounts = useMemo(
-		() => computeAggCounts(tree, tagCounts),
-		[tree, tagCounts]
-	);
+	const aggCounts = useMemo(() => {
+		const agg = new Map<string, number>();
+		const compute = (node: TagNode): number => {
+			let total = tagCounts.get(node.fullPath) || 0;
+			for (const child of node.children) total += compute(child);
+			agg.set(node.fullPath, total);
+			return total;
+		};
+		for (const node of tree) compute(node);
+		return agg;
+	}, [tree, tagCounts]);
 
 	const sortedRoots = useMemo(
 		() => [...tree].sort((a, b) => (aggCounts.get(b.fullPath) || 0) - (aggCounts.get(a.fullPath) || 0)),
@@ -88,11 +128,10 @@ export function TagTreeFilter({
 
 	const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
 
-	const toggleExpand = (fullPath: string) => {
+	const toggleExpand = (fp: string) => {
 		setExpandedTags(prev => {
 			const next = new Set(prev);
-			if (next.has(fullPath)) next.delete(fullPath);
-			else next.add(fullPath);
+			if (next.has(fp)) next.delete(fp); else next.add(fp);
 			return next;
 		});
 	};
@@ -100,6 +139,7 @@ export function TagTreeFilter({
 	const renderTagNode = (node: TagNode, level: number): JSX.Element => {
 		const aggCount = aggCounts.get(node.fullPath) || 0;
 		if (aggCount === 0 && node.children.length > 0) return <></>;
+
 		const isSelected = selectedTags.includes(node.fullPath);
 		const hasChildren = node.children.length > 0;
 		const isExpanded = expandedTags.has(node.fullPath);
@@ -107,27 +147,46 @@ export function TagTreeFilter({
 		return (
 			<div key={node.fullPath}>
 				<div
-					className={`${DropdownMenuClasses.item}${isSelected ? ` ${DropdownMenuClasses.itemChecked}` : ''}`}
-					style={{ cursor: 'pointer' }}
+					role="option"
+					aria-selected={isSelected}
+					tabIndex={0}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(node.fullPath); }
+					}}
 					onClick={() => onToggle(node.fullPath)}
+					style={{
+						display: 'flex', alignItems: 'center', gap: '6px',
+						padding: '4px 8px', cursor: 'pointer', borderRadius: '6px',
+						transition: 'background-color 0.12s ease',
+						background: isSelected ? 'var(--background-modifier-hover)' : 'transparent',
+						borderLeft: isSelected ? '2px solid var(--interactive-accent)' : '2px solid transparent',
+					}}
+					onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'var(--background-modifier-hover)'; }}
+					onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
 				>
+					<span style={{ width: `${level * 12}px`, flexShrink: 0 }} />
 					{hasChildren ? (
 						<span
-							style={{ display: 'inline-flex', width: '16px', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+							style={{ display: 'inline-flex', width: '14px', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', color: 'var(--text-faint)' }}
 							onClick={(e) => { e.stopPropagation(); toggleExpand(node.fullPath); }}
 						>
 							<Icon icon={isExpanded ? 'chevron-down' : 'chevron-right'} />
 						</span>
 					) : (
-						<span style={{ width: '16px', flexShrink: 0 }} />
+						<span style={{ width: '14px', flexShrink: 0 }} />
 					)}
+					<ColorDot fullPath={node.fullPath} />
 					<span
-						className={DropdownMenuClasses.itemLabel}
-						style={{ paddingLeft: level * 16, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+						style={{
+							flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+							fontSize: '12px', fontWeight: isSelected ? '500' : '400',
+							color: isSelected ? 'var(--text-normal)' : 'var(--text-secondary)',
+						}}
 					>
-						{node.fullPath}
+						{node.name}
 					</span>
-					<span className="gc-u-text-muted" style={{ fontSize: '11px', flexShrink: 0 }}>{aggCount}</span>
+					{isSelected && <Icon icon="check" />}
+					<CountBadge count={aggCount} />
 				</div>
 				{hasChildren && isExpanded
 					? [...node.children]
@@ -139,28 +198,25 @@ export function TagTreeFilter({
 	};
 
 	return (
-		<div>
+		<div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px' }}>
+			<div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+				{sortedRoots.length === 0 ? (
+					<div style={{ padding: '12px 8px', textAlign: 'center', color: 'var(--text-faint)', fontSize: '12px' }}>
+						{i18n.t('toolbar.tagFilter.empty')}
+					</div>
+				) : (
+					sortedRoots.map(root => renderTagNode(root, 0))
+				)}
+			</div>
 			{showOperator && (
-				<div
-					className={`${DropdownMenuClasses.item}`}
-					style={{ borderBottom: '1px solid var(--background-modifier-border)', marginBottom: '4px' }}
-				>
-					<span className="gc-u-text-muted" style={{ fontSize: '12px', flex: 1 }}>
-						{i18n.t('sidebar.taskList.tagFilter.matchMode')}
-					</span>
-					{(['OR', 'AND', 'NOT'] as const).map(op => (
-						<button
-							key={op}
-							className={`clickable-icon gc-u-rounded${operator === op ? ' is-selected' : ''}`}
-							style={{ fontSize: '11px', padding: '2px 6px' }}
-							onClick={() => onOperatorChange(op)}
-						>
-							{op}
-						</button>
-					))}
+				<div style={{ borderTop: '1px solid var(--background-modifier-border)', paddingTop: '6px' }}>
+					<SegmentedToggle
+						options={['OR', 'AND', 'NOT'] as const}
+						value={operator}
+						onChange={onOperatorChange}
+					/>
 				</div>
 			)}
-			{sortedRoots.map(root => renderTagNode(root, 0))}
 		</div>
 	);
 }
