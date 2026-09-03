@@ -460,17 +460,18 @@ function DayColumn({
 		return snapMinutes(pxToMinutes(clientY - rect.top), false);
 	}, []);
 
-	/** 直接 DOM 更新 ghost（避免 60Hz mousemove 触发 React 重渲染） */
+	/** 直接 DOM 更新 ghost（避免 60Hz mousemove 触发 React 重渲染）；钳制在 [0, 24:00] 内 */
 	const showGhost = useCallback((startMin: number, endMin: number, dragging: boolean): void => {
 		const ghost = ghostRef.current;
 		const label = ghostLabelRef.current;
 		if (!ghost) return;
+		const clampedEnd = Math.min(Math.max(endMin, startMin + 1), MINUTES_PER_DAY);
 		setCssProps(ghost, { display: 'block' });
 		ghost.style.top = `${minutesToPx(startMin)}px`;
-		ghost.style.height = `${minutesToPx(Math.max(endMin - startMin, MIN_DURATION_MIN))}px`;
+		ghost.style.height = `${minutesToPx(clampedEnd - startMin)}px`;
 		ghost.classList.toggle(WeekViewClasses.modifiers.ghostDragging, dragging);
 		if (label) label.textContent = dragging
-			? `${formatMinutes(startMin)} – ${formatMinutes(endMin)}`
+			? `${formatMinutes(startMin)} – ${formatMinutes(clampedEnd)}`
 			: formatMinutes(startMin);
 	}, []);
 
