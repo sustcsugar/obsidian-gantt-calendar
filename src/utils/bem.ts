@@ -783,7 +783,7 @@ export const MonthViewClasses = {
 };
 
 /**
- * 周视图类名常量
+ * 周视图类名常量（连续时间画布，仅时间线模式）
  */
 export const WeekViewClasses = {
 	block: bem(BLOCKS.WEEK_VIEW),
@@ -791,38 +791,52 @@ export const WeekViewClasses = {
 	/** Elements */
 	elements: {
 		grid: bem(BLOCKS.WEEK_VIEW, 'grid'),
-		headerRow: bem(BLOCKS.WEEK_VIEW, 'header-row'),
 		headerCell: bem(BLOCKS.WEEK_VIEW, 'header-cell'),
-	headerSpacer: bem(BLOCKS.WEEK_VIEW, 'header-spacer'),
+		headerSpacer: bem(BLOCKS.WEEK_VIEW, 'header-spacer'),
 		dayName: bem(BLOCKS.WEEK_VIEW, 'day-name'),
 		dayNumber: bem(BLOCKS.WEEK_VIEW, 'day-number'),
 		lunarText: bem(BLOCKS.WEEK_VIEW, 'lunar-text'),
 		tasksGrid: bem(BLOCKS.WEEK_VIEW, 'tasks-grid'),
-		tasksColumn: bem(BLOCKS.WEEK_VIEW, 'tasks-column'),
-		empty: bem(BLOCKS.WEEK_VIEW, 'empty'),
-		// 时间轴相关
-		timeGutter: bem(BLOCKS.WEEK_VIEW, 'time-gutter'),
+		// 时间画布
 		timeGutterSlot: bem(BLOCKS.WEEK_VIEW, 'time-gutter-slot'),
 		timeGutterLabel: bem(BLOCKS.WEEK_VIEW, 'time-gutter-label'),
-		timeSlot: bem(BLOCKS.WEEK_VIEW, 'time-slot'),
-		timeTasks: bem(BLOCKS.WEEK_VIEW, 'time-tasks'),
-			// 全天任务行
-			alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
-			alldaySlot: bem(BLOCKS.WEEK_VIEW, 'allday-slot'),
-			alldayTasks: bem(BLOCKS.WEEK_VIEW, 'allday-tasks'),
-			currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
-			slotCreate: bem(BLOCKS.WEEK_VIEW, 'slot-create'),
+		dayCol: bem(BLOCKS.WEEK_VIEW, 'day-col'),
+		// 时间块
+		timeBlock: bem(BLOCKS.WEEK_VIEW, 'time-block'),
+		timeBlockTime: bem(BLOCKS.WEEK_VIEW, 'time-block-time'),
+		timeBlockArrow: bem(BLOCKS.WEEK_VIEW, 'time-block-arrow'),
+		handle: bem(BLOCKS.WEEK_VIEW, 'handle'),
+		// 空白创建 ghost
+		ghost: bem(BLOCKS.WEEK_VIEW, 'ghost'),
+		ghostLabel: bem(BLOCKS.WEEK_VIEW, 'ghost-label'),
+		ghostPlus: bem(BLOCKS.WEEK_VIEW, 'ghost-plus'),
+		// 拖放指示线 / resize 时间气泡
+		dropLine: bem(BLOCKS.WEEK_VIEW, 'drop-line'),
+		resizeTip: bem(BLOCKS.WEEK_VIEW, 'resize-tip'),
+		// 全天行
+		alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
+		alldayRow: bem(BLOCKS.WEEK_VIEW, 'allday-row'),
+		alldayCell: bem(BLOCKS.WEEK_VIEW, 'allday-cell'),
+		alldayBar: bem(BLOCKS.WEEK_VIEW, 'allday-bar'),
+		currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
 	},
 
 	/** Modifiers */
 	modifiers: {
 		today: bem(BLOCKS.WEEK_VIEW, 'header-cell', 'today'),
-		tasksColumnToday: bem(BLOCKS.WEEK_VIEW, 'tasks-column', 'today'),
-		timeSlotToday: bem(BLOCKS.WEEK_VIEW, 'time-slot', 'today'),
-		alldaySlotToday: bem(BLOCKS.WEEK_VIEW, 'allday-slot', 'today'),
-		timeline: bem(BLOCKS.WEEK_VIEW, undefined, 'timeline'),
-		dragOver: bem(BLOCKS.WEEK_VIEW, 'row', 'drag-over'),
-			alldayDragOver: bem(BLOCKS.WEEK_VIEW, 'allday-slot', 'drag-over'),
+		dayColToday: bem(BLOCKS.WEEK_VIEW, 'day-col', 'today'),
+		dayColDragOver: bem(BLOCKS.WEEK_VIEW, 'day-col', 'drag-over'),
+		timeBlockContinuesBefore: bem(BLOCKS.WEEK_VIEW, 'time-block', 'continues-before'),
+		timeBlockContinuesAfter: bem(BLOCKS.WEEK_VIEW, 'time-block', 'continues-after'),
+		timeBlockStacked: bem(BLOCKS.WEEK_VIEW, 'time-block', 'stacked'),
+		handleTop: bem(BLOCKS.WEEK_VIEW, 'handle', 'top'),
+		handleBottom: bem(BLOCKS.WEEK_VIEW, 'handle', 'bottom'),
+		ghostDragging: bem(BLOCKS.WEEK_VIEW, 'ghost', 'dragging'),
+		alldayCellToday: bem(BLOCKS.WEEK_VIEW, 'allday-cell', 'today'),
+		alldayCellDragOver: bem(BLOCKS.WEEK_VIEW, 'allday-cell', 'drag-over'),
+		alldayBarContinuesBefore: bem(BLOCKS.WEEK_VIEW, 'allday-bar', 'continues-before'),
+		alldayBarContinuesAfter: bem(BLOCKS.WEEK_VIEW, 'allday-bar', 'continues-after'),
+		alldayBarStacked: bem(BLOCKS.WEEK_VIEW, 'allday-bar', 'stacked'),
 	},
 };
 

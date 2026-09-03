@@ -30,9 +30,12 @@ export interface TaskFormModalProps {
 	app: App;
 	/** 创建模式需要：插件上下文 */
 	plugin?: IPluginContext;
-	/** 创建模式：目标日期/小时 */
+	/** 创建模式：目标日期/小时/分钟（预填 dueDate 时刻） */
 	targetDate?: Date;
 	targetHour?: number;
+	targetMinute?: number;
+	/** 创建模式：目标起止区间（预填 startDate+dueDate，均带时刻） */
+	targetRange?: { start: Date; end: Date };
 	/** 编辑模式需要：任务对象 */
 	task?: GCTask;
 	enabledFormats?: string[];
@@ -86,6 +89,8 @@ export function TaskFormModal({
 	plugin,
 	targetDate,
 	targetHour,
+	targetMinute,
+	targetRange,
 	task,
 	enabledFormats,
 	allowEditContent,
@@ -124,17 +129,23 @@ export function TaskFormModal({
 			d.scheduledDate = null;
 			d.cancelledDate = null;
 			d.completionDate = null;
-			if (targetHour !== undefined) {
+			if (targetRange) {
+				// 时间线拖拽选区：直接建成区间任务
+				d.startDate = new Date(targetRange.start);
+				d.dueDate = new Date(targetRange.end);
+			} else if (targetHour !== undefined) {
 				d.dueDate = new Date(dayStart);
-				d.dueDate.setHours(targetHour, 0, 0, 0);
+				d.dueDate.setHours(targetHour, targetMinute ?? 0, 0, 0);
 			}
 		}
 		return d;
-	}, [mode, task, targetDate, targetHour]);
+	}, [mode, task, targetDate, targetHour, targetMinute, targetRange]);
 
 	const [dates, setDates] = useState<Record<string, Date | null>>(initialDates);
 	const [datePrecision, setDatePrecision] = useState<Record<string, 'day' | 'time'>>(
-		mode === 'edit' ? (task?.datePrecision ? { ...task.datePrecision } : {}) : (targetHour !== undefined ? { dueDate: 'time' } : {})
+		mode === 'edit'
+			? (task?.datePrecision ? { ...task.datePrecision } : {})
+			: (targetRange ? { startDate: 'time', dueDate: 'time' } : (targetHour !== undefined ? { dueDate: 'time' } : {}))
 	);
 	const [selectedTags, setSelectedTags] = useState<string[]>(mode === 'edit' ? (task?.tags || []) : []);
 	const [description, setDescription] = useState(mode === 'edit' ? (task?.description || '') : '');
@@ -432,6 +443,8 @@ export function openCreateTaskModal(options: {
 	plugin: IPluginContext;
 	targetDate?: Date;
 	targetHour?: number;
+	targetMinute?: number;
+	targetRange?: { start: Date; end: Date };
 	onSuccess: () => void;
 }): void {
 	const close = openReactModal(
@@ -441,6 +454,8 @@ export function openCreateTaskModal(options: {
 			plugin={options.plugin}
 			targetDate={options.targetDate}
 			targetHour={options.targetHour}
+			targetMinute={options.targetMinute}
+			targetRange={options.targetRange}
 			onSuccess={options.onSuccess}
 			onClose={() => close()}
 		/>

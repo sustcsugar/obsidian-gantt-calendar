@@ -1,20 +1,6 @@
 /* 6.4 Week View Components */
-/* （月视图样式已迁至 views/month-view.css，年视图计数已迁至 views/year-view.css） */
-
-.gc-week-view__tasks-column {
-	border-right: 1px solid var(--background-modifier-border);
-	padding: 8px;
-	overflow-y: visible;
-	overflow-x: hidden;
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	background-color: var(--background-primary);
-}
-
-.gc-week-view__tasks-column:last-child {
-	border-right: none;
-}
+/* （月视图样式已迁至 views/month-view.css，年视图计数已迁至 views/year-view.css；
+    平铺列 tasks-column 已随双模式移除，剩余时间线样式在 views/week-view.css） */
 
 .gc-week-view__header-cell {
 	padding: 12px 20%;

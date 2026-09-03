@@ -183,15 +183,11 @@
 	color: var(--gc-danger, #ff6b6b);
 }
 
-.gc-week-view__tasks-column--today {
-	background-color: rgba(255, 107, 107, 0.1);
-}
-
-.gc-week-view__time-slot--today {
+.gc-week-view__day-col--today {
 	background-color: rgba(255, 107, 107, 0.08);
 }
 
-.gc-week-view__allday-slot--today {
+.gc-week-view__allday-cell--today {
 	background-color: rgba(255, 107, 107, 0.08);
 }
 

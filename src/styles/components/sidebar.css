@@ -348,9 +348,8 @@
 	color: var(--interactive-accent);
 }
 
-/* 日视图/周视图 空时间格 "+" 创建按钮 */
-.gc-day-view__slot-create,
-.gc-week-view__slot-create {
+/* 日视图 空时间格 "+" 创建按钮（周视图已改为连续画布点击创建） */
+.gc-day-view__slot-create {
 	position: absolute;
 	inset: 0;
 	display: flex;
@@ -361,13 +360,11 @@
 	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
-.gc-day-view__slot-create:hover,
-.gc-week-view__slot-create:hover {
+.gc-day-view__slot-create:hover {
 	background-color: var(--gc-hover-wash);
 }
 
-.gc-day-view__slot-create .lucide-plus,
-.gc-week-view__slot-create .lucide-plus {
+.gc-day-view__slot-create .lucide-plus {
 	width: 18px;
 	height: 18px;
 	color: var(--text-muted);
@@ -375,8 +372,7 @@
 	transition: opacity var(--gc-dur-fast) var(--gc-ease-out), color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
-.gc-day-view__slot-create:hover .lucide-plus,
-.gc-week-view__slot-create:hover .lucide-plus {
+.gc-day-view__slot-create:hover .lucide-plus {
 	opacity: 0.7;
 	color: var(--interactive-accent);
 }
