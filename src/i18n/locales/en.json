@@ -895,6 +895,7 @@
         "selectedLabel": "Selected Tags:",
         "noSelected": "No tags selected",
         "inputPlaceholder": "Enter new tag name...",
+        "searchOrCreate": "Search or create tag, press Enter to create",
         "addButton": "Add"
       }
     },
@@ -950,6 +951,7 @@
         "selectedLabel": "Selected Tags:",
         "noSelected": "No tags selected",
         "inputPlaceholder": "Enter new tag name...",
+        "searchOrCreate": "Search or create tag, press Enter to create",
         "addButton": "Add"
       }
     },

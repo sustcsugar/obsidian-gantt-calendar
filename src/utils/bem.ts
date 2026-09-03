@@ -1028,11 +1028,18 @@ export const TagSelectorClasses = {
 	elements: {
 		recommendedSection: bem(BLOCKS.TAG_SELECTOR, 'recommended-section'),
 		selectedSection: bem(BLOCKS.TAG_SELECTOR, 'selected-section'),
-		newSection: bem(BLOCKS.TAG_SELECTOR, 'new-section'),
 		label: bem(BLOCKS.TAG_SELECTOR, 'label'),
-		grid: bem(BLOCKS.TAG_SELECTOR, 'grid'),
-		newInput: bem(BLOCKS.TAG_SELECTOR, 'new-input'),
-		newButton: bem(BLOCKS.TAG_SELECTOR, 'new-button'),
+		/** 搜索/创建合一输入框 */
+		searchInput: bem(BLOCKS.TAG_SELECTOR, 'search-input'),
+		/** 流式胶囊容器（flex-wrap 铺满行宽） */
+		pills: bem(BLOCKS.TAG_SELECTOR, 'pills'),
+		pill: bem(BLOCKS.TAG_SELECTOR, 'pill'),
+		pillCount: bem(BLOCKS.TAG_SELECTOR, 'pill-count'),
+		pillCheck: bem(BLOCKS.TAG_SELECTOR, 'pill-check'),
+	},
+
+	modifiers: {
+		pillSelected: bem(BLOCKS.TAG_SELECTOR, 'pill', 'selected'),
 	},
 };
 

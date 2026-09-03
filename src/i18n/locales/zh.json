@@ -895,6 +895,7 @@
         "selectedLabel": "已选标签：",
         "noSelected": "未选择标签",
         "inputPlaceholder": "输入新标签名称...",
+        "searchOrCreate": "搜索或创建标签，回车创建",
         "addButton": "添加"
       }
     },
@@ -950,6 +951,7 @@
         "selectedLabel": "已选标签：",
         "noSelected": "未选择标签",
         "inputPlaceholder": "输入新标签名称...",
+        "searchOrCreate": "搜索或创建标签，回车创建",
         "addButton": "添加"
       }
     },

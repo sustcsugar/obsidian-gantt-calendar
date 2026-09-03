@@ -26,7 +26,7 @@ export interface TagTreeFilterProps {
 }
 
 /** 标签专属颜色圆点 */
-function ColorDot({ fullPath }: { fullPath: string }): JSX.Element {
+export function ColorDot({ fullPath }: { fullPath: string }): JSX.Element {
 	const idx = TagPill.getColorIndex(fullPath);
 	const names = ['blue', 'green', 'orange', 'yellow', 'purple', 'pink'];
 	const colorVar = `var(--gc-color-${names[idx] ?? 'blue'}, #3884ff)`;
@@ -42,7 +42,7 @@ function ColorDot({ fullPath }: { fullPath: string }): JSX.Element {
 }
 
 /** 计数徽章 */
-function CountBadge({ count }: { count: number }): JSX.Element {
+export function CountBadge({ count }: { count: number }): JSX.Element {
 	return (
 		<span
 			style={{
