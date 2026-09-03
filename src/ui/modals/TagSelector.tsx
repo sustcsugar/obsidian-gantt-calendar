@@ -149,7 +149,7 @@ interface TagPillChipProps {
 	onToggle: () => void;
 }
 
-/** 可切换的 Linear 风格标签胶囊：色点 + 路径 + 次数徽章 + 选中勾 */
+/** 可切换的 Linear 风格标签胶囊：色点 + 路径 + 次数徽章，选中态仅以颜色区分 */
 function TagPillChip({ fullPath, selected, count, onToggle }: TagPillChipProps): JSX.Element {
 	const classes = [
 		TagSelectorClasses.elements.pill,
@@ -178,7 +178,6 @@ function TagPillChip({ fullPath, selected, count, onToggle }: TagPillChipProps):
 			<ColorDot fullPath={fullPath} />
 			<span>{`#${fullPath}`}</span>
 			{count !== undefined ? <span className={TagSelectorClasses.elements.pillCount}>{count}</span> : null}
-			{selected ? <span className={TagSelectorClasses.elements.pillCheck}>✓</span> : null}
 		</span>
 	);
 }

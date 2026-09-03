@@ -1035,7 +1035,6 @@ export const TagSelectorClasses = {
 		pills: bem(BLOCKS.TAG_SELECTOR, 'pills'),
 		pill: bem(BLOCKS.TAG_SELECTOR, 'pill'),
 		pillCount: bem(BLOCKS.TAG_SELECTOR, 'pill-count'),
-		pillCheck: bem(BLOCKS.TAG_SELECTOR, 'pill-check'),
 	},
 
 	modifiers: {
