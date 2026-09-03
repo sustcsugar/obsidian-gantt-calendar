@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
+import { useCallback,  useEffect, useMemo, useRef, useState, type JSX  } from 'react';
 import { Notice } from 'obsidian';
 import type { App } from 'obsidian';
 import type { GCTask, IPluginContext } from '../../types';
@@ -157,7 +157,9 @@ export function TaskFormModal({
 
 	// 关闭只切状态，退出动画播完后由 onExited 从宿主移除。
 	// 直接调 onClose 会立即卸载整个弹窗，动画中断且可能丢弃动画中的状态。
-	const handleClose = () => setOpen(false);
+	// useCallback：Modal 的焦点管理 useEffect 依赖 onClose，
+	// 未 memo 化会导致每次键入触发 focus 面板（输入框焦点被抢走）
+	const handleClose = useCallback(() => setOpen(false), []);
 
 	const isEdit = mode === 'edit';
 	const title = isEdit ? i18n.t('modals.editTask.title') : i18n.t('modals.createTask.title');

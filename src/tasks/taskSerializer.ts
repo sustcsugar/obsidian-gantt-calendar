@@ -168,7 +168,7 @@ export function serializeTask(
 	const appWithPlugins = app as App & { plugins?: { getPlugin?: (id: string) => { settings?: SerializerPluginSettings } | null } };
 	const ganttPlugin = appWithPlugins.plugins?.getPlugin?.('gantt-calendar');
 	const pluginSettings: SerializerPluginSettings = ganttPlugin?.settings ?? {};
-	const globalFilter = pluginSettings.globalTaskFilter || '';
+	const globalFilter = (pluginSettings.globalTaskFilter || '').trim();
 	const taskStatuses: Array<{ key: TaskStatusType; symbol: string }> = pluginSettings.taskStatuses || DEFAULT_TASK_STATUSES;
 
 	// 3. 构建任务行的各个部分
@@ -197,13 +197,13 @@ export function serializeTask(
 
 	// 标签（复选框之后，任务描述之前）
 	if (merged.tags && merged.tags.length > 0) {
-		const tagsStr = merged.tags.map(tag => `#${tag}`).join(' ');
+		const tagsStr = merged.tags.map(tag => `#${tag.trim()}`).join(' ');
 		parts.push(tagsStr);
 	}
 
-	// 任务描述
+	// 任务描述（trim 防止 join(' ') 产生双空格）
 	if (merged.description) {
-		parts.push(merged.description);
+		parts.push(merged.description.trim());
 	}
 
 	// 统一的内联元数据字段 %%[key::value]%%
