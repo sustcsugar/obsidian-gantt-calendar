@@ -89,27 +89,7 @@ export function TagSelector({ allTasks, initialTags, onChange }: TagSelectorProp
 				}}
 			/>
 
-			{/* 已选标签（仅非空时显示，避免空区块占位） */}
-			{selectedTags.size > 0 ? (
-				<div className={TagSelectorClasses.elements.selectedSection}>
-					<small className={TagSelectorClasses.elements.label}>
-						{i18n.t('modals.createTask.tags.selectedLabel')}
-						<CountBadge count={selectedTags.size} />
-					</small>
-					<div className={TagSelectorClasses.elements.pills}>
-						{Array.from(selectedTags).map(tag => (
-							<TagPillChip
-								key={tag}
-								fullPath={tag}
-								selected
-								onToggle={() => toggleTag(tag)}
-							/>
-						))}
-					</div>
-				</div>
-			) : null}
-
-			{/* 推荐标签（流式胶囊，横向铺满自动换行） */}
+			{/* 待选标签（流式胶囊，横向铺满自动换行） */}
 			<div className={TagSelectorClasses.elements.recommendedSection}>
 				{visibleTags.length === 0 && extraSelected.length === 0 ? (
 					<small style={{ opacity: 0.5 }}>{i18n.t('modals.createTask.tags.noRecommended')}</small>
@@ -134,6 +114,28 @@ export function TagSelector({ allTasks, initialTags, onChange }: TagSelectorProp
 						))}
 					</div>
 				)}
+			</div>
+
+			{/* 已选标签（常驻渲染，避免选择时 DOM 突然插入造成面板内容跳跃） */}
+			<div className={TagSelectorClasses.elements.selectedSection}>
+				<small className={TagSelectorClasses.elements.label}>
+					{i18n.t('modals.createTask.tags.selectedLabel')}
+					<CountBadge count={selectedTags.size} />
+				</small>
+				<div className={TagSelectorClasses.elements.pills}>
+					{selectedTags.size === 0 ? (
+						<small style={{ opacity: 0.5 }}>{i18n.t('modals.createTask.tags.noSelected')}</small>
+					) : (
+						Array.from(selectedTags).map(tag => (
+							<TagPillChip
+								key={tag}
+								fullPath={tag}
+								selected
+								onToggle={() => toggleTag(tag)}
+							/>
+						))
+					)}
+				</div>
 			</div>
 		</div>
 	);
