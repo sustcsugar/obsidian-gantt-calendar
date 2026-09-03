@@ -73,6 +73,8 @@ export interface AlldayBar extends LaneInfo {
 	continuesBefore: boolean;
 	/** 延续至下周 */
 	continuesAfter: boolean;
+	/** 长区间任务的起止时刻标注（如 "09:00 → 18:00"、"22:00 →"），day 精度无标注 */
+	timeLabel?: string;
 }
 
 /** 任务区间分类结果 */
@@ -280,12 +282,63 @@ export interface WeekTimelineModel {
 	days: DaySegment[][];
 	/** 本周全部时间块（每任务一份，供拖拽/resize 查询） */
 	blocks: TimeBlock[];
-	/** 全天行（单日卡 + 跨日横跨条，含 lane） */
+	/** 全天行（单日卡 + 跨日横跨条，含 lane 与时刻标注） */
 	allday: AlldayBar[];
+}
+
+/** 区间任务的时刻标注：两端带时刻 "09:00 → 18:00"，单端 "22:00 →" / "→ 03:00"，纯日期无标注 */
+function buildIntervalTimeLabel(start: Date, end: Date, startTimed: boolean, endTimed: boolean): string | undefined {
+	if (!startTimed && !endTimed) return undefined;
+	const parts: string[] = [];
+	if (startTimed) parts.push(formatMinutes(start.getHours() * 60 + start.getMinutes()));
+	parts.push('→');
+	if (endTimed) parts.push(formatMinutes(end.getHours() * 60 + end.getMinutes()));
+	return parts.join(' ');
+}
+
+/** 区间端点恰为某日 00:00 时，最后覆盖日为前一日（如 day 精度结束端=次日 00:00） */
+function lastCoveredDay(end: Date, start: Date): Date {
+	const e = new Date(end);
+	if (e.getHours() === 0 && e.getMinutes() === 0 && e.getSeconds() === 0 && e.getTime() > start.getTime()) {
+		e.setDate(e.getDate() - 1);
+	}
+	return dayStart(e);
+}
+
+/** 由起止日构建钳制到本周的横跨条（与本周无交集返回 null） */
+function buildSpanBar(
+	task: GCTask,
+	startDay: Date,
+	endDay: Date,
+	weekStart: Date,
+	weekEndDay: Date,
+	timeLabel?: string,
+): AlldayBar | null {
+	const clampedStart = startDay < weekStart ? new Date(weekStart) : startDay;
+	const clampedEnd = endDay > weekEndDay ? weekEndDay : endDay;
+	if (clampedStart.getTime() > clampedEnd.getTime()) return null;
+	return {
+		task,
+		startDayIndex: Math.round((clampedStart.getTime() - weekStart.getTime()) / 86400000),
+		endDayIndex: Math.round((clampedEnd.getTime() - weekStart.getTime()) / 86400000),
+		continuesBefore: startDay < weekStart,
+		continuesAfter: endDay > weekEndDay,
+		lane: 0,
+		laneCount: 1,
+		stackedIndex: 0,
+		timeLabel,
+	};
 }
 
 /**
  * 将本周任务分类为时间块与全天条。
+ *
+ * 区间路由规则（消除"中间日整列被占满"）：
+ * - 时长 < 24h（含跨午夜，如 22:00 → 次日 03:00）→ 时间网格分段块
+ * - 时长 ≥ 24h（含"🛫带时刻 + 📅仅日期"的多日任务）→ 全天行横跨条 + 时刻标注，不进时间网格
+ * - 双端 day 精度 → 全天行横跨条（无时刻标注）
+ * - 点任务（单时刻字段）→ 时间网格默认时长块
+ *
  * @param tasks  已经过筛选/排序、包含虚拟周期实例的任务列表
  */
 export function buildWeekTimelineModel(
@@ -298,9 +351,31 @@ export function buildWeekTimelineModel(
 	const blocks: TimeBlock[] = [];
 	const alldayTasks: GCTask[] = [];
 
+	const weekEndDay = new Date(weekStart);
+	weekEndDay.setDate(weekEndDay.getDate() + 6);
+	const allday: AlldayBar[] = [];
+
 	for (const task of tasks) {
 		const interval = getTaskInterval(task, startField, endField, dateField);
 		if (interval) {
+			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
+			// 长区间任务（≥24h）：全天行横跨条，时刻标注取自两端精度
+			if (interval.kind === 'interval' && durationMin >= MINUTES_PER_DAY) {
+				const bar = buildSpanBar(
+					task,
+					dayStart(interval.start),
+					lastCoveredDay(interval.end, interval.start),
+					weekStart,
+					weekEndDay,
+					buildIntervalTimeLabel(
+						interval.start, interval.end,
+						task.datePrecision?.[startField] === 'time',
+						task.datePrecision?.[endField] === 'time',
+					),
+				);
+				if (bar) allday.push(bar);
+				continue;
+			}
 			const segments = splitWeekSegments(interval.start, interval.end, weekStart);
 			if (segments.length > 0) {
 				blocks.push({
@@ -334,10 +409,7 @@ export function buildWeekTimelineModel(
 		daySegs.sort((a, b) => a.seg.startMin - b.seg.startMin || b.seg.lane - a.seg.lane);
 	}
 
-	// 全天行：跨日（gantt 两端都为 day 精度）渲染横跨条，单日维持命中日
-	const weekEndDay = new Date(weekStart);
-	weekEndDay.setDate(weekEndDay.getDate() + 6);
-	const allday: AlldayBar[] = [];
+	// 全天行：day 精度跨日渲染横跨条，单日维持 dateFilterField 命中日
 	for (const task of alldayTasks) {
 		const startVal = getTaskDateField(task, startField);
 		const endVal = getTaskDateField(task, endField);
@@ -347,21 +419,7 @@ export function buildWeekTimelineModel(
 			const startDay = dayStart(startVal);
 			const endDay = dayStart(endVal);
 			if (startDay < weekStart || endDay > weekEndDay || startDay.getTime() !== endDay.getTime()) {
-				// 与本周有交集的非单日区间 → 横跨条（单日区间也走此路径统一渲染）
-				const clampedStart = startDay < weekStart ? new Date(weekStart) : startDay;
-				const clampedEnd = endDay > weekEndDay ? weekEndDay : endDay;
-				if (clampedStart <= clampedEnd) {
-					bar = {
-						task,
-						startDayIndex: Math.round((clampedStart.getTime() - weekStart.getTime()) / 86400000),
-						endDayIndex: Math.round((clampedEnd.getTime() - weekStart.getTime()) / 86400000),
-						continuesBefore: startDay < weekStart,
-						continuesAfter: endDay > weekEndDay,
-						lane: 0,
-						laneCount: 1,
-						stackedIndex: 0,
-					};
-				}
+				bar = buildSpanBar(task, startDay, endDay, weekStart, weekEndDay);
 			}
 		}
 

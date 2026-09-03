@@ -818,6 +818,7 @@ export const WeekViewClasses = {
 		alldayRow: bem(BLOCKS.WEEK_VIEW, 'allday-row'),
 		alldayCell: bem(BLOCKS.WEEK_VIEW, 'allday-cell'),
 		alldayBar: bem(BLOCKS.WEEK_VIEW, 'allday-bar'),
+		alldayBarTime: bem(BLOCKS.WEEK_VIEW, 'allday-bar-time'),
 		currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
 	},
 
