@@ -11,6 +11,7 @@ import type GanttCalendarPlugin from '../../../main';
 import type { TaskStatus } from '../../tasks/taskStatus';
 import { DEFAULT_TASK_STATUSES } from '../../tasks/taskStatus';
 import { Icon } from './Icon';
+import { TagTreeFilter } from './TagTreeFilter';
 import { DropdownMenu, type MenuItemDef, type DropdownMenuSection } from './DropdownMenu';
 import type { DateFieldType, GanttCalendarSettings } from '../../settings/types';
 import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
@@ -152,64 +153,6 @@ export function ToolbarBar(): JSX.Element {
 		return [{ items }];
 	};
 
-	const tagMenuSections = (): DropdownMenuSection[] => {
-		const allTasks = plugin.taskCache.getAllTasks();
-		const tagSet = new Set<string>();
-		for (const t of allTasks) {
-			for (const tag of t.tags || []) tagSet.add(tag);
-		}
-		const allTags = Array.from(tagSet).sort();
-		const selected = filter?.tag.selectedTags || [];
-		const operator = filter?.tag.operator || 'OR';
-
-		const operatorItems: MenuItemDef[] = (['AND', 'OR', 'NOT'] as const).map((op) => ({
-			key: op,
-			title: op,
-			checked: operator === op,
-			keepOpen: true,
-			onClick: () => {
-				setTagFilter(scope, { selectedTags: selected, operator: op });
-			},
-		}));
-
-		// 树形标签菜单：按层级缩进展示，父节点选中时级联子节点
-		const flattenTree = (nodes: TagNode[], level: number): MenuItemDef[] => {
-			const items: MenuItemDef[] = [];
-			for (const node of nodes) {
-				const indent = ' '.repeat(level * 4);
-				const prefix = node.children.length > 0 ? '▸ ' : '';
-				const childPaths = node.children.map((c: TagNode) => c.fullPath);
-				const isSelected = selected.includes(node.fullPath) ||
-					(childPaths.length > 0 && childPaths.every(p => selected.includes(p)));
-
-				items.push({
-					key: `tag-${node.fullPath}`,
-					title: `${indent}${prefix}#${node.name}`,
-					checked: isSelected,
-					keepOpen: true,
-					onClick: () => {
-						const tagsToToggle = [node.fullPath, ...childPaths];
-						let next = [...selected];
-						if (tagsToToggle.every(t => next.includes(t))) {
-							next = next.filter(t => !tagsToToggle.includes(t));
-						} else {
-							for (const t of tagsToToggle) { if (!next.includes(t)) next.push(t); }
-						}
-						setTagFilter(scope, { selectedTags: next, operator });
-					},
-				});
-				if (node.children.length > 0) items.push(...flattenTree(node.children, level + 1));
-			}
-			return items;
-		};
-
-		const tree = buildTagHierarchy(allTags);
-		const tagItems: MenuItemDef[] = allTags.length === 0
-			? [{ key: '__empty__', title: i18n.t('toolbar.tagFilter.empty'), disabled: true }]
-			: flattenTree(tree, 0);
-
-		return [{ items: operatorItems }, { items: tagItems }];
-	};
 
 	// ===== 任务视图：时间字段选择 =====
 	const fieldMenuSections = (): DropdownMenuSection[] => {
@@ -321,7 +264,30 @@ export function ToolbarBar(): JSX.Element {
 							</DropdownMenu>
 						</div>
 						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={tagMenuSections()}>
+							<DropdownMenu
+								content={() => (
+									<TagTreeFilter
+										allTags={(() => {
+											const set = new Set<string>();
+											for (const t of plugin.taskCache.getAllTasks()) {
+												for (const tag of t.tags || []) set.add(tag);
+											}
+											return Array.from(set).sort();
+										})()}
+										selectedTags={filter?.tag.selectedTags || []}
+										onToggle={(fp) => {
+											const selected = filter?.tag.selectedTags || [];
+											const next = selected.includes(fp)
+												? selected.filter(t => t !== fp)
+												: [...selected, fp];
+											setTagFilter(scope, { selectedTags: next, operator: filter?.tag.operator || 'OR' });
+										}}
+										operator={filter?.tag.operator || 'OR'}
+										onOperatorChange={(op) => setTagFilter(scope, { selectedTags: filter?.tag.selectedTags || [], operator: op })}
+									/>
+								)}
+								align="right"
+							>
 								{({ onClick, 'aria-expanded': expanded }) => (
 									<ToolbarBtn icon="tag" label={i18n.t('toolbar.tagFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
 								)}
@@ -350,7 +316,30 @@ export function ToolbarBar(): JSX.Element {
 							</div>
 						)}
 						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={tagMenuSections()}>
+							<DropdownMenu
+								content={() => (
+									<TagTreeFilter
+										allTags={(() => {
+											const set = new Set<string>();
+											for (const t of plugin.taskCache.getAllTasks()) {
+												for (const tag of t.tags || []) set.add(tag);
+											}
+											return Array.from(set).sort();
+										})()}
+										selectedTags={filter?.tag.selectedTags || []}
+										onToggle={(fp) => {
+											const selected = filter?.tag.selectedTags || [];
+											const next = selected.includes(fp)
+												? selected.filter(t => t !== fp)
+												: [...selected, fp];
+											setTagFilter(scope, { selectedTags: next, operator: filter?.tag.operator || 'OR' });
+										}}
+										operator={filter?.tag.operator || 'OR'}
+										onOperatorChange={(op) => setTagFilter(scope, { selectedTags: filter?.tag.selectedTags || [], operator: op })}
+									/>
+								)}
+								align="right"
+							>
 								{({ onClick, 'aria-expanded': expanded }) => (
 									<ToolbarBtn icon="tag" label={i18n.t('toolbar.tagFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
 								)}
@@ -411,7 +400,30 @@ export function ToolbarBar(): JSX.Element {
 							</DropdownMenu>
 						</div>
 						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={tagMenuSections()}>
+							<DropdownMenu
+								content={() => (
+									<TagTreeFilter
+										allTags={(() => {
+											const set = new Set<string>();
+											for (const t of plugin.taskCache.getAllTasks()) {
+												for (const tag of t.tags || []) set.add(tag);
+											}
+											return Array.from(set).sort();
+										})()}
+										selectedTags={filter?.tag.selectedTags || []}
+										onToggle={(fp) => {
+											const selected = filter?.tag.selectedTags || [];
+											const next = selected.includes(fp)
+												? selected.filter(t => t !== fp)
+												: [...selected, fp];
+											setTagFilter(scope, { selectedTags: next, operator: filter?.tag.operator || 'OR' });
+										}}
+										operator={filter?.tag.operator || 'OR'}
+										onOperatorChange={(op) => setTagFilter(scope, { selectedTags: filter?.tag.selectedTags || [], operator: op })}
+									/>
+								)}
+								align="right"
+							>
 								{({ onClick, 'aria-expanded': expanded }) => (
 									<ToolbarBtn icon="tag" label={i18n.t('toolbar.tagFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
 								)}

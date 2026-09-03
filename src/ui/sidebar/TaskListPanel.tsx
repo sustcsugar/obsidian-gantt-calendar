@@ -10,7 +10,7 @@ import { isToday } from '../../dateUtils/dateCompare';
 import { isThisWeek } from '../../dateUtils/week';
 import { isThisMonth } from '../../dateUtils/dateCompare';
 import { i18n } from '../../i18n/i18n';
-import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
+import { TagTreeFilter } from '../components/TagTreeFilter';
 import type { TagNode } from '../../tasks/tags/TagHierarchy';
 import { usePlugin, useApp } from '../pluginContext';
 import { useCalendarStore } from '../store/calendarStore';
@@ -136,7 +136,7 @@ export function TaskListPanel(): JSX.Element {
 	const [statusFilter, setStatusFilter] = useState<StatusFilterState>({ ...DEFAULT_STATUS_FILTER_STATE });
 	const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
-	const [tagOperator, setTagOperator] = useState<'OR' | 'AND'>('OR');
+	const [tagOperator, setTagOperator] = useState<'OR' | 'AND' | 'NOT'>('OR');
 	const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 	const [sortBy, setSortBy] = useState<SortField>('dueDate');
 	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -160,32 +160,11 @@ export function TaskListPanel(): JSX.Element {
 		return counts;
 	}, [tasks]);
 
-	const tagTree = useMemo(() => buildTagHierarchy(Array.from(tagCounts.keys())), [tagCounts]);
 
-	const aggCounts = useMemo(() => {
-		const agg = new Map<string, number>();
-		const computeAgg = (node: TagNode): number => {
-			let total = tagCounts.get(node.fullPath) || 0;
-			for (const child of node.children) {
-				total += computeAgg(child);
-			}
-			return total;
-		};
-		const computeAll = (nodes: TagNode[]) => {
-			for (const node of nodes) {
-				agg.set(node.fullPath, computeAgg(node));
-				computeAll(node.children);
-			}
-		};
-		computeAll(tagTree);
-		return agg;
-	}, [tagTree, tagCounts]);
-
-	const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
 
 	// 排序任务
 	const sortedTasks = useMemo(() => {
-		let result = filterTasks(tasks, statusFilter, priorityFilter, selectedTags, tagOperator, dateFilter);
+		let result = filterTasks(tasks, statusFilter, priorityFilter, selectedTags, tagOperator === 'NOT' ? 'AND' : tagOperator, dateFilter);
 
 		if (debouncedQuery) {
 			result = result.filter(t =>
@@ -266,93 +245,7 @@ export function TaskListPanel(): JSX.Element {
 		})),
 	}], [dateFilter]);
 
-	// 标签树节点渲染（chevron 点击展开/收起，行点击选中）
-	const renderTagNode = (node: TagNode, level: number): JSX.Element => {
-		const aggCount = aggCounts.get(node.fullPath) || 0;
-		if (aggCount === 0 && node.children.length > 0) return <></>;
-		const isSelected = selectedTags.includes(node.fullPath);
-		const hasChildren = node.children.length > 0;
-		const isExpanded = expandedTags.has(node.fullPath);
-
-		return (
-			<div key={node.fullPath}>
-				<div
-					className={`${DropdownMenuClasses.item}${isSelected ? ` ${DropdownMenuClasses.itemChecked}` : ''}`}
-					style={{ cursor: 'pointer' }}
-					onClick={() => {
-						if (isSelected) {
-							setSelectedTags(prev => prev.filter(t => t !== node.fullPath));
-						} else {
-							setSelectedTags(prev => [...prev, node.fullPath]);
-						}
-					}}
-				>
-					{hasChildren ? (
-						<span
-							style={{ display: 'inline-flex', width: '16px', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
-							onClick={(e) => {
-								e.stopPropagation();
-								setExpandedTags(prev => {
-									const next = new Set(prev);
-									if (next.has(node.fullPath)) {
-										next.delete(node.fullPath);
-									} else {
-										next.add(node.fullPath);
-									}
-									return next;
-								});
-							}}
-						>
-							<Icon icon={isExpanded ? 'chevron-down' : 'chevron-right'} />
-						</span>
-					) : (
-						<span style={{ width: '16px', flexShrink: 0 }} />
-					)}
-					<span
-						className={DropdownMenuClasses.itemLabel}
-						style={{ paddingLeft: level * 16, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-					>
-						{node.fullPath}
-					</span>
-					<span className="gc-u-text-muted" style={{ fontSize: '11px', flexShrink: 0 }}>{aggCount}</span>
-				</div>
-				{hasChildren && isExpanded
-					? [...node.children]
-							.sort((a, b) => (aggCounts.get(b.fullPath) || 0) - (aggCounts.get(a.fullPath) || 0))
-							.map(child => renderTagNode(child, level + 1))
-					: null}
-			</div>
-		);
-	};
-
-	// 标签筛选菜单内容（自定义渲染：OR/AND 切换 + 标签树）
-	const renderTagContent = (close: () => void): JSX.Element => (
-		<div>
-			<div className={`${DropdownMenuClasses.item}`} style={{ borderBottom: '1px solid var(--background-modifier-border)', marginBottom: '4px' }}>
-				<span className="gc-u-text-muted" style={{ fontSize: '12px', flex: 1 }}>{i18n.t('sidebar.taskList.tagFilter.matchMode')}</span>
-				<button
-					className={`clickable-icon gc-u-rounded${tagOperator === 'OR' ? ' is-selected' : ''}`}
-					style={{ fontSize: '11px', padding: '2px 6px' }}
-					onClick={() => setTagOperator('OR')}
-				>
-					OR
-				</button>
-				<button
-					className={`clickable-icon gc-u-rounded${tagOperator === 'AND' ? ' is-selected' : ''}`}
-					style={{ fontSize: '11px', padding: '2px 6px' }}
-					onClick={() => setTagOperator('AND')}
-				>
-					AND
-				</button>
-			</div>
-			{sortedRoots.map(root => renderTagNode(root, 0))}
-		</div>
-	);
-
-	const sortedRoots = useMemo(
-		() => [...tagTree].sort((a, b) => (aggCounts.get(b.fullPath) || 0) - (aggCounts.get(a.fullPath) || 0)),
-		[tagTree, aggCounts]
-	);
+	// 标签筛选菜单内容（共享 TagTreeFilter 组件）
 
 	return (
 		<>
@@ -390,7 +283,22 @@ export function TaskListPanel(): JSX.Element {
 					)}
 				</DropdownMenu>
 
-				<DropdownMenu content={renderTagContent} align="left" className="gc-u-pointer" panelStyle={{ width: '220px', maxHeight: '320px', overflowY: 'auto' }}>
+				<DropdownMenu
+						content={() => (
+							<TagTreeFilter
+								allTags={Array.from(tagCounts.keys())}
+								selectedTags={selectedTags}
+								onToggle={(fp) => {
+									setSelectedTags(prev =>
+										prev.includes(fp) ? prev.filter(t => t !== fp) : [...prev, fp]
+									);
+								}}
+								operator={tagOperator}
+								onOperatorChange={setTagOperator}
+								taskCounts={tagCounts}
+							/>
+						)}
+						align="left" className="gc-u-pointer" panelStyle={{ width: '220px', maxHeight: '320px', overflowY: 'auto' }}>
 					{({ onClick }) => (
 						<button
 							className={`clickable-icon${hasTagFilter ? ' has-active-filter' : ''}`}
