@@ -70,6 +70,13 @@ interface DropLineState {
 	min: number;
 }
 
+/** 整块拖动的落点预览状态（块上边缘吸附位置 + 任务时长） */
+interface DropPreviewState {
+	dayIndex: number;
+	startMin: number;
+	endMin: number;
+}
+
 /** ghost 快速创建载荷 */
 export type QuickCreate =
 	| { type: 'point'; dayIndex: number; min: number }
@@ -101,6 +108,8 @@ export function WeekTimelineGrid({
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
 
 	const [dropLine, setDropLine] = useState<DropLineState | null>(null);
+	/** 整块拖动的落点预览（块上边缘吸附位置 + 任务时长） */
+	const [dropPreview, setDropPreview] = useState<DropPreviewState | null>(null);
 	/** 拖放悬停高亮的列（块拖动与外部拖入都显示列高亮，指示线仅外部拖入） */
 	const [dragOverCol, setDragOverCol] = useState<number | null>(null);
 	const [alldayDragDay, setAlldayDragDay] = useState<number | null>(null);
@@ -419,6 +428,8 @@ export function WeekTimelineGrid({
 					onBlockMove={commitBlockMove}
 					dropLine={dropLine}
 					setDropLine={setDropLine}
+					dropPreview={dropPreview}
+					setDropPreview={setDropPreview}
 					dragOverCol={dragOverCol}
 					setDragOverCol={setDragOverCol}
 					tasks={tasks}
@@ -443,11 +454,17 @@ function isInsideBlock(target: EventTarget | null): boolean {
 }
 
 /**
- * dataTransfer 自定义类型：抓取点相对块顶边的像素偏移。
- * 块拖动的落点按块上边缘计算（指针 - 偏移），而非指针所在时刻；
- * dragover 阶段用 types 探测该标记以区分块拖动与外部拖入（getData 仅在 drop 可用）
+ * 整块拖动的抓取信息（模块级状态）。
+ * dragover 阶段 dataTransfer.getData 不可用（只能读 types），
+ * 落点预览与边缘锚定所需的偏移/时长存在这里，dragend / drop 清零
  */
-const DRAG_OFFSET_TYPE = 'gc-week-drag-offset';
+interface BlockDragMeta {
+	/** 抓取点相对块顶边的像素偏移（落点 = 指针 - 偏移 = 块上边缘） */
+	offsetPx: number;
+	/** 任务时长（分钟），落点预览高度与后向点任务锚点计算用 */
+	durationMin: number;
+}
+let blockDragMeta: BlockDragMeta | null = null;
 
 /**
  * 页面上是否存在打开的右键菜单。
@@ -469,6 +486,8 @@ interface DayColumnProps {
 	onBlockMove: (task: GCTask, dayIndex: number, minutes: number) => void;
 	dropLine: DropLineState | null;
 	setDropLine: Dispatch<SetStateAction<DropLineState | null>>;
+	dropPreview: DropPreviewState | null;
+	setDropPreview: Dispatch<SetStateAction<DropPreviewState | null>>;
 	dragOverCol: number | null;
 	setDragOverCol: Dispatch<SetStateAction<number | null>>;
 	tasks: GCTask[];
@@ -486,6 +505,8 @@ function DayColumn({
 	onBlockMove,
 	dropLine,
 	setDropLine,
+	dropPreview,
+	setDropPreview,
 	dragOverCol,
 	setDragOverCol,
 	tasks,
@@ -606,31 +627,42 @@ function DayColumn({
 		document.addEventListener('mouseup', finishCreate);
 	}, [minutesFromEvent, showGhost, finishCreate]);
 
-	// ===== HTML5 拖放（整体平移；块拖动按块边缘落点，外部拖入按指针） =====
+	// ===== HTML5 拖放（整体平移；块拖动按块边缘落点 + 预览块，外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {
 		e.preventDefault();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 		setDragOverCol((prev) => (prev === dayIndex ? prev : dayIndex));
-		// 块拖动的落点由块边缘决定（指针处指示线会误导），仅外部拖入显示指针吸附线
-		const isBlockDrag = e.dataTransfer && Array.from(e.dataTransfer.types).includes(DRAG_OFFSET_TYPE);
-		if (isBlockDrag) {
+		const meta = blockDragMeta;
+		if (meta) {
+			// 块拖动：落点预览 = 块上边缘吸附位置 + 任务时长（不出指针指示线）
 			setDropLine(null);
+			const col = colRef.current;
+			if (!col) return;
+			const topMin = snapMinutes(pxToMinutes(e.clientY - meta.offsetPx - col.getBoundingClientRect().top), false);
+			const endMin = Math.min(topMin + meta.durationMin, MINUTES_PER_DAY);
+			setDropPreview((prev) => (
+				prev && prev.dayIndex === dayIndex && prev.startMin === topMin ? prev : { dayIndex, startMin: topMin, endMin }
+			));
 			return;
 		}
+		// 外部拖入：指针吸附线
+		setDropPreview(null);
 		const min = minutesFromEvent(e.clientY);
 		setDropLine((prev) => (prev && prev.dayIndex === dayIndex && prev.min === min ? prev : { dayIndex, min }));
-	}, [dayIndex, minutesFromEvent, setDropLine]);
+	}, [dayIndex, minutesFromEvent, setDropLine, setDropPreview]);
 
 	const handleDragLeave = useCallback((e: ReactDragEvent) => {
 		const related = e.relatedTarget as Node | null;
 		if (related && e.currentTarget.contains(related)) return;
 		setDropLine(null);
+		setDropPreview(null);
 		setDragOverCol((prev) => (prev === dayIndex ? null : prev));
-	}, [dayIndex, setDropLine]);
+	}, [dayIndex, setDropLine, setDropPreview]);
 
 	const handleDrop = useCallback((e: ReactDragEvent) => {
 		e.preventDefault();
 		setDropLine(null);
+		setDropPreview(null);
 		setDragOverCol(null);
 		const taskId = e.dataTransfer?.getData('taskId');
 		if (!taskId) return;
@@ -640,10 +672,10 @@ function DayColumn({
 			return;
 		}
 		// 块拖动：指针 - 抓取偏移 = 块上边缘位置；外部拖入：指针即块顶
-		const offsetY = parseFloat(e.dataTransfer.getData(DRAG_OFFSET_TYPE) || '');
-		const topEdgeClientY = isNaN(offsetY) ? e.clientY : e.clientY - offsetY;
+		const meta = blockDragMeta;
+		const topEdgeClientY = meta ? e.clientY - meta.offsetPx : e.clientY;
 		onBlockMove(task, dayIndex, minutesFromEvent(topEdgeClientY));
-	}, [tasks, dayIndex, minutesFromEvent, onBlockMove, setDropLine]);
+	}, [tasks, dayIndex, minutesFromEvent, onBlockMove, setDropLine, setDropPreview]);
 
 	return (
 		<div
@@ -679,9 +711,17 @@ function DayColumn({
 						className={cls}
 						style={style}
 						onDragStart={(e) => {
-							// 记录抓取点相对块顶边的偏移：落点按块上边缘计算而非指针（WYSIWYG）
+							// 记录抓取信息：落点按块上边缘计算而非指针（WYSIWYG），
+							// 时长用于落点预览与后向点任务锚点（dragover 阶段 getData 不可用）
 							const rect = e.currentTarget.getBoundingClientRect();
-							e.dataTransfer.setData(DRAG_OFFSET_TYPE, String(e.clientY - rect.top));
+							blockDragMeta = {
+								offsetPx: e.clientY - rect.top,
+								durationMin: Math.round((block.end.getTime() - block.start.getTime()) / 60000),
+							};
+						}}
+						onDragEnd={() => {
+							blockDragMeta = null;
+							setDropPreview(null);
 						}}
 					>
 						{durationMin >= 30 ? (
@@ -722,12 +762,23 @@ function DayColumn({
 					</div>
 				);
 			})}
-			{/* 拖放吸附指示线（仅外部来源拖入显示；块拖动按块边缘落点，不出指针线） */}
+			{/* 拖放吸附指示线（仅外部来源拖入显示；块拖动用落点预览块） */}
 			{dropLine?.dayIndex === dayIndex ? (
 				<div
 					className={WeekViewClasses.elements.dropLine}
 					style={{ top: `${minutesToPx(dropLine.min)}px` }}
 				/>
+			) : null}
+			{/* 整块拖动的落点预览：上边缘吸附位置 + 任务时长 */}
+			{dropPreview?.dayIndex === dayIndex ? (
+				<div
+					className={WeekViewClasses.elements.dropPreview}
+					style={{ top: `${minutesToPx(dropPreview.startMin)}px`, height: `${minutesToPx(dropPreview.endMin - dropPreview.startMin)}px` }}
+				>
+					<span className={WeekViewClasses.elements.ghostLabel}>
+						{`${formatMinutes(dropPreview.startMin)} – ${formatMinutes(dropPreview.endMin)}`}
+					</span>
+				</div>
 			) : null}
 			{/* 空白快速创建 ghost */}
 			<div ref={ghostRef} className={WeekViewClasses.elements.ghost} style={{ display: 'none' }}>

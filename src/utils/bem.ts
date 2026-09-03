@@ -810,8 +810,9 @@ export const WeekViewClasses = {
 		ghost: bem(BLOCKS.WEEK_VIEW, 'ghost'),
 		ghostLabel: bem(BLOCKS.WEEK_VIEW, 'ghost-label'),
 		ghostPlus: bem(BLOCKS.WEEK_VIEW, 'ghost-plus'),
-		// 拖放指示线 / resize 时间气泡
+		// 拖放指示线 / 落点预览块 / resize 时间气泡
 		dropLine: bem(BLOCKS.WEEK_VIEW, 'drop-line'),
+		dropPreview: bem(BLOCKS.WEEK_VIEW, 'drop-preview'),
 		resizeTip: bem(BLOCKS.WEEK_VIEW, 'resize-tip'),
 		// 全天行
 		alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
