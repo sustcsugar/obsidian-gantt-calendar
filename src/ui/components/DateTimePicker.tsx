@@ -85,6 +85,18 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerProps): JSX.Element {
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const popoverRef = useRef<HTMLDivElement | null>(null);
+	// portal 挂载容器：带 block 类，使 `.gc-date-time-picker .gc-date-time-picker__xxx`
+	// 后代选择器在 body 下继续匹配（否则面板布局整体失效）；零尺寸不占布局
+	const [containerEl] = useState(() => {
+		const el = document.createElement('div');
+		el.className = DateTimePickerClasses.block;
+		el.style.width = '0';
+		el.style.height = '0';
+		el.style.overflow = 'visible';
+		document.body.appendChild(el);
+		return el;
+	});
+	useEffect(() => () => containerEl.remove(), [containerEl]);
 	const [open, setOpen] = useState(false);
 	const [viewYear, setViewYear] = useState(() => new Date().getFullYear());
 	const [viewMonth, setViewMonth] = useState(() => new Date().getMonth() + 1);
@@ -380,7 +392,7 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 						</button>
 					</div>
 				</div>,
-				document.body
+				containerEl
 			) : null}
 		</div>
 	);
