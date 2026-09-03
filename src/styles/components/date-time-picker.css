@@ -108,20 +108,10 @@
 	box-shadow: var(--gc-elev-3, 0 4px 16px rgba(0, 0, 0, 0.12));
 }
 
-.gc-date-time-picker__popover--top {
-	top: auto;
-	bottom: calc(100% + 4px);
-}
-
-.gc-date-time-picker__popover--right {
-	left: auto;
-	right: 0;
-}
-
 .gc-date-time-picker__body {
 	display: flex;
 	align-items: stretch;
-	gap: 8px;
+	gap: 12px;
 }
 
 .gc-date-time-picker__calendar {
@@ -188,7 +178,7 @@
 	color: var(--text-faint);
 }
 
-/* 日期格：antd 式——hover 中性底，今天 accent 文字，选中 accent 描边框 */
+/* 日期格：今天标红；选中为 accent 实底反白（无外框） */
 .gc-date-time-picker__day-cell {
 	display: flex;
 	align-items: center;
@@ -213,20 +203,24 @@
 }
 
 .gc-date-time-picker__day-cell--today {
-	color: var(--interactive-accent);
+	color: var(--gc-color-red, var(--color-red, #ef4444));
 	font-weight: 600;
 }
 
 .gc-date-time-picker__day-cell--selected {
-	box-shadow: inset 0 0 0 1px var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 600;
 }
 
-/* 右侧时/分滚动列 */
+/* 右侧时/分滚动列：与日历之间以淡灰细线分隔 */
 .gc-date-time-picker__time-panel {
 	display: flex;
 	gap: 2px;
-	width: 96px;
+	width: 104px;
 	flex-shrink: 0;
+	border-left: 1px solid var(--background-modifier-border);
+	padding-left: 10px;
 }
 
 .gc-date-time-picker__time-column {

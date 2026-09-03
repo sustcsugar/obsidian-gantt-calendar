@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type JSX } from 'react';
+import { createPortal } from 'react-dom';
 import { DateTimePickerClasses } from '../../utils/bem';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { i18n } from '../../i18n/i18n';
@@ -90,8 +91,7 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 	/** 面板草稿值：确定才提交到 onChange */
 	const [draft, setDraft] = useState<Date | null>(null);
 	const [inputText, setInputText] = useState<string | null>(null);
-	const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
-	const [align, setAlign] = useState<'left' | 'right'>('left');
+	const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
 	const now = useMemo(() => new Date(), []);
 
@@ -99,7 +99,9 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 	useEffect(() => {
 		if (!open) return;
 		const onDocMouseDown = (e: MouseEvent) => {
-			if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+			const target = e.target as Node;
+			if (rootRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+			setOpen(false);
 		};
 		const onKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
@@ -115,14 +117,36 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 		};
 	}, [open]);
 
-	// 弹层定位：下方空间不足翻转到上方，右侧溢出改为右对齐
+	// 面板定位（portal 到 body 后用 fixed 坐标）：下方空间不足翻转到上方，
+	// 右侧溢出改为右对齐；弹窗/页面滚动与窗口缩放时跟随重算
+	const updatePos = useCallback(() => {
+		const trigger = rootRef.current?.getBoundingClientRect();
+		const panel = popoverRef.current;
+		if (!trigger || !panel) return;
+		const pw = panel.offsetWidth;
+		const ph = panel.offsetHeight;
+		let top = trigger.bottom + 4;
+		if (top + ph > window.innerHeight - 8 && trigger.top - ph > 8) top = trigger.top - ph - 4;
+		let left = trigger.left;
+		if (left + pw > window.innerWidth - 8) left = trigger.right - pw;
+		setPos({ top, left: Math.max(8, left) });
+	}, []);
+
 	useLayoutEffect(() => {
-		if (!open || !popoverRef.current || !rootRef.current) return;
-		const rect = popoverRef.current.getBoundingClientRect();
-		const triggerTop = rootRef.current.getBoundingClientRect().top;
-		setPlacement(rect.bottom > window.innerHeight && triggerTop > rect.height ? 'top' : 'bottom');
-		setAlign(rect.right > window.innerWidth - 8 ? 'right' : 'left');
-	}, [open, viewMonth, viewYear]);
+		if (!open) return;
+		updatePos();
+	}, [open, viewMonth, viewYear, updatePos]);
+
+	useEffect(() => {
+		if (!open) return;
+		// capture 捕获弹窗内部滚动容器的滚动事件
+		window.addEventListener('scroll', updatePos, true);
+		window.addEventListener('resize', updatePos);
+		return () => {
+			window.removeEventListener('scroll', updatePos, true);
+			window.removeEventListener('resize', updatePos);
+		};
+	}, [open, updatePos]);
 
 	// 时/分滚动列：打开与选择后把选中项滚到列中部
 	useEffect(() => {
@@ -197,9 +221,9 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 	const days = useMemo(() => buildMonthGrid(viewYear, viewMonth), [viewYear, viewMonth]);
 	const today = useMemo(() => new Date(), []);
 	const weekdayNames = i18n.t('sidebar.dailyTimeline.weekdays') as unknown as string[];
-	// 周一为首日：i18n 数组为周日索引，取一~六 + 周日
+	// 周一为首日：i18n 数组为周日索引，取一~六 + 周日；去掉"周"前缀只留汉字
 	const weekdays = useMemo(
-		() => [1, 2, 3, 4, 5, 6, 0].map(i => weekdayNames[i]),
+		() => [1, 2, 3, 4, 5, 6, 0].map(i => weekdayNames[i].replace(/^周/, '')),
 		[weekdayNames]
 	);
 	const monthLabel = i18n.t('modals.dateTimePicker.monthFormat', { year: viewYear, month: viewMonth });
@@ -275,15 +299,18 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 				</button>
 			</div>
 
-			{open ? (
+			{open ? createPortal(
 				<div
-					className={[
-						DateTimePickerClasses.elements.popover,
-						placement === 'top' ? DateTimePickerClasses.modifiers.popoverTop : '',
-						align === 'right' ? DateTimePickerClasses.modifiers.popoverRight : '',
-					].filter(Boolean).join(' ')}
+					className={DateTimePickerClasses.elements.popover}
 					role="dialog"
 					ref={popoverRef}
+					style={{
+						position: 'fixed',
+						top: pos?.top ?? -9999,
+						left: pos?.left ?? -9999,
+						visibility: pos ? 'visible' : 'hidden',
+						zIndex: 1000,
+					}}
 				>
 					<div className={DateTimePickerClasses.elements.body}>
 						{/* 左侧：日历 */}
@@ -352,7 +379,8 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 							{i18n.t('modals.dateTimePicker.ok')}
 						</button>
 					</div>
-				</div>
+				</div>,
+				document.body
 			) : null}
 		</div>
 	);
