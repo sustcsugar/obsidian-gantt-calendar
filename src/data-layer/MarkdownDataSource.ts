@@ -243,12 +243,14 @@ export class MarkdownDataSource implements IDataSource {
 	 * 带重置与 maxWait 的文件级防抖。
 	 * 纯 trailing 防抖在连续编辑（间隔 < DEBOUNCE_MS）下会无限期推迟重解析，
 	 * 首次事件后最多 MAX_WAIT_MS 强制冲刷一次，保证视图数据最迟刷新间隔。
+	 * 取 min：孤立事件按 DEBOUNCE_MS 快速响应；突发临近 maxWait 截止点时
+	 * 截止项归零强制冲刷（若取 max，孤立事件反而要等满 MAX_WAIT_MS）。
 	 */
 	private scheduleFileDebounce(path: string, run: () => void): void {
 		const now = Date.now();
 		const firstAt = this.debounceFirstAt.get(path) ?? now;
 		this.debounceFirstAt.set(path, firstAt);
-		const delay = Math.max(this.DEBOUNCE_MS, this.MAX_WAIT_MS - (now - firstAt));
+		const delay = Math.min(this.DEBOUNCE_MS, Math.max(0, this.MAX_WAIT_MS - (now - firstAt)));
 
 		const existing = this.debounceTimers.get(path);
 		if (existing !== undefined) window.clearTimeout(existing);

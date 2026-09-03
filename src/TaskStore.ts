@@ -349,13 +349,15 @@ export class TaskStore {
 	private notifyListenersDebounced(filePath?: string): void {
 		const now = Date.now();
 		// maxWait：纯 trailing 防抖在连续事件下会无限期推迟刷新，
-		// 首次事件后最多 MAX_WAIT_MS 必须冲刷一次
+		// 首次事件后最多 MAX_WAIT_MS 必须冲刷一次。
+		// 取 min：孤立事件按 DEBOUNCE_MS 快速响应；突发临近 maxWait 截止点时
+		// 截止项归零强制冲刷（若取 max，孤立事件反而要等满 MAX_WAIT_MS）。
 		if (this.updateDebounceFirstAt === null) {
 			this.updateDebounceFirstAt = now;
 		}
-		const remaining = Math.max(
+		const remaining = Math.min(
 			this.DEBOUNCE_MS,
-			this.MAX_WAIT_MS - (now - this.updateDebounceFirstAt)
+			Math.max(0, this.MAX_WAIT_MS - (now - this.updateDebounceFirstAt))
 		);
 
 		if (this.updateDebounceTimer !== null) {
