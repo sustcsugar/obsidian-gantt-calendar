@@ -193,7 +193,15 @@ export function TaskFormModal({
 					tags: selectedTags.length > 0 ? selectedTags : undefined,
 					datePrecision: Object.keys(datePrecision).length > 0 ? datePrecision : undefined,
 				};
-				await createTaskInDailyNote(app, taskData, plugin.settings, plugin.dailyNoteIndex);
+				const targetFilePath = await createTaskInDailyNote(app, taskData, plugin.settings, plugin.dailyNoteIndex);
+				// 写回后立即刷新缓存并推送数据，跳过文件事件防抖回流
+				if (targetFilePath && plugin.taskCache) {
+					await plugin.taskCache.refreshFile(targetFilePath);
+					const { useCalendarStore } = await import('../store/calendarStore');
+					useCalendarStore.getState().notifyTasksUpdated(
+						plugin.taskCache.getAllTasks(), targetFilePath
+					);
+				}
 				new Notice(i18n.t('modals.createTask.success'));
 				onSuccess();
 				handleClose();

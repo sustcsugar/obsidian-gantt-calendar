@@ -1,7 +1,7 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { TaskUpdates } from '../../tasks/taskSerializer';
-import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { updateTaskProperties, refreshTaskView } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
 
@@ -44,6 +44,7 @@ export async function postponeTask(
 		updates.dueDate = newDate;
 
 		await updateTaskProperties(app, task, updates, enabledFormats);
+		await refreshTaskView(app, task.filePath);
 		onRefresh();
 
 		const dateStr = newDate.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });

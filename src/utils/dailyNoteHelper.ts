@@ -99,13 +99,14 @@ export interface CreateTaskData {
  * @param taskData 任务数据
  * @param settings 插件设置
  * @param dailyNoteIndex 日记索引缓存（Obsidian 模式时使用）
+ * @returns 任务写入的目标文件路径；用户取消或写入失败时返回 null
  */
 export async function createTaskInDailyNote(
 	app: App,
 	taskData: CreateTaskData,
 	settings: GanttCalendarSettings,
 	dailyNoteIndex?: DailyNoteIndex
-): Promise<void> {
+): Promise<string | null> {
 	if (settings.followObsidianDailyNote && dailyNoteIndex) {
 		// Obsidian 模式：使用 obsidian-daily-notes-interface
 		const momentDate = window.moment();
@@ -120,7 +121,7 @@ export async function createTaskInDailyNote(
 			);
 			if (!confirmed) {
 				new Notice(i18n.t('dailyNote.createCancelled'));
-				return;
+				return null;
 			}
 			file = await createDailyNote(momentDate);
 			dailyNoteIndex.invalidate();
@@ -129,8 +130,9 @@ export async function createTaskInDailyNote(
 		if (file) {
 			await insertTaskToFile(app, file, taskData, settings.newTaskHeading);
 			new Notice(i18n.t('dailyNote.taskAdded'));
+			return file.path;
 		}
-		return;
+		return null;
 	}
 
 	// 手动模式
@@ -144,22 +146,24 @@ export async function createTaskInDailyNote(
 
 	if (searchResult) {
 		await insertTaskToFile(app, searchResult.file, taskData, newTaskHeading);
+		return searchResult.file.path;
 	} else {
 		// 创建新文件时使用完整格式路径（支持嵌套文件夹）
 		const filePath = `${dailyNotePath}/${fullFormatResult}.md`;
-		await handleMissingDailyNote(app, filePath, taskData, settings);
+		return await handleMissingDailyNote(app, filePath, taskData, settings);
 	}
 }
 
 /**
  * 处理 Daily Note 不存在的情况
+ * @returns 任务写入的目标文件路径；用户取消或失败时返回 null
  */
 async function handleMissingDailyNote(
 	app: App,
 	filePath: string,
 	taskData: CreateTaskData,
 	settings: GanttCalendarSettings
-): Promise<void> {
+): Promise<string | null> {
 	// 弹出确认对话框
 	const confirmed = await showConfirmDialog(
 		app, 'Daily Note 不存在', '当天的 Daily Note 尚未创建，是否现在创建？',
@@ -168,7 +172,7 @@ async function handleMissingDailyNote(
 
 	if (!confirmed) {
 		new Notice(i18n.t('dailyNote.createCancelled'));
-		return;
+		return null;
 	}
 
 	try {
@@ -179,10 +183,13 @@ async function handleMissingDailyNote(
 		if (abstractFile instanceof TFile) {
 			await insertTaskToFile(app, abstractFile, taskData, settings.newTaskHeading);
 			new Notice(i18n.t('dailyNote.createdAndAdded'));
+			return filePath;
 		}
+		return null;
 	} catch (error) {
 		Logger.error('DailyNoteHelper', 'Error creating daily note:', error);
 		new Notice(i18n.t('dailyNote.createFailed', { error: (error as Error).message }));
+		return null;
 	}
 }
 

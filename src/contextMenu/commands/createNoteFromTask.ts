@@ -1,7 +1,7 @@
 import { App, Notice, normalizePath, TFile } from 'obsidian';
 import type { GCTask } from '../../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
-import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { updateTaskProperties, refreshTaskView } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
 
@@ -205,6 +205,7 @@ export async function createNoteFromTaskCore(
 			await leaf.openFile(existingFileInVault);
 			// 直接将任务改为双链，方便后续跳转
 			await updateTaskProperties(app, task, { content: options.wikiLinkContent }, enabledFormats);
+			await refreshTaskView(app, task.filePath);
 			return;
 		}
 
@@ -217,6 +218,7 @@ export async function createNoteFromTaskCore(
 			await leaf.openFile(existingFile);
 			// 仍将任务内容改为双链，方便后续跳转
 			await updateTaskProperties(app, task, { content: options.wikiLinkContent }, enabledFormats);
+			await refreshTaskView(app, task.filePath);
 			return;
 		}
 
@@ -241,6 +243,7 @@ export async function createNoteFromTaskCore(
 
 		// 9) 更新源任务行为双链，使用 updateTaskProperties 保留 tags 等元数据
 		await updateTaskProperties(app, task, { content: options.wikiLinkContent }, enabledFormats);
+		await refreshTaskView(app, task.filePath);
 	} catch (error) {
 		Logger.error('createNoteFromTask', 'Failed to create note from task:', error);
 		new Notice(i18n.t('contextMenu.commands.noteCreateFailed'));

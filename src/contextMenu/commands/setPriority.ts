@@ -1,6 +1,6 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
-import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { updateTaskProperties, refreshTaskView } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
 
@@ -25,6 +25,7 @@ export async function setTaskPriority(
 		};
 
 		await updateTaskProperties(app, task, updates, enabledFormats);
+		await refreshTaskView(app, task.filePath);
 		onRefresh();
 		new Notice(i18n.t('contextMenu.commands.priorityUpdated'));
 	} catch (err) {

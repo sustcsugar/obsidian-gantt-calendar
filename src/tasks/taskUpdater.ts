@@ -47,6 +47,38 @@ function extractUnrecognizedTokens(line: string): string[] {
 	return tokens;
 }
 
+// ==================== 写回后即时刷新 ====================
+// 文件修改事件要经过 50ms 防抖 + 75ms maxWait 才回流到视图；
+// 用户主动写回（右键命令、表单保存等）完成后调用 refreshTaskView
+// 立即重建该文件的 Repository 缓存并推送最新任务，消除 1~2s 的延迟感。
+
+interface PluginTaskCache {
+	refreshFile: (filePath: string) => Promise<void>;
+	getAllTasks: () => GCTask[];
+}
+
+function getPluginTaskCache(app: App): PluginTaskCache | null {
+	const appWithPlugins = app as App & {
+		plugins?: { getPlugin?: (id: string) => { taskCache?: PluginTaskCache } | null };
+	};
+	return appWithPlugins.plugins?.getPlugin?.('gantt-calendar')?.taskCache ?? null;
+}
+
+/**
+ * 写回任务文件后的即时刷新：跳过文件事件防抖，立即更新缓存并通知视图。
+ */
+export async function refreshTaskView(app: App, filePath: string): Promise<void> {
+	try {
+		const taskCache = getPluginTaskCache(app);
+		if (!taskCache?.refreshFile) return;
+		await taskCache.refreshFile(filePath);
+		const { useCalendarStore } = await import('../ui/store/calendarStore');
+		useCalendarStore.getState().notifyTasksUpdated(taskCache.getAllTasks(), filePath);
+	} catch (error) {
+		Logger.error('refreshTaskView', 'Immediate refresh after write-back failed:', error);
+	}
+}
+
 // ==================== 行内容校验 ====================
 
 function getGlobalTaskFilter(app: App): string {

@@ -1,5 +1,6 @@
 import { App, Notice, TFile } from 'obsidian';
 import type { GCTask } from '../../types';
+import { refreshTaskView } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
 
@@ -37,6 +38,8 @@ export async function deleteTask(
 		// 写回文件
 		const newContent = lines.join('\n');
 		await app.vault.modify(file, newContent);
+		// 删除行走的是行号删改，立即重建缓存，避免下方任务行号错位视图停留 1~2s
+		await refreshTaskView(app, task.filePath);
 
 		new Notice(i18n.t('contextMenu.commands.deleted'));
 		onRefresh();

@@ -1,6 +1,6 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
-import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { updateTaskProperties, refreshTaskView } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
 
@@ -37,6 +37,7 @@ export async function restoreTask(
 			cancelled: false,
 			cancelledDate: null
 		}, enabledFormats);
+		await refreshTaskView(app, task.filePath);
 
 		new Notice(i18n.t('contextMenu.commands.restored'));
 		onRefresh();

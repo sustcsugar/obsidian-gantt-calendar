@@ -1,7 +1,7 @@
 import { App, Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { TaskStatusType } from '../../tasks/taskStatus';
-import { updateTaskProperties } from '../../tasks/taskUpdater';
+import { updateTaskProperties, refreshTaskView } from '../../tasks/taskUpdater';
 import { getStatusByKey } from '../../tasks/taskStatus';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
@@ -23,6 +23,7 @@ export async function setTaskStatus(
 ): Promise<void> {
 	try {
 		await updateTaskProperties(app, task, { status }, enabledFormats);
+		await refreshTaskView(app, task.filePath);
 
 		const statusInfo = getStatusByKey(status);
 		const label = statusInfo ? statusInfo.name : status;
