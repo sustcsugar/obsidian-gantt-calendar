@@ -27,8 +27,8 @@
 }
 
 .gc-task-card--month:hover {
-	transform: translateX(1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
+	box-shadow: var(--gc-elev-2);
 }
 
 .gc-task-card--task:hover {
@@ -36,18 +36,14 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 年视图日期悬停效果 */
+/* 年视图日期悬停效果（轻浮起，阴影用统一 elev 层级） */
 .gc-year-view__day:hover {
-	transform: translateY(-1px) scale(1.08);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-	z-index: 10;
+	transform: translateY(-1px) scale(1.06);
+	box-shadow: var(--gc-elev-2);
+	z-index: 2;
 }
 
-/* BEM类名: gc-month-view__day-cell */
-.gc-month-view__day-cell:hover {
-	background-color: var(--background-modifier-hover);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+/* 月视图格子 hover 已收编至 views/month-view.css */
 
 /* 7.3 Recurring Task Styles */
 /* 周期性真实任务：强调左边框 */
@@ -123,98 +119,61 @@
 	color: var(--gc-festival-solar-term);
 }
 
-/* Month view specific festival styles */
+/* Month view specific festival styles
+   （用 (0,2,0) 特异度压过月视图农历的 muted 基调，保证节日/节气着色生效） */
 /* BEM类名: gc-month-view__lunar-text--festival */
-.gc-month-view__lunar-text--festival {
+.gc-month-view__day-cell .gc-month-view__lunar-text--festival {
 	font-weight: 600;
 }
 
 /* BEM类名: gc-month-view__lunar-text--festival-solar */
-.gc-month-view__lunar-text--festival-solar {
+.gc-month-view__day-cell .gc-month-view__lunar-text--festival-solar {
 	color: var(--gc-festival-solar);
 }
 
 /* BEM类名: gc-month-view__lunar-text--festival-lunar */
-.gc-month-view__lunar-text--festival-lunar {
+.gc-month-view__day-cell .gc-month-view__lunar-text--festival-lunar {
 	color: var(--gc-festival-lunar);
 }
 
 /* BEM类名: gc-month-view__lunar-text--festival-solar-term */
-.gc-month-view__lunar-text--festival-solar-term {
+.gc-month-view__day-cell .gc-month-view__lunar-text--festival-solar-term {
 	color: var(--gc-festival-solar-term);
 }
 
 /* 7.5 Special States */
-/* BEM类名: gc-month-view__day-cell--outside-month */
-.gc-month-view__day-cell--outside-month {
-	background-color: var(--background-secondary);
-	opacity: 0.5;
-}
-
-.gc-month-view__day-cell--outside-month .gc-month-view__day-number {
-	color: var(--text-faint);
-}
-
-/* BEM类名: gc-year-view__day.outside-month (年视图非本月日期) */
-.gc-year-view__day.outside-month {
-	opacity: 0.4;
-}
-
-.gc-year-view__day.outside-month .gc-year-view__day-number {
-	color: var(--text-faint);
-}
-
-.gc-year-view__day.outside-month .gc-year-view__lunar-text {
-	color: var(--text-faint);
-}
+/* 月视图 非当月/今天 状态已收编至 views/month-view.css；
+   年视图非当月日期已收编至 views/year-view.css */
 
 /* Today state */
-/* 年视图今天样式：使用伪元素创建红色虚线圆圈，不干扰热力图背景 */
-.gc-year-view__day.today {
-	position: relative;
-}
-
+/* 年视图今天：accent 实线圆环（替代旧红色虚线圈），不干扰热力图填色 */
 .gc-year-view__day.today::before {
 	content: '';
 	position: absolute;
-	inset: 2px;
-	border: 2px dashed var(--gc-danger, #ff6b6b);
-	border-radius: 4px;
+	inset: 1px;
+	border: 2px solid var(--gc-accent);
+	border-radius: inherit;
 	pointer-events: none;
 	z-index: 1;
 }
 
-/* 确保日期内容在圆圈之上 */
+/* 确保日期内容在圆环之上 */
 .gc-year-view__day.today > * {
 	position: relative;
 	z-index: 2;
 }
 
-/* 年视图今天的阳历和农历日期显示为红色 */
+/* 年视图今天的阳历和农历日期用 accent 强调 */
 .gc-year-view__day.today .gc-year-view__day-number {
-	color: var(--gc-danger, #ff6b6b);
+	color: var(--gc-accent);
 	font-weight: 600;
 }
 
 .gc-year-view__day.today .gc-year-view__lunar-text {
-	color: var(--gc-danger, #ff6b6b);
+	color: var(--gc-accent);
 }
 
-/* 月视图今天样式 */
-/* BEM类名: gc-month-view__day-cell--today */
-.gc-month-view__day-cell--today {
-	background-color: var(--gc-danger, #ff6b6b);
-	border-color: var(--gc-danger, #ff6b6b);
-}
-
-.gc-month-view__day-cell--today .gc-month-view__day-number {
-	color: white;
-	font-weight: 700;
-}
-
-.gc-month-view__day-cell--today .gc-month-view__lunar-text {
-	color: rgba(255, 255, 255, 0.9);
-}
+/* 月视图今天样式已收编至 views/month-view.css */
 
 .gc-week-view__header-cell--today {
 	background-color: rgba(255, 107, 107, 0.1);

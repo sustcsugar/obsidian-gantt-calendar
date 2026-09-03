@@ -49,18 +49,33 @@ Author: sugar
 	/* 边框 */
 	--gc-border: var(--background-modifier-border);
 	--gc-border-strong: var(--background-modifier-border-hover);
+	/* hairline：半透明发丝线，叠在表面上产生"层次"而不显生硬（深色主题下方自动翻转为白系） */
+	--gc-border-hairline: rgba(0, 0, 0, 0.08);
 
 	/* 主题色 + 状态色（随主题切换） */
 	--gc-accent: var(--interactive-accent);
+	--gc-accent-soft: color-mix(in srgb, var(--interactive-accent) 8%, transparent);
+	--gc-accent-wash: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+	--gc-on-accent: var(--text-on-accent);
 	--gc-status-done: var(--color-green);
 	--gc-status-canceled: var(--color-orange);
 	--gc-status-overdue: var(--color-red);
 
-	/* 圆角 */
-	--gc-radius-xs: 4px;
-	--gc-radius-sm: 6px;
-	--gc-radius-md: 8px;
-	--gc-radius-lg: 12px;
+	/* 中性交互洗色（Plane 风格：导航/列表 hover 与 active 用中性背景块，不用 accent）
+	   浅色=黑系、深色=白系，数值对齐 Plane bg-layer-transparent 三态 */
+	--gc-hover-wash: rgba(0, 0, 0, 0.04);
+	--gc-active-wash: rgba(0, 0, 0, 0.08);
+	--gc-selected-wash: rgba(0, 0, 0, 0.10);
+
+	/* Plane raised 卡片阴影：rest 极轻、hover 微升（深色主题自动加重） */
+	--gc-card-shadow: 0 1px 6px -1px rgb(41 47 61 / 0.03), 0 1px 4px rgb(41 47 61 / 0.04);
+	--gc-card-shadow-hover: 0 1px 2px -1px rgb(41 47 61 / 0.06), 0 1px 3px rgb(41 47 61 / 0.05);
+
+	/* 圆角（现代圆润风：基准上调，卡片 14px / 格子 10px / 药丸 full） */
+	--gc-radius-xs: 6px;
+	--gc-radius-sm: 8px;
+	--gc-radius-md: 10px;
+	--gc-radius-lg: 14px;
 	--gc-radius-full: 999px;
 
 	/* 间距（4px 基准网格） */
@@ -71,12 +86,12 @@ Author: sugar
 	--gc-space-5: 24px;
 	--gc-space-6: 32px;
 
-	/* 阴影层级（颜色随主题深浅切换） */
-	--gc-shadow-color: rgba(0, 0, 0, 0.12);
-	--gc-elev-1: 0 1px 2px var(--gc-shadow-color);           /* 凹陷/贴面 */
-	--gc-elev-2: 0 4px 12px var(--gc-shadow-color);          /* 悬浮控件 */
-	--gc-elev-3: 0 8px 24px var(--gc-shadow-color);          /* 下拉/悬浮窗 */
-	--gc-elev-4: 0 16px 48px var(--gc-shadow-color);         /* 模态框 */
+	/* 阴影层级（现代分层式：低透明度、大模糊、小偏移；深色主题下方整体加重并少用） */
+	--gc-shadow-color: rgba(0, 0, 0, 0.08);
+	--gc-elev-1: 0 1px 2px rgba(0, 0, 0, 0.05);                                          /* 贴面/输入 */
+	--gc-elev-2: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);           /* 卡片悬浮 */
+	--gc-elev-3: 0 4px 8px -2px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.06); /* 下拉/悬浮窗 */
+	--gc-elev-4: 0 12px 24px -6px rgba(0, 0, 0, 0.14), 0 8px 12px -6px rgba(0, 0, 0, 0.08); /* 模态框 */
 
 	/* 动效 */
 	--gc-dur-fast: 120ms;
@@ -107,9 +122,34 @@ Author: sugar
 	--gc-danger: var(--color-red, #ff6b6b);
 }
 
-/* 深色主题微调（阴影更淡，浮层更亮） */
+/* 热力图色板基色（9 色，深浅主题共用色相；
+   明暗档位由 heatmap.css 用 color-mix 与主题背景混合生成，
+   浅色"越深=越多"、深色"越亮=越多"，与 GitHub 贡献图行为一致） */
+:root {
+	--gc-heat-blue: #3b82f6;
+	--gc-heat-green: #22c55e;
+	--gc-heat-red: #ef4444;
+	--gc-heat-purple: #a855f7;
+	--gc-heat-orange: #f97316;
+	--gc-heat-cyan: #06b6d4;
+	--gc-heat-pink: #ec4899;
+	--gc-heat-yellow: #eab308;
+}
+
+/* 深色主题微调：阴影加重补足对比，层次主要靠 hairline 边框与表面提亮 */
 .theme-dark {
-	--gc-shadow-color: rgba(0, 0, 0, 0.45);
+	--gc-border-hairline: rgba(255, 255, 255, 0.09);
+	--gc-accent-soft: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+	--gc-accent-wash: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+	--gc-hover-wash: rgba(255, 255, 255, 0.05);
+	--gc-active-wash: rgba(255, 255, 255, 0.07);
+	--gc-selected-wash: rgba(255, 255, 255, 0.10);
+	--gc-card-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.20), 0 1px 4px rgb(0 0 0 / 0.25);
+	--gc-card-shadow-hover: 0 1px 2px -1px rgb(0 0 0 / 0.25), 0 1px 3px rgb(0 0 0 / 0.30);
+	--gc-elev-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+	--gc-elev-2: 0 2px 6px rgba(0, 0, 0, 0.40);
+	--gc-elev-3: 0 4px 12px rgba(0, 0, 0, 0.45);
+	--gc-elev-4: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
 
 /* 系统开启"减少动态效果"：动效全部降级为瞬切 */

@@ -1,99 +1,174 @@
-/* 6.3 Year View Components */
-/* 月卡片 - BEM类名: gc-year-view__month-card */
-.gc-year-view__month-card {
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 4px 6px;
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-}
+/* ============================================
+   月视图组件（Month View Components）
+   BEM: gc-month-view__*
+   视觉语言：软网格 — 格子间 gap 透出背景，
+   单格为圆角卡片（hairline 边框 + 悬浮阴影），
+   今天用 accent 淡染整格 + 数字反白圆徽标
+   ============================================ */
 
-/* 月份标题 - BEM类名: gc-year-view__month-header */
-.gc-year-view__month-header {
-	text-align: center;
-	margin-bottom: 4px;
-	border-bottom: none;
-	padding-bottom: 2px;
-}
-
-.gc-year-view__month-header h3 {
-	font-size: 12px;
+/* 星期标签 - Grid 第1行 */
+.gc-month-view__weekday {
+	font-size: var(--gc-font-xs);
 	font-weight: 600;
-	margin: 0;
 	color: var(--text-muted);
-}
-
-/* 星期标签容器 - BEM类名: gc-year-view__weekdays */
-.gc-year-view__weekdays {
-	display: grid;
-	grid-template-columns: repeat(7, 1fr);
-	width: 100%;
-	margin-bottom: 1px;
-}
-
-/* 星期标签 - BEM类名: gc-year-view__weekday */
-.gc-year-view__weekday {
 	text-align: center;
-	font-size: 9px;
-	font-weight: 500;
-	color: var(--text-faint);
-	padding: 1px 0;
+	padding: 4px 4px 0;
+	/* 确保在Grid第1行 */
+	grid-row: 1;
+	letter-spacing: 0.02em;
+	user-select: none;
 }
 
-/* 日期网格 - BEM类名: gc-year-view__days-grid */
-.gc-year-view__days-grid {
-	display: grid;
-	grid-template-columns: repeat(7, 1fr);
-	flex: 1;
-	gap: 1px;
+/* 空占位 - 第1行第1列 */
+.gc-month-view__weekday--empty {
+	visibility: hidden;
 }
 
-/* 日期单元格 - BEM类名: gc-year-view__day */
-.gc-year-view__day {
+/* 周编号 - 位于每周的第1列 */
+.gc-month-view__week-number {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0;
-	padding: 1px 2px;
-	border-radius: 4px;
-	cursor: pointer;
-	background-color: transparent;
-	border: none;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
-	min-height: 35px;
-}
-
-/* 日期数字 - BEM类名: gc-year-view__day-number */
-.gc-year-view__day-number {
-	font-size: 14px;
-	font-weight: 400;
-	color: var(--text-normal);
-	line-height: 1.2;
-}
-
-/* 农历文本 - BEM类名: gc-year-view__lunar-text */
-.gc-year-view__lunar-text {
-	font-size: 7px;
+	font-size: var(--gc-font-xxs);
+	font-weight: 600;
 	color: var(--text-faint);
-	text-align: center;
-	line-height: 1;
+	user-select: none;
+	/* grid位置由组件内联样式设置 */
+}
+
+/* 日期格 — 圆角卡片 */
+.gc-month-view__day-cell {
+	min-height: 100px;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	padding: 8px;
+	gap: 2px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--gc-border-hairline);
+	border-radius: var(--gc-radius-md);
+	cursor: pointer;
+	transition:
+		background-color var(--gc-dur-fast) var(--gc-ease-out),
+		border-color var(--gc-dur-fast) var(--gc-ease-out),
+		box-shadow var(--gc-dur-fast) var(--gc-ease-out);
+	overflow: hidden;
+}
+
+.gc-month-view__day-cell:hover {
+	border-color: var(--gc-border-strong);
+	box-shadow: var(--gc-elev-2);
+	background-color: color-mix(in srgb, var(--gc-accent) 3%, var(--background-primary));
+}
+
+.gc-month-view__day-cell:focus-visible {
+	outline: 2px solid var(--gc-accent);
+	outline-offset: 1px;
+}
+
+/* 日期头部：数字 + 农历，左对齐、无分隔线 */
+.gc-month-view__day-header {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
+	width: 100%;
+	gap: 6px;
+}
+
+/* 日期数字（今天变 accent 反白圆徽标） */
+.gc-month-view__day-cell .gc-month-view__day-number {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 4px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+	border-radius: var(--gc-radius-full);
+	transition:
+		background-color var(--gc-dur-fast) var(--gc-ease-out),
+		color var(--gc-dur-fast) var(--gc-ease-out);
+}
+
+/* 农历文本（字号由设置内联注入，此处只定色彩基调） */
+.gc-month-view__day-cell .gc-month-view__lunar-text {
+	color: var(--text-muted);
+	font-weight: 500;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	max-width: 100%;
 }
 
-/* 年视图月卡片中的农历字体大小可调 */
-.gc-year-view__month-card .gc-year-view__lunar-text {
-	font-size: var(--year-lunar-font-size, 10px);
+/* 今天：accent 淡染 + 数字反白徽标 */
+.gc-month-view__day-cell--today {
+	background-color: color-mix(in srgb, var(--gc-accent) 6%, var(--background-primary));
+	border-color: color-mix(in srgb, var(--gc-accent) 40%, transparent);
 }
 
-/* 年视图农历始终显示 */
-.gc-view--year .gc-year-view__lunar-text {
-	display: block;
+.gc-month-view__day-cell--today:hover {
+	background-color: color-mix(in srgb, var(--gc-accent) 9%, var(--background-primary));
+	border-color: color-mix(in srgb, var(--gc-accent) 55%, transparent);
+	box-shadow: var(--gc-elev-2);
 }
 
+.gc-month-view__day-cell--today .gc-month-view__day-number {
+	background-color: var(--gc-accent);
+	color: var(--gc-on-accent);
+	font-weight: 700;
+}
+
+.gc-month-view__day-cell--today .gc-month-view__lunar-text {
+	color: var(--gc-accent);
+}
+
+/* 非当月日期：整格弱化，不用透明度砸内容 */
+.gc-month-view__day-cell--outside-month {
+	background-color: var(--background-secondary);
+	opacity: 0.55;
+}
+
+.gc-month-view__day-cell--outside-month .gc-month-view__day-number {
+	color: var(--text-faint);
+	font-weight: 500;
+}
+
+/* 任务列表 */
+.gc-month-view__tasks {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	width: 100%;
+	margin-top: 2px;
+	flex: 1;
+	overflow: hidden;
+}
+
+/* 任务药丸：月视图内瘦身，保留 3px 状态色条 */
+.gc-month-view__tasks .gc-task-card {
+	padding: 3px 8px;
+	min-height: 0;
+	font-size: 12px;
+	line-height: 1.5;
+	gap: 4px;
+}
+
+/* "更多"提示 chip */
+.gc-month-view__task-more {
+	font-size: var(--gc-font-xxs);
+	color: var(--text-faint);
+	padding: 1px 8px;
+	align-self: flex-start;
+	border-radius: var(--gc-radius-full);
+	transition:
+		color var(--gc-dur-fast) var(--gc-ease-out),
+		background-color var(--gc-dur-fast) var(--gc-ease-out);
+}
+
+.gc-month-view__task-more:hover {
+	color: var(--text-muted);
+	background-color: var(--background-modifier-hover);
+}
