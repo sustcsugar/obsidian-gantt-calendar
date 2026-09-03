@@ -788,7 +788,14 @@
   "modals": {
     "dateTimePicker": {
       "monthFormat": "{{year}}年{{month}}月",
-      "timePlaceholder": "HH:mm"
+      "timePlaceholder": "HH:mm",
+      "presetToday": "今天",
+      "presetTomorrow": "明天",
+      "presetWeekend": "周末",
+      "presetNextWeek": "下周",
+      "relToday": "今天",
+      "relTomorrow": "明天",
+      "relDayAfterTomorrow": "后天"
     },
     "addStatus": {
       "title": "添加自定义状态",

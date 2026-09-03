@@ -1050,10 +1050,12 @@ export const DateTimePickerClasses = {
 
 	elements: {
 		trigger: bem(BLOCKS.DATE_TIME_PICKER, 'trigger'),
+		input: bem(BLOCKS.DATE_TIME_PICKER, 'input'),
 		triggerIcon: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-icon'),
-		triggerText: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-text'),
 		triggerClear: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-clear'),
 		popover: bem(BLOCKS.DATE_TIME_PICKER, 'popover'),
+		presets: bem(BLOCKS.DATE_TIME_PICKER, 'presets'),
+		preset: bem(BLOCKS.DATE_TIME_PICKER, 'preset'),
 		header: bem(BLOCKS.DATE_TIME_PICKER, 'header'),
 		monthLabel: bem(BLOCKS.DATE_TIME_PICKER, 'month-label'),
 		navButton: bem(BLOCKS.DATE_TIME_PICKER, 'nav-button'),
@@ -1070,6 +1072,10 @@ export const DateTimePickerClasses = {
 		daySelected: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'selected'),
 		dayToday: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'today'),
 		dayOtherMonth: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'other-month'),
+		dayFocused: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'focused'),
+		popoverTop: bem(BLOCKS.DATE_TIME_PICKER, 'popover', 'top'),
+		popoverRight: bem(BLOCKS.DATE_TIME_PICKER, 'popover', 'right'),
+		presetActive: bem(BLOCKS.DATE_TIME_PICKER, 'preset', 'active'),
 	},
 };
 
