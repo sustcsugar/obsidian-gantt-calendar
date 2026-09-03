@@ -54,6 +54,8 @@ export const BLOCKS = {
 	CREATE_TASK_BUTTON: 'create-task-btn',
 	/** 编辑任务弹窗 */
 	EDIT_TASK_MODAL: 'edit-task-modal',
+	/** 日期时间选择器（Linear 风格） */
+	DATE_TIME_PICKER: 'date-time-picker',
 	/** 确认弹窗 */
 	CONFIRM_MODAL: 'confirm-modal',
 
@@ -658,8 +660,6 @@ export const EditTaskModalClasses = {
 		dateItem: bem(BLOCKS.EDIT_TASK_MODAL, 'date-item'),
 		dateLabel: bem(BLOCKS.EDIT_TASK_MODAL, 'date-label'),
 		dateInputContainer: bem(BLOCKS.EDIT_TASK_MODAL, 'date-input-container'),
-		dateInput: bem(BLOCKS.EDIT_TASK_MODAL, 'date-input'),
-		dateClear: bem(BLOCKS.EDIT_TASK_MODAL, 'date-clear'),
 			dateAddTime: bem(BLOCKS.EDIT_TASK_MODAL, 'date-add-time'),
 
 		// 标签选择器板块
@@ -1039,6 +1039,37 @@ export const TagSelectorClasses = {
 
 	modifiers: {
 		pillSelected: bem(BLOCKS.TAG_SELECTOR, 'pill', 'selected'),
+	},
+};
+
+/**
+ * 日期时间选择器类名常量（Linear 风格：触发按钮 + 日历弹层）
+ */
+export const DateTimePickerClasses = {
+	block: bem(BLOCKS.DATE_TIME_PICKER),
+
+	elements: {
+		trigger: bem(BLOCKS.DATE_TIME_PICKER, 'trigger'),
+		triggerIcon: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-icon'),
+		triggerText: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-text'),
+		triggerClear: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-clear'),
+		popover: bem(BLOCKS.DATE_TIME_PICKER, 'popover'),
+		header: bem(BLOCKS.DATE_TIME_PICKER, 'header'),
+		monthLabel: bem(BLOCKS.DATE_TIME_PICKER, 'month-label'),
+		navButton: bem(BLOCKS.DATE_TIME_PICKER, 'nav-button'),
+		weekdays: bem(BLOCKS.DATE_TIME_PICKER, 'weekdays'),
+		weekday: bem(BLOCKS.DATE_TIME_PICKER, 'weekday'),
+		dayGrid: bem(BLOCKS.DATE_TIME_PICKER, 'day-grid'),
+		dayCell: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell'),
+		footer: bem(BLOCKS.DATE_TIME_PICKER, 'footer'),
+		timeInput: bem(BLOCKS.DATE_TIME_PICKER, 'time-input'),
+		footerButton: bem(BLOCKS.DATE_TIME_PICKER, 'footer-button'),
+	},
+
+	modifiers: {
+		daySelected: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'selected'),
+		dayToday: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'today'),
+		dayOtherMonth: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'other-month'),
 	},
 };
 

@@ -12,7 +12,7 @@ import { EditTaskModalClasses } from '../../utils/bem';
 import { Modal } from '../components/Modal';
 import { TagSelector } from './TagSelector';
 import { RepeatSection } from './RepeatSection';
-import { useFlatpickr, getFlatpickrInstance } from './useFlatpickr';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { openReactModal } from './modalHost';
 
 /**
@@ -391,7 +391,7 @@ export function TaskFormModal({
 	);
 }
 
-// ==================== 日期字段（flatpickr 封装） ====================
+// ==================== 日期字段（Linear 风格日期时间选择器） ====================
 
 interface DateFieldProps {
 	label: string;
@@ -401,64 +401,22 @@ interface DateFieldProps {
 }
 
 function DateField({ label, current, onChange, onPrecisionChange }: DateFieldProps): JSX.Element {
-	const [clearOpacity, setClearOpacity] = useState(0.6);
-
-	const inputRef = useFlatpickr<HTMLInputElement>({
-		enableTime: true,
-		dateFormat: 'Y-m-d H:i',
-		time_24hr: true,
-		allowInput: false,
-		clickOpens: true,
-		defaultDate: current || undefined,
-		minuteIncrement: 1,
-		onChange: (selectedDates: Date[]) => {
-			if (selectedDates.length === 0) {
-				onChange(null);
-				onPrecisionChange('day');
-			} else {
-				const date = selectedDates[0];
-				const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
-				onPrecisionChange(hasTime ? 'time' : 'day');
-				onChange(date);
-			}
-		},
-		onOpen: () => {
-			setClearOpacity(0);
-			const ta = document.querySelector(`.${EditTaskModalClasses.elements.descTextarea}`);
-			if (ta) ta.setAttribute('inert', '');
-		},
-		onClose: () => {
-			setClearOpacity(0.6);
-			const ta = document.querySelector(`.${EditTaskModalClasses.elements.descTextarea}`);
-			if (ta) ta.removeAttribute('inert');
-		},
-	});
-
 	return (
 		<div className={EditTaskModalClasses.elements.dateItem}>
 			<label className={EditTaskModalClasses.elements.dateLabel}>{label}</label>
 			<div className={EditTaskModalClasses.elements.dateInputContainer}>
-				<div className="gc-u-relative" style={{ position: 'relative' }}>
-					<input
-						ref={inputRef}
-						type="text"
-						readOnly
-						className={[EditTaskModalClasses.elements.dateInput, 'gc-u-pointer'].join(' ')}
-						placeholder={i18n.t('modals.editTask.datePlaceholder')}
-					/>
-					<button
-						className={[EditTaskModalClasses.elements.dateClear, 'gc-u-clear-btn-pos'].join(' ')}
-						style={{ opacity: clearOpacity }}
-						onClick={(e) => {
-							e.stopPropagation();
-							getFlatpickrInstance(inputRef)?.clear();
-							onChange(null);
+				<DateTimePicker
+					value={current}
+					placeholder={i18n.t('modals.editTask.datePlaceholder')}
+					onChange={(d) => {
+						onChange(d);
+						if (!d) {
 							onPrecisionChange('day');
-						}}
-					>
-						{'×'}
-					</button>
-				</div>
+						} else {
+							onPrecisionChange(d.getHours() !== 0 || d.getMinutes() !== 0 ? 'time' : 'day');
+						}
+					}}
+				/>
 			</div>
 		</div>
 	);

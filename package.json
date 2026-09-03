@@ -33,7 +33,6 @@
 		"typescript-eslint": "^8.61.1"
 	},
 	"dependencies": {
-		"flatpickr": "^4.6.13",
 		"motion": "^13.1.1",
 		"obsidian-daily-notes-interface": "^0.9.4",
 		"react": "^19.2.8",
