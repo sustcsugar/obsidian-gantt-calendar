@@ -101,6 +101,8 @@ export function WeekTimelineGrid({
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
 
 	const [dropLine, setDropLine] = useState<DropLineState | null>(null);
+	/** 拖放悬停高亮的列（块拖动与外部拖入都显示列高亮，指示线仅外部拖入） */
+	const [dragOverCol, setDragOverCol] = useState<number | null>(null);
 	const [alldayDragDay, setAlldayDragDay] = useState<number | null>(null);
 	const gridRef = useRef<HTMLDivElement | null>(null);
 
@@ -190,7 +192,7 @@ export function WeekTimelineGrid({
 
 	const beginResize = useBlockResize(commitResize);
 
-	// ===== 拖放落点：整体平移块（保留时长与精度） =====
+	// ===== 拖放落点：整体平移块（保留时长与精度；minutes = 块上边缘的吸附时刻） =====
 	const commitBlockMove = useCallback((task: GCTask, dayIndex: number, minutes: number): void => {
 		const day = dayDate(dayIndex);
 		const interval = getTaskInterval(task, startField, endField, dateField);
@@ -198,13 +200,19 @@ export function WeekTimelineGrid({
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
 		if (interval && interval.kind === 'point') {
-			// 点任务：平移时刻
-			updates[interval.pointField] = atMinutes(day, minutes);
+			// 点任务：真实时刻字段是块的一个边缘——前向=上边缘即锚点；
+			// 后向（截止语义）锚在下边缘，上边缘 + 时长才是写入的截止时刻
+			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
+			const anchorMin = interval.pointDirection === 'backward' ? minutes + durationMin : minutes;
+			updates[interval.pointField] = atMinutes(day, anchorMin);
 			precision = { [interval.pointField]: 'time' };
 		} else if (interval) {
-			// 区间任务：以落点为新锚点整体平移，day 精度端点保持整天语义
+			// 区间任务：块上边缘落到落点后整体平移，day 精度端点保持整天语义。
+			// 仅原本就同日的区间才做"当日容纳"钳制——跨夜区间允许继续跨夜
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
-			const anchorMin = durationMin <= MINUTES_PER_DAY
+			const dayOf = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
+			const sameDayOrigin = dayOf(interval.start) === dayOf(interval.end);
+			const anchorMin = sameDayOrigin && durationMin <= MINUTES_PER_DAY
 				? Math.max(0, Math.min(minutes, MINUTES_PER_DAY - durationMin))
 				: minutes;
 			const newStart = atMinutes(day, anchorMin);
@@ -411,6 +419,8 @@ export function WeekTimelineGrid({
 					onBlockMove={commitBlockMove}
 					dropLine={dropLine}
 					setDropLine={setDropLine}
+					dragOverCol={dragOverCol}
+					setDragOverCol={setDragOverCol}
 					tasks={tasks}
 					hideTooltip={() => tooltip.hide()}
 					onCardRefresh={handleCardRefresh}
@@ -433,6 +443,13 @@ function isInsideBlock(target: EventTarget | null): boolean {
 }
 
 /**
+ * dataTransfer 自定义类型：抓取点相对块顶边的像素偏移。
+ * 块拖动的落点按块上边缘计算（指针 - 偏移），而非指针所在时刻；
+ * dragover 阶段用 types 探测该标记以区分块拖动与外部拖入（getData 仅在 drop 可用）
+ */
+const DRAG_OFFSET_TYPE = 'gc-week-drag-offset';
+
+/**
  * 页面上是否存在打开的右键菜单。
  * ContextMenuTrigger 会 stopPropagation 掉 contextmenu 事件（列内收不到），
  * 菜单又 portal 到 body 且其 mousemove 会沿 React 树冒泡进列内——
@@ -452,6 +469,8 @@ interface DayColumnProps {
 	onBlockMove: (task: GCTask, dayIndex: number, minutes: number) => void;
 	dropLine: DropLineState | null;
 	setDropLine: Dispatch<SetStateAction<DropLineState | null>>;
+	dragOverCol: number | null;
+	setDragOverCol: Dispatch<SetStateAction<number | null>>;
 	tasks: GCTask[];
 	hideTooltip: () => void;
 	onCardRefresh: () => void;
@@ -467,6 +486,8 @@ function DayColumn({
 	onBlockMove,
 	dropLine,
 	setDropLine,
+	dragOverCol,
+	setDragOverCol,
 	tasks,
 	hideTooltip,
 	onCardRefresh,
@@ -585,10 +606,17 @@ function DayColumn({
 		document.addEventListener('mouseup', finishCreate);
 	}, [minutesFromEvent, showGhost, finishCreate]);
 
-	// ===== HTML5 拖放（整体平移） =====
+	// ===== HTML5 拖放（整体平移；块拖动按块边缘落点，外部拖入按指针） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {
 		e.preventDefault();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+		setDragOverCol((prev) => (prev === dayIndex ? prev : dayIndex));
+		// 块拖动的落点由块边缘决定（指针处指示线会误导），仅外部拖入显示指针吸附线
+		const isBlockDrag = e.dataTransfer && Array.from(e.dataTransfer.types).includes(DRAG_OFFSET_TYPE);
+		if (isBlockDrag) {
+			setDropLine(null);
+			return;
+		}
 		const min = minutesFromEvent(e.clientY);
 		setDropLine((prev) => (prev && prev.dayIndex === dayIndex && prev.min === min ? prev : { dayIndex, min }));
 	}, [dayIndex, minutesFromEvent, setDropLine]);
@@ -597,11 +625,13 @@ function DayColumn({
 		const related = e.relatedTarget as Node | null;
 		if (related && e.currentTarget.contains(related)) return;
 		setDropLine(null);
-	}, [setDropLine]);
+		setDragOverCol((prev) => (prev === dayIndex ? null : prev));
+	}, [dayIndex, setDropLine]);
 
 	const handleDrop = useCallback((e: ReactDragEvent) => {
 		e.preventDefault();
 		setDropLine(null);
+		setDragOverCol(null);
 		const taskId = e.dataTransfer?.getData('taskId');
 		if (!taskId) return;
 		const task = findTaskById(tasks, taskId);
@@ -609,15 +639,16 @@ function DayColumn({
 			Logger.error('WeekTimelineGrid', 'Drop source task not found:', taskId);
 			return;
 		}
-		onBlockMove(task, dayIndex, minutesFromEvent(e.clientY));
+		// 块拖动：指针 - 抓取偏移 = 块上边缘位置；外部拖入：指针即块顶
+		const offsetY = parseFloat(e.dataTransfer.getData(DRAG_OFFSET_TYPE) || '');
+		const topEdgeClientY = isNaN(offsetY) ? e.clientY : e.clientY - offsetY;
+		onBlockMove(task, dayIndex, minutesFromEvent(topEdgeClientY));
 	}, [tasks, dayIndex, minutesFromEvent, onBlockMove, setDropLine]);
-
-	const showDropLine = dropLine?.dayIndex === dayIndex;
 
 	return (
 		<div
 			ref={colRef}
-			className={`${WeekViewClasses.elements.dayCol}${day.isToday ? ` ${WeekViewClasses.modifiers.dayColToday}` : ''}${showDropLine ? ` ${WeekViewClasses.modifiers.dayColDragOver}` : ''}`}
+			className={`${WeekViewClasses.elements.dayCol}${day.isToday ? ` ${WeekViewClasses.modifiers.dayColToday}` : ''}${dragOverCol === dayIndex ? ` ${WeekViewClasses.modifiers.dayColDragOver}` : ''}`}
 			style={{ gridColumn: `${dayIndex + 2}`, gridRow: '3', height: `${DAY_PX}px` }}
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
@@ -643,7 +674,16 @@ function DayColumn({
 					zIndex: seg.lane + (seg.stackedIndex > 0 ? 4 : 1),
 				};
 				return (
-					<div key={`${taskKey(block.task)}-d${dayIndex}`} className={cls} style={style}>
+					<div
+						key={`${taskKey(block.task)}-d${dayIndex}`}
+						className={cls}
+						style={style}
+						onDragStart={(e) => {
+							// 记录抓取点相对块顶边的偏移：落点按块上边缘计算而非指针（WYSIWYG）
+							const rect = e.currentTarget.getBoundingClientRect();
+							e.dataTransfer.setData(DRAG_OFFSET_TYPE, String(e.clientY - rect.top));
+						}}
+					>
 						{durationMin >= 30 ? (
 							<span className={WeekViewClasses.elements.timeBlockTime}>
 								{`${formatMinutes(seg.startMin)} – ${formatMinutes(seg.endMin)}`}
@@ -682,8 +722,8 @@ function DayColumn({
 					</div>
 				);
 			})}
-			{/* 拖放吸附指示线 */}
-			{showDropLine ? (
+			{/* 拖放吸附指示线（仅外部来源拖入显示；块拖动按块边缘落点，不出指针线） */}
+			{dropLine?.dayIndex === dayIndex ? (
 				<div
 					className={WeekViewClasses.elements.dropLine}
 					style={{ top: `${minutesToPx(dropLine.min)}px` }}
