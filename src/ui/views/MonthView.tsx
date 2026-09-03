@@ -217,7 +217,6 @@ export function MonthView(): JSX.Element {
 								>
 									<div className={MonthViewClasses.elements.dayHeader}>
 										<div className={MonthViewClasses.elements.dayNumber}>{day.day.toString()}</div>
-										<span className={MonthViewClasses.elements.dayHeaderSeparator} />
 										{lunarEl}
 									</div>
 									<div className={MonthViewClasses.elements.tasks}>

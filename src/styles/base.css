@@ -144,7 +144,7 @@
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 300px));
 	justify-content: center;
-	gap: 8px;
+	gap: 12px;
 	width: 100%;
 	padding: 12px;
 	align-content: start;
@@ -152,6 +152,7 @@
 
 /* ========================================
    月视图单一Grid布局（7行8列）
+   格子间 4px gap 让背景透出，配合圆角卡片形成"软网格"
    ======================================== */
 .gc-view.gc-view--month {
 	display: grid;
@@ -159,9 +160,9 @@
 	grid-template-rows: auto repeat(6, 1fr);
 	/* 8列: 第1列周数(40px固定) + 7列星期(均分) */
 	grid-template-columns: 40px repeat(7, 1fr);
-	gap: 0;
+	gap: 4px;
 	height: 100%;
-	padding: 8px;
+	padding: 8px 10px 10px;
 	overflow: hidden;
 }
 

@@ -1,113 +1,102 @@
-/* 6.9 Heatmap Components */
-/* 热力图色卡：蓝、绿、红（5级） - BEM类名支持 */
-/* 为年视图新类名添加热力图样式，排除非当月日期 */
-.gc-year-view__day:not(.outside-month).heatmap-blue-1 { background-image: none; background-color: rgba(56, 132, 255, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-blue-2 { background-image: none; background-color: rgba(56, 132, 255, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-blue-3 { background-image: none; background-color: rgba(56, 132, 255, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-blue-4 { background-image: none; background-color: rgba(56, 132, 255, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-blue-5 { background-image: none; background-color: rgba(56, 132, 255, 0.58); }
+/* ============================================
+   6.9 热力图组件（年视图月卡片内）
+   色阶 = color-mix(基色, 主题背景)：
+   - 浅色主题：基色占比越高 → 越深 = 任务越多
+   - 深色主题：基色占比越高 → 越亮 = 任务越多（GitHub 同款行为）
+   基色 token（--gc-heat-*）定义在 tokens.css
+   档位：L1 22% / L2 40% / L3 58% / L4 76% / L5 100%
+   ============================================ */
 
-.gc-year-view__day:not(.outside-month).heatmap-green-1 { background-image: none; background-color: rgba(82, 196, 26, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-green-2 { background-image: none; background-color: rgba(82, 196, 26, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-green-3 { background-image: none; background-color: rgba(82, 196, 26, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-green-4 { background-image: none; background-color: rgba(82, 196, 26, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-green-5 { background-image: none; background-color: rgba(82, 196, 26, 0.58); }
+/* 填色格子通用：圆角 + 极淡描边环（GitHub 2024 改版同款手法，深色下尤其提升可读性） */
+.gc-year-view__day:not(.outside-month)[class*="heatmap-"] {
+	border-radius: 4px;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
 
-.gc-year-view__day:not(.outside-month).heatmap-red-1 { background-image: none; background-color: rgba(231, 76, 60, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-red-2 { background-image: none; background-color: rgba(231, 76, 60, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-red-3 { background-image: none; background-color: rgba(231, 76, 60, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-red-4 { background-image: none; background-color: rgba(231, 76, 60, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-red-5 { background-image: none; background-color: rgba(231, 76, 60, 0.58); }
+.theme-dark .gc-year-view__day:not(.outside-month)[class*="heatmap-"] {
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
 
-.gc-year-view__day:not(.outside-month).heatmap-purple-1 { background-image: none; background-color: rgba(142, 68, 173, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-purple-2 { background-image: none; background-color: rgba(142, 68, 173, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-purple-3 { background-image: none; background-color: rgba(142, 68, 173, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-purple-4 { background-image: none; background-color: rgba(142, 68, 173, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-purple-5 { background-image: none; background-color: rgba(142, 68, 173, 0.58); }
+/* ---------- 蓝 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-blue-1 { background-color: color-mix(in srgb, var(--gc-heat-blue) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-2 { background-color: color-mix(in srgb, var(--gc-heat-blue) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-3 { background-color: color-mix(in srgb, var(--gc-heat-blue) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-4 { background-color: color-mix(in srgb, var(--gc-heat-blue) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-blue-5 { background-color: color-mix(in srgb, var(--gc-heat-blue) 100%, var(--background-primary)); }
 
-.gc-year-view__day:not(.outside-month).heatmap-orange-1 { background-image: none; background-color: rgba(245, 124, 0, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-orange-2 { background-image: none; background-color: rgba(245, 124, 0, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-orange-3 { background-image: none; background-color: rgba(245, 124, 0, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-orange-4 { background-image: none; background-color: rgba(245, 124, 0, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-orange-5 { background-image: none; background-color: rgba(245, 124, 0, 0.58); }
+/* ---------- 绿 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-green-1 { background-color: color-mix(in srgb, var(--gc-heat-green) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-green-2 { background-color: color-mix(in srgb, var(--gc-heat-green) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-green-3 { background-color: color-mix(in srgb, var(--gc-heat-green) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-green-4 { background-color: color-mix(in srgb, var(--gc-heat-green) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-green-5 { background-color: color-mix(in srgb, var(--gc-heat-green) 100%, var(--background-primary)); }
 
-.gc-year-view__day:not(.outside-month).heatmap-cyan-1 { background-image: none; background-color: rgba(0, 188, 212, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-2 { background-image: none; background-color: rgba(0, 188, 212, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-3 { background-image: none; background-color: rgba(0, 188, 212, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-4 { background-image: none; background-color: rgba(0, 188, 212, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-cyan-5 { background-image: none; background-color: rgba(0, 188, 212, 0.58); }
+/* ---------- 红 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-red-1 { background-color: color-mix(in srgb, var(--gc-heat-red) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-red-2 { background-color: color-mix(in srgb, var(--gc-heat-red) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-red-3 { background-color: color-mix(in srgb, var(--gc-heat-red) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-red-4 { background-color: color-mix(in srgb, var(--gc-heat-red) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-red-5 { background-color: color-mix(in srgb, var(--gc-heat-red) 100%, var(--background-primary)); }
 
-.gc-year-view__day:not(.outside-month).heatmap-pink-1 { background-image: none; background-color: rgba(233, 30, 99, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-pink-2 { background-image: none; background-color: rgba(233, 30, 99, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-pink-3 { background-image: none; background-color: rgba(233, 30, 99, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-pink-4 { background-image: none; background-color: rgba(233, 30, 99, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-pink-5 { background-image: none; background-color: rgba(233, 30, 99, 0.58); }
+/* ---------- 紫 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-purple-1 { background-color: color-mix(in srgb, var(--gc-heat-purple) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-2 { background-color: color-mix(in srgb, var(--gc-heat-purple) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-3 { background-color: color-mix(in srgb, var(--gc-heat-purple) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-4 { background-color: color-mix(in srgb, var(--gc-heat-purple) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-purple-5 { background-color: color-mix(in srgb, var(--gc-heat-purple) 100%, var(--background-primary)); }
 
-.gc-year-view__day:not(.outside-month).heatmap-yellow-1 { background-image: none; background-color: rgba(255, 193, 7, 0.12); }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-2 { background-image: none; background-color: rgba(255, 193, 7, 0.22); }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-3 { background-image: none; background-color: rgba(255, 193, 7, 0.32); }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-4 { background-image: none; background-color: rgba(255, 193, 7, 0.44); }
-.gc-year-view__day:not(.outside-month).heatmap-yellow-5 { background-image: none; background-color: rgba(255, 193, 7, 0.58); }
+/* ---------- 橙 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-orange-1 { background-color: color-mix(in srgb, var(--gc-heat-orange) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-2 { background-color: color-mix(in srgb, var(--gc-heat-orange) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-3 { background-color: color-mix(in srgb, var(--gc-heat-orange) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-4 { background-color: color-mix(in srgb, var(--gc-heat-orange) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-orange-5 { background-color: color-mix(in srgb, var(--gc-heat-orange) 100%, var(--background-primary)); }
 
-/* 热力图3D效果 - 第一档：轻微突起 */
+/* ---------- 青 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-cyan-1 { background-color: color-mix(in srgb, var(--gc-heat-cyan) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-2 { background-color: color-mix(in srgb, var(--gc-heat-cyan) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-3 { background-color: color-mix(in srgb, var(--gc-heat-cyan) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-4 { background-color: color-mix(in srgb, var(--gc-heat-cyan) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-cyan-5 { background-color: color-mix(in srgb, var(--gc-heat-cyan) 100%, var(--background-primary)); }
+
+/* ---------- 粉 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-pink-1 { background-color: color-mix(in srgb, var(--gc-heat-pink) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-2 { background-color: color-mix(in srgb, var(--gc-heat-pink) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-3 { background-color: color-mix(in srgb, var(--gc-heat-pink) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-4 { background-color: color-mix(in srgb, var(--gc-heat-pink) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-pink-5 { background-color: color-mix(in srgb, var(--gc-heat-pink) 100%, var(--background-primary)); }
+
+/* ---------- 黄 ---------- */
+.gc-year-view__day:not(.outside-month).heatmap-yellow-1 { background-color: color-mix(in srgb, var(--gc-heat-yellow) 22%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-2 { background-color: color-mix(in srgb, var(--gc-heat-yellow) 40%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-3 { background-color: color-mix(in srgb, var(--gc-heat-yellow) 58%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-4 { background-color: color-mix(in srgb, var(--gc-heat-yellow) 76%, var(--background-primary)); }
+.gc-year-view__day:not(.outside-month).heatmap-yellow-5 { background-color: color-mix(in srgb, var(--gc-heat-yellow) 100%, var(--background-primary)); }
+
+/* ---------- 立体感（原拟物 3D 选项现代化：
+   一档 = 顶部微光；二档 = 一档 + 轻浮起投影。类名保持不变，设置项无需迁移） ---------- */
 .gc-year-view__day:not(.outside-month).heatmap-3d-1[class*="heatmap-"] {
 	box-shadow:
-		inset 0 1px 1px rgba(255, 255, 255, 0.4),
-		inset 0 -1px 1px rgba(0, 0, 0, 0.05),
-		0 2px 4px rgba(0, 0, 0, 0.08);
-	position: relative;
+		inset 0 0 0 1px rgba(0, 0, 0, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.30);
 }
 
-.gc-year-view__day:not(.outside-month).heatmap-3d-1[class*="heatmap-"]::after {
-	content: '';
-	position: absolute;
-	top: 2px;
-	left: 10%;
-	right: 10%;
-	height: 40%;
-	background: linear-gradient(
-		to bottom,
-		rgba(255, 255, 255, 0.25),
-		rgba(255, 255, 255, 0)
-	);
-	border-radius: 8px 8px 4px 4px;
-	pointer-events: none;
-	opacity: 0.7;
-}
-
-/* 热力图3D效果 - 第二档：明显突起 */
 .gc-year-view__day:not(.outside-month).heatmap-3d-2[class*="heatmap-"] {
-	/* 内阴影创造深度感，底部深色阴影避免白色边缘 */
 	box-shadow:
-		/* 内阴影 - 顶部高光 */
-		inset 0 2px 4px rgba(255, 255, 255, 0.5),
-		/* 内阴影 - 底部深色阴影（避免白色边缘） */
-		inset 0 -2px 6px rgba(0, 0, 0, 0.15),
-		/* 内阴影 - 左右边缘 */
-		inset 1px 0 2px rgba(255, 255, 255, 0.25),
-		inset -1px 0 2px rgba(0, 0, 0, 0.1),
-		/* 外阴影 - 柔和突起 */
-		0 2px 6px rgba(0, 0, 0, 0.1),
-		0 4px 12px rgba(0, 0, 0, 0.06);
-	position: relative;
+		inset 0 0 0 1px rgba(0, 0, 0, 0.05),
+		inset 0 1px 0 rgba(255, 255, 255, 0.30),
+		0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-/* 玻璃顶部高光反射 - 第二档 */
-.gc-year-view__day:not(.outside-month).heatmap-3d-2[class*="heatmap-"]::after {
-	content: '';
-	position: absolute;
-	top: 2px;
-	left: 10%;
-	right: 10%;
-	height: 40%;
-	background: linear-gradient(
-		to bottom,
-		rgba(255, 255, 255, 0.35) 0%,
-		rgba(255, 255, 255, 0.15) 40%,
-		rgba(255, 255, 255, 0) 100%
-	);
-	border-radius: 8px 8px 4px 4px;
-	pointer-events: none;
+.theme-dark .gc-year-view__day:not(.outside-month).heatmap-3d-1[class*="heatmap-"] {
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+		inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
-
+.theme-dark .gc-year-view__day:not(.outside-month).heatmap-3d-2[class*="heatmap-"] {
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+		inset 0 1px 0 rgba(255, 255, 255, 0.16),
+		0 2px 6px rgba(0, 0, 0, 0.45);
+}
