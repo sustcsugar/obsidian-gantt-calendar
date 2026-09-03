@@ -99,8 +99,14 @@ export function DailyTimelinePanel(): JSX.Element {
 			try {
 				const newDate = new Date(today);
 				newDate.setHours(hour, 0, 0, 0);
-				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'time' };
-				await updateTaskDateField(app, sourceTask, dateFieldName, newDate, plugin.settings.enabledTaskFormats);
+				// 浅拷贝而非变异 store 中的共享对象
+				const timedTask = { ...sourceTask, datePrecision: { ...sourceTask.datePrecision, [dateFieldName]: 'time' } };
+				await updateTaskDateField(app, timedTask, dateFieldName, newDate, plugin.settings.enabledTaskFormats);
+				// 写回后立即刷新缓存并推送数据（跳过 125ms 防抖回流）
+				await plugin.taskCache.refreshFile(sourceTask.filePath);
+				useCalendarStore.getState().notifyTasksUpdated(
+					plugin.taskCache.getAllTasks(), sourceTask.filePath
+				);
 				Logger.debug('DailyTimelinePanel', 'Task time updated via drag-drop', { taskId, hour });
 			} catch (error) {
 				Logger.error('DailyTimelinePanel', 'Error updating task time:', error);
@@ -118,8 +124,12 @@ export function DailyTimelinePanel(): JSX.Element {
 
 		void (async () => {
 			try {
-				sourceTask.datePrecision = { ...sourceTask.datePrecision, [dateFieldName]: 'day' };
-				await updateTaskDateField(app, sourceTask, dateFieldName, today, plugin.settings.enabledTaskFormats);
+				const dayTask = { ...sourceTask, datePrecision: { ...sourceTask.datePrecision, [dateFieldName]: 'day' } };
+				await updateTaskDateField(app, dayTask, dateFieldName, today, plugin.settings.enabledTaskFormats);
+				await plugin.taskCache.refreshFile(sourceTask.filePath);
+				useCalendarStore.getState().notifyTasksUpdated(
+					plugin.taskCache.getAllTasks(), sourceTask.filePath
+				);
 				Logger.debug('DailyTimelinePanel', 'Task set to all-day via drag-drop', { taskId });
 			} catch (error) {
 				Logger.error('DailyTimelinePanel', 'Error setting task to all-day:', error);
