@@ -69,13 +69,39 @@ const buildInitialFilters = (): Record<ViewScope, ViewFilterState> => {
 	}, {} as Record<ViewScope, ViewFilterState>);
 };
 
+const VIEW_FILTERS_KEY = 'gantt-calendar-view-filters';
+
+/** 从 localStorage 恢复上次会话的筛选条件 */
+function loadPersistedFilters(): Record<ViewScope, ViewFilterState> {
+	try {
+		const raw = localStorage.getItem(VIEW_FILTERS_KEY);
+		if (!raw) return buildInitialFilters();
+		const parsed = JSON.parse(raw) as Partial<Record<ViewScope, ViewFilterState>>;
+		// 合并：只覆盖有效 scope，缺失的 scope 用默认值
+		const base = buildInitialFilters();
+		for (const scope of Object.keys(base) as ViewScope[]) {
+			if (parsed[scope]) base[scope] = { ...base[scope], ...parsed[scope] };
+		}
+		return base;
+	} catch {
+		return buildInitialFilters();
+	}
+}
+
+/** 保存筛选条件到 localStorage */
+function persistFilters(filters: Record<ViewScope, ViewFilterState>): void {
+	try {
+		localStorage.setItem(VIEW_FILTERS_KEY, JSON.stringify(filters));
+	} catch { /* quota exceeded 等静默忽略 */ }
+}
+
 export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	viewType: 'year',
 	currentDate: new Date(),
 	tasks: [],
 	changedFilePath: undefined,
 	updateSeq: 0,
-	viewFilters: buildInitialFilters(),
+	viewFilters: loadPersistedFilters(),
 	settingsVersion: 0,
 	ganttScroll: null,
 
@@ -97,33 +123,29 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	refreshTasks: () => set((s) => ({ updateSeq: s.updateSeq + 1 })),
 
 	setStatusFilter: (scope, status) =>
-		set((s) => ({
-			viewFilters: {
-				...s.viewFilters,
-				[scope]: { ...s.viewFilters[scope], status },
-			},
-		})),
+		set((s) => {
+			const vf = { ...s.viewFilters, [scope]: { ...s.viewFilters[scope], status } };
+			persistFilters(vf);
+			return { viewFilters: vf };
+		}),
 	setTagFilter: (scope, tag) =>
-		set((s) => ({
-			viewFilters: {
-				...s.viewFilters,
-				[scope]: { ...s.viewFilters[scope], tag },
-			},
-		})),
+		set((s) => {
+			const vf = { ...s.viewFilters, [scope]: { ...s.viewFilters[scope], tag } };
+			persistFilters(vf);
+			return { viewFilters: vf };
+		}),
 	setSort: (scope, sort) =>
-		set((s) => ({
-			viewFilters: {
-				...s.viewFilters,
-				[scope]: { ...s.viewFilters[scope], sort },
-			},
-		})),
+		set((s) => {
+			const vf = { ...s.viewFilters, [scope]: { ...s.viewFilters[scope], sort } };
+			persistFilters(vf);
+			return { viewFilters: vf };
+		}),
 	applyFilter: (scope, status, tag, sort) =>
-		set((s) => ({
-			viewFilters: {
-				...s.viewFilters,
-				[scope]: { status, tag, sort },
-			},
-		})),
+		set((s) => {
+			const vf = { ...s.viewFilters, [scope]: { status, tag, sort } };
+			persistFilters(vf);
+			return { viewFilters: vf };
+		}),
 }));
 
 /**
