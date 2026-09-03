@@ -275,6 +275,12 @@
 		color: var(--interactive-accent);
 		background: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
 	}
+	/* 已选区胶囊位预留一行高度（与单枚胶囊等高）：首枚胶囊出现/消失时
+	   区块高度不变，避免面板整体抖动 */
+	.gc-tag-selector__selected-section .gc-tag-selector__pills {
+		min-height: 25px;
+		align-items: center;
+	}
 	.gc-edit-task-modal__buttons {
 		display: flex;
 		gap: 8px;
