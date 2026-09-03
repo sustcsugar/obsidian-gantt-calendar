@@ -871,16 +871,26 @@ export const SidebarClasses = {
 		taskList: bem(BLOCKS.SIDEBAR, 'task-list'),
 		taskItem: bem(BLOCKS.SIDEBAR, 'task-item'),
 		emptyState: bem(BLOCKS.SIDEBAR, 'empty-state'),
-		// 今日时间线
+		// 今日时间线（连续画布，与周视图同语义）
 		timeline: bem(BLOCKS.SIDEBAR, 'timeline'),
 		timelineHeader: bem(BLOCKS.SIDEBAR, 'timeline-header'),
 		timelineAllDay: bem(BLOCKS.SIDEBAR, 'timeline-allday'),
 		timelineAllDayLabel: bem(BLOCKS.SIDEBAR, 'timeline-allday-label'),
 		timelineAllDayTasks: bem(BLOCKS.SIDEBAR, 'timeline-allday-tasks'),
-		timelineTimeSlot: bem(BLOCKS.SIDEBAR, 'timeline-time-slot'),
+		timelineAllDayItem: bem(BLOCKS.SIDEBAR, 'timeline-allday-item'),
+		timelineAllDayTime: bem(BLOCKS.SIDEBAR, 'timeline-allday-time'),
+		timelineBody: bem(BLOCKS.SIDEBAR, 'timeline-body'),
+		timelineGutter: bem(BLOCKS.SIDEBAR, 'timeline-gutter'),
 		timelineTimeLabel: bem(BLOCKS.SIDEBAR, 'timeline-time-label'),
-		timelineTimeTasks: bem(BLOCKS.SIDEBAR, 'timeline-time-tasks'),
-		timelineSlotCreate: bem(BLOCKS.SIDEBAR, 'timeline-slot-create'),
+		timelineCanvas: bem(BLOCKS.SIDEBAR, 'timeline-canvas'),
+		timelineBlock: bem(BLOCKS.SIDEBAR, 'timeline-block'),
+		timelineBlockTime: bem(BLOCKS.SIDEBAR, 'timeline-block-time'),
+		timelineHandle: bem(BLOCKS.SIDEBAR, 'timeline-handle'),
+		timelineGhost: bem(BLOCKS.SIDEBAR, 'timeline-ghost'),
+		timelineGhostLabel: bem(BLOCKS.SIDEBAR, 'timeline-ghost-label'),
+		timelineGhostPlus: bem(BLOCKS.SIDEBAR, 'timeline-ghost-plus'),
+		timelineDropLine: bem(BLOCKS.SIDEBAR, 'timeline-drop-line'),
+		timelineDropPreview: bem(BLOCKS.SIDEBAR, 'timeline-drop-preview'),
 		timelineCurrentTime: bem(BLOCKS.SIDEBAR, 'timeline-current-time'),
 		// 下拉菜单
 		dropdown: 'sidebar-dropdown',
@@ -891,6 +901,14 @@ export const SidebarClasses = {
 	modifiers: {
 		taskListTab: bem(BLOCKS.SIDEBAR, undefined, 'task-list'),
 		timelineTab: bem(BLOCKS.SIDEBAR, undefined, 'timeline'),
+		// 今日时间线连续画布
+		timelineCanvasDragOver: bem(BLOCKS.SIDEBAR, 'timeline-canvas', 'drag-over'),
+		timelineBlockContinuesBefore: bem(BLOCKS.SIDEBAR, 'timeline-block', 'continues-before'),
+		timelineBlockContinuesAfter: bem(BLOCKS.SIDEBAR, 'timeline-block', 'continues-after'),
+		timelineBlockStacked: bem(BLOCKS.SIDEBAR, 'timeline-block', 'stacked'),
+		timelineHandleTop: bem(BLOCKS.SIDEBAR, 'timeline-handle', 'top'),
+		timelineHandleBottom: bem(BLOCKS.SIDEBAR, 'timeline-handle', 'bottom'),
+		timelineGhostDragging: bem(BLOCKS.SIDEBAR, 'timeline-ghost', 'dragging'),
 	},
 };
 
