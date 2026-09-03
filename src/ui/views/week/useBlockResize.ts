@@ -40,6 +40,18 @@ interface DragHandlers {
 	end: (e: MouseEvent) => void;
 }
 
+/**
+ * resize 手势进行中的模块级标志。
+ * 手柄 mousedown 已 stopPropagation，列内 hover 逻辑无法从事件流感知 resize——
+ * 直接导出探测函数（与 isContextMenuOpen 同模式），拖边缘期间不出"+ 可添加"ghost
+ */
+let resizeActive = false;
+
+/** 是否有块边缘 resize 手势正在进行 */
+export function isBlockResizing(): boolean {
+	return resizeActive;
+}
+
 export function useBlockResize(onCommit: BlockResizeCommit) {
 	const activeRef = useRef<ActiveResize | null>(null);
 	const handlersRef = useRef<DragHandlers | null>(null);
@@ -57,6 +69,7 @@ export function useBlockResize(onCommit: BlockResizeCommit) {
 			activeRef.current.tipEl.remove();
 			activeRef.current = null;
 		}
+		resizeActive = false;
 		setCssProps(document.body, { cursor: '', userSelect: '' });
 	}, []);
 
@@ -76,6 +89,7 @@ export function useBlockResize(onCommit: BlockResizeCommit) {
 		e.preventDefault();
 		e.stopPropagation();
 		detach(); // 防御：上一次手势未正常收尾时先解绑
+		resizeActive = true;
 
 		const tipEl = createDiv(WeekViewClasses.elements.resizeTip);
 		document.body.appendChild(tipEl);

@@ -31,7 +31,7 @@ import {
 	MIN_DURATION_MIN,
 	MINUTES_PER_DAY,
 } from './timelineModel';
-import { useBlockResize } from './useBlockResize';
+import { useBlockResize, isBlockResizing } from './useBlockResize';
 
 /** 全天行单行高度（卡片 24px + 间距 4px，与 CSS 令牌对应） */
 const ALLDAY_ROW_PX = 28;
@@ -539,8 +539,8 @@ function DayColumn({
 			hideGhost();
 			return;
 		}
-		// 菜单打开期间或时段已被占用：不出 hover 提示（点击仍可创建）
-		if (isContextMenuOpen() || isTimeBusy(minutes)) {
+		// 菜单打开 / 块边缘 resize 进行中 / 时段已被占用：不出 hover 提示（点击仍可创建）
+		if (isContextMenuOpen() || isBlockResizing() || isTimeBusy(minutes)) {
 			hideGhost();
 			return;
 		}
