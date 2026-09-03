@@ -128,6 +128,10 @@ export function MonthView(): JSX.Element {
 				}
 			}
 			await updateTaskDateField(app, sourceTask, dateField, newDate, plugin.settings.enabledTaskFormats);
+			await plugin.taskCache.refreshFile(sourceTask.filePath);
+			useCalendarStore.getState().notifyTasksUpdated(
+				plugin.taskCache.getAllTasks(), sourceTask.filePath
+			);
 		} catch (error) {
 			Logger.error('MonthView', 'Error updating task date:', error);
 			new Notice(i18n.t('views.dayView.updateDateFailed'));

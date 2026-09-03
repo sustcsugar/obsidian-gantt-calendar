@@ -228,6 +228,13 @@ export function TaskFormModal({
 				? { ...task, datePrecision: { ...datePrecision } }
 				: task;
 			await updateTaskProperties(app, taskToUpdate, updates, enabledFormats || []);
+			if (plugin?.taskCache) {
+				await plugin.taskCache.refreshFile(taskToUpdate.filePath);
+				const { useCalendarStore } = await import('../store/calendarStore');
+				useCalendarStore.getState().notifyTasksUpdated(
+					plugin.taskCache.getAllTasks(), taskToUpdate.filePath
+				);
+			}
 			onSuccess();
 			handleClose();
 			new Notice(i18n.t('modals.editTask.success'));
