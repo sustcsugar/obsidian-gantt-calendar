@@ -34,8 +34,13 @@ export class ViewManager {
 
 		void this.app.workspace.revealLeaf(leaf);
 
-		// 同时打开侧边栏视图
-		await activateSidebarView(this.app);
+		// 侧边栏仅在叶子尚不存在时顺带创建；已存在（哪怕当前被其他标签如
+		// 文件目录遮挡）不再激活，避免 ribbon 点击把用户切换走的侧边栏抢回来。
+		// 显式打开侧边栏请用 activateSidebarView（命令面板"打开侧边栏视图"）。
+		const sidebarLeaf = this.app.workspace.getLeavesOfType(GC_SIDEBAR_VIEW_ID)[0];
+		if (!sidebarLeaf) {
+			await activateSidebarView(this.app);
+		}
 	}
 
 	/**
