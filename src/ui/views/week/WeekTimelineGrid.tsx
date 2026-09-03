@@ -153,10 +153,11 @@ export function WeekTimelineGrid({
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
 		if (block.isPoint) {
-			// 点任务被 resize 即升级：原时刻成为另一端，新边缘成为对应端
+			// 点任务 resize 即升级为区间任务：按 WYSIWYG 提交拖拽预览所见的边界
+			// （被拖的边缘写入新时刻，另一边缘保持预览位置并落盘，前向/后向锚定通用）
 			if (edge === 'top') {
 				updates[startField] = atMinutes(day, newStartMin);
-				updates[endField] = block.start;
+				updates[endField] = block.end;
 			} else {
 				updates[startField] = block.start;
 				updates[endField] = atMinutes(day, newEndMin);
@@ -250,13 +251,15 @@ export function WeekTimelineGrid({
 			});
 			return;
 		}
+		// 单击 = 前向 1 小时区间：预填 startDate + dueDate（createdDate 由弹窗默认当日），
+		// 保存后为双时刻区间任务，渲染与 hover 虚拟框完全重合，不留空开始字段
 		const min = payload.min;
+		const endMin = Math.min(min + DEFAULT_POINT_DURATION_MIN, MINUTES_PER_DAY);
 		openCreateTaskModal({
 			app,
 			plugin,
 			targetDate: dayInfo.date,
-			targetHour: Math.floor(min / 60),
-			targetMinute: min % 60,
+			targetRange: { start: atMinutes(dayInfo.date, min), end: atMinutes(dayInfo.date, endMin) },
 			onSuccess: refreshTasks,
 		});
 	}, [app, plugin, days, atMinutes, refreshTasks]);
@@ -523,9 +526,12 @@ function DayColumn({
 		if (create) {
 			create.lastMin = minutes;
 			if (minutes !== create.anchorMin) create.moved = true;
-			const start = Math.min(create.anchorMin, minutes);
-			const end = Math.max(create.anchorMin, minutes) + (minutes === create.anchorMin ? MIN_DURATION_MIN : 0);
-			showGhost(start, end, true);
+			if (!create.moved) {
+				// 未超过一个吸附步长：维持 1 小时预览（按下瞬间不坍缩）
+				showGhost(create.anchorMin, create.anchorMin + DEFAULT_POINT_DURATION_MIN, true);
+				return;
+			}
+			showGhost(Math.min(create.anchorMin, minutes), Math.max(create.anchorMin, minutes), true);
 			return;
 		}
 		// 菜单打开期间或时段已被占用：不出 hover 提示（点击仍可创建）
@@ -567,7 +573,8 @@ function DayColumn({
 		e.preventDefault();
 		const anchorMin = minutesFromEvent(e.clientY);
 		createRef.current = { anchorMin, lastMin: anchorMin, moved: false };
-		showGhost(anchorMin, anchorMin + MIN_DURATION_MIN, true);
+		// 按下瞬间维持 hover 的 1 小时块（仅切换激活样式），拖动超步长后才变为选区
+		showGhost(anchorMin, anchorMin + DEFAULT_POINT_DURATION_MIN, true);
 		// 防御：上一手势未正常收尾时先解绑，避免 finishCreate 重复触发
 		document.removeEventListener('mouseup', finishCreate);
 		document.addEventListener('mouseup', finishCreate);
