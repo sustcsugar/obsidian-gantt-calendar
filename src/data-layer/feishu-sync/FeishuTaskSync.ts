@@ -1082,6 +1082,12 @@ export class FeishuTaskSync {
         const file = this.app.vault.getAbstractFileByPath(path);
         if (file instanceof TFile) return file;
 
+        // 确保父文件夹存在（支持子目录路径如 Projects/feishu-tasks.md）
+        const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+        if (parentPath && !this.app.vault.getAbstractFileByPath(parentPath)) {
+            await this.app.vault.createFolder(parentPath);
+        }
+
         // 自动创建目标文件
         await this.app.vault.create(path, '');
         const created = this.app.vault.getAbstractFileByPath(path);

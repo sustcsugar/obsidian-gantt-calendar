@@ -439,8 +439,8 @@
         "buttonText": "Fetch Task Lists"
       },
       "targetFile": {
-        "name": "Feishu Sync Target File",
-        "description": "New Feishu tasks will be synced to this file (auto-created if not exists)",
+        "name": "Feishu sync target file",
+        "description": "Tasks pulled from Feishu will be written to this Markdown file. Supports subdirectory paths (e.g. Projects/feishu-tasks.md). File and folders are auto-created if missing. Type a path or click the search icon to pick an existing file.",
         "placeholder": "gantt-calendar-feishu-sync.md"
       },
       "direction": {

@@ -440,7 +440,7 @@
       },
       "targetFile": {
         "name": "飞书同步目标文件",
-        "description": "飞书新任务将同步到此文件（不存在时自动创建）",
+        "description": "从飞书拉取的任务将写入此 Markdown 文件。支持子目录路径（如 Projects/feishu-tasks.md），文件或文件夹不存在时自动创建。在下方输入框中输入路径或点击搜索图标选择已有文件。",
         "placeholder": "gantt-calendar-feishu-sync.md"
       },
       "direction": {
