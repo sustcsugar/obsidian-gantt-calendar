@@ -212,15 +212,6 @@
 	box-shadow: var(--gc-elev-2);
 }
 
-/* 时间轴模式的卡片固定高度，悬停不浮动（保持网格行高稳定） */
-.gc-sidebar__timeline-time-tasks .gc-task-card:hover,
-.gc-week-view__time-tasks .gc-task-card:hover,
-.gc-week-view__allday-tasks .gc-task-card:hover,
-.gc-day-view__time-tasks .gc-task-card:hover {
-	transform: none;
-	box-shadow: none;
-}
-
 .gc-task-card__text {
 	flex: 1;
 	word-break: break-word;
@@ -231,13 +222,7 @@
 }
 
 /* Task Card Modifiers */
-.gc-task-card--task {
-	padding: 10px;
-	gap: 8px;
-	flex-wrap: wrap;
-	font-size: var(--gc-font-sm);
-}
-
+.gc-task-card--task,
 .gc-task-card--day {
 	padding: 10px;
 	gap: 8px;
@@ -262,11 +247,10 @@
 	margin-left: 0;
 }
 
-/* ========== 时间轴视图内的任务卡片 — 固定高度，单行不换行 ========== */
-.gc-sidebar__timeline-time-tasks .gc-task-card,
-.gc-week-view__time-tasks .gc-task-card,
-.gc-week-view__allday-tasks .gc-task-card,
-.gc-day-view__time-tasks .gc-task-card {
+/* ========== 时间轴变体卡片 — 固定高度，单行不换行 ========== */
+/* 由 config.variant='timeline' 声明（日/周视图时间格与各处全天区），
+   双类选择器保证覆盖 sidebar.css 等后加载文件中的单类视图修饰符规则 */
+.gc-task-card.gc-task-card--timeline {
 	height: var(--gc-tl-card-h);
 	padding: 2px 6px;
 	font-size: var(--gc-font-xs);
@@ -277,37 +261,31 @@
 	border-left-width: 2px;
 }
 
-.gc-sidebar__timeline-time-tasks .gc-task-card__text,
-.gc-week-view__time-tasks .gc-task-card__text,
-.gc-week-view__allday-tasks .gc-task-card__text,
-.gc-day-view__time-tasks .gc-task-card__text {
+/* 时间轴内悬停不浮动（保持网格行高稳定） */
+.gc-task-card.gc-task-card--timeline:hover {
+	transform: none;
+	box-shadow: none;
+}
+
+.gc-task-card--timeline .gc-task-card__text {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.gc-sidebar__timeline-time-tasks .gc-task-card__tags,
-.gc-week-view__time-tasks .gc-task-card__tags,
-.gc-week-view__allday-tasks .gc-task-card__tags,
-.gc-day-view__time-tasks .gc-task-card__tags {
+.gc-task-card--timeline .gc-task-card__tags {
 	flex-wrap: nowrap;
 	overflow: hidden;
 	flex-shrink: 0;
 	max-width: 40%;
 }
 
-.gc-sidebar__timeline-time-tasks .gc-task-card__times,
-.gc-week-view__time-tasks .gc-task-card__times,
-.gc-week-view__allday-tasks .gc-task-card__times,
-.gc-day-view__time-tasks .gc-task-card__times {
+.gc-task-card--timeline .gc-task-card__times {
 	flex-wrap: nowrap;
 	flex-shrink: 0;
 }
 
-.gc-sidebar__timeline-time-tasks .gc-task-card__checkbox,
-.gc-week-view__time-tasks .gc-task-card__checkbox,
-.gc-week-view__allday-tasks .gc-task-card__checkbox,
-.gc-day-view__time-tasks .gc-task-card__checkbox {
+.gc-task-card--timeline .gc-task-card__checkbox {
 	flex-shrink: 0;
 }
 
@@ -319,15 +297,14 @@
 	border-radius: 3px;
 }
 
-.gc-task-card--gantt {
-	padding: 8px 12px;
-	border-left: 3px solid var(--interactive-accent);
-	border-top: 1px solid var(--background-modifier-border);
-	border-right: 1px solid var(--background-modifier-border);
-	border-bottom: 1px solid var(--background-modifier-border);
-	display: flex;
-	align-items: center;
-	white-space: nowrap;
+/* 月视图小屏幕 - 限制标签显示 */
+.gc-task-card--month .gc-task-card__tags {
+	max-width: 100%;
+	overflow: hidden;
+}
+
+.gc-task-card--month .gc-tag {
+	max-width: 60px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }

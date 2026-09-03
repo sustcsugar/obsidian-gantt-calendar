@@ -78,6 +78,7 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 		const viewKey = `${config.viewModifier}View` as keyof typeof TaskCardClasses.modifiers;
 		const mod = TaskCardClasses.modifiers[viewKey];
 		if (mod) list.push(mod);
+		if (config.variant === 'timeline') list.push(TaskCardClasses.modifiers.timeline);
 		if (config.compact) list.push(TaskCardClasses.modifiers.compact);
 		if (virtual) list.push(TaskCardClasses.modifiers.virtual);
 		else if (task.repeat) list.push(TaskCardClasses.modifiers.recurring);
@@ -85,7 +86,7 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 		// 有自定义状态时添加 task-with-status，激活 CSS 变量卡片着色
 		if (task.status && !task.completed) list.push('task-with-status');
 		return list;
-	}, [config.viewModifier, config.compact, virtual, task.repeat, task.completed, task.status]);
+	}, [config.viewModifier, config.variant, config.compact, virtual, task.repeat, task.completed, task.status]);
 
 	// ===== 状态颜色 =====
 	const style = useMemo<CSSProperties | undefined>(() => {

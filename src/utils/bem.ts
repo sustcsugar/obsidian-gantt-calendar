@@ -146,7 +146,8 @@ export const TaskCardClasses = {
 		weekView: bem(BLOCKS.TASK_CARD, undefined, 'week'),
 		dayView: bem(BLOCKS.TASK_CARD, undefined, 'day'),
 		taskView: bem(BLOCKS.TASK_CARD, undefined, 'task'),
-		ganttView: bem(BLOCKS.TASK_CARD, undefined, 'gantt'),
+		// 布局变体修饰符（由 config.variant 声明，与视图修饰符正交）
+		timeline: bem(BLOCKS.TASK_CARD, undefined, 'timeline'),
 		// 状态修饰符
 		completed: bem(BLOCKS.TASK_CARD, undefined, 'completed'),
 		pending: bem(BLOCKS.TASK_CARD, undefined, 'pending'),

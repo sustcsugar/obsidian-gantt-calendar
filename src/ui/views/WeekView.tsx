@@ -89,6 +89,8 @@ export function WeekView(): JSX.Element {
 		showPriority: plugin.settings.weekViewShowPriority,
 		showTicktick: plugin.settings.weekViewShowTicktick,
 	}), [plugin.settings]);
+	// 时间轴模式（全天格 + 时间格）使用紧凑变体；平铺模式使用标准卡片
+	const timelineConfig = useMemo(() => ({ ...config, variant: 'timeline' as const }), [config]);
 
 	const weekData = useMemo(() => (
 		getWeekOfDate(currentDate, currentDate.getFullYear(), startOnMonday)
@@ -388,7 +390,7 @@ export function WeekView(): JSX.Element {
 										<TaskCard
 											key={taskKey(t)}
 											task={t}
-											config={config}
+											config={timelineConfig}
 											targetDate={day.date}
 											onClick={() => tooltip.hide()}
 											onRefresh={handleCardRefresh}
@@ -427,7 +429,7 @@ export function WeekView(): JSX.Element {
 												<TaskCard
 													key={taskKey(t)}
 													task={t}
-													config={config}
+													config={timelineConfig}
 													targetDate={day.date}
 													onClick={() => tooltip.hide()}
 													onRefresh={handleCardRefresh}

@@ -4,7 +4,14 @@ import type { App } from 'obsidian';
 /**
  * 视图修饰符类型
  */
-export type ViewModifier = 'task' | 'day' | 'week' | 'month' | 'gantt' | 'sidebar';
+export type ViewModifier = 'task' | 'day' | 'week' | 'month' | 'sidebar';
+
+/**
+ * 卡片布局变体
+ * - timeline：时间轴紧凑布局（固定高度、单行省略），用于日/周视图时间格与各处全天区
+ * - 缺省：标准卡片布局
+ */
+export type CardVariant = 'timeline';
 
 /**
  * 时间字段显示配置
@@ -74,6 +81,8 @@ export interface TaskCardConfig {
 	compact?: boolean;
 	/** 描述最大行数 */
 	maxLines?: number;
+	/** 布局变体（时间轴内的卡片传 'timeline'） */
+	variant?: CardVariant;
 
 	/** ===== 内容过滤 ===== */
 

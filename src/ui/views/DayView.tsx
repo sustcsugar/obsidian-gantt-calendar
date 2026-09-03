@@ -44,7 +44,7 @@ export function DayView(): JSX.Element {
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
 
 	const config = useMemo(() => ({ ...DayViewConfig }), []);
-	const timelineConfig = useMemo(() => ({ ...DayViewConfig, enableDrag: true }), []);
+	const timelineConfig = useMemo(() => ({ ...DayViewConfig, enableDrag: true, variant: 'timeline' as const }), []);
 
 	const normalized = useMemo(() => {
 		const d = new Date(currentDate);
@@ -334,7 +334,7 @@ export function DayView(): JSX.Element {
 		}
 
 		return (
-			<>
+			<div className={DayViewClasses.elements.taskList}>
 				{dayTasks.sorted.map((t) => (
 					<TaskCard
 						key={taskKey(t)}
@@ -344,7 +344,7 @@ export function DayView(): JSX.Element {
 						onRefresh={handleCardRefresh}
 					/>
 				))}
-			</>
+			</div>
 		);
 	};
 

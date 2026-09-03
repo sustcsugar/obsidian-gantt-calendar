@@ -42,6 +42,8 @@ export function DailyTimelinePanel(): JSX.Element {
 	const today = useMemo(() => getTodayInTimezone(), []);
 	const allTasks = tasks;
 	const config = useMemo(() => buildSidebarConfig(plugin.settings), [plugin.settings]);
+	// 时间线内（全天区 + 时段格）统一使用紧凑变体，与周/日视图时间轴一致
+	const timelineConfig = useMemo(() => ({ ...config, variant: 'timeline' as const }), [config]);
 
 	// 今天的任务（未取消 + dueDate 今天）
 	const todayTasks = useMemo(
@@ -189,7 +191,7 @@ export function DailyTimelinePanel(): JSX.Element {
 							<TaskCard
 								key={`${task.filePath}:${task.lineNumber}`}
 								task={task}
-								config={config}
+								config={timelineConfig}
 								onClick={onCardClick}
 							/>
 						))}
@@ -210,7 +212,7 @@ export function DailyTimelinePanel(): JSX.Element {
 							hour={hour}
 							isCurrentHour={isCurrentHour}
 							tasks={hourTasks}
-							config={config}
+							config={timelineConfig}
 							onDropTask={(taskId) => handleSlotDrop(hour, taskId)}
 							onCreateTask={() => {
 								openCreateTaskModal({
@@ -262,16 +264,16 @@ function TimeSlot({ hour, isCurrentHour, tasks, config, onDropTask, onCreateTask
 				{`${String(hour).padStart(2, '0')}:00`}
 			</div>
 			{tasks.length > 0 ? (
-				<div className={SidebarClasses.elements.timelineTimeTasks}>
-					{tasks.map((task) => (
-						<TaskCard
-							key={`${task.filePath}:${task.lineNumber}`}
-							task={task}
-							config={config}
-							onClick={openFile}
-						/>
-					))}
-				</div>
+					<div className={SidebarClasses.elements.timelineTimeTasks}>
+						{tasks.map((task) => (
+							<TaskCard
+								key={`${task.filePath}:${task.lineNumber}`}
+								task={task}
+								config={config}
+								onClick={openFile}
+							/>
+						))}
+					</div>
 			) : (
 				<SlotCreateButton onCreateTask={onCreateTask} />
 			)}

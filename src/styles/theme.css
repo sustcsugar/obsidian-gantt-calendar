@@ -4,57 +4,14 @@
    ======================================== */
 
 /* 7.1 Task Status States (高特指性) */
+/* 修饰符驱动，不依赖视图容器：任务视图/日视图/周视图/月视图/侧边栏行为一致 */
 
-
-/* Task View 容器 */
-.gc-view--task .gc-task-card--task.gc-task-card--completed {
+.gc-task-card--completed {
 	opacity: 0.65;
 	border-left-color: var(--gc-task-completed);
 }
 
-.gc-view--task .gc-task-card--task.gc-task-card--pending {
-	border-left-color: var(--gc-task-pending);
-}
-
-/* Day View 容器 */
-.gc-day-view__task-list .gc-task-card--day.gc-task-card--completed {
-	opacity: 0.65;
-	border-left-color: var(--gc-task-completed);
-}
-
-.gc-day-view__task-list .gc-task-card--day.gc-task-card--pending {
-	border-left-color: var(--gc-task-pending);
-}
-
-
-/* Week View */
-.gc-week-view__tasks-grid .gc-task-card--week.gc-task-card--completed {
-	opacity: 0.6;
-	border-left-color: var(--gc-task-completed);
-}
-
-.gc-week-view__tasks-grid .gc-task-card--week.gc-task-card--pending {
-	border-left-color: var(--gc-task-pending);
-}
-
-/* Month View */
-/* BEM类名: gc-month-view__tasks */
-.gc-month-view__tasks .gc-task-card--month.gc-task-card--completed {
-	opacity: 0.5;
-	border-left-color: var(--gc-task-completed);
-}
-
-.gc-month-view__tasks .gc-task-card--month.gc-task-card--pending {
-	border-left-color: var(--gc-task-pending);
-}
-
-/* Gantt View */
-.gc-task-card--gantt.gc-task-card--completed {
-	opacity: 0.7;
-	border-left-color: var(--gc-task-completed);
-}
-
-.gc-task-card--gantt.gc-task-card--pending {
+.gc-task-card--pending {
 	border-left-color: var(--gc-task-pending);
 }
 
@@ -66,17 +23,12 @@
 
 .gc-task-card--week:hover {
 	transform: translateX(2px);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .gc-task-card--month:hover {
 	transform: translateX(1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.gc-task-card--gantt:hover {
-	transform: translateX(2px);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .gc-task-card--task:hover {
@@ -103,33 +55,15 @@
 	border-left: 3px solid var(--interactive-accent);
 }
 
-/* 虚拟周期实例：虚线边框、降低不透明度 */
+/* 虚拟周期实例：accent 虚线边框、降低不透明度（所有视图统一） */
 .gc-task-card--virtual {
 	opacity: 0.7;
-	border-left: 2px dashed var(--text-muted);
+	border-left: 2px dashed var(--interactive-accent);
 	cursor: pointer;
 }
 
 .gc-task-card--virtual:hover {
 	opacity: 0.9;
-}
-
-/* 周视图虚拟实例 */
-.gc-week-view__tasks-grid .gc-task-card--week.gc-task-card--virtual {
-	opacity: 0.7;
-	border-left: 2px dashed var(--interactive-accent);
-}
-
-/* 月视图虚拟实例 */
-.gc-month-view__tasks .gc-task-card--month.gc-task-card--virtual {
-	opacity: 0.65;
-	border-left: 1px dashed var(--interactive-accent);
-}
-
-/* 日视图虚拟实例 */
-.gc-day-view__task-list .gc-task-card--day.gc-task-card--virtual {
-	opacity: 0.75;
-	border-left: 2px dashed var(--interactive-accent);
 }
 
 /* 周期指示器 */
@@ -304,11 +238,7 @@
 
 /* 7.6 Text Decoration (已完成任务) */
 /* 排除自定义状态的已完成任务，使用自定义文字颜色 */
-.gc-day-view__task-list .gc-task-card--day.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
-.gc-week-view__tasks-grid .gc-task-card--week.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
-.gc-month-view__tasks .gc-task-card--month.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
-.gc-view--task .gc-task-card--task.gc-task-card--completed:not(.task-with-status) .gc-task-card__text,
-.gc-task-card--gantt.gc-task-card--completed:not(.task-with-status) .gc-task-card__text {
+.gc-task-card--completed:not(.task-with-status) .gc-task-card__text {
 	text-decoration: line-through;
 	color: var(--text-muted);
 }
