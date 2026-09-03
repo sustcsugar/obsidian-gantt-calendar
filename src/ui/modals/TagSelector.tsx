@@ -3,6 +3,8 @@ import type { GCTask } from '../../types';
 import { i18n } from '../../i18n/i18n';
 import { TagPill } from '../../components/tagPill';
 import { TagClasses, TagSelectorClasses } from '../../utils/bem';
+import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
+import type { TagNode } from '../../tasks/tags/TagHierarchy';
 
 export interface TagSelectorProps {
 	/** 所有任务（用于计算推荐标签） */
@@ -65,23 +67,32 @@ export function TagSelector({ allTasks, initialTags, onChange }: TagSelectorProp
 
 	return (
 		<div>
-			{/* 推荐标签区域 */}
+			{/* 推荐标签区域（树形层级） */}
 			<div className={TagSelectorClasses.elements.recommendedSection}>
 				<small className={TagSelectorClasses.elements.label}>{i18n.t('modals.createTask.tags.recommendedLabel')}</small>
-				<div className={TagSelectorClasses.elements.grid}>
-					{recommendedTags.length === 0 ? (
-						<small style={{ opacity: 0.5 }}>{i18n.t('modals.createTask.tags.noRecommended')}</small>
-					) : (
-						recommendedTags.map(tag => (
-							<SelectableTagPill
-								key={tag}
-								label={tag}
-								selected={selectedTags.has(tag)}
-								onClick={() => toggleTag(tag)}
-							/>
-						))
-					)}
-				</div>
+				{recommendedTags.length === 0 ? (
+					<small style={{ opacity: 0.5 }}>{i18n.t('modals.createTask.tags.noRecommended')}</small>
+				) : (() => {
+					// 构建标签树并扁平化（含缩进层级信息）
+					const tree = buildTagHierarchy(recommendedTags);
+					const flatten = (nodes: TagNode[], level: number): Array<{ tag: TagNode; level: number }> =>
+						nodes.flatMap(n => [{ tag: n, level }, ...flatten(n.children, level + 1)]);
+					const flat = flatten(tree, 0);
+
+					return (
+						<div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+							{flat.map(({ tag: node, level }) => (
+								<div key={node.fullPath} style={{ paddingLeft: `${level * 16}px` }}>
+									<SelectableTagPill
+										label={node.fullPath}
+										selected={selectedTags.has(node.fullPath)}
+										onClick={() => toggleTag(node.fullPath)}
+									/>
+								</div>
+							))}
+						</div>
+					);
+				})()}
 			</div>
 
 			{/* 已选标签区域 */}

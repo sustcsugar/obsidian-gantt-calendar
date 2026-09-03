@@ -13,6 +13,8 @@ import { DEFAULT_TASK_STATUSES } from '../../tasks/taskStatus';
 import { Icon } from './Icon';
 import { DropdownMenu, type MenuItemDef, type DropdownMenuSection } from './DropdownMenu';
 import type { DateFieldType, GanttCalendarSettings } from '../../settings/types';
+import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
+import type { TagNode } from '../../tasks/tags/TagHierarchy';
 
 const VIEW_BUTTONS: Array<{ type: CalendarViewType; icon: string }> = [
 	{ type: 'day', icon: 'sun' },
@@ -170,20 +172,41 @@ export function ToolbarBar(): JSX.Element {
 			},
 		}));
 
-		const tagItems: MenuItemDef[] = allTags.length === 0
-			? [{ key: '__empty__', title: i18n.t('toolbar.tagFilter.empty'), disabled: true }]
-			: allTags.map((tag) => ({
-					key: tag,
-					title: `#${tag}`,
-					checked: selected.includes(tag),
+		// 树形标签菜单：按层级缩进展示，父节点选中时级联子节点
+		const flattenTree = (nodes: TagNode[], level: number): MenuItemDef[] => {
+			const items: MenuItemDef[] = [];
+			for (const node of nodes) {
+				const indent = ' '.repeat(level * 4);
+				const prefix = node.children.length > 0 ? '▸ ' : '';
+				const childPaths = node.children.map((c: TagNode) => c.fullPath);
+				const isSelected = selected.includes(node.fullPath) ||
+					(childPaths.length > 0 && childPaths.every(p => selected.includes(p)));
+
+				items.push({
+					key: `tag-${node.fullPath}`,
+					title: `${indent}${prefix}#${node.name}`,
+					checked: isSelected,
 					keepOpen: true,
 					onClick: () => {
-						const next = selected.includes(tag)
-							? selected.filter((t) => t !== tag)
-							: [...selected, tag];
+						const tagsToToggle = [node.fullPath, ...childPaths];
+						let next = [...selected];
+						if (tagsToToggle.every(t => next.includes(t))) {
+							next = next.filter(t => !tagsToToggle.includes(t));
+						} else {
+							for (const t of tagsToToggle) { if (!next.includes(t)) next.push(t); }
+						}
 						setTagFilter(scope, { selectedTags: next, operator });
 					},
-				}));
+				});
+				if (node.children.length > 0) items.push(...flattenTree(node.children, level + 1));
+			}
+			return items;
+		};
+
+		const tree = buildTagHierarchy(allTags);
+		const tagItems: MenuItemDef[] = allTags.length === 0
+			? [{ key: '__empty__', title: i18n.t('toolbar.tagFilter.empty'), disabled: true }]
+			: flattenTree(tree, 0);
 
 		return [{ items: operatorItems }, { items: tagItems }];
 	};
