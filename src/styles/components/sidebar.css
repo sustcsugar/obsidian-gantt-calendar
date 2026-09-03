@@ -1,5 +1,9 @@
-   /* ============================================
-   侧边栏视图样式
+/* ============================================
+   侧边栏视图样式（Plane 风格）
+   层级靠表面 + hairline 边框表达；导航/列表
+   hover 与 active 用中性 wash，不用 accent；
+   任务卡 = Plane kanban 卡解剖（8px 圆角 +
+   1px 边框 + 极轻投影 + hover 边框加深）
    ============================================ */
 
 .gc-sidebar {
@@ -9,36 +13,40 @@
 	overflow: hidden;
 }
 
-/* Tab 切换栏 */
+/* Tab 切换栏：Plane 导航药丸（无下边框、中性 active 块） */
 .gc-sidebar__tab-bar {
 	display: flex;
 	gap: 2px;
-	padding: 8px 8px 0;
-	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 8px 8px 4px;
 	flex-shrink: 0;
 }
 
 .gc-sidebar__tab-btn {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	padding: 6px 12px;
+	gap: 6px;
+	padding: 5px 10px;
 	font-size: 12px;
+	font-weight: 500;
 	color: var(--text-muted);
 	cursor: pointer;
-	border-radius: 6px 6px 0 0;
-	transition: color 0.15s, background-color 0.15s;
+	border-radius: var(--gc-radius-xs);
+	transition:
+		color var(--gc-dur-fast) var(--gc-ease-out),
+		background-color var(--gc-dur-fast) var(--gc-ease-out);
 	white-space: nowrap;
+	user-select: none;
 }
 
 .gc-sidebar__tab-btn:hover {
 	color: var(--text-normal);
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 }
 
+/* active = 中性背景块 + 文字提亮（Plane/Linear 同款，不用 accent） */
 .gc-sidebar__tab-btn--active {
-	color: var(--text-accent);
-	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	background-color: var(--gc-active-wash);
 	font-weight: 600;
 }
 
@@ -46,7 +54,7 @@
 .gc-sidebar__content {
 	flex: 1;
 	overflow-y: auto;
-	padding: 8px;
+	padding: 10px 8px;
 }
 
 /* 搜索框 */
@@ -56,13 +64,14 @@
 
 .gc-sidebar__search-input input {
 	width: 100%;
-	padding: 6px 10px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
+	padding: 5px 10px;
+	border: 1px solid var(--gc-border-hairline);
+	border-radius: var(--gc-radius-sm);
 	background: var(--background-primary);
 	color: var(--text-normal);
 	font-size: 13px;
 	outline: none;
+	transition: border-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-sidebar__search-input input:focus {
@@ -83,12 +92,17 @@
 
 .gc-sidebar__filter-bar .clickable-icon {
 	padding: 4px;
-	border-radius: 4px;
+	border-radius: var(--gc-radius-xs);
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
+}
+
+.gc-sidebar__filter-bar .clickable-icon:hover {
+	background-color: var(--gc-hover-wash);
 }
 
 .gc-sidebar__filter-bar .has-active-filter {
 	color: var(--interactive-accent);
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-accent-soft);
 }
 
 /* 下拉菜单 */
@@ -98,10 +112,10 @@
 	left: 0;
 	z-index: 100;
 	background: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
+	border: 1px solid var(--gc-border-hairline);
+	border-radius: var(--gc-radius-sm);
 	padding: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	box-shadow: var(--gc-elev-3);
 	min-width: 120px;
 }
 
@@ -109,19 +123,22 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 4px 8px;
+	padding: 5px 8px;
 	cursor: pointer;
-	border-radius: 4px;
+	border-radius: var(--gc-radius-xs);
 	font-size: 13px;
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .sidebar-dropdown-item:hover {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 }
 
+/* 选中项：中性背景块 + 文字提亮 */
 .sidebar-dropdown-item.is-selected {
-	background-color: var(--background-modifier-active-hover);
-	color: var(--text-accent);
+	background-color: var(--gc-active-wash);
+	color: var(--text-normal);
+	font-weight: 500;
 }
 
 .sidebar-dropdown-item button.is-selected {
@@ -134,18 +151,19 @@
 .gc-sidebar__task-list {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 6px;
 }
 
 /* 任务项在侧边栏中更紧凑 */
 .gc-sidebar__task-item {
 	padding: 6px 8px;
-	border-radius: 6px;
+	border-radius: var(--gc-radius-sm);
 	cursor: grab;
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-sidebar__task-item:hover {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 }
 
 /* 空状态 */
@@ -158,23 +176,30 @@
 	font-size: 13px;
 }
 
-/* 任务卡片侧边栏修饰符 */
+/* 任务卡片侧边栏修饰符 — Plane kanban 卡解剖：
+   hairline 边框 + 极轻投影，hover 边框加深（背景不变） */
 .gc-task-card--sidebar {
-	padding: 6px 8px;
+	padding: 8px 10px;
 	font-size: 12px;
-	border-radius: 6px;
-	border: 1px solid transparent;
-	transition: background-color 0.15s, border-color 0.15s;
+	border-radius: var(--gc-radius-sm);
+	border: 1px solid var(--gc-border-hairline);
+	box-shadow: var(--gc-card-shadow);
+	transition:
+		background-color var(--gc-dur-fast) var(--gc-ease-out),
+		border-color var(--gc-dur-fast) var(--gc-ease-out),
+		box-shadow var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-task-card--sidebar:hover {
-	background-color: var(--background-modifier-hover);
-	border-color: var(--background-modifier-border);
+	box-shadow: var(--gc-card-shadow-hover);
+	border-top-color: var(--gc-border-strong);
+	border-right-color: var(--gc-border-strong);
+	border-bottom-color: var(--gc-border-strong);
 }
 
 .gc-task-card--sidebar .gc-task-card__text {
 	font-size: 12px;
-	line-height: 1.4;
+	line-height: 1.5;
 }
 
 .gc-task-card--sidebar .gc-task-card__time-badge {
@@ -198,8 +223,9 @@
 .gc-sidebar__timeline-allday {
 	margin-bottom: 12px;
 	padding: 4px;
-	border-radius: 6px;
+	border-radius: var(--gc-radius-sm);
 	background-color: var(--background-primary-alt);
+	border: 1px solid var(--gc-border-hairline);
 }
 
 .gc-sidebar__timeline-allday-label {
@@ -230,12 +256,13 @@
 	gap: 8px;
 	height: var(--gc-tl-slot-h);
 	overflow: hidden;
-	border-top: 1px solid var(--background-modifier-border);
+	border-top: 1px solid var(--gc-border-hairline);
 	position: relative;
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-sidebar__timeline-time-slot.is-current-hour {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 }
 
 .gc-sidebar__timeline-time-label {
@@ -245,6 +272,7 @@
 	color: var(--text-muted);
 	text-align: right;
 	padding-top: 2px;
+	user-select: none;
 }
 
 .gc-sidebar__timeline-time-tasks {
@@ -280,14 +308,14 @@
 
 /* 时间格拖放高亮 */
 .gc-sidebar__timeline-time-slot.gc-sidebar__time-slot--drag-over {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 	outline: 2px dashed var(--interactive-accent);
 	outline-offset: -2px;
 }
 
 /* 全天区域拖放高亮 */
 .gc-sidebar__timeline-allday.gc-sidebar__all-day--drag-over {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 	outline: 2px dashed var(--interactive-accent);
 	outline-offset: -2px;
 	border-radius: 4px;
@@ -300,12 +328,12 @@
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	border-radius: 4px;
-	transition: background-color 0.15s;
+	border-radius: var(--gc-radius-xs);
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-sidebar__timeline-slot-create:hover {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 }
 
 .gc-sidebar__timeline-slot-create .lucide-plus {
@@ -329,13 +357,13 @@
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	border-radius: 4px;
-	transition: background-color 0.15s;
+	border-radius: var(--gc-radius-xs);
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-day-view__slot-create:hover,
 .gc-week-view__slot-create:hover {
-	background-color: var(--background-modifier-hover);
+	background-color: var(--gc-hover-wash);
 }
 
 .gc-day-view__slot-create .lucide-plus,
@@ -344,7 +372,7 @@
 	height: 18px;
 	color: var(--text-muted);
 	opacity: 0;
-	transition: opacity 0.15s, color 0.15s;
+	transition: opacity var(--gc-dur-fast) var(--gc-ease-out), color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
 .gc-day-view__slot-create:hover .lucide-plus,

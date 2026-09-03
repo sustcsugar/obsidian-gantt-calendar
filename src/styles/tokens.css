@@ -61,6 +61,16 @@ Author: sugar
 	--gc-status-canceled: var(--color-orange);
 	--gc-status-overdue: var(--color-red);
 
+	/* 中性交互洗色（Plane 风格：导航/列表 hover 与 active 用中性背景块，不用 accent）
+	   浅色=黑系、深色=白系，数值对齐 Plane bg-layer-transparent 三态 */
+	--gc-hover-wash: rgba(0, 0, 0, 0.04);
+	--gc-active-wash: rgba(0, 0, 0, 0.08);
+	--gc-selected-wash: rgba(0, 0, 0, 0.10);
+
+	/* Plane raised 卡片阴影：rest 极轻、hover 微升（深色主题自动加重） */
+	--gc-card-shadow: 0 1px 6px -1px rgb(41 47 61 / 0.03), 0 1px 4px rgb(41 47 61 / 0.04);
+	--gc-card-shadow-hover: 0 1px 2px -1px rgb(41 47 61 / 0.06), 0 1px 3px rgb(41 47 61 / 0.05);
+
 	/* 圆角（现代圆润风：基准上调，卡片 14px / 格子 10px / 药丸 full） */
 	--gc-radius-xs: 6px;
 	--gc-radius-sm: 8px;
@@ -131,6 +141,11 @@ Author: sugar
 	--gc-border-hairline: rgba(255, 255, 255, 0.09);
 	--gc-accent-soft: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
 	--gc-accent-wash: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+	--gc-hover-wash: rgba(255, 255, 255, 0.05);
+	--gc-active-wash: rgba(255, 255, 255, 0.07);
+	--gc-selected-wash: rgba(255, 255, 255, 0.10);
+	--gc-card-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.20), 0 1px 4px rgb(0 0 0 / 0.25);
+	--gc-card-shadow-hover: 0 1px 2px -1px rgb(0 0 0 / 0.25), 0 1px 3px rgb(0 0 0 / 0.30);
 	--gc-elev-1: 0 1px 2px rgba(0, 0, 0, 0.35);
 	--gc-elev-2: 0 2px 6px rgba(0, 0, 0, 0.40);
 	--gc-elev-3: 0 4px 12px rgba(0, 0, 0, 0.45);
