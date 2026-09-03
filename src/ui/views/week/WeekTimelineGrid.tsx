@@ -4,7 +4,7 @@ import { Notice } from 'obsidian';
 import type { GCTask } from '../../../types';
 import type { DateFieldType } from '../../../settings/types';
 import type { TaskCardConfig } from '../../../components/TaskCard/TaskCardConfig';
-import { WeekViewClasses, setCssProps } from '../../../utils/bem';
+import { WeekViewClasses, ContextMenuClasses, setCssProps } from '../../../utils/bem';
 import { usePlugin, useApp } from '../../pluginContext';
 import { useTaskTooltip } from '../../components/TooltipProvider';
 import { TaskCard } from '../../components/TaskCard';
@@ -432,6 +432,16 @@ function isInsideBlock(target: EventTarget | null): boolean {
 	return !!(target instanceof Element && target.closest(`.${WeekViewClasses.elements.timeBlock}`));
 }
 
+/**
+ * 页面上是否存在打开的右键菜单。
+ * ContextMenuTrigger 会 stopPropagation 掉 contextmenu 事件（列内收不到），
+ * 菜单又 portal 到 body 且其 mousemove 会沿 React 树冒泡进列内——
+ * 只能直接探测 DOM，不能依赖事件冒泡传递"菜单已打开"状态
+ */
+function isContextMenuOpen(): boolean {
+	return !!document.querySelector(`.${ContextMenuClasses.container}`);
+}
+
 interface DayColumnProps {
 	dayIndex: number;
 	day: WeekTimelineDayInfo;
@@ -466,22 +476,6 @@ function DayColumn({
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
 	/** 拖拽选区创建状态（mousedown 于空白处时激活；moved 以像素位移判定，防点击抖动） */
 	const createRef = useRef<{ anchorMin: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
-	/** 右键菜单打开期间抑制 ghost/创建手势（菜单 portal 到 body，但事件仍沿 React 树冒泡进列内） */
-	const menuOpenRef = useRef(false);
-
-	// 菜单关闭（点击菜单项/外部/Escape）后恢复。
-	// 必须在 click 而非 mousedown 清零：菜单项的 mousedown 会经 React portal 冒泡进
-	// handleMouseDown，若 mousedown 阶段就清零，该次按下会被误判为空白创建手势，
-	// mouseup 时与菜单命令同时弹窗（编辑+创建双面板）
-	useEffect(() => {
-		const clear = () => { menuOpenRef.current = false; };
-		document.addEventListener('click', clear, true);
-		document.addEventListener('keydown', clear, true);
-		return () => {
-			document.removeEventListener('click', clear, true);
-			document.removeEventListener('keydown', clear, true);
-		};
-	}, []);
 
 	const minutesFromEvent = useCallback((clientY: number): number => {
 		const col = colRef.current;
@@ -509,12 +503,6 @@ function DayColumn({
 		const ghost = ghostRef.current;
 		if (ghost) setCssProps(ghost, { display: 'none' });
 	}, []);
-
-	// 右键（气泡自卡片冒泡）：菜单打开期间不再提示"点击添加任务"
-	const handleContextMenu = useCallback(() => {
-		menuOpenRef.current = true;
-		hideGhost();
-	}, [hideGhost]);
 
 	/** hover 时段 [min, min+默认时长) 是否与任一已有块重叠（重叠则不显示"+ 可添加"提示） */
 	const isTimeBusy = useCallback((min: number): boolean => {
@@ -544,8 +532,15 @@ function DayColumn({
 			showGhost(Math.min(create.anchorMin, minutes), Math.max(create.anchorMin, minutes), true);
 			return;
 		}
+		// DOM 物理包含校验：portal 浮层（右键菜单/弹窗）的 mousemove 虽从 React 树冒泡进列内，
+		// 但其目标不在本列 DOM 中，不算画布 hover（contextmenu 被 trigger 截断，菜单状态只能直接探测）
+		const col = colRef.current;
+		if (!col || !col.contains(e.target as Node)) {
+			hideGhost();
+			return;
+		}
 		// 菜单打开期间或时段已被占用：不出 hover 提示（点击仍可创建）
-		if (menuOpenRef.current || isTimeBusy(minutes)) {
+		if (isContextMenuOpen() || isTimeBusy(minutes)) {
 			hideGhost();
 			return;
 		}
@@ -575,8 +570,8 @@ function DayColumn({
 	const handleMouseDown = useCallback((e: ReactMouseEvent) => {
 		if (e.button !== 0 || isInsideBlock(e.target)) return;
 		// 菜单打开期间：列内的首次点击仅负责关闭菜单，不启动创建
-		if (menuOpenRef.current) return;
-		// DOM 物理包含校验：portal 浮层（右键菜单/tooltip）的事件虽从 React 树冒泡进列内，
+		if (isContextMenuOpen()) return;
+		// DOM 物理包含校验：portal 浮层（右键菜单/弹窗）的事件虽从 React 树冒泡进列内，
 		// 但其目标不在本列 DOM 中，不能视为画布上的按下
 		const col = colRef.current;
 		if (!col || !col.contains(e.target as Node)) return;
@@ -627,7 +622,6 @@ function DayColumn({
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
 			onMouseDown={handleMouseDown}
-			onContextMenu={handleContextMenu}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
