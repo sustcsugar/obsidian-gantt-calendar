@@ -1,6 +1,6 @@
 /* ========================================
-   DateTimePicker（Linear 风格日期时间选择器）
-   可键入输入框 + 日历弹层（预设行/月份网格/时间输入/清除）
+   DateTimePicker（Ant Design showTime 面板复刻）
+   触发输入框 + 面板：左日历 + 右时/分滚动列 + 此刻/确定
    ======================================== */
 
 .gc-date-time-picker {
@@ -95,13 +95,12 @@
 	height: 12px;
 }
 
-/* 日历弹层 */
+/* 面板：左日历 + 右时间列 */
 .gc-date-time-picker__popover {
 	position: absolute;
 	top: calc(100% + 4px);
 	left: 0;
 	z-index: 100;
-	width: 252px;
 	padding: 8px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--gc-radius-md, 10px);
@@ -109,7 +108,6 @@
 	box-shadow: var(--gc-elev-3, 0 4px 16px rgba(0, 0, 0, 0.12));
 }
 
-/* 定位修饰符：下方空间不足翻转到上方，右侧溢出改右对齐 */
 .gc-date-time-picker__popover--top {
 	top: auto;
 	bottom: calc(100% + 4px);
@@ -120,36 +118,15 @@
 	right: 0;
 }
 
-/* 快捷预设行（Linear 同款：今天/明天/周末/下周） */
-.gc-date-time-picker__presets {
+.gc-date-time-picker__body {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-	margin-bottom: 8px;
-	padding-bottom: 8px;
-	border-bottom: 1px solid var(--background-modifier-border);
+	align-items: stretch;
+	gap: 8px;
 }
 
-.gc-date-time-picker__preset {
-	padding: 2px 8px;
-	border: 1px solid transparent;
-	border-radius: var(--gc-radius-full, 999px);
-	background: var(--background-secondary);
-	color: var(--text-muted);
-	font-size: 11px;
-	cursor: pointer;
-	transition: background-color var(--gc-dur-fast, 0.1s) ease,
-		color var(--gc-dur-fast, 0.1s) ease;
-}
-
-.gc-date-time-picker__preset:hover {
-	background: var(--gc-hover-wash, var(--background-modifier-hover));
-	color: var(--text-normal);
-}
-
-.gc-date-time-picker__preset--active {
-	background: var(--gc-accent-wash, color-mix(in srgb, var(--interactive-accent) 14%, transparent));
-	color: var(--interactive-accent);
+.gc-date-time-picker__calendar {
+	width: 224px;
+	flex-shrink: 0;
 }
 
 /* 月份头部：« < 标签 > » */
@@ -193,7 +170,7 @@
 	height: 13px;
 }
 
-/* 星期表头 */
+/* 星期表头 + 日期网格 */
 .gc-date-time-picker__weekdays,
 .gc-date-time-picker__day-grid {
 	display: grid;
@@ -211,7 +188,7 @@
 	color: var(--text-faint);
 }
 
-/* 日期格：中性洗色 hover，accent 只给选中态 */
+/* 日期格：antd 式——hover 中性底，今天 accent 文字，选中 accent 描边框 */
 .gc-date-time-picker__day-cell {
 	display: flex;
 	align-items: center;
@@ -236,69 +213,99 @@
 }
 
 .gc-date-time-picker__day-cell--today {
-	box-shadow: inset 0 0 0 1px var(--interactive-accent);
-}
-
-.gc-date-time-picker__day-cell--focused {
-	background: var(--gc-active-wash, var(--background-modifier-hover));
-}
-
-.gc-date-time-picker__day-cell--selected {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
+	color: var(--interactive-accent);
 	font-weight: 600;
 }
 
-.gc-date-time-picker__day-cell--selected:hover {
-	background: var(--interactive-accent);
-	opacity: 0.9;
+.gc-date-time-picker__day-cell--selected {
+	box-shadow: inset 0 0 0 1px var(--interactive-accent);
 }
 
-/* 底部：时间输入 + 清除 */
+/* 右侧时/分滚动列 */
+.gc-date-time-picker__time-panel {
+	display: flex;
+	gap: 2px;
+	width: 96px;
+	flex-shrink: 0;
+}
+
+.gc-date-time-picker__time-column {
+	position: relative;
+	flex: 1;
+	height: 100%;
+	max-height: 232px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	border-radius: 5px;
+	background: var(--background-secondary);
+}
+
+.gc-date-time-picker__time-column::-webkit-scrollbar {
+	width: 4px;
+}
+
+.gc-date-time-picker__time-column::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 2px;
+}
+
+.gc-date-time-picker__time-cell {
+	display: block;
+	width: 100%;
+	padding: 2px 0;
+	border: none;
+	background: transparent;
+	color: var(--text-normal);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	cursor: pointer;
+}
+
+.gc-date-time-picker__time-cell:hover {
+	background: var(--gc-hover-wash, var(--background-modifier-hover));
+}
+
+.gc-date-time-picker__time-cell--selected {
+	background: var(--gc-accent-wash, color-mix(in srgb, var(--interactive-accent) 14%, transparent));
+	color: var(--interactive-accent);
+	font-weight: 600;
+}
+
+/* 底部：此刻（左） + 确定（右，主按钮） */
 .gc-date-time-picker__footer {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	gap: 6px;
 	margin-top: 8px;
 	padding-top: 8px;
 	border-top: 1px solid var(--background-modifier-border);
 }
 
-.gc-date-time-picker__time-input {
-	flex: 1;
-	min-width: 0;
-	padding: 3px 8px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 5px;
-	background: var(--background-secondary);
-	color: var(--text-normal);
-	font-size: 12px;
-	font-variant-numeric: tabular-nums;
-}
-
-.gc-date-time-picker__time-input:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-}
-
-.gc-date-time-picker__time-input:disabled {
-	opacity: 0.5;
-}
-
-.gc-date-time-picker__footer-button {
-	padding: 3px 10px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 5px;
-	background: var(--background-secondary);
-	color: var(--text-muted);
+.gc-date-time-picker__now-button {
+	padding: 2px 4px;
+	border: none;
+	background: transparent;
+	color: var(--interactive-accent);
 	font-size: 12px;
 	cursor: pointer;
-	flex-shrink: 0;
-	transition: background-color var(--gc-dur-fast, 0.1s) ease,
-		color var(--gc-dur-fast, 0.1s) ease;
 }
 
-.gc-date-time-picker__footer-button:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
+.gc-date-time-picker__now-button:hover {
+	opacity: 0.8;
+}
+
+.gc-date-time-picker__ok-button {
+	padding: 3px 14px;
+	border: 1px solid var(--interactive-accent);
+	border-radius: var(--gc-radius-sm, 6px);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.gc-date-time-picker__ok-button:hover {
+	opacity: 0.88;
 }

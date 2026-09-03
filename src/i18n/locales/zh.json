@@ -789,10 +789,8 @@
     "dateTimePicker": {
       "monthFormat": "{{year}}年{{month}}月",
       "timePlaceholder": "HH:mm",
-      "presetToday": "今天",
-      "presetTomorrow": "明天",
-      "presetWeekend": "周末",
-      "presetNextWeek": "下周",
+      "now": "此刻",
+      "ok": "确定",
       "relToday": "今天",
       "relTomorrow": "明天",
       "relDayAfterTomorrow": "后天"

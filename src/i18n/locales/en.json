@@ -789,10 +789,8 @@
     "dateTimePicker": {
       "monthFormat": "{{month}}/{{year}}",
       "timePlaceholder": "HH:mm",
-      "presetToday": "Today",
-      "presetTomorrow": "Tomorrow",
-      "presetWeekend": "Weekend",
-      "presetNextWeek": "Next week",
+      "now": "Now",
+      "ok": "OK",
       "relToday": "Today",
       "relTomorrow": "Tomorrow",
       "relDayAfterTomorrow": "In 2 days"
