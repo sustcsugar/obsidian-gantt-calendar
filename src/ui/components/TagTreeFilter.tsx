@@ -153,13 +153,18 @@ export function TagTreeFilter({
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(node.fullPath); }
 					}}
-					onClick={() => onToggle(node.fullPath)}
+					onClick={() => {
+						onToggle(node.fullPath);
+						// 有子节点时点击行同时展开/收起
+						if (hasChildren) toggleExpand(node.fullPath);
+					}}
 					style={{
-						display: 'flex', alignItems: 'center', gap: '6px',
-						padding: '4px 8px', cursor: 'pointer', borderRadius: '6px',
+						display: 'flex', alignItems: 'center', gap: '4px',
+						padding: '3px 6px', cursor: 'pointer', borderRadius: '6px',
 						transition: 'background-color 0.12s ease',
 						background: isSelected ? 'var(--background-modifier-hover)' : 'transparent',
 						borderLeft: isSelected ? '2px solid var(--interactive-accent)' : '2px solid transparent',
+						minHeight: '28px',
 					}}
 					onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'var(--background-modifier-hover)'; }}
 					onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
@@ -167,13 +172,13 @@ export function TagTreeFilter({
 					<span style={{ width: `${level * 12}px`, flexShrink: 0 }} />
 					{hasChildren ? (
 						<span
-							style={{ display: 'inline-flex', width: '14px', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', color: 'var(--text-faint)' }}
+							style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '14px', height: '20px', flexShrink: 0, cursor: 'pointer', color: 'var(--text-faint)' }}
 							onClick={(e) => { e.stopPropagation(); toggleExpand(node.fullPath); }}
 						>
 							<Icon icon={isExpanded ? 'chevron-down' : 'chevron-right'} />
 						</span>
 					) : (
-						<span style={{ width: '14px', flexShrink: 0 }} />
+						<span style={{ width: '14px', height: '20px', flexShrink: 0, display: 'inline-flex', alignItems: 'center' }} />
 					)}
 					<ColorDot fullPath={node.fullPath} />
 					<span
@@ -199,6 +204,17 @@ export function TagTreeFilter({
 
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px' }}>
+			{/* OR/AND/NOT 切换器（顶部） */}
+			{showOperator && (
+				<div style={{ paddingBottom: '4px', borderBottom: '1px solid var(--background-modifier-border)' }}>
+					<SegmentedToggle
+						options={['OR', 'AND', 'NOT'] as const}
+						value={operator}
+						onChange={onOperatorChange}
+					/>
+				</div>
+			)}
+			{/* 标签树 */}
 			<div style={{ maxHeight: '280px', overflowY: 'auto' }}>
 				{sortedRoots.length === 0 ? (
 					<div style={{ padding: '12px 8px', textAlign: 'center', color: 'var(--text-faint)', fontSize: '12px' }}>
@@ -208,15 +224,6 @@ export function TagTreeFilter({
 					sortedRoots.map(root => renderTagNode(root, 0))
 				)}
 			</div>
-			{showOperator && (
-				<div style={{ borderTop: '1px solid var(--background-modifier-border)', paddingTop: '6px' }}>
-					<SegmentedToggle
-						options={['OR', 'AND', 'NOT'] as const}
-						value={operator}
-						onChange={onOperatorChange}
-					/>
-				</div>
-			)}
 		</div>
 	);
 }
