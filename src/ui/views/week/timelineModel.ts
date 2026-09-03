@@ -53,13 +53,15 @@ export interface TimeBlockSegment extends LaneInfo {
 /** 时间网格块（一个任务的完整渲染数据，含各日分段与 lane 布局结果） */
 export interface TimeBlock {
 	task: GCTask;
-	/** 真实起止（点任务的 end = start + 默认时长） */
+	/** 真实起止（点任务的一端为锚、另一端为默认时长推算） */
 	start: Date;
 	end: Date;
 	/** 点任务：仅单时刻字段，无显式区间（resize 后写回时升级） */
 	isPoint: boolean;
 	/** 点任务的时刻所在字段（写回用） */
 	pointField: DateFieldType;
+	/** 点任务锚定方向：前向=锚是块起点；后向=锚是块终点（区间任务无） */
+	pointDirection?: PointDirection;
 	segments: TimeBlockSegment[];
 }
 
@@ -77,12 +79,17 @@ export interface AlldayBar extends LaneInfo {
 	timeLabel?: string;
 }
 
+/** 点任务锚定方向：前向=锚是块起点（时刻为开始语义）；后向=锚是块终点（时刻为截止语义，闭包） */
+export type PointDirection = 'forward' | 'backward';
+
 /** 任务区间分类结果 */
 export interface TaskInterval {
 	kind: 'interval' | 'point';
 	start: Date;
 	end: Date;
 	pointField: DateFieldType;
+	/** 仅点任务：锚定方向（区间任务无） */
+	pointDirection?: PointDirection;
 }
 
 // ===== 分钟 <-> 像素 =====
@@ -125,13 +132,42 @@ function nextDayStart(d: Date): Date {
 }
 
 /**
- * 提取任务在时间线中的区间语义：
- * - 双端带时刻 → 区间任务；day 精度终点 = 当日 24:00（闭区间，对齐甘特语义）
- * - day 起点 + 时刻终点：day 起点不含时刻信息，**不得虚构 00:00 起点**——
- *   同日按点任务锚定在截止时刻（与"仅 📅 带时刻"的任务渲染一致，兼容遗留数据）；
- *   跨日维持区间（时长必 ≥24h，由上层路由为全天横跨条）
- * - day 起点 + day 终点 → 返回 null（全天行横跨条）
- * - 点任务：仅 dateFilterField 带 time 精度，end = start + 默认时长
+ * 终点角色字段：时刻为截止语义（闭包），块结束边压在时刻上。
+ * ganttEndField 或 dueDate 视为终点角色
+ */
+function isEndRoleField(field: DateFieldType, endField: DateFieldType): boolean {
+	return field === endField || field === 'dueDate';
+}
+
+/** 前向点任务：锚为块起点 [t, t+60)，终点钳制在当日 24:00 */
+function forwardPoint(anchorVal: Date, field: DateFieldType): TaskInterval {
+	const start = new Date(anchorVal);
+	const dayEnd = nextDayStart(start);
+	const end = new Date(start);
+	end.setMinutes(end.getMinutes() + DEFAULT_POINT_DURATION_MIN);
+	return { kind: 'point', start, end: end > dayEnd ? dayEnd : end, pointField: field, pointDirection: 'forward' };
+}
+
+/** 后向点任务：锚为块终点 [t-60, t)，起点钳制在当日 00:00 */
+function backwardPoint(anchorVal: Date, field: DateFieldType): TaskInterval {
+	const end = new Date(anchorVal);
+	const dayBeg = dayStart(end);
+	const start = new Date(end);
+	start.setMinutes(start.getMinutes() - DEFAULT_POINT_DURATION_MIN);
+	return { kind: 'point', start: start < dayBeg ? dayBeg : start, end, pointField: field, pointDirection: 'backward' };
+}
+
+/**
+ * 提取任务在时间线中的区间语义。
+ * 核心原则：day 精度端点不含时刻信息，不得虚构 00:00/24:00 参与时间网格定位。
+ *
+ * - SF时刻 + EF时刻 → 区间（<24h 分段块 / ≥24h 全天条，由上层路由）
+ * - SF时刻 + EF同日仅日期 → 前向点任务 [SF, SF+60)（EF 的 day 无时刻信息）
+ * - SF时刻 + EF跨日仅日期 → 区间 [SF, EF 24:00]（必 ≥24h → 全天条 "H:mm →"）
+ * - SF仅日期 + EF同日时刻 → 后向点任务 [EF-60, EF)（SF 的 day 无时刻信息）
+ * - SF仅日期 + EF跨日时刻 → 区间 [SF 00:00, EF]（必 ≥24h → 全天条 "→ H:mm"）
+ * - 双 day → null（全天横跨条）
+ * - 单字段（dateFilterField）带时刻：终点角色 → 后向点；其余 → 前向点
  */
 export function getTaskInterval(
 	task: GCTask,
@@ -153,30 +189,36 @@ export function getTaskInterval(
 			const startDay = dayStart(startVal);
 			const endDay = dayStart(endVal);
 			if (startDay.getTime() >= endDay.getTime()) {
-				// 同日（或数据倒置）：锚定截止时刻的点任务
-				const start = new Date(endVal);
-				const end = new Date(start);
-				end.setMinutes(end.getMinutes() + DEFAULT_POINT_DURATION_MIN);
-				return { kind: 'point', start, end, pointField: endField };
+				// 同日（或数据倒置）：截止时刻为锚的后向点任务
+				return backwardPoint(endVal, endField);
 			}
 			// 跨日：[起点日 00:00, 截止时刻]，时长必 ≥24h → 全天横跨条
 			return { kind: 'interval', start: startDay, end: new Date(endVal), pointField: startField };
 		}
 
-		// 起点带时刻（终点 time 或 day；day 终点 = 当日 24:00）
+		// 起点带时刻 + 终点 day
+		if (endPrecision !== 'time') {
+			const startDay = dayStart(startVal);
+			const endDay = dayStart(endVal);
+			if (startDay.getTime() >= endDay.getTime()) {
+				// 同日（或数据倒置）：day 终点无时刻信息 → 起点为锚的前向点任务
+				return forwardPoint(startVal, startField);
+			}
+			// 跨日：[SF 时刻, EF 当日 24:00]，必 ≥24h → 全天横跨条
+			return { kind: 'interval', start: new Date(startVal), end: nextDayStart(endVal), pointField: startField };
+		}
+
+		// 双端带时刻（end < start 时钳制，对齐甘特 taskDataAdapter 的归一化）
 		const start = new Date(startVal);
-		const end = endPrecision === 'time' ? new Date(endVal) : nextDayStart(endVal);
-		// end < start 时钳制（对齐甘特 taskDataAdapter 的归一化）
+		const end = new Date(endVal);
 		return { kind: 'interval', start, end: end < start ? new Date(start) : end, pointField: startField };
 	}
 
-	// 点任务：dateFilterField 带时刻
+	// 单字段点任务：dateFilterField 带时刻，方向取决于字段角色
 	const dateVal = getTaskDateField(task, dateField);
 	if (dateVal && task.datePrecision?.[dateField] === 'time') {
-		const start = new Date(dateVal);
-		const end = new Date(start);
-		end.setMinutes(end.getMinutes() + DEFAULT_POINT_DURATION_MIN);
-		return { kind: 'point', start, end, pointField: dateField };
+		if (isEndRoleField(dateField, endField)) return backwardPoint(dateVal, dateField);
+		return forwardPoint(dateVal, dateField);
 	}
 
 	return null;
@@ -402,6 +444,7 @@ export function buildWeekTimelineModel(
 					end: interval.end,
 					isPoint: interval.kind === 'point',
 					pointField: interval.pointField,
+					pointDirection: interval.pointDirection,
 					segments,
 				});
 			}
