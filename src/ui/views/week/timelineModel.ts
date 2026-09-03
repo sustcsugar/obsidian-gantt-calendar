@@ -1,0 +1,406 @@
+import type { GCTask } from '../../../types';
+import { getTaskDateField } from '../../../types';
+import type { DateFieldType } from '../../../settings/types';
+
+/**
+ * 周视图时间线「连续画布」数据模型（纯函数，无副作用）
+ *
+ * 时间块按分钟绝对定位：1 小时 = HOUR_PX 像素（单一来源，
+ * 由组件以 CSS 变量 --gc-tl-hour-h 注入样式）。
+ * 任务在时间线内分三类：
+ * 1. 区间任务（ganttStartField+ganttEndField 都有值且至少一个带时刻）→ 时间网格块
+ * 2. 点任务（仅 dateFilterField 带时刻）→ 默认时长的块，resize 时升级为区间任务
+ * 3. 全天任务（day 精度）→ 全天行横跨条
+ */
+
+/** 1 小时的像素高度（改这里即可全局调整，勿在 CSS 中硬编码） */
+export const HOUR_PX = 50;
+export const DAY_PX = HOUR_PX * 24;
+export const MINUTES_PER_DAY = 24 * 60;
+
+/** 吸附粒度：默认 15 分钟，按住 Alt 精调 5 分钟 */
+export const SNAP_MINUTES = 15;
+export const FINE_SNAP_MINUTES = 5;
+/** 最小块时长（一个吸附步长） */
+export const MIN_DURATION_MIN = 15;
+/** 点任务（单时刻字段）的默认展示时长 */
+export const DEFAULT_POINT_DURATION_MIN = 60;
+/** 同簇重叠块最多分 3 列，第 4 条起叠加偏移 */
+export const MAX_LANE = 3;
+
+/** lane 布局信息（叠加在时间块分段/全天条上） */
+export interface LaneInfo {
+	lane: number;
+	laneCount: number;
+	/** 超出 MAX_LANE 的块叠加在最后一列上（渲染时加偏移与阴影，从 1 起） */
+	stackedIndex: number;
+}
+
+/** 时间网格中某任务在单日内的渲染段 */
+export interface TimeBlockSegment extends LaneInfo {
+	/** 本周第几天（0 = 周首日） */
+	dayIndex: number;
+	/** 段起点相对当日 00:00 的分钟偏移 [0, 1440] */
+	startMin: number;
+	/** 段终点（≤ 1440，1440 = 次日 00:00） */
+	endMin: number;
+	/** 段起点非真实起点（延续自前一日或周外） */
+	continuesBefore: boolean;
+	/** 段终点非真实终点（延续至后一日或周外） */
+	continuesAfter: boolean;
+}
+
+/** 时间网格块（一个任务的完整渲染数据，含各日分段与 lane 布局结果） */
+export interface TimeBlock {
+	task: GCTask;
+	/** 真实起止（点任务的 end = start + 默认时长） */
+	start: Date;
+	end: Date;
+	/** 点任务：仅单时刻字段，无显式区间（resize 后写回时升级） */
+	isPoint: boolean;
+	/** 点任务的时刻所在字段（写回用） */
+	pointField: DateFieldType;
+	segments: TimeBlockSegment[];
+}
+
+/** 全天行横跨条 */
+export interface AlldayBar extends LaneInfo {
+	task: GCTask;
+	/** 钳制到本周的日起（0-6，闭区间） */
+	startDayIndex: number;
+	endDayIndex: number;
+	/** 延续自上周 */
+	continuesBefore: boolean;
+	/** 延续至下周 */
+	continuesAfter: boolean;
+}
+
+/** 任务区间分类结果 */
+export interface TaskInterval {
+	kind: 'interval' | 'point';
+	start: Date;
+	end: Date;
+	pointField: DateFieldType;
+}
+
+// ===== 分钟 <-> 像素 =====
+
+export function minutesToPx(minutes: number): number {
+	return (minutes / 60) * HOUR_PX;
+}
+
+export function pxToMinutes(px: number): number {
+	return (px / HOUR_PX) * 60;
+}
+
+/** 吸附到 15（或 Alt 精调 5）分钟网格，钳制在 [0, 1440] */
+export function snapMinutes(minutes: number, fine: boolean): number {
+	const step = fine ? FINE_SNAP_MINUTES : SNAP_MINUTES;
+	const snapped = Math.round(minutes / step) * step;
+	return Math.max(0, Math.min(MINUTES_PER_DAY, snapped));
+}
+
+/** 分钟数格式化为 HH:mm（1440 → "24:00"） */
+export function formatMinutes(minutes: number): string {
+	const h = Math.floor(minutes / 60);
+	const m = Math.round(minutes % 60);
+	return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+// ===== 区间提取 =====
+
+function dayStart(d: Date): Date {
+	const r = new Date(d);
+	r.setHours(0, 0, 0, 0);
+	return r;
+}
+
+/** 当日终结点（次日 00:00，供 24:00 语义与差值计算使用） */
+function nextDayStart(d: Date): Date {
+	const r = dayStart(d);
+	r.setDate(r.getDate() + 1);
+	return r;
+}
+
+/**
+ * 提取任务在时间线中的区间语义：
+ * - 区间任务：ganttStartField 与 ganttEndField 都有值且至少一个带时刻；
+ *   day 精度端点取 00:00 / 当日 24:00（闭区间，对齐甘特语义）
+ * - 点任务：仅 dateFilterField 带 time 精度，end = start + 默认时长
+ * - 返回 null：全天任务或不参与本周时间线
+ */
+export function getTaskInterval(
+	task: GCTask,
+	startField: DateFieldType,
+	endField: DateFieldType,
+	dateField: DateFieldType,
+): TaskInterval | null {
+	const startVal = getTaskDateField(task, startField);
+	const endVal = getTaskDateField(task, endField);
+
+	if (startVal && endVal) {
+		const startPrecision = task.datePrecision?.[startField];
+		const endPrecision = task.datePrecision?.[endField];
+		// 两个端点都是 day 精度 → 全天横跨条，不进时间网格
+		if (startPrecision !== 'time' && endPrecision !== 'time') return null;
+		const start = startPrecision === 'time' ? new Date(startVal) : dayStart(startVal);
+		// day 精度的结束端 = 当日结束（次日 00:00）
+		const end = endPrecision === 'time' ? new Date(endVal) : nextDayStart(endVal);
+		// end < start 时钳制（对齐甘特 taskDataAdapter 的归一化）
+		return { kind: 'interval', start, end: end < start ? new Date(start) : end, pointField: startField };
+	}
+
+	// 点任务：dateFilterField 带时刻
+	const dateVal = getTaskDateField(task, dateField);
+	if (dateVal && task.datePrecision?.[dateField] === 'time') {
+		const start = new Date(dateVal);
+		const end = new Date(start);
+		end.setMinutes(end.getMinutes() + DEFAULT_POINT_DURATION_MIN);
+		return { kind: 'point', start, end, pointField: dateField };
+	}
+
+	return null;
+}
+
+// ===== 周内分段 =====
+
+/**
+ * 将 [start, end] 与一周 7 天求交，产出各日分段（lane 信息由 assignLanes 填充）。
+ * weekStart 为本周首日 00:00。周外延续用 continuesBefore/After 标记。
+ */
+export function splitWeekSegments(start: Date, end: Date, weekStart: Date): TimeBlockSegment[] {
+	const weekEnd = dayStart(weekStart);
+	weekEnd.setDate(weekEnd.getDate() + 7);
+
+	// 与本周无交集
+	if (end.getTime() <= weekStart.getTime() || start.getTime() >= weekEnd.getTime()) return [];
+
+	const segments: TimeBlockSegment[] = [];
+	for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+		const segDayStart = new Date(weekStart);
+		segDayStart.setDate(segDayStart.getDate() + dayIndex);
+		const segDayEnd = new Date(segDayStart);
+		segDayEnd.setDate(segDayEnd.getDate() + 1);
+
+		// 段与该日无交集
+		if (end.getTime() <= segDayStart.getTime() || start.getTime() >= segDayEnd.getTime()) continue;
+
+		const segStart = start.getTime() < segDayStart.getTime() ? segDayStart : start;
+		const segEnd = end.getTime() > segDayEnd.getTime() ? segDayEnd : end;
+
+		segments.push({
+			dayIndex,
+			startMin: Math.round((segStart.getTime() - segDayStart.getTime()) / 60000),
+			endMin: Math.round((segEnd.getTime() - segDayStart.getTime()) / 60000),
+			continuesBefore: start.getTime() < segDayStart.getTime(),
+			continuesAfter: end.getTime() > segDayEnd.getTime(),
+			lane: 0,
+			laneCount: 1,
+			stackedIndex: 0,
+		});
+	}
+	return segments;
+}
+
+// ===== lane 布局 =====
+
+interface LaneInput {
+	startMin: number;
+	endMin: number;
+}
+
+/**
+ * 贪心 lane 分配（Google Calendar 式重叠分列）：
+ * 按 startMin 升序（同时刻长者优先），装入最早可用的 lane；
+ * 以"传递重叠簇"为单位计算簇内 lane 总数，簇内等宽分列。
+ * 超过 MAX_LANE 的块钳制到最后一列并标记叠加序号。
+ */
+export function assignLanes<T extends LaneInput & LaneInfo>(items: T[]): void {
+	if (items.length === 0) return;
+
+	const sorted = [...items].sort((a, b) =>
+		a.startMin - b.startMin || (b.endMin - b.startMin) - (a.endMin - a.startMin)
+	);
+
+	const cluster: T[] = [];
+	let clusterEnd = -Infinity;
+	let clusterMaxLane = 0;
+	const laneEnds: number[] = [];
+
+	const flushCluster = () => {
+		if (cluster.length === 0) return;
+		const laneCount = Math.min(clusterMaxLane + 1, MAX_LANE);
+		for (const item of cluster) {
+			if (item.lane >= laneCount) {
+				// 超出的块叠加在最后一列：stackedIndex 从 1 起
+				item.stackedIndex = item.lane - laneCount + 1;
+				item.lane = laneCount - 1;
+			}
+			item.laneCount = laneCount;
+		}
+		cluster.length = 0;
+		clusterEnd = -Infinity;
+		clusterMaxLane = 0;
+		laneEnds.length = 0;
+	};
+
+	for (const item of sorted) {
+		// 与当前簇不再传递重叠 → 关簇开新簇
+		if (cluster.length > 0 && item.startMin >= clusterEnd) flushCluster();
+
+		// 找最早可用 lane
+		let lane = laneEnds.findIndex((end) => end <= item.startMin);
+		if (lane === -1) {
+			lane = laneEnds.length;
+			laneEnds.push(item.endMin);
+		} else {
+			laneEnds[lane] = item.endMin;
+		}
+
+		item.lane = lane;
+		item.laneCount = 1;
+		item.stackedIndex = 0;
+		cluster.push(item);
+		clusterEnd = Math.max(clusterEnd, item.endMin);
+		clusterMaxLane = Math.max(clusterMaxLane, lane);
+	}
+	flushCluster();
+}
+
+// ===== 主入口：构建一周的时间块与全天条 =====
+
+/** 某日列内待渲染的（块, 段）配对，已按开始时间排序 */
+export interface DaySegment {
+	block: TimeBlock;
+	seg: TimeBlockSegment;
+}
+
+export interface WeekTimelineModel {
+	/** 每日的时间块分段（含 lane），dayIndex 0-6 */
+	days: DaySegment[][];
+	/** 本周全部时间块（每任务一份，供拖拽/resize 查询） */
+	blocks: TimeBlock[];
+	/** 全天行（单日卡 + 跨日横跨条，含 lane） */
+	allday: AlldayBar[];
+}
+
+/**
+ * 将本周任务分类为时间块与全天条。
+ * @param tasks  已经过筛选/排序、包含虚拟周期实例的任务列表
+ */
+export function buildWeekTimelineModel(
+	tasks: GCTask[],
+	weekStart: Date,
+	startField: DateFieldType,
+	endField: DateFieldType,
+	dateField: DateFieldType,
+): WeekTimelineModel {
+	const blocks: TimeBlock[] = [];
+	const alldayTasks: GCTask[] = [];
+
+	for (const task of tasks) {
+		const interval = getTaskInterval(task, startField, endField, dateField);
+		if (interval) {
+			const segments = splitWeekSegments(interval.start, interval.end, weekStart);
+			if (segments.length > 0) {
+				blocks.push({
+					task,
+					start: interval.start,
+					end: interval.end,
+					isPoint: interval.kind === 'point',
+					pointField: interval.pointField,
+					segments,
+				});
+			}
+			continue;
+		}
+
+		// 全天任务：按 dateFilterField 的命中日出现（维持现有语义）
+		const dateVal = getTaskDateField(task, dateField);
+		if (dateVal && !isNaN(dateVal.getTime())) {
+			alldayTasks.push(task);
+		}
+	}
+
+	// 每日分段 lane 布局（列内互不影响）
+	const days: DaySegment[][] = Array.from({ length: 7 }, () => []);
+	for (const block of blocks) {
+		for (const seg of block.segments) {
+			days[seg.dayIndex].push({ block, seg });
+		}
+	}
+	for (const daySegs of days) {
+		assignLanes(daySegs.map((d) => d.seg));
+		daySegs.sort((a, b) => a.seg.startMin - b.seg.startMin || b.seg.lane - a.seg.lane);
+	}
+
+	// 全天行：跨日（gantt 两端都为 day 精度）渲染横跨条，单日维持命中日
+	const weekEndDay = new Date(weekStart);
+	weekEndDay.setDate(weekEndDay.getDate() + 6);
+	const allday: AlldayBar[] = [];
+	for (const task of alldayTasks) {
+		const startVal = getTaskDateField(task, startField);
+		const endVal = getTaskDateField(task, endField);
+		let bar: AlldayBar | null = null;
+
+		if (startVal && endVal) {
+			const startDay = dayStart(startVal);
+			const endDay = dayStart(endVal);
+			if (startDay < weekStart || endDay > weekEndDay || startDay.getTime() !== endDay.getTime()) {
+				// 与本周有交集的非单日区间 → 横跨条（单日区间也走此路径统一渲染）
+				const clampedStart = startDay < weekStart ? new Date(weekStart) : startDay;
+				const clampedEnd = endDay > weekEndDay ? weekEndDay : endDay;
+				if (clampedStart <= clampedEnd) {
+					bar = {
+						task,
+						startDayIndex: Math.round((clampedStart.getTime() - weekStart.getTime()) / 86400000),
+						endDayIndex: Math.round((clampedEnd.getTime() - weekStart.getTime()) / 86400000),
+						continuesBefore: startDay < weekStart,
+						continuesAfter: endDay > weekEndDay,
+						lane: 0,
+						laneCount: 1,
+						stackedIndex: 0,
+					};
+				}
+			}
+		}
+
+		if (!bar) {
+			// 单日全天：按 dateFilterField 命中日
+			const dateVal = getTaskDateField(task, dateField);
+			if (!dateVal) continue;
+			const d = dayStart(dateVal);
+			const dayIndex = Math.round((d.getTime() - weekStart.getTime()) / 86400000);
+			if (dayIndex < 0 || dayIndex > 6) continue;
+			bar = {
+				task,
+				startDayIndex: dayIndex,
+				endDayIndex: dayIndex,
+				continuesBefore: false,
+				continuesAfter: false,
+				lane: 0,
+				laneCount: 1,
+				stackedIndex: 0,
+			};
+		}
+		allday.push(bar);
+	}
+
+	// 全天行 lane 布局：以"天"为最小单位映射到分钟轴（endDay + 1 使相邻日的条正确分列）
+	const laneProxy = allday.map((bar) => ({
+		bar,
+		startMin: bar.startDayIndex * MINUTES_PER_DAY,
+		endMin: (bar.endDayIndex + 1) * MINUTES_PER_DAY,
+		lane: 0,
+		laneCount: 1,
+		stackedIndex: 0,
+	}));
+	assignLanes(laneProxy);
+	for (const proxy of laneProxy) {
+		proxy.bar.lane = proxy.lane;
+		proxy.bar.laneCount = proxy.laneCount;
+		proxy.bar.stackedIndex = proxy.stackedIndex;
+	}
+
+	return { days, blocks, allday };
+}

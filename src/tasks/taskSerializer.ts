@@ -2,12 +2,16 @@ import { App } from 'obsidian';
 import { GCTask, MetadataField } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { TaskStatusType, DEFAULT_TASK_STATUSES } from './taskStatus';
+import type { DateFieldType } from '../settings/types';
 
 /** Minimal plugin settings shape needed for serialization */
 interface SerializerPluginSettings {
 	globalTaskFilter?: string;
 	taskStatuses?: Array<{ key: TaskStatusType; symbol: string }>;
 }
+
+/** 各日期字段的时间精度（'time' = 日期+HH:mm，'day' = 仅日期） */
+type DatePrecisionMap = Partial<Record<DateFieldType, 'day' | 'time'>>;
 
 /**
  * 任务更新参数
@@ -28,10 +32,7 @@ export interface TaskUpdates {
 	tags?: string[];
 	metadataFields?: MetadataField[] | null;
 	feishuGuid?: string | null;  // 飞书任务 GUID（同步系统直接写入时使用）
-	datePrecision?: {
-		dueDate?: 'day' | 'time';
-		startDate?: 'day' | 'time';
-	};
+	datePrecision?: DatePrecisionMap;
 }
 
 /**
@@ -52,10 +53,7 @@ interface MergedTask {
 	dueDate?: Date;
 	cancelledDate?: Date;
 	completionDate?: Date;
-	datePrecision?: {
-		dueDate?: 'day' | 'time';
-		startDate?: 'day' | 'time';
-	};
+	datePrecision?: DatePrecisionMap;
 }
 
 /**
