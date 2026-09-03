@@ -36,6 +36,13 @@ import { useBlockResize } from './useBlockResize';
 /** 全天行单行高度（卡片 24px + 间距 4px，与 CSS 令牌对应） */
 const ALLDAY_ROW_PX = 28;
 
+/**
+ * 创建手势的像素位移阈值：超过该位移才视为拖拽选区。
+ * 不能用吸附步长判断——点击时 1-2px 抖动就可能让吸附分钟跨过舍入中点跳一格，
+ * 导致按下瞬间 1 小时预览坍缩为 15 分钟选区（对齐甘特拖拽的 3px hasMoved 模式）
+ */
+const CREATE_DRAG_THRESHOLD_PX = 5;
+
 export interface WeekTimelineDayInfo {
 	date: Date;
 	isToday: boolean;
@@ -457,8 +464,8 @@ function DayColumn({
 	const colRef = useRef<HTMLDivElement | null>(null);
 	const ghostRef = useRef<HTMLDivElement | null>(null);
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
-	/** 拖拽选区创建状态（mousedown 于空白处时激活） */
-	const createRef = useRef<{ anchorMin: number; lastMin: number; moved: boolean } | null>(null);
+	/** 拖拽选区创建状态（mousedown 于空白处时激活；moved 以像素位移判定，防点击抖动） */
+	const createRef = useRef<{ anchorMin: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
 	/** 右键菜单打开期间抑制 ghost/创建手势（菜单 portal 到 body，但事件仍沿 React 树冒泡进列内） */
 	const menuOpenRef = useRef(false);
 
@@ -525,9 +532,12 @@ function DayColumn({
 		const create = createRef.current;
 		if (create) {
 			create.lastMin = minutes;
-			if (minutes !== create.anchorMin) create.moved = true;
+			// 像素位移超阈值才算拖拽选区（吸附步长对点击抖动过于敏感）
+			if (!create.moved && Math.abs(e.clientY - create.anchorY) > CREATE_DRAG_THRESHOLD_PX) {
+				create.moved = true;
+			}
 			if (!create.moved) {
-				// 未超过一个吸附步长：维持 1 小时预览（按下瞬间不坍缩）
+				// 抖动范围内：维持 1 小时预览（按下瞬间不坍缩）
 				showGhost(create.anchorMin, create.anchorMin + DEFAULT_POINT_DURATION_MIN, true);
 				return;
 			}
@@ -572,8 +582,8 @@ function DayColumn({
 		if (!col || !col.contains(e.target as Node)) return;
 		e.preventDefault();
 		const anchorMin = minutesFromEvent(e.clientY);
-		createRef.current = { anchorMin, lastMin: anchorMin, moved: false };
-		// 按下瞬间维持 hover 的 1 小时块（仅切换激活样式），拖动超步长后才变为选区
+		createRef.current = { anchorMin, anchorY: e.clientY, lastMin: anchorMin, moved: false };
+		// 按下瞬间维持 hover 的 1 小时块（仅切换激活样式），像素级拖动后才变为选区
 		showGhost(anchorMin, anchorMin + DEFAULT_POINT_DURATION_MIN, true);
 		// 防御：上一手势未正常收尾时先解绑，避免 finishCreate 重复触发
 		document.removeEventListener('mouseup', finishCreate);
