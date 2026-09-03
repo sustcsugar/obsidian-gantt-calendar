@@ -17,7 +17,7 @@ import { FileSuggest } from '../components';
 import { PushFilterConfig, DEFAULT_PUSH_FILTER } from '../../utils/taskFilter';
 import { showSyncResultModal } from '../../ui/modals/SyncResultDialog';
 import { syncFeishuTasks } from '../../commands/feishuCommands';
-import { BLOCKS, bem, SyncHintClasses, SyncTasklistClasses } from '../../utils/bem';
+import { BLOCKS, bem, SettingsClasses, SyncHintClasses, SyncTasklistClasses } from '../../utils/bem';
 import { i18n } from '../../i18n/i18n';
 
 /**
@@ -78,6 +78,8 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					.setDesc(i18n.t('settings.sync.targetFile.description'))
 					.addSearch(cb => {
 						new FileSuggest(this.plugin.app, cb.inputEl);
+						// 搜索输入框默认 intrinsic 宽度过窄，长路径展示不全
+						cb.inputEl.addClass(SettingsClasses.elements.syncTargetInput);
 						cb.setPlaceholder('gantt-calendar-feishu-sync.md')
 							.setValue(syncConfig.feishuSyncTargetFile || 'gantt-calendar-feishu-sync.md')
 							.onChange(async (value: string) => {

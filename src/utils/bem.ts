@@ -1047,6 +1047,7 @@ export const SettingsClasses = {
 		tabButton: bem(BLOCKS.SETTINGS, 'tab-button'),
 		tabContent: bem(BLOCKS.SETTINGS, 'tab-content'),
 		sectionHidden: bem(BLOCKS.SETTINGS, 'section-hidden'),
+		syncTargetInput: bem(BLOCKS.SETTINGS, 'sync-target-input'),
 	},
 };
 

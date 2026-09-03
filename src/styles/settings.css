@@ -54,6 +54,12 @@
    Settings: Sync (设置页: 飞书同步)
    ======================================== */
 
+/* 飞书同步目标文件搜索框：默认 intrinsic 宽度过窄，长路径展示不全 */
+.gc-settings__sync-target-input {
+	width: 280px;
+	max-width: 100%;
+}
+
 /* 同步免责声明横幅 */
 .gc-settings-sync-warning {
 	display: flex;
