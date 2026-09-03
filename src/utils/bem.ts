@@ -1110,8 +1110,6 @@ export const DateTimePickerClasses = {
 		dayToday: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'today'),
 		dayOtherMonth: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'other-month'),
 		timeCellSelected: bem(BLOCKS.DATE_TIME_PICKER, 'time-cell', 'selected'),
-		popoverTop: bem(BLOCKS.DATE_TIME_PICKER, 'popover', 'top'),
-		popoverRight: bem(BLOCKS.DATE_TIME_PICKER, 'popover', 'right'),
 	},
 };
 
