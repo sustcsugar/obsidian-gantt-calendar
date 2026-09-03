@@ -291,6 +291,8 @@ export class MarkdownDataSource implements IDataSource {
 					Logger.debug('MarkdownDataSource', `No actual changes detected for ${filePath}`);
 				}
 			}
+		} catch (error) {
+			Logger.error('MarkdownDataSource', `Error processing file modification: ${filePath}`, error);
 		} finally {
 			this.processingFiles.delete(filePath);
 
@@ -727,18 +729,71 @@ export class MarkdownDataSource implements IDataSource {
 
 		// 检测更新：ID 交集且指纹变化（无指纹缓存时退化为全量 updated，
 		// 与旧行为一致，保证正确性优先）
+		const unmatchedOldIds: string[] = [];
 		for (const [id, newTask] of newIdMap) {
 			if (oldIdSet.has(id)) {
 				const oldFp = oldFingerprintMap?.get(id);
 				if (oldFingerprintMap && oldFp === fingerprintTask(newTask)) {
 					continue; // 内容未变化，跳过
 				}
-				// 传递完整的新任务对象，让 TaskRepository 可以完全替换缓存中的旧任务
 				changes.updated.push({
 					id,
 					changes: {},
 					task: newTask
 				});
+			}
+		}
+
+		// ---- 二次匹配：行号漂移重配 ----
+		// 上方插行/删行时，下方任务 ID（含行号）全部变化，第一轮产生
+		// 大量伪 deleted + created。通过内容指纹重新配对，将它们从
+		// deleted+created 降级为 updated（原地更新），避免：
+		// 1. React key 全变 → 卡片全部卸载重挂（最坏 0.5-4s 卡顿）
+		// 2. 甘特增量更新 added+removed > 5 → 全量重绘
+		if (oldFingerprintMap && oldFingerprintMap.size > 0) {
+			// 收集第一轮未匹配的旧任务（指纹 → 旧ID）
+			const unmatchedOld = new Map<string, string>(); // fingerprint → oldId
+			for (const id of oldTaskIds) {
+				if (!newIdMap.has(id)) {
+					const fp = oldFingerprintMap.get(id);
+					if (fp !== undefined && !unmatchedOld.has(fp)) {
+						unmatchedOld.set(fp, id);
+					}
+				}
+			}
+
+			if (unmatchedOld.size > 0 && unmatchedOld.size <= 500) {
+				// 收集第一轮新创建的任务（指纹 → newTask）
+				const unmatchedNew = new Map<string, GCTask>();
+				for (const [id, task] of newIdMap) {
+					if (!oldIdSet.has(id)) {
+						const fp = fingerprintTask(task);
+						if (!unmatchedNew.has(fp)) {
+							unmatchedNew.set(fp, task);
+						}
+					}
+				}
+
+				// 指纹匹配：相同内容 → 行号漂移，不是真创建/删除
+				const matchedNewIds = new Set<string>();
+				for (const [fp, oldId] of unmatchedOld) {
+					const newTask = unmatchedNew.get(fp);
+					if (newTask) {
+						const newId = generateTaskId(newTask);
+						matchedNewIds.add(newId);
+						unmatchedOld.delete(fp);
+						unmatchedNew.delete(fp);
+
+						// 从 deleted/created 撤回，改为 updated
+						changes.deleted = changes.deleted.filter(d => generateTaskId(d) !== oldId);
+						const newTaskIdx = changes.created.findIndex(c => generateTaskId(c) === newId);
+						if (newTaskIdx !== -1) changes.created.splice(newTaskIdx, 1);
+
+						// 用旧 ID 做 updated，保持缓存键稳定
+						// （新任务对象的 lineNumber 已经是新值，写回正确）
+						changes.updated.push({ id: oldId, changes: {}, task: newTask });
+					}
+				}
 			}
 		}
 
