@@ -42,7 +42,7 @@ interface DragHandlers {
 
 /**
  * resize 手势进行中的模块级标志。
- * 手柄 mousedown 已 stopPropagation，列内 hover 逻辑无法从事件流感知 resize——
+ * 手柄 mousedown 已 stopPropagation，列内 hover 逻辑无法从事件流感知——
  * 直接导出探测函数（与 isContextMenuOpen 同模式），拖边缘期间不出"+ 可添加"ghost
  */
 let resizeActive = false;
@@ -50,6 +50,32 @@ let resizeActive = false;
 /** 是否有块边缘 resize 手势正在进行 */
 export function isBlockResizing(): boolean {
 	return resizeActive;
+}
+
+/**
+ * 整块拖动的抓取信息（跨视图共享的模块级状态：周视图与侧栏今日时间线）。
+ * dragover 阶段 dataTransfer.getData 不可用（只能读 types），落点预览与
+ * 边缘锚定所需的偏移/时长存在这里；dragend / drop 清零
+ */
+export interface BlockDragMeta {
+	/** 抓取点相对块顶边的像素偏移（落点 = 指针 - 偏移 = 块上边缘） */
+	offsetPx: number;
+	/** 任务时长（分钟），落点预览高度与后向点任务锚点计算用 */
+	durationMin: number;
+}
+
+let blockDragMeta: BlockDragMeta | null = null;
+
+export function setBlockDragMeta(meta: BlockDragMeta): void {
+	blockDragMeta = meta;
+}
+
+export function getBlockDragMeta(): BlockDragMeta | null {
+	return blockDragMeta;
+}
+
+export function clearBlockDragMeta(): void {
+	blockDragMeta = null;
 }
 
 export function useBlockResize(onCommit: BlockResizeCommit) {

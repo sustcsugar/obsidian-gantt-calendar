@@ -31,7 +31,7 @@ import {
 	MIN_DURATION_MIN,
 	MINUTES_PER_DAY,
 } from './timelineModel';
-import { useBlockResize, isBlockResizing } from './useBlockResize';
+import { useBlockResize, isBlockResizing, setBlockDragMeta, getBlockDragMeta, clearBlockDragMeta } from './useBlockResize';
 
 /** 全天行单行高度（卡片 24px + 间距 4px，与 CSS 令牌对应） */
 const ALLDAY_ROW_PX = 28;
@@ -454,19 +454,6 @@ function isInsideBlock(target: EventTarget | null): boolean {
 }
 
 /**
- * 整块拖动的抓取信息（模块级状态）。
- * dragover 阶段 dataTransfer.getData 不可用（只能读 types），
- * 落点预览与边缘锚定所需的偏移/时长存在这里，dragend / drop 清零
- */
-interface BlockDragMeta {
-	/** 抓取点相对块顶边的像素偏移（落点 = 指针 - 偏移 = 块上边缘） */
-	offsetPx: number;
-	/** 任务时长（分钟），落点预览高度与后向点任务锚点计算用 */
-	durationMin: number;
-}
-let blockDragMeta: BlockDragMeta | null = null;
-
-/**
  * 页面上是否存在打开的右键菜单。
  * ContextMenuTrigger 会 stopPropagation 掉 contextmenu 事件（列内收不到），
  * 菜单又 portal 到 body 且其 mousemove 会沿 React 树冒泡进列内——
@@ -632,7 +619,7 @@ function DayColumn({
 		e.preventDefault();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 		setDragOverCol((prev) => (prev === dayIndex ? prev : dayIndex));
-		const meta = blockDragMeta;
+		const meta = getBlockDragMeta();
 		if (meta) {
 			// 块拖动：落点预览 = 块上边缘吸附位置 + 任务时长（不出指针指示线）
 			setDropLine(null);
@@ -672,7 +659,7 @@ function DayColumn({
 			return;
 		}
 		// 块拖动：指针 - 抓取偏移 = 块上边缘位置；外部拖入：指针即块顶
-		const meta = blockDragMeta;
+		const meta = getBlockDragMeta();
 		const topEdgeClientY = meta ? e.clientY - meta.offsetPx : e.clientY;
 		onBlockMove(task, dayIndex, minutesFromEvent(topEdgeClientY));
 	}, [tasks, dayIndex, minutesFromEvent, onBlockMove, setDropLine, setDropPreview]);
@@ -714,13 +701,13 @@ function DayColumn({
 							// 记录抓取信息：落点按块上边缘计算而非指针（WYSIWYG），
 							// 时长用于落点预览与后向点任务锚点（dragover 阶段 getData 不可用）
 							const rect = e.currentTarget.getBoundingClientRect();
-							blockDragMeta = {
+							setBlockDragMeta({
 								offsetPx: e.clientY - rect.top,
 								durationMin: Math.round((block.end.getTime() - block.start.getTime()) / 60000),
-							};
+							});
 						}}
 						onDragEnd={() => {
-							blockDragMeta = null;
+							clearBlockDragMeta();
 							setDropPreview(null);
 						}}
 					>

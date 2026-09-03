@@ -523,3 +523,117 @@ export function buildWeekTimelineModel(
 
 	return { days, blocks, allday };
 }
+
+// ===== 单日时间线（侧边栏今日时间线） =====
+
+/** 全天列表项（单日无横跨条，纵向卡片 + 可选时刻标注） */
+export interface DayAlldayItem {
+	task: GCTask;
+	/** 长区间任务的起止时刻标注（如 "22:00 → 03:00"） */
+	timeLabel?: string;
+}
+
+/** 单日时间线模型 */
+export interface DayTimelineModel {
+	/** 今日时段块（含 lane），按开始时间排序 */
+	blocks: DaySegment[];
+	/** 全天列表：day 精度命中 + 覆盖今日的 ≥24h 长区间 */
+	allday: DayAlldayItem[];
+}
+
+/** 区间与单日求交（无交集返回 null），周外/日外延续用 continues 标记 */
+function clipToDay(start: Date, end: Date, dayStart: Date): TimeBlockSegment | null {
+	const dayEnd = new Date(dayStart);
+	dayEnd.setDate(dayEnd.getDate() + 1);
+	if (end.getTime() <= dayStart.getTime() || start.getTime() >= dayEnd.getTime()) return null;
+	const segStart = start.getTime() < dayStart.getTime() ? dayStart : start;
+	const segEnd = end.getTime() > dayEnd.getTime() ? dayEnd : end;
+	return {
+		dayIndex: 0,
+		startMin: Math.round((segStart.getTime() - dayStart.getTime()) / 60000),
+		endMin: Math.round((segEnd.getTime() - dayStart.getTime()) / 60000),
+		continuesBefore: start.getTime() < dayStart.getTime(),
+		continuesAfter: end.getTime() > dayEnd.getTime(),
+		lane: 0,
+		laneCount: 1,
+		stackedIndex: 0,
+	};
+}
+
+/**
+ * 构建单日时间线模型（与周视图同语义）：
+ * - <24h 区间/点任务 → 裁剪到当日的时段块（lane 布局，延续边标记）
+ * - ≥24h 长区间（覆盖当日）→ 全天列表 + 时刻标注，不进时间网格
+ * - day 精度：gantt 区间覆盖当日，或 dateField 命中当日 → 全天列表
+ * @param tasks  未过滤取消态的任务全集（模型不筛 cancelled，由调用方决定）
+ */
+export function buildDayTimelineModel(
+	tasks: GCTask[],
+	day: Date,
+	startField: DateFieldType,
+	endField: DateFieldType,
+	dateField: DateFieldType,
+): DayTimelineModel {
+	// 注意：参数名用 day，避免遮蔽模块级 dayStart() 工具函数
+	const dayEnd = new Date(day);
+	dayEnd.setDate(dayEnd.getDate() + 1);
+	const coversDay = (s: Date, e: Date) => s.getTime() < dayEnd.getTime() && e.getTime() > day.getTime();
+
+	const blocks: TimeBlock[] = [];
+	const allday: DayAlldayItem[] = [];
+
+	for (const task of tasks) {
+		const interval = getTaskInterval(task, startField, endField, dateField);
+		if (interval) {
+			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
+			if (interval.kind === 'interval' && durationMin >= MINUTES_PER_DAY) {
+				// 覆盖当日的长区间 → 全天列表（带时刻标注）
+				if (coversDay(interval.start, interval.end)) {
+					allday.push({
+						task,
+						timeLabel: buildIntervalTimeLabel(
+							interval.start, interval.end,
+							task.datePrecision?.[startField] === 'time',
+							task.datePrecision?.[endField] === 'time',
+						),
+					});
+				}
+				continue;
+			}
+			const seg = clipToDay(interval.start, interval.end, day);
+			if (seg) {
+				blocks.push({
+					task,
+					start: interval.start,
+					end: interval.end,
+					isPoint: interval.kind === 'point',
+					pointField: interval.pointField,
+					pointDirection: interval.pointDirection,
+					segments: [seg],
+				});
+			}
+			continue;
+		}
+
+		// day 精度：gantt 双字段区间覆盖当日，或 dateField 命中当日
+		const startVal = getTaskDateField(task, startField);
+		const endVal = getTaskDateField(task, endField);
+		if (startVal && endVal && coversDay(dayStart(startVal), nextDayStart(endVal))) {
+			allday.push({ task });
+			continue;
+		}
+		const dateVal = getTaskDateField(task, dateField);
+		if (dateVal && dayStart(dateVal).getTime() === day.getTime()) {
+			allday.push({ task });
+		}
+	}
+
+	const daySegs: DaySegment[] = [];
+	for (const block of blocks) {
+		for (const seg of block.segments) daySegs.push({ block, seg });
+	}
+	assignLanes(daySegs.map((d) => d.seg));
+	daySegs.sort((a, b) => a.seg.startMin - b.seg.startMin || b.seg.lane - a.seg.lane);
+
+	return { blocks: daySegs, allday };
+}
