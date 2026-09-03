@@ -1254,8 +1254,14 @@ export class SvgGanttRenderer {
 				this.hidePopup();
 			});
 
-			// 添加元素到组
+			// leadBar 悬停事件（黑色引导区域 tooltip）
 			if (leadBar) {
+				leadBar.addEventListener('mouseenter', (event: MouseEvent) => {
+					this.showPopup(task, leadBar!, { x: event.clientX, y: event.clientY });
+				});
+				leadBar.addEventListener('mouseleave', () => {
+					this.hidePopup();
+				});
 				barGroup.appendChild(leadBar);
 			}
 			if (progressElement) {

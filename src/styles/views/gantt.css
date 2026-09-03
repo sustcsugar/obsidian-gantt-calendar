@@ -467,5 +467,6 @@
 .gc-gantt-view__lead-bar {
 	fill: var(--text-muted);
 	opacity: 0.35;
-	pointer-events: none;
+	pointer-events: auto;
+	cursor: pointer;
 }
