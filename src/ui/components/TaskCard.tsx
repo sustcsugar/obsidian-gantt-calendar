@@ -82,8 +82,10 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 		if (virtual) list.push(TaskCardClasses.modifiers.virtual);
 		else if (task.repeat) list.push(TaskCardClasses.modifiers.recurring);
 		list.push(task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
+		// 有自定义状态时添加 task-with-status，激活 CSS 变量卡片着色
+		if (task.status && !task.completed) list.push('task-with-status');
 		return list;
-	}, [config.viewModifier, config.compact, virtual, task.repeat, task.completed]);
+	}, [config.viewModifier, config.compact, virtual, task.repeat, task.completed, task.status]);
 
 	// ===== 状态颜色 =====
 	const style = useMemo<CSSProperties | undefined>(() => {
