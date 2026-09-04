@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type JSX } from 'react';
-import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react';
+import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { Notice } from 'obsidian';
 import type { GCTask } from '../../../types';
 import type { DateFieldType } from '../../../settings/types';
@@ -557,6 +557,8 @@ function DayColumn({
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
 	/** 拖拽选区创建状态（mousedown 于空白处时激活；moved 以像素位移判定，防点击抖动） */
 	const createRef = useRef<{ anchorMin: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
+	/** pointercancel 清理经 ref 桥接，避免与 finishCreate 形成循环推断 */
+	const cancelCreateRef = useRef<() => void>(() => {});
 
 	const minutesFromEvent = useCallback((clientY: number): number => {
 		const col = colRef.current;
@@ -591,7 +593,7 @@ function DayColumn({
 	}, [daySegs]);
 
 	// ===== hover ghost / 拖拽选区 =====
-	const handleMouseMove = useCallback((e: ReactMouseEvent) => {
+	const handleMouseMove = useCallback((e: ReactPointerEvent) => {
 		if (isInsideBlock(e.target)) {
 			// 选区拖拽中指针掠过块上：ghost 保持（选区仍跟随指针）
 			if (!createRef.current) hideGhost();
@@ -636,7 +638,8 @@ function DayColumn({
 	const finishCreate = useCallback((): void => {
 		const create = createRef.current;
 		createRef.current = null;
-		document.removeEventListener('mouseup', finishCreate);
+		document.removeEventListener('pointerup', finishCreate);
+		document.removeEventListener('pointercancel', cancelCreateRef.current);
 		hideGhost();
 		if (!create) return;
 		if (create.moved && Math.abs(create.lastMin - create.anchorMin) >= MIN_DURATION_MIN) {
@@ -648,7 +651,17 @@ function DayColumn({
 		}
 	}, [dayIndex, onQuickCreate, hideGhost]);
 
-	const handleMouseDown = useCallback((e: ReactMouseEvent) => {
+	/** 触屏滚动接管手势（pointercancel）：静默放弃创建，不弹窗 */
+	const cancelCreate = useCallback((): void => {
+		createRef.current = null;
+		document.removeEventListener('pointerup', finishCreate);
+		document.removeEventListener('pointercancel', cancelCreateRef.current);
+		hideGhost();
+	}, [finishCreate, hideGhost]);
+
+	cancelCreateRef.current = cancelCreate;
+
+	const handleMouseDown = useCallback((e: ReactPointerEvent) => {
 		if (e.button !== 0 || isInsideBlock(e.target)) return;
 		// 菜单打开期间：列内的首次点击仅负责关闭菜单，不启动创建
 		if (isContextMenuOpen()) return;
@@ -662,9 +675,11 @@ function DayColumn({
 		// 按下瞬间维持 hover 的 1 小时块（仅切换激活样式），像素级拖动后才变为选区
 		showGhost(anchorMin, anchorMin + DEFAULT_POINT_DURATION_MIN, true);
 		// 防御：上一手势未正常收尾时先解绑，避免 finishCreate 重复触发
-		document.removeEventListener('mouseup', finishCreate);
-		document.addEventListener('mouseup', finishCreate);
-	}, [minutesFromEvent, showGhost, finishCreate]);
+		document.removeEventListener('pointerup', finishCreate);
+		document.removeEventListener('pointercancel', cancelCreateRef.current);
+		document.addEventListener('pointerup', finishCreate);
+		document.addEventListener('pointercancel', cancelCreateRef.current);
+	}, [minutesFromEvent, showGhost, finishCreate, cancelCreate]);
 
 	// ===== HTML5 拖放（整体平移；块拖动按块边缘落点 + 预览块，外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {
@@ -721,9 +736,9 @@ function DayColumn({
 			ref={colRef}
 			className={`${WeekViewClasses.elements.dayCol}${day.isToday ? ` ${WeekViewClasses.modifiers.dayColToday}` : ''}${dragOverCol === dayIndex ? ` ${WeekViewClasses.modifiers.dayColDragOver}` : ''}`}
 			style={{ gridColumn: `${colPos + 2}`, gridRow: '3', height: `${DAY_PX}px` }}
-			onMouseMove={handleMouseMove}
+			onPointerMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
-			onMouseDown={handleMouseDown}
+			onPointerDown={handleMouseDown}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
@@ -779,7 +794,7 @@ function DayColumn({
 						{!seg.continuesBefore && resizable ? (
 							<div
 								className={`${WeekViewClasses.elements.handle} ${WeekViewClasses.modifiers.handleTop}`}
-								onMouseDown={(e) => {
+								onPointerDown={(e) => {
 									const col = colRef.current;
 									if (col && e.currentTarget.parentElement) {
 										beginResize(e, block, seg, 'top', col, e.currentTarget.parentElement);
@@ -790,7 +805,7 @@ function DayColumn({
 						{!seg.continuesAfter && resizable ? (
 							<div
 								className={`${WeekViewClasses.elements.handle} ${WeekViewClasses.modifiers.handleBottom}`}
-								onMouseDown={(e) => {
+								onPointerDown={(e) => {
 									const col = colRef.current;
 									if (col && e.currentTarget.parentElement) {
 										beginResize(e, block, seg, 'bottom', col, e.currentTarget.parentElement);

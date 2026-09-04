@@ -13,6 +13,7 @@ import { ContextMenuTrigger, type ContextMenuSection } from './ContextMenu';
 import { useTaskTooltip } from './TooltipProvider';
 import { useDragSource } from '../utils/useDragAndDrop';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
+import { isTouchNow } from '../utils/platform';
 import { updateTaskCompletion } from '../../tasks/taskUpdater';
 import { completeRecurringTask } from '../../tasks/recurringTaskCompleter';
 import { openEditTaskModal } from '../modals/TaskFormModal';
@@ -386,7 +387,7 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 			onDragStart={dragProps.onDragStart}
 			onDragEnd={dragProps.onDragEnd}
 			onMouseEnter={(e) => {
-				if (config.enableTooltip) tooltip.show(task, e.currentTarget);
+				if (config.enableTooltip && !isTouchNow()) tooltip.show(task, e.currentTarget);
 			}}
 			onMouseLeave={() => tooltip.hide()}
 			onContextMenu={() => tooltip.cancel()}

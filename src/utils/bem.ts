@@ -254,6 +254,10 @@ export const ContextMenuClasses = {
 	itemDisabled: bem(BLOCKS.CONTEXT_MENU, 'item', 'disabled'),
 	itemIcon: bem(BLOCKS.CONTEXT_MENU, 'item-icon'),
 	itemLabel: bem(BLOCKS.CONTEXT_MENU, 'item-label'),
+	// 手机端底部操作面板
+	sheet: bem(BLOCKS.CONTEXT_MENU, 'sheet'),
+	sheetOverlay: bem(BLOCKS.CONTEXT_MENU, 'sheet-overlay'),
+	sheetGrabber: bem(BLOCKS.CONTEXT_MENU, 'sheet-grabber'),
 };
 
 /**

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type JSX } from 'react';
-import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent } from 'react';
+import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { Notice } from 'obsidian';
 import type { GCTask } from '../../types';
 import type { DateFieldType } from '../../settings/types';
@@ -336,6 +336,8 @@ function TimelineCanvas({
 	const ghostRef = useRef<HTMLDivElement | null>(null);
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
 	const createRef = useRef<{ anchorMin: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
+	/** pointercancel 清理经 ref 桥接，避免与 finishCreate 形成循环推断 */
+	const cancelCreateRef = useRef<() => void>(() => {});
 
 	// 当前时间指示线（30s 刷新）
 	const [nowTop, setNowTop] = useState<number | null>(null);
@@ -381,7 +383,7 @@ function TimelineCanvas({
 	}, [model.blocks]);
 
 	// ===== hover ghost / 拖拽选区 =====
-	const handleMouseMove = useCallback((e: ReactMouseEvent) => {
+	const handleMouseMove = useCallback((e: ReactPointerEvent) => {
 		if (isInsideBlock(e.target)) {
 			if (!createRef.current) hideGhost();
 			return;
@@ -419,7 +421,8 @@ function TimelineCanvas({
 	const finishCreate = useCallback((): void => {
 		const create = createRef.current;
 		createRef.current = null;
-		document.removeEventListener('mouseup', finishCreate);
+		document.removeEventListener('pointerup', finishCreate);
+		document.removeEventListener('pointercancel', cancelCreateRef.current);
 		hideGhost();
 		if (!create) return;
 		if (create.moved && Math.abs(create.lastMin - create.anchorMin) >= MIN_DURATION_MIN) {
@@ -433,7 +436,17 @@ function TimelineCanvas({
 		}
 	}, [onQuickCreate, hideGhost]);
 
-	const handleMouseDown = useCallback((e: ReactMouseEvent) => {
+	/** 触屏滚动接管手势（pointercancel）：静默放弃创建，不弹窗 */
+	const cancelCreate = useCallback((): void => {
+		createRef.current = null;
+		document.removeEventListener('pointerup', finishCreate);
+		document.removeEventListener('pointercancel', cancelCreateRef.current);
+		hideGhost();
+	}, [finishCreate, hideGhost]);
+
+	cancelCreateRef.current = cancelCreate;
+
+	const handleMouseDown = useCallback((e: ReactPointerEvent) => {
 		if (e.button !== 0 || isInsideBlock(e.target)) return;
 		if (isContextMenuOpen()) return;
 		const canvas = canvasRef.current;
@@ -442,9 +455,11 @@ function TimelineCanvas({
 		const anchorMin = minutesFromEvent(e.clientY);
 		createRef.current = { anchorMin, anchorY: e.clientY, lastMin: anchorMin, moved: false };
 		showGhost(anchorMin, anchorMin + DEFAULT_POINT_DURATION_MIN, true);
-		document.removeEventListener('mouseup', finishCreate);
-		document.addEventListener('mouseup', finishCreate);
-	}, [minutesFromEvent, showGhost, finishCreate]);
+		document.removeEventListener('pointerup', finishCreate);
+		document.removeEventListener('pointercancel', cancelCreateRef.current);
+		document.addEventListener('pointerup', finishCreate);
+		document.addEventListener('pointercancel', cancelCreateRef.current);
+	}, [minutesFromEvent, showGhost, finishCreate, cancelCreate]);
 
 	// ===== HTML5 拖放（块拖动按块边缘落点 + 预览块；外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {
@@ -510,9 +525,9 @@ function TimelineCanvas({
 				ref={canvasRef}
 				className={canvasCls}
 				style={{ height: `${DAY_PX}px`, '--gc-tl-hour-h': `${DAY_PX / 24}px` } as CSSProperties}
-				onMouseMove={handleMouseMove}
+				onPointerMove={handleMouseMove}
 				onMouseLeave={handleMouseLeave}
-				onMouseDown={handleMouseDown}
+				onPointerDown={handleMouseDown}
 				onDragOver={handleDragOver}
 				onDragLeave={handleDragLeave}
 				onDrop={handleDrop}
@@ -559,7 +574,7 @@ function TimelineCanvas({
 							{!seg.continuesBefore && resizable ? (
 								<div
 									className={`${SidebarClasses.elements.timelineHandle} ${SidebarClasses.modifiers.timelineHandleTop}`}
-									onMouseDown={(e) => {
+									onPointerDown={(e) => {
 										const canvas = canvasRef.current;
 										if (canvas && e.currentTarget.parentElement) {
 											beginResize(e, block, seg, 'top', canvas, e.currentTarget.parentElement);
@@ -570,7 +585,7 @@ function TimelineCanvas({
 							{!seg.continuesAfter && resizable ? (
 								<div
 									className={`${SidebarClasses.elements.timelineHandle} ${SidebarClasses.modifiers.timelineHandleBottom}`}
-									onMouseDown={(e) => {
+									onPointerDown={(e) => {
 										const canvas = canvasRef.current;
 										if (canvas && e.currentTarget.parentElement) {
 											beginResize(e, block, seg, 'bottom', canvas, e.currentTarget.parentElement);

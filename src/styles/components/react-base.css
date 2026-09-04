@@ -254,3 +254,51 @@ button.gc-context-menu__item--disabled {
 /* 模态面板作为焦点容器：程序聚焦不显示 outline，键盘导航焦点可见 */
 .gc-modal__panel:focus { outline: none; }
 .gc-modal__panel:focus-visible { outline: 2px solid var(--interactive-accent); }
+
+/* ===== 手机端底部操作面板（ContextMenuTrigger 长按唤出） ===== */
+.gc-context-menu__sheet-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: calc(var(--layer-popover, 100) - 1);
+	background: rgba(0, 0, 0, 0.3);
+}
+
+.gc-context-menu.gc-context-menu__sheet {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	max-width: none;
+	min-width: 0;
+	max-height: 70vh;
+	border-radius: 16px 16px 0 0;
+	border-bottom: none;
+	box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.28);
+	padding: 4px 0 calc(10px + env(safe-area-inset-bottom));
+}
+
+.gc-context-menu__sheet .gc-context-menu__section {
+	padding: 0 12px;
+}
+
+.gc-context-menu__sheet .gc-context-menu__item {
+	min-height: 46px;
+	font-size: 15px;
+}
+
+.gc-context-menu__sheet-grabber {
+	width: 36px;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--background-modifier-border);
+	margin: 6px auto 8px;
+}
+
+/* 触屏：卡片禁用系统长按菜单/文本选择，避免与长按操作菜单冲突 */
+@media (hover: none) {
+	.gc-task-card {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+}

@@ -133,8 +133,8 @@ export function createTaskDragController(
 ): {
 	setupTaskBarDragging: (barGroup: SVGGElement, bar: SVGRectElement, leftHandle: SVGRectElement, rightHandle: SVGRectElement, task: GanttChartTask, minDate: Date) => void;
 	startDragging: (task: GanttChartTask, dragType: 'move' | 'resize-left' | 'resize-right', startX: number, minDate: Date, bar: SVGRectElement, leftHandle: SVGRectElement | null, rightHandle: SVGRectElement | null) => void;
-	handleDragMove: (e: MouseEvent) => void;
-	handleDragEnd: (e: MouseEvent) => void;
+	handleDragMove: (e: PointerEvent) => void;
+	handleDragEnd: (e: PointerEvent) => void;
 	addDays: (date: Date, days: number) => Date;
 	destroy: () => void;
 } {
@@ -148,19 +148,21 @@ export function createTaskDragController(
 		task: GanttChartTask,
 		minDate: Date
 	): void {
-		leftHandle.addEventListener('mousedown', (e: MouseEvent) => {
+		// 触屏：拖动元素禁止浏览器手势接管，pointer 拖动才能生效
+		barGroup.style.setProperty('touch-action', 'none');
+		leftHandle.addEventListener('pointerdown', (e: PointerEvent) => {
 			e.preventDefault();
 			e.stopPropagation();
 			startDragging(task, 'resize-left', e.clientX, minDate, bar, leftHandle, null);
 		});
 
-		rightHandle.addEventListener('mousedown', (e: MouseEvent) => {
+		rightHandle.addEventListener('pointerdown', (e: PointerEvent) => {
 			e.preventDefault();
 			e.stopPropagation();
 			startDragging(task, 'resize-right', e.clientX, minDate, bar, null, rightHandle);
 		});
 
-		bar.addEventListener('mousedown', (e: MouseEvent) => {
+		bar.addEventListener('pointerdown', (e: PointerEvent) => {
 			e.preventDefault();
 			startDragging(task, 'move', e.clientX, minDate, bar, null, null);
 		});
@@ -223,11 +225,11 @@ export function createTaskDragController(
 			userSelect: 'none',
 		});
 
-		activeDocument.addEventListener('mousemove', handleDragMove);
-		activeDocument.addEventListener('mouseup', handleDragEnd);
+		activeDocument.addEventListener('pointermove', handleDragMove);
+		activeDocument.addEventListener('pointerup', handleDragEnd);
 	}
 
-	function handleDragMove(e: MouseEvent): void {
+	function handleDragMove(e: PointerEvent): void {
 		if (!state.isDragging) return;
 
 		const deltaX = e.clientX - state.startX;
@@ -271,15 +273,15 @@ export function createTaskDragController(
 		updateTaskBarVisual(ctx, newStart, newEnd, taskMinDate!, state);
 	}
 
-	function handleDragEnd(e: MouseEvent): void {
+	function handleDragEnd(e: PointerEvent): void {
 		if (!state.isDragging) return;
 
 		const { task, dragType, originalStart, originalEnd, startX, hasMoved } = state;
 
 		state.isDragging = false;
 		setCssProps(activeDocument.body, { cursor: '', userSelect: '' });
-		activeDocument.removeEventListener('mousemove', handleDragMove);
-		activeDocument.removeEventListener('mouseup', handleDragEnd);
+		activeDocument.removeEventListener('pointermove', handleDragMove);
+		activeDocument.removeEventListener('pointerup', handleDragEnd);
 
 		if (!hasMoved) {
 			// 没有移动，视为点击
@@ -339,8 +341,8 @@ export function createTaskDragController(
 
 	/** 强制结束拖拽并清理监听器（用于 renderer destroy / 重渲染前） */
 	function destroy(): void {
-		activeDocument.removeEventListener('mousemove', handleDragMove);
-		activeDocument.removeEventListener('mouseup', handleDragEnd);
+		activeDocument.removeEventListener('pointermove', handleDragMove);
+		activeDocument.removeEventListener('pointerup', handleDragEnd);
 		state.isDragging = false;
 		state.justFinishedDragging = false;
 		setCssProps(activeDocument.body, { cursor: '', userSelect: '' });

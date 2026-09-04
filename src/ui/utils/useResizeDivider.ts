@@ -1,4 +1,4 @@
-import { useCallback, useRef, type MouseEvent as ReactMouseEvent, type RefObject } from 'react';
+import { useCallback, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 
 /**
  * 分割线拖拽 hook：鼠标按住分割线拖拽，调整两个相邻面板的尺寸
@@ -19,14 +19,14 @@ export interface ResizeDividerOptions {
 }
 
 /**
- * 返回分割线 onMouseDown 处理器
+ * 返回分割线 onPointerDown 处理器（pointer 事件统一鼠标与触摸）
  */
-export function useResizeDivider(options: ResizeDividerOptions): (e: ReactMouseEvent<HTMLElement>) => void {
+export function useResizeDivider(options: ResizeDividerOptions): (e: ReactPointerEvent<HTMLElement>) => void {
 	const { direction, firstRef, secondRef, minSize = 100, gap = 8 } = options;
 	const optsRef = useRef(options);
 	optsRef.current = options;
 
-	return useCallback((e: ReactMouseEvent<HTMLElement>) => {
+	return useCallback((e: ReactPointerEvent<HTMLElement>) => {
 		const first = firstRef.current;
 		const second = secondRef.current;
 		const container = (e.currentTarget).parentElement;
@@ -37,7 +37,7 @@ export function useResizeDivider(options: ResizeDividerOptions): (e: ReactMouseE
 		const startFirst = isHorizontal ? first.offsetWidth : first.offsetHeight;
 		const total = isHorizontal ? container.offsetWidth : container.offsetHeight;
 
-		const handleMove = (moveEvent: MouseEvent) => {
+		const handleMove = (moveEvent: PointerEvent) => {
 			const delta = moveEvent[isHorizontal ? 'clientX' : 'clientY'] - startPos;
 			const newFirst = Math.max(minSize, startFirst + delta);
 			const newSecond = Math.max(minSize, total - newFirst - gap);
@@ -46,11 +46,11 @@ export function useResizeDivider(options: ResizeDividerOptions): (e: ReactMouseE
 		};
 
 		const handleUp = () => {
-			document.removeEventListener('mousemove', handleMove);
-			document.removeEventListener('mouseup', handleUp);
+			document.removeEventListener('pointermove', handleMove);
+			document.removeEventListener('pointerup', handleUp);
 		};
 
-		document.addEventListener('mousemove', handleMove);
-		document.addEventListener('mouseup', handleUp);
+		document.addEventListener('pointermove', handleMove);
+		document.addEventListener('pointerup', handleUp);
 	}, [direction, firstRef, secondRef, minSize, gap]);
 }

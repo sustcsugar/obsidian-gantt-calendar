@@ -567,3 +567,11 @@
 	opacity: 0.7;
 	color: var(--interactive-accent);
 }
+
+/* 触屏：侧栏时间线 resize 手柄禁手势接管 + 命中区放大 */
+@media (hover: none) {
+	.gc-sidebar__timeline-handle {
+		height: 18px;
+		touch-action: none;
+	}
+}

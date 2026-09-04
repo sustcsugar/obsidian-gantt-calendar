@@ -530,3 +530,19 @@
 	border-radius: 50%;
 	background-color: var(--interactive-accent);
 }
+
+/* 触屏：resize 手柄禁止浏览器手势接管（纵向拖动专属），命中区放大 */
+@media (hover: none) {
+	.gc-week-view__handle {
+		height: 18px;
+		touch-action: none;
+	}
+
+	.gc-week-view__handle--top {
+		top: 0;
+	}
+
+	.gc-week-view__handle--bottom {
+		bottom: 0;
+	}
+}

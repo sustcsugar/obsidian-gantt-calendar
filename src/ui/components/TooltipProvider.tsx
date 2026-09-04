@@ -18,6 +18,7 @@ import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { i18n } from '../../i18n/i18n';
 import { TooltipClasses } from '../../utils/bem';
 import { TagPillSpan } from './TagPillSpan';
+import { isTouchNow } from '../utils/platform';
 import { MOTION, tooltipVariants, easeOutTransition } from '../motion';
 
 interface TooltipState {
@@ -133,7 +134,7 @@ export function TaskTooltipTrigger({
 		<span
 			ref={ref}
 			className="gc-u-inline"
-			onMouseEnter={handleEnter}
+			onMouseEnter={(e) => { if (!isTouchNow()) handleEnter(e); }}
 			onMouseLeave={hide}
 			onContextMenu={cancel}
 			onDragStart={cancel}

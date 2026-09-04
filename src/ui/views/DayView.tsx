@@ -374,7 +374,7 @@ export function DayView(): JSX.Element {
 				</div>
 				<div
 					className={layout === 'horizontal' ? DayViewClasses.elements.divider : DayViewClasses.elements.dividerVertical}
-					onMouseDown={layout === 'horizontal' ? handleDividerMouseDown : handleDividerMouseDownVertical}
+					onPointerDown={layout === 'horizontal' ? handleDividerMouseDown : handleDividerMouseDownVertical}
 				/>
 				<div ref={notesSectionRef} className={DayViewClasses.elements.sectionNotes}>
 					<div className={DayViewClasses.elements.notesHeader}>
