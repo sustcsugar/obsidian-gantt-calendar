@@ -54,7 +54,14 @@ export function DayView(): JSX.Element {
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 
 	const config = useMemo(() => ({ ...DayViewConfig }), []);
-	const timelineConfig = useMemo(() => ({ ...DayViewConfig, enableDrag: true, variant: 'timeline' as const }), []);
+	const timelineConfig = useMemo(() => ({
+		...DayViewConfig,
+		enableDrag: true,
+		// 画布块信息密度高且可能被裁剪，悬浮详情弹窗与周视图/侧栏保持一致开启
+		// （DayViewConfig 预设的 false 是旧版简化列表的遗留）
+		enableTooltip: true,
+		variant: 'timeline' as const,
+	}), []);
 
 	const normalized = useMemo(() => {
 		const d = new Date(currentDate);
