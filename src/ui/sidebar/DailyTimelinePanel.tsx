@@ -33,6 +33,7 @@ import {
 	MINUTES_PER_DAY,
 } from '../views/week/timelineModel';
 import { useBlockResize, isBlockResizing, setBlockDragMeta, getBlockDragMeta, clearBlockDragMeta } from '../views/week/useBlockResize';
+import { useCanvasTouchDrag } from '../views/week/useCanvasTouchDrag';
 
 /**
  * 创建手势的像素位移阈值（与周视图一致）：超过才视为拖拽选区，
@@ -199,6 +200,13 @@ export function DailyTimelinePanel(): JSX.Element {
 		void persistTaskUpdate(task, updates, precision, 'views.dayView.updateTimeFailed');
 	}, [atMinutes, startField, endField, dateField, persistTaskUpdate]);
 
+	// 触屏整块拖动（长按 500ms 起拖；单日画布 dayIndex 恒为 0）
+	const beginBlockTouchPress = useCanvasTouchDrag({
+		onCommit: (task, _dayIndex, minutes) => commitBlockMove(task, minutes),
+		setPreview: (prev) => setDropPreview(prev && { startMin: prev.startMin, endMin: prev.endMin }),
+		columnSelector: '.' + SidebarClasses.elements.timelineCanvas,
+	});
+
 	// ===== 全天区拖放：转全天（day 精度） =====
 	const handleAllDayDrop = useCallback((taskId: string): void => {
 		const task = findTaskById(candidates, taskId);
@@ -288,6 +296,7 @@ export function DailyTimelinePanel(): JSX.Element {
 				config={timelineConfig}
 				tasks={candidates}
 				beginResize={beginResize}
+				beginTouchPress={beginBlockTouchPress}
 				onQuickCreate={handleQuickCreate}
 				onBlockMove={commitBlockMove}
 				dropLine={dropLine}
@@ -308,6 +317,7 @@ interface TimelineCanvasProps {
 	config: ReturnType<typeof buildSidebarConfig>;
 	tasks: GCTask[];
 	beginResize: ReturnType<typeof useBlockResize>;
+	beginTouchPress: ReturnType<typeof useCanvasTouchDrag>;
 	onQuickCreate: (payload: QuickCreate) => void;
 	onBlockMove: (task: GCTask, minutes: number) => void;
 	dropLine: number | null;
@@ -323,6 +333,7 @@ function TimelineCanvas({
 	config,
 	tasks,
 	beginResize,
+	beginTouchPress,
 	onQuickCreate,
 	onBlockMove,
 	dropLine,
@@ -524,7 +535,8 @@ function TimelineCanvas({
 			<div
 				ref={canvasRef}
 				className={canvasCls}
-				style={{ height: `${DAY_PX}px`, '--gc-tl-hour-h': `${DAY_PX / 24}px` } as CSSProperties}
+				data-day-idx={0}
+			style={{ height: `${DAY_PX}px`, '--gc-tl-hour-h': `${DAY_PX / 24}px` } as CSSProperties}
 				onPointerMove={handleMouseMove}
 				onMouseLeave={handleMouseLeave}
 				onPointerDown={handleMouseDown}
@@ -549,11 +561,12 @@ function TimelineCanvas({
 						zIndex: seg.lane + (seg.stackedIndex > 0 ? 4 : 1),
 					};
 					return (
-						<div
-							key={`${block.task.filePath}:${block.task.lineNumber}`}
-							className={cls}
-							style={style}
-							onDragStart={(e) => {
+					<div
+						key={`${block.task.filePath}:${block.task.lineNumber}`}
+						className={cls}
+						style={style}
+						onPointerDown={(e) => beginTouchPress(e, block, e.currentTarget)}
+						onDragStart={(e) => {
 								const rect = e.currentTarget.getBoundingClientRect();
 								setBlockDragMeta({
 									offsetPx: e.clientY - rect.top,
@@ -570,7 +583,7 @@ function TimelineCanvas({
 									{`${formatMinutes(seg.startMin)} – ${formatMinutes(seg.endMin)}`}
 								</span>
 							) : null}
-							<TaskCard task={block.task} config={config} />
+							<TaskCard task={block.task} config={config} disableLongPressMenu />
 							{!seg.continuesBefore && resizable ? (
 								<div
 									className={`${SidebarClasses.elements.timelineHandle} ${SidebarClasses.modifiers.timelineHandleTop}`}

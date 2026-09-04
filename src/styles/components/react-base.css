@@ -302,3 +302,22 @@ button.gc-context-menu__item--disabled {
 		user-select: none;
 	}
 }
+
+/* 触屏画布拖动的跟随标签（useCanvasTouchDrag） */
+.gc-canvas-drag-chip {
+	position: fixed;
+	z-index: 1100;
+	transform: translate(-50%, -100%);
+	max-width: 220px;
+	padding: 4px 10px;
+	border-radius: 6px;
+	background: var(--background-primary);
+	border: 1px solid var(--interactive-accent);
+	color: var(--text-normal);
+	font-size: 12px;
+	pointer-events: none;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

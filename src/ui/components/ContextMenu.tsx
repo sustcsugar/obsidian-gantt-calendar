@@ -27,6 +27,8 @@ export interface ContextMenuTriggerProps {
 	onOpen?: () => void;
 	/** 菜单类名 */
 	className?: string;
+	/** 禁用内置触屏长按（容器自管长按手势时使用，如时间画布的拖动/菜单复用手势） */
+	longPressDisabled?: boolean;
 }
 
 interface MenuState {
@@ -43,6 +45,7 @@ export function ContextMenuTrigger({
 	sections,
 	onOpen,
 	className,
+	longPressDisabled,
 }: ContextMenuTriggerProps): JSX.Element {
 	const [state, setState] = useState<MenuState | null>(null);
 	const menuRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +71,7 @@ export function ContextMenuTrigger({
 	}, []);
 
 	const handlePointerDown = useCallback((e: ReactPointerEvent) => {
-		if (e.pointerType === 'mouse') return; // 桌面走右键 / 左键点击
+		if (e.pointerType === 'mouse' || longPressDisabled) return; // 桌面走右键 / 左键点击；容器自管长按
 		const x = e.clientX;
 		const y = e.clientY;
 		const timer = window.setTimeout(() => {

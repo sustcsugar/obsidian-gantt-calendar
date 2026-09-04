@@ -32,6 +32,7 @@ import {
 	MINUTES_PER_DAY,
 } from './timelineModel';
 import { useBlockResize, isBlockResizing, setBlockDragMeta, getBlockDragMeta, clearBlockDragMeta } from './useBlockResize';
+import { useCanvasTouchDrag } from './useCanvasTouchDrag';
 
 /** 全天行单行高度（卡片 24px + 间距 4px，与 CSS 令牌对应） */
 const ALLDAY_ROW_PX = 28;
@@ -288,6 +289,13 @@ export function WeekTimelineGrid({
 		void persistTaskUpdate(task, updates, precision, 'views.dayView.updateTaskFailed');
 	}, [dayDate, startField, endField, dateField, persistTaskUpdate]);
 
+	// 触屏整块拖动（长按 500ms 起拖；提交与落点预览复用现有链路）
+	const beginBlockTouchPress = useCanvasTouchDrag({
+		onCommit: commitBlockMove,
+		setPreview: setDropPreview,
+		columnSelector: '.' + WeekViewClasses.elements.dayCol,
+	});
+
 	// ===== 空白快速创建 =====
 	const handleQuickCreate = useCallback((payload: QuickCreate): void => {
 		const dayInfo = days[payload.dayIndex];
@@ -472,6 +480,7 @@ export function WeekTimelineGrid({
 					daySegs={model.days[dayIdx] || []}
 					config={config}
 					beginResize={beginResize}
+					beginTouchPress={beginBlockTouchPress}
 					onQuickCreate={handleQuickCreate}
 					onBlockMove={commitBlockMove}
 					dropLine={dropLine}
@@ -520,6 +529,7 @@ interface DayColumnProps {
 	daySegs: DaySegment[];
 	config: TaskCardConfig;
 	beginResize: ReturnType<typeof useBlockResize>;
+	beginTouchPress: ReturnType<typeof useCanvasTouchDrag>;
 	onQuickCreate: (payload: QuickCreate) => void;
 	onBlockMove: (task: GCTask, dayIndex: number, minutes: number) => void;
 	dropLine: DropLineState | null;
@@ -540,6 +550,7 @@ function DayColumn({
 	daySegs,
 	config,
 	beginResize,
+	beginTouchPress,
 	onQuickCreate,
 	onBlockMove,
 	dropLine,
@@ -735,6 +746,7 @@ function DayColumn({
 		<div
 			ref={colRef}
 			className={`${WeekViewClasses.elements.dayCol}${day.isToday ? ` ${WeekViewClasses.modifiers.dayColToday}` : ''}${dragOverCol === dayIndex ? ` ${WeekViewClasses.modifiers.dayColDragOver}` : ''}`}
+			data-day-idx={dayIndex}
 			style={{ gridColumn: `${colPos + 2}`, gridRow: '3', height: `${DAY_PX}px` }}
 			onPointerMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
@@ -764,6 +776,7 @@ function DayColumn({
 						key={`${taskKey(block.task)}-d${dayIndex}`}
 						className={cls}
 						style={style}
+						onPointerDown={(e) => beginTouchPress(e, block, e.currentTarget)}
 						onDragStart={(e) => {
 							// 记录抓取信息：落点按块上边缘计算而非指针（WYSIWYG），
 							// 时长用于落点预览与后向点任务锚点（dragover 阶段 getData 不可用）
