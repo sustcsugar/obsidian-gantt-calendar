@@ -588,7 +588,7 @@
 	white-space: normal;
 	word-break: break-word;
 	text-overflow: clip;
-	flex: 1 1 auto;
+	flex: 1 1 0;
 	min-width: 0;
 }
 
