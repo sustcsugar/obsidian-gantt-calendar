@@ -546,3 +546,23 @@
 		bottom: 0;
 	}
 }
+
+/* 任务块内文本多行换行：块高度由时长决定（主），文本填充可用空间并随块裁剪（从）。
+   仅作用于时间块；全天条（固定 24px）与日视图槽位保持单行 */
+.gc-week-view__time-block .gc-task-card--timeline {
+	flex-wrap: wrap;
+	align-content: flex-start;
+	align-items: flex-start;
+}
+
+.gc-week-view__time-block .gc-task-card--timeline .gc-task-card__text {
+	white-space: normal;
+	word-break: break-word;
+	text-overflow: clip;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.gc-week-view__time-block .gc-task-card--timeline .gc-task-card__tags {
+	max-width: 100%;
+}

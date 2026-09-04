@@ -575,3 +575,23 @@
 		touch-action: none;
 	}
 }
+
+/* 侧栏时间块内文本多行换行（与周视图同语义：块为主，文本为从）；
+   全天区列表项（固定高卡片）保持单行 */
+.gc-sidebar__timeline-block .gc-task-card--timeline {
+	flex-wrap: wrap;
+	align-content: flex-start;
+	align-items: flex-start;
+}
+
+.gc-sidebar__timeline-block .gc-task-card--timeline .gc-task-card__text {
+	white-space: normal;
+	word-break: break-word;
+	text-overflow: clip;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.gc-sidebar__timeline-block .gc-task-card--timeline .gc-task-card__tags {
+	max-width: 100%;
+}
