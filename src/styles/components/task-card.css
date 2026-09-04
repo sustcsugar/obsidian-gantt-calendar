@@ -191,25 +191,31 @@
 	.gc-toolbar__tag-filter-tag-item--level-3 { padding-left: 56px; }
 	.gc-toolbar__tag-filter-tag-item--level-4 { padding-left: 72px; }
 
-/* 6.2 Task Card Component (统一任务卡片) */
-/* BEM命名: gc-task-card */
+/* 6.2 Task Card Component (统一任务卡片)
+   Plane 卡解剖：hairline 边框承载层级（左侧 3px 保留为状态色条），
+   hover 边框加深 + 极轻投影抬升，背景不变 */
 .gc-task-card {
 	display: flex;
 	align-items: center;
 	padding: 8px;
+	border: 1px solid var(--gc-border-hairline);
 	border-left: 3px solid transparent;
 	background-color: var(--background-secondary);
 	border-radius: var(--gc-radius-sm);
 	cursor: pointer;
 	transition: background-color var(--gc-dur-fast) var(--gc-ease-out),
+		border-color var(--gc-dur-fast) var(--gc-ease-out),
 		transform var(--gc-dur-fast) var(--gc-ease-out),
 		box-shadow var(--gc-dur-fast) var(--gc-ease-out);
 }
 
+/* 只加深上/右/下边框，避免覆盖左侧状态色条 */
 .gc-task-card:hover {
 	background-color: var(--background-modifier-hover);
-	transform: translateY(-1px);
-	box-shadow: var(--gc-elev-2);
+	border-top-color: var(--gc-border-strong);
+	border-right-color: var(--gc-border-strong);
+	border-bottom-color: var(--gc-border-strong);
+	box-shadow: var(--gc-card-shadow-hover);
 }
 
 .gc-task-card__text {
@@ -228,13 +234,14 @@
 	gap: 8px;
 	flex-wrap: wrap;
 	font-size: var(--gc-font-sm);
+	box-shadow: var(--gc-card-shadow);
 }
 
 .gc-task-card--week {
 	padding: 8px;
 	gap: 4px;
 	font-size: var(--gc-font-sm);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: var(--gc-card-shadow);
 }
 
 /* 周视图：给文本添加左侧间距，补偿复选框后的gap */
@@ -294,7 +301,7 @@
 	font-size: var(--gc-font-xxs);
 	line-height: 1.3;
 	border-left-width: 2px;
-	border-radius: 3px;
+	border-radius: var(--gc-radius-xs);
 }
 
 /* 月视图小屏幕 - 限制标签显示 */

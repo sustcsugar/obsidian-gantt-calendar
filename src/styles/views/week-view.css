@@ -120,20 +120,13 @@
 	color: var(--text-muted);
 }
 
-.gc-week-view__empty {
-	padding: 16px 8px;
-	text-align: center;
-	color: var(--text-muted);
-	font-size: 12px;
-}
-
-/* ==================== Week View Timeline ==================== */
-/* 周视图时间轴模式 - 当周内有定时任务时激活 */
-/* 核心：header + 时间标尺 + 任务格全部在同一 grid 中，保证行列完美对齐 */
-.gc-week-view--timeline .gc-week-view__tasks-grid {
+/* ==================== Week View Timeline（连续时间画布） ==================== */
+/* 常驻时间线模式：header + 全天行 + 7 个日列（24h 连续画布）在同一 grid 中 */
+/* 1 小时高度由 --gc-tl-hour-h 驱动（组件内联注入，单一来源 HOUR_PX） */
+.gc-week-view__tasks-grid {
 	display: grid;
 	grid-template-columns: 48px repeat(7, 1fr);
-	grid-template-rows: 52px auto repeat(24, var(--gc-tl-slot-h));
+	grid-template-rows: 52px auto auto;
 	align-content: start;
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -152,105 +145,371 @@
 	z-index: 5;
 }
 
-/* 时间轴模式下 header cell（sticky） */
-.gc-week-view--timeline .gc-week-view__header-cell {
+/* header cell（sticky） */
+.gc-week-view__tasks-grid .gc-week-view__header-cell {
 	position: sticky;
 	top: 0;
 	z-index: 5;
 	background-color: var(--background-primary);
 }
 
-/* 时间标尺格（第 1 列，第 2-25 行） */
+/* 时间沟槽：24 个整点标签（第 1 列第 3 行） */
 .gc-week-view__time-gutter-slot {
 	display: flex;
-	align-items: flex-start;
-	justify-content: flex-end;
-	padding: 2px 6px 0 0;
-	height: var(--gc-tl-slot-h);
-	border-top: 1px solid var(--background-modifier-border);
+	flex-direction: column;
+	align-items: flex-end;
+	border-right: 1px solid var(--background-modifier-border);
 	background-color: var(--background-primary);
-	border-right: 1px solid var(--background-modifier-border);
-}
-
-.gc-week-view__time-gutter-slot:first-of-type {
-	border-top: none;
-}
-
-/* 全天任务行 gutter（第 1 列第 2 行） */
-.gc-week-view__allday-gutter {
-	display: flex;
-	align-items: flex-start;
-	justify-content: flex-end;
-	padding: 0 6px 0 0;
-	font-size: 11px;
-	color: var(--text-muted);
-	border-right: 1px solid var(--background-modifier-border);
-	border-bottom: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary-alt);
-}
-
-/* 全天任务格 */
-.gc-week-view__allday-slot {
-	display: flex;
-	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
-	padding: 0 4px;
-	border-bottom: 1px solid var(--background-modifier-border);
-	border-right: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary-alt);
-	transition: background-color 0.15s ease;
-	/* 网格轨道为 1fr(=minmax(auto,1fr))，grid item 的 min-width:auto 会让
-	   卡片内 nowrap 长文本把整列撑宽；overflow 非 visible 将自动最小尺寸归零，
-	   与 time-slot 同款约束 */
 	min-width: 0;
-	overflow: hidden;
-}
-
-.gc-week-view__allday-tasks {
-	display: flex;
-	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
-	min-height: var(--gc-tl-card-h);
-	min-width: 0;
-	max-width: 100%;
-}
-
-.gc-week-view__allday-slot--drag-over {
-	background-color: var(--background-modifier-hover);
 }
 
 .gc-week-view__time-gutter-label {
+	height: var(--gc-tl-hour-h);
+	width: 100%;
+	padding: 2px 6px 0 0;
+	text-align: right;
+	box-sizing: border-box;
 	font-size: 11px;
 	color: var(--text-muted);
 	font-variant-numeric: tabular-nums;
 }
 
-/* 任务时间格（第 2-8 列，第 2-25 行） */
-.gc-week-view__time-slot {
+/* 全天行 gutter（第 1 列第 2 行） */
+.gc-week-view__allday-gutter {
 	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	padding: 0 4px;
-	height: var(--gc-tl-slot-h);
-	overflow: hidden;
-	border-top: 1px solid var(--background-modifier-border);
+	align-items: flex-start;
+	justify-content: flex-end;
+	padding: 4px 6px 0 0;
+	font-size: 11px;
+	color: var(--text-muted);
 	border-right: 1px solid var(--background-modifier-border);
-	position: relative;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary-alt);
 }
 
-.gc-week-view__time-tasks {
-	display: flex;
-	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
+/* 全天行（第 2-8 列第 2 行）：背景日格 + 绝对定位横跨条 */
+.gc-week-view__allday-row {
+	position: relative;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary-alt);
+	min-width: 0;
 	overflow: hidden;
 }
 
-.gc-week-view__row--drag-over {
-	background-color: var(--background-modifier-hover);
-	transition: background-color 0.15s ease;
+.gc-week-view__allday-cell {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	border-right: 1px solid var(--background-modifier-border);
+	transition: background-color var(--gc-dur-fast) var(--gc-ease-out);
 }
 
-/* Week View — 当前时间指示线 */
+.gc-week-view__allday-cell--today {
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-week-view__allday-cell--drag-over {
+	background-color: var(--background-modifier-hover);
+}
+
+/* 全天横跨条：left/width/top 由组件按 dayIndex/lane 内联定位 */
+.gc-week-view__allday-bar {
+	position: absolute;
+	height: var(--gc-tl-card-h);
+	z-index: 1;
+	min-width: 0;
+}
+
+.gc-week-view__allday-bar .gc-task-card--timeline {
+	height: 100%;
+}
+
+/* 长区间任务（≥24h）的起止时刻标注，如 "22:00 → 03:00" */
+.gc-week-view__allday-bar-time {
+	position: absolute;
+	top: 2px;
+	right: 4px;
+	z-index: 2;
+	font-size: 10px;
+	line-height: 1.3;
+	padding: 0 3px;
+	border-radius: 3px;
+	background-color: color-mix(in srgb, var(--background-primary) 80%, transparent);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+.gc-week-view__allday-bar--stacked {
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* 延续指示箭头（跨日/跨周延续的横跨条） */
+.gc-week-view__allday-bar--continues-before::before,
+.gc-week-view__allday-bar--continues-after::after {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 10px;
+	line-height: 1;
+	color: var(--text-muted);
+	background-color: var(--background-primary);
+	border-radius: 3px;
+	padding: 1px 1px;
+	z-index: 2;
+}
+
+.gc-week-view__allday-bar--continues-before::before {
+	content: '‹';
+	left: 0;
+}
+
+.gc-week-view__allday-bar--continues-after::after {
+	content: '›';
+	right: 0;
+}
+
+/* 日列（连续画布）：整点实线 + 半点浅线网格，块按分钟绝对定位 */
+.gc-week-view__day-col {
+	position: relative;
+	border-right: 1px solid var(--background-modifier-border);
+	background-image:
+		repeating-linear-gradient(
+			to bottom,
+			var(--background-modifier-border) 0,
+			var(--background-modifier-border) 1px,
+			transparent 1px,
+			transparent var(--gc-tl-hour-h)
+		),
+		repeating-linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--background-modifier-border) 45%, transparent) 0,
+			color-mix(in srgb, var(--background-modifier-border) 45%, transparent) 1px,
+			transparent 1px,
+			transparent calc(var(--gc-tl-hour-h) / 2)
+		);
+}
+
+.gc-week-view__day-col--today {
+	background-color: var(--background-primary-alt);
+}
+
+.gc-week-view__day-col--drag-over {
+	background-color: var(--background-modifier-hover);
+}
+
+/* 时间块：top/height/left/width 由组件按分钟与 lane 内联定位 */
+.gc-week-view__time-block {
+	position: absolute;
+	border-radius: var(--gc-radius-xs, 4px);
+	overflow: hidden;
+	min-width: 0;
+}
+
+/* 块内卡片高度由块容器按时长撑开（timeline 变体默认固定 24px，此处覆盖） */
+.gc-week-view__time-block .gc-task-card--timeline {
+	height: 100%;
+	min-height: var(--gc-tl-card-h);
+}
+
+/* 延续分段：平角 + 箭头指示（延续自前一日/次日） */
+.gc-week-view__time-block--continues-before {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.gc-week-view__time-block--continues-after {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.gc-week-view__time-block--continues-before::before,
+.gc-week-view__time-block--continues-after::after {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 9px;
+	line-height: 1;
+	color: var(--text-muted);
+	z-index: 2;
+	pointer-events: none;
+}
+
+.gc-week-view__time-block--continues-before::before {
+	content: '▲';
+	top: 1px;
+}
+
+.gc-week-view__time-block--continues-after::after {
+	content: '▼';
+	bottom: 1px;
+}
+
+/* 超出 lane 上限的叠加块：加阴影区分 */
+.gc-week-view__time-block--stacked {
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* 块右上角时刻标签 */
+.gc-week-view__time-block-time {
+	position: absolute;
+	top: 1px;
+	right: 3px;
+	z-index: 2;
+	font-size: 10px;
+	line-height: 1.3;
+	padding: 0 3px;
+	border-radius: 3px;
+	background-color: color-mix(in srgb, var(--background-primary) 80%, transparent);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+/* resize 手柄（仅真实起止边缘渲染）：6px 命中区 + 悬停视觉条 */
+.gc-week-view__handle {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 6px;
+	cursor: ns-resize;
+	z-index: 3;
+}
+
+.gc-week-view__handle--top {
+	top: 0;
+}
+
+.gc-week-view__handle--bottom {
+	bottom: 0;
+}
+
+.gc-week-view__handle::after {
+	content: '';
+	position: absolute;
+	left: 20%;
+	right: 20%;
+	height: 2px;
+	border-radius: 1px;
+	background-color: var(--interactive-accent);
+	opacity: 0;
+	transition: opacity var(--gc-dur-fast) var(--gc-ease-out);
+}
+
+.gc-week-view__handle--top::after {
+	top: 2px;
+}
+
+.gc-week-view__handle--bottom::after {
+	bottom: 2px;
+}
+
+.gc-week-view__time-block:hover .gc-week-view__handle::after,
+.gc-week-view__handle:hover::after {
+	opacity: 0.9;
+}
+
+/* 空白快速创建 ghost：hover 提示 / 拖拽选区 */
+.gc-week-view__ghost {
+	position: absolute;
+	left: 2px;
+	right: 2px;
+	z-index: 5;
+	border: 1px dashed var(--interactive-accent);
+	border-radius: var(--gc-radius-xs, 4px);
+	background-color: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+	pointer-events: none;
+}
+
+.gc-week-view__ghost--dragging {
+	border-style: solid;
+	background-color: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+}
+
+.gc-week-view__ghost-label {
+	position: absolute;
+	top: 2px;
+	left: 3px;
+	font-size: 10px;
+	line-height: 1.3;
+	padding: 0 3px;
+	border-radius: 3px;
+	background-color: var(--background-primary);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.gc-week-view__ghost-plus {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--interactive-accent);
+	opacity: 0.75;
+}
+
+.gc-week-view__ghost--dragging .gc-week-view__ghost-plus {
+	display: none;
+}
+
+/* 拖放吸附指示线 */
+.gc-week-view__drop-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background-color: var(--interactive-accent);
+	opacity: 0.75;
+	z-index: 6;
+	pointer-events: none;
+}
+
+/* 整块拖动的落点预览（上边缘吸附位置 + 任务时长的虚拟块） */
+.gc-week-view__drop-preview {
+	position: absolute;
+	left: 2px;
+	right: 2px;
+	z-index: 9;
+	border: 1px dashed var(--interactive-accent);
+	border-radius: var(--gc-radius-xs, 4px);
+	background-color: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+	pointer-events: none;
+}
+
+.gc-week-view__drop-line::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: -2px;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: var(--interactive-accent);
+}
+
+/* resize 拖拽时的时间气泡（挂载于 body，fixed 定位） */
+.gc-week-view__resize-tip {
+	position: fixed;
+	z-index: 1000;
+	pointer-events: none;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--gc-radius-xs, 4px);
+	padding: 2px 6px;
+	font-size: 11px;
+	color: var(--text-normal);
+	font-variant-numeric: tabular-nums;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+	white-space: nowrap;
+}
+
+/* 当前时间指示线 */
 .gc-week-view__timeline-current-time {
 	position: absolute;
 	left: 48px;
@@ -271,4 +530,3 @@
 	border-radius: 50%;
 	background-color: var(--interactive-accent);
 }
-

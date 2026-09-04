@@ -111,88 +111,88 @@ export const HEATMAP_PALETTES = {
 		key: 'blue' as const,
 		label: i18n.t('settings.heatmapPalettes.blue'),
 		colors: [
-			'rgba(56, 132, 255, 0.12)',
-			'rgba(56, 132, 255, 0.22)',
-			'rgba(56, 132, 255, 0.32)',
-			'rgba(56, 132, 255, 0.44)',
-			'rgba(56, 132, 255, 0.58)'
+			'rgb(212, 228, 253)',
+			'rgb(177, 205, 251)',
+			'rgb(141, 183, 250)',
+			'rgb(106, 160, 248)',
+			'rgb(59, 130, 246)'
 		]
 	},
 	green: {
 		key: 'green' as const,
 		label: i18n.t('settings.heatmapPalettes.green'),
 		colors: [
-			'rgba(82, 196, 26, 0.12)',
-			'rgba(82, 196, 26, 0.22)',
-			'rgba(82, 196, 26, 0.32)',
-			'rgba(82, 196, 26, 0.44)',
-			'rgba(82, 196, 26, 0.58)'
+			'rgb(206, 242, 220)',
+			'rgb(167, 232, 191)',
+			'rgb(127, 221, 162)',
+			'rgb(87, 211, 133)',
+			'rgb(34, 197, 94)'
 		]
 	},
 	red: {
 		key: 'red' as const,
 		label: i18n.t('settings.heatmapPalettes.red'),
 		colors: [
-			'rgba(231, 76, 60, 0.12)',
-			'rgba(231, 76, 60, 0.22)',
-			'rgba(231, 76, 60, 0.32)',
-			'rgba(231, 76, 60, 0.44)',
-			'rgba(231, 76, 60, 0.58)'
+			'rgb(251, 214, 214)',
+			'rgb(249, 180, 180)',
+			'rgb(246, 147, 147)',
+			'rgb(243, 113, 113)',
+			'rgb(239, 68, 68)'
 		]
 	},
 	purple: {
 		key: 'purple' as const,
 		label: i18n.t('settings.heatmapPalettes.purple'),
 		colors: [
-			'rgba(142, 68, 173, 0.12)',
-			'rgba(142, 68, 173, 0.22)',
-			'rgba(142, 68, 173, 0.32)',
-			'rgba(142, 68, 173, 0.44)',
-			'rgba(142, 68, 173, 0.58)'
+			'rgb(236, 218, 253)',
+			'rgb(220, 187, 252)',
+			'rgb(205, 156, 250)',
+			'rgb(189, 126, 249)',
+			'rgb(168, 85, 247)'
 		]
 	},
 	orange: {
 		key: 'orange' as const,
 		label: i18n.t('settings.heatmapPalettes.orange'),
 		colors: [
-			'rgba(245, 124, 0, 0.12)',
-			'rgba(245, 124, 0, 0.22)',
-			'rgba(245, 124, 0, 0.32)',
-			'rgba(245, 124, 0, 0.44)',
-			'rgba(245, 124, 0, 0.58)'
+			'rgb(254, 224, 204)',
+			'rgb(253, 199, 162)',
+			'rgb(252, 174, 120)',
+			'rgb(250, 149, 78)',
+			'rgb(249, 115, 22)'
 		]
 	},
 	cyan: {
 		key: 'cyan' as const,
 		label: i18n.t('settings.heatmapPalettes.cyan'),
 		colors: [
-			'rgba(0, 188, 212, 0.12)',
-			'rgba(0, 188, 212, 0.22)',
-			'rgba(0, 188, 212, 0.32)',
-			'rgba(0, 188, 212, 0.44)',
-			'rgba(0, 188, 212, 0.58)'
+			'rgb(200, 239, 246)',
+			'rgb(155, 226, 238)',
+			'rgb(111, 213, 230)',
+			'rgb(66, 200, 222)',
+			'rgb(6, 182, 212)'
 		]
 	},
 	pink: {
 		key: 'pink' as const,
 		label: i18n.t('settings.heatmapPalettes.pink'),
 		colors: [
-			'rgba(233, 30, 99, 0.12)',
-			'rgba(233, 30, 99, 0.22)',
-			'rgba(233, 30, 99, 0.32)',
-			'rgba(233, 30, 99, 0.44)',
-			'rgba(233, 30, 99, 0.58)'
+			'rgb(251, 215, 233)',
+			'rgb(247, 182, 214)',
+			'rgb(244, 149, 196)',
+			'rgb(241, 116, 177)',
+			'rgb(236, 72, 153)'
 		]
 	},
 	yellow: {
 		key: 'yellow' as const,
 		label: i18n.t('settings.heatmapPalettes.yellow'),
 		colors: [
-			'rgba(255, 193, 7, 0.12)',
-			'rgba(255, 193, 7, 0.22)',
-			'rgba(255, 193, 7, 0.32)',
-			'rgba(255, 193, 7, 0.44)',
-			'rgba(255, 193, 7, 0.58)'
+			'rgb(250, 238, 201)',
+			'rgb(247, 225, 156)',
+			'rgb(243, 211, 112)',
+			'rgb(239, 197, 67)',
+			'rgb(234, 179, 8)'
 		]
 	}
 };

@@ -13,6 +13,7 @@
     "error": "错误",
     "ready": "就绪",
     "today": "今天",
+    "clear": "清除",
     "none": "无",
     "noContent": "无内容",
     "fileNotFound": "文件未找到：{{path}}",
@@ -785,6 +786,15 @@
     }
   },
   "modals": {
+    "dateTimePicker": {
+      "monthFormat": "{{year}}年{{month}}月",
+      "timePlaceholder": "HH:mm",
+      "now": "此刻",
+      "ok": "确定",
+      "relToday": "今天",
+      "relTomorrow": "明天",
+      "relDayAfterTomorrow": "后天"
+    },
     "addStatus": {
       "title": "添加自定义状态",
       "name": {

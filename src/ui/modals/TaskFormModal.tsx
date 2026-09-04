@@ -12,7 +12,7 @@ import { EditTaskModalClasses } from '../../utils/bem';
 import { Modal } from '../components/Modal';
 import { TagSelector } from './TagSelector';
 import { RepeatSection } from './RepeatSection';
-import { useFlatpickr, getFlatpickrInstance } from './useFlatpickr';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { openReactModal } from './modalHost';
 
 /**
@@ -30,9 +30,12 @@ export interface TaskFormModalProps {
 	app: App;
 	/** 创建模式需要：插件上下文 */
 	plugin?: IPluginContext;
-	/** 创建模式：目标日期/小时 */
+	/** 创建模式：目标日期/小时/分钟（预填 dueDate 时刻） */
 	targetDate?: Date;
 	targetHour?: number;
+	targetMinute?: number;
+	/** 创建模式：目标起止区间（预填 startDate+dueDate，均带时刻） */
+	targetRange?: { start: Date; end: Date };
 	/** 编辑模式需要：任务对象 */
 	task?: GCTask;
 	enabledFormats?: string[];
@@ -86,6 +89,8 @@ export function TaskFormModal({
 	plugin,
 	targetDate,
 	targetHour,
+	targetMinute,
+	targetRange,
 	task,
 	enabledFormats,
 	allowEditContent,
@@ -124,17 +129,23 @@ export function TaskFormModal({
 			d.scheduledDate = null;
 			d.cancelledDate = null;
 			d.completionDate = null;
-			if (targetHour !== undefined) {
+			if (targetRange) {
+				// 时间线拖拽选区：直接建成区间任务
+				d.startDate = new Date(targetRange.start);
+				d.dueDate = new Date(targetRange.end);
+			} else if (targetHour !== undefined) {
 				d.dueDate = new Date(dayStart);
-				d.dueDate.setHours(targetHour, 0, 0, 0);
+				d.dueDate.setHours(targetHour, targetMinute ?? 0, 0, 0);
 			}
 		}
 		return d;
-	}, [mode, task, targetDate, targetHour]);
+	}, [mode, task, targetDate, targetHour, targetMinute, targetRange]);
 
 	const [dates, setDates] = useState<Record<string, Date | null>>(initialDates);
 	const [datePrecision, setDatePrecision] = useState<Record<string, 'day' | 'time'>>(
-		mode === 'edit' ? (task?.datePrecision ? { ...task.datePrecision } : {}) : (targetHour !== undefined ? { dueDate: 'time' } : {})
+		mode === 'edit'
+			? (task?.datePrecision ? { ...task.datePrecision } : {})
+			: (targetRange ? { startDate: 'time', dueDate: 'time' } : (targetHour !== undefined ? { dueDate: 'time' } : {}))
 	);
 	const [selectedTags, setSelectedTags] = useState<string[]>(mode === 'edit' ? (task?.tags || []) : []);
 	const [description, setDescription] = useState(mode === 'edit' ? (task?.description || '') : '');
@@ -391,7 +402,7 @@ export function TaskFormModal({
 	);
 }
 
-// ==================== 日期字段（flatpickr 封装） ====================
+// ==================== 日期字段（Linear 风格日期时间选择器） ====================
 
 interface DateFieldProps {
 	label: string;
@@ -401,64 +412,22 @@ interface DateFieldProps {
 }
 
 function DateField({ label, current, onChange, onPrecisionChange }: DateFieldProps): JSX.Element {
-	const [clearOpacity, setClearOpacity] = useState(0.6);
-
-	const inputRef = useFlatpickr<HTMLInputElement>({
-		enableTime: true,
-		dateFormat: 'Y-m-d H:i',
-		time_24hr: true,
-		allowInput: false,
-		clickOpens: true,
-		defaultDate: current || undefined,
-		minuteIncrement: 1,
-		onChange: (selectedDates: Date[]) => {
-			if (selectedDates.length === 0) {
-				onChange(null);
-				onPrecisionChange('day');
-			} else {
-				const date = selectedDates[0];
-				const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
-				onPrecisionChange(hasTime ? 'time' : 'day');
-				onChange(date);
-			}
-		},
-		onOpen: () => {
-			setClearOpacity(0);
-			const ta = document.querySelector(`.${EditTaskModalClasses.elements.descTextarea}`);
-			if (ta) ta.setAttribute('inert', '');
-		},
-		onClose: () => {
-			setClearOpacity(0.6);
-			const ta = document.querySelector(`.${EditTaskModalClasses.elements.descTextarea}`);
-			if (ta) ta.removeAttribute('inert');
-		},
-	});
-
 	return (
 		<div className={EditTaskModalClasses.elements.dateItem}>
 			<label className={EditTaskModalClasses.elements.dateLabel}>{label}</label>
 			<div className={EditTaskModalClasses.elements.dateInputContainer}>
-				<div className="gc-u-relative" style={{ position: 'relative' }}>
-					<input
-						ref={inputRef}
-						type="text"
-						readOnly
-						className={[EditTaskModalClasses.elements.dateInput, 'gc-u-pointer'].join(' ')}
-						placeholder={i18n.t('modals.editTask.datePlaceholder')}
-					/>
-					<button
-						className={[EditTaskModalClasses.elements.dateClear, 'gc-u-clear-btn-pos'].join(' ')}
-						style={{ opacity: clearOpacity }}
-						onClick={(e) => {
-							e.stopPropagation();
-							getFlatpickrInstance(inputRef)?.clear();
-							onChange(null);
+				<DateTimePicker
+					value={current}
+					placeholder={i18n.t('modals.editTask.datePlaceholder')}
+					onChange={(d) => {
+						onChange(d);
+						if (!d) {
 							onPrecisionChange('day');
-						}}
-					>
-						{'×'}
-					</button>
-				</div>
+						} else {
+							onPrecisionChange(d.getHours() !== 0 || d.getMinutes() !== 0 ? 'time' : 'day');
+						}
+					}}
+				/>
 			</div>
 		</div>
 	);
@@ -474,6 +443,8 @@ export function openCreateTaskModal(options: {
 	plugin: IPluginContext;
 	targetDate?: Date;
 	targetHour?: number;
+	targetMinute?: number;
+	targetRange?: { start: Date; end: Date };
 	onSuccess: () => void;
 }): void {
 	const close = openReactModal(
@@ -483,6 +454,8 @@ export function openCreateTaskModal(options: {
 			plugin={options.plugin}
 			targetDate={options.targetDate}
 			targetHour={options.targetHour}
+			targetMinute={options.targetMinute}
+			targetRange={options.targetRange}
 			onSuccess={options.onSuccess}
 			onClose={() => close()}
 		/>

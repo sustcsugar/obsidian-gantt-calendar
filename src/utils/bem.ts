@@ -54,6 +54,8 @@ export const BLOCKS = {
 	CREATE_TASK_BUTTON: 'create-task-btn',
 	/** 编辑任务弹窗 */
 	EDIT_TASK_MODAL: 'edit-task-modal',
+	/** 日期时间选择器（Linear 风格） */
+	DATE_TIME_PICKER: 'date-time-picker',
 	/** 确认弹窗 */
 	CONFIRM_MODAL: 'confirm-modal',
 
@@ -658,8 +660,6 @@ export const EditTaskModalClasses = {
 		dateItem: bem(BLOCKS.EDIT_TASK_MODAL, 'date-item'),
 		dateLabel: bem(BLOCKS.EDIT_TASK_MODAL, 'date-label'),
 		dateInputContainer: bem(BLOCKS.EDIT_TASK_MODAL, 'date-input-container'),
-		dateInput: bem(BLOCKS.EDIT_TASK_MODAL, 'date-input'),
-		dateClear: bem(BLOCKS.EDIT_TASK_MODAL, 'date-clear'),
 			dateAddTime: bem(BLOCKS.EDIT_TASK_MODAL, 'date-add-time'),
 
 		// 标签选择器板块
@@ -783,7 +783,7 @@ export const MonthViewClasses = {
 };
 
 /**
- * 周视图类名常量
+ * 周视图类名常量（连续时间画布，仅时间线模式）
  */
 export const WeekViewClasses = {
 	block: bem(BLOCKS.WEEK_VIEW),
@@ -791,38 +791,54 @@ export const WeekViewClasses = {
 	/** Elements */
 	elements: {
 		grid: bem(BLOCKS.WEEK_VIEW, 'grid'),
-		headerRow: bem(BLOCKS.WEEK_VIEW, 'header-row'),
 		headerCell: bem(BLOCKS.WEEK_VIEW, 'header-cell'),
-	headerSpacer: bem(BLOCKS.WEEK_VIEW, 'header-spacer'),
+		headerSpacer: bem(BLOCKS.WEEK_VIEW, 'header-spacer'),
 		dayName: bem(BLOCKS.WEEK_VIEW, 'day-name'),
 		dayNumber: bem(BLOCKS.WEEK_VIEW, 'day-number'),
 		lunarText: bem(BLOCKS.WEEK_VIEW, 'lunar-text'),
 		tasksGrid: bem(BLOCKS.WEEK_VIEW, 'tasks-grid'),
-		tasksColumn: bem(BLOCKS.WEEK_VIEW, 'tasks-column'),
-		empty: bem(BLOCKS.WEEK_VIEW, 'empty'),
-		// 时间轴相关
-		timeGutter: bem(BLOCKS.WEEK_VIEW, 'time-gutter'),
+		// 时间画布
 		timeGutterSlot: bem(BLOCKS.WEEK_VIEW, 'time-gutter-slot'),
 		timeGutterLabel: bem(BLOCKS.WEEK_VIEW, 'time-gutter-label'),
-		timeSlot: bem(BLOCKS.WEEK_VIEW, 'time-slot'),
-		timeTasks: bem(BLOCKS.WEEK_VIEW, 'time-tasks'),
-			// 全天任务行
-			alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
-			alldaySlot: bem(BLOCKS.WEEK_VIEW, 'allday-slot'),
-			alldayTasks: bem(BLOCKS.WEEK_VIEW, 'allday-tasks'),
-			currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
-			slotCreate: bem(BLOCKS.WEEK_VIEW, 'slot-create'),
+		dayCol: bem(BLOCKS.WEEK_VIEW, 'day-col'),
+		// 时间块
+		timeBlock: bem(BLOCKS.WEEK_VIEW, 'time-block'),
+		timeBlockTime: bem(BLOCKS.WEEK_VIEW, 'time-block-time'),
+		timeBlockArrow: bem(BLOCKS.WEEK_VIEW, 'time-block-arrow'),
+		handle: bem(BLOCKS.WEEK_VIEW, 'handle'),
+		// 空白创建 ghost
+		ghost: bem(BLOCKS.WEEK_VIEW, 'ghost'),
+		ghostLabel: bem(BLOCKS.WEEK_VIEW, 'ghost-label'),
+		ghostPlus: bem(BLOCKS.WEEK_VIEW, 'ghost-plus'),
+		// 拖放指示线 / 落点预览块 / resize 时间气泡
+		dropLine: bem(BLOCKS.WEEK_VIEW, 'drop-line'),
+		dropPreview: bem(BLOCKS.WEEK_VIEW, 'drop-preview'),
+		resizeTip: bem(BLOCKS.WEEK_VIEW, 'resize-tip'),
+		// 全天行
+		alldayGutter: bem(BLOCKS.WEEK_VIEW, 'allday-gutter'),
+		alldayRow: bem(BLOCKS.WEEK_VIEW, 'allday-row'),
+		alldayCell: bem(BLOCKS.WEEK_VIEW, 'allday-cell'),
+		alldayBar: bem(BLOCKS.WEEK_VIEW, 'allday-bar'),
+		alldayBarTime: bem(BLOCKS.WEEK_VIEW, 'allday-bar-time'),
+		currentTimeLine: bem(BLOCKS.WEEK_VIEW, 'timeline-current-time'),
 	},
 
 	/** Modifiers */
 	modifiers: {
 		today: bem(BLOCKS.WEEK_VIEW, 'header-cell', 'today'),
-		tasksColumnToday: bem(BLOCKS.WEEK_VIEW, 'tasks-column', 'today'),
-		timeSlotToday: bem(BLOCKS.WEEK_VIEW, 'time-slot', 'today'),
-		alldaySlotToday: bem(BLOCKS.WEEK_VIEW, 'allday-slot', 'today'),
-		timeline: bem(BLOCKS.WEEK_VIEW, undefined, 'timeline'),
-		dragOver: bem(BLOCKS.WEEK_VIEW, 'row', 'drag-over'),
-			alldayDragOver: bem(BLOCKS.WEEK_VIEW, 'allday-slot', 'drag-over'),
+		dayColToday: bem(BLOCKS.WEEK_VIEW, 'day-col', 'today'),
+		dayColDragOver: bem(BLOCKS.WEEK_VIEW, 'day-col', 'drag-over'),
+		timeBlockContinuesBefore: bem(BLOCKS.WEEK_VIEW, 'time-block', 'continues-before'),
+		timeBlockContinuesAfter: bem(BLOCKS.WEEK_VIEW, 'time-block', 'continues-after'),
+		timeBlockStacked: bem(BLOCKS.WEEK_VIEW, 'time-block', 'stacked'),
+		handleTop: bem(BLOCKS.WEEK_VIEW, 'handle', 'top'),
+		handleBottom: bem(BLOCKS.WEEK_VIEW, 'handle', 'bottom'),
+		ghostDragging: bem(BLOCKS.WEEK_VIEW, 'ghost', 'dragging'),
+		alldayCellToday: bem(BLOCKS.WEEK_VIEW, 'allday-cell', 'today'),
+		alldayCellDragOver: bem(BLOCKS.WEEK_VIEW, 'allday-cell', 'drag-over'),
+		alldayBarContinuesBefore: bem(BLOCKS.WEEK_VIEW, 'allday-bar', 'continues-before'),
+		alldayBarContinuesAfter: bem(BLOCKS.WEEK_VIEW, 'allday-bar', 'continues-after'),
+		alldayBarStacked: bem(BLOCKS.WEEK_VIEW, 'allday-bar', 'stacked'),
 	},
 };
 
@@ -855,16 +871,26 @@ export const SidebarClasses = {
 		taskList: bem(BLOCKS.SIDEBAR, 'task-list'),
 		taskItem: bem(BLOCKS.SIDEBAR, 'task-item'),
 		emptyState: bem(BLOCKS.SIDEBAR, 'empty-state'),
-		// 今日时间线
+		// 今日时间线（连续画布，与周视图同语义）
 		timeline: bem(BLOCKS.SIDEBAR, 'timeline'),
 		timelineHeader: bem(BLOCKS.SIDEBAR, 'timeline-header'),
 		timelineAllDay: bem(BLOCKS.SIDEBAR, 'timeline-allday'),
 		timelineAllDayLabel: bem(BLOCKS.SIDEBAR, 'timeline-allday-label'),
 		timelineAllDayTasks: bem(BLOCKS.SIDEBAR, 'timeline-allday-tasks'),
-		timelineTimeSlot: bem(BLOCKS.SIDEBAR, 'timeline-time-slot'),
+		timelineAllDayItem: bem(BLOCKS.SIDEBAR, 'timeline-allday-item'),
+		timelineAllDayTime: bem(BLOCKS.SIDEBAR, 'timeline-allday-time'),
+		timelineBody: bem(BLOCKS.SIDEBAR, 'timeline-body'),
+		timelineGutter: bem(BLOCKS.SIDEBAR, 'timeline-gutter'),
 		timelineTimeLabel: bem(BLOCKS.SIDEBAR, 'timeline-time-label'),
-		timelineTimeTasks: bem(BLOCKS.SIDEBAR, 'timeline-time-tasks'),
-		timelineSlotCreate: bem(BLOCKS.SIDEBAR, 'timeline-slot-create'),
+		timelineCanvas: bem(BLOCKS.SIDEBAR, 'timeline-canvas'),
+		timelineBlock: bem(BLOCKS.SIDEBAR, 'timeline-block'),
+		timelineBlockTime: bem(BLOCKS.SIDEBAR, 'timeline-block-time'),
+		timelineHandle: bem(BLOCKS.SIDEBAR, 'timeline-handle'),
+		timelineGhost: bem(BLOCKS.SIDEBAR, 'timeline-ghost'),
+		timelineGhostLabel: bem(BLOCKS.SIDEBAR, 'timeline-ghost-label'),
+		timelineGhostPlus: bem(BLOCKS.SIDEBAR, 'timeline-ghost-plus'),
+		timelineDropLine: bem(BLOCKS.SIDEBAR, 'timeline-drop-line'),
+		timelineDropPreview: bem(BLOCKS.SIDEBAR, 'timeline-drop-preview'),
 		timelineCurrentTime: bem(BLOCKS.SIDEBAR, 'timeline-current-time'),
 		// 下拉菜单
 		dropdown: 'sidebar-dropdown',
@@ -875,6 +901,14 @@ export const SidebarClasses = {
 	modifiers: {
 		taskListTab: bem(BLOCKS.SIDEBAR, undefined, 'task-list'),
 		timelineTab: bem(BLOCKS.SIDEBAR, undefined, 'timeline'),
+		// 今日时间线连续画布
+		timelineCanvasDragOver: bem(BLOCKS.SIDEBAR, 'timeline-canvas', 'drag-over'),
+		timelineBlockContinuesBefore: bem(BLOCKS.SIDEBAR, 'timeline-block', 'continues-before'),
+		timelineBlockContinuesAfter: bem(BLOCKS.SIDEBAR, 'timeline-block', 'continues-after'),
+		timelineBlockStacked: bem(BLOCKS.SIDEBAR, 'timeline-block', 'stacked'),
+		timelineHandleTop: bem(BLOCKS.SIDEBAR, 'timeline-handle', 'top'),
+		timelineHandleBottom: bem(BLOCKS.SIDEBAR, 'timeline-handle', 'bottom'),
+		timelineGhostDragging: bem(BLOCKS.SIDEBAR, 'timeline-ghost', 'dragging'),
 	},
 };
 
@@ -1039,6 +1073,43 @@ export const TagSelectorClasses = {
 
 	modifiers: {
 		pillSelected: bem(BLOCKS.TAG_SELECTOR, 'pill', 'selected'),
+	},
+};
+
+/**
+ * 日期时间选择器类名常量（Linear 风格：触发按钮 + 日历弹层）
+ */
+export const DateTimePickerClasses = {
+	block: bem(BLOCKS.DATE_TIME_PICKER),
+
+	elements: {
+		trigger: bem(BLOCKS.DATE_TIME_PICKER, 'trigger'),
+		input: bem(BLOCKS.DATE_TIME_PICKER, 'input'),
+		triggerIcon: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-icon'),
+		triggerClear: bem(BLOCKS.DATE_TIME_PICKER, 'trigger-clear'),
+		popover: bem(BLOCKS.DATE_TIME_PICKER, 'popover'),
+		body: bem(BLOCKS.DATE_TIME_PICKER, 'body'),
+		calendar: bem(BLOCKS.DATE_TIME_PICKER, 'calendar'),
+		header: bem(BLOCKS.DATE_TIME_PICKER, 'header'),
+		monthLabel: bem(BLOCKS.DATE_TIME_PICKER, 'month-label'),
+		navButton: bem(BLOCKS.DATE_TIME_PICKER, 'nav-button'),
+		weekdays: bem(BLOCKS.DATE_TIME_PICKER, 'weekdays'),
+		weekday: bem(BLOCKS.DATE_TIME_PICKER, 'weekday'),
+		dayGrid: bem(BLOCKS.DATE_TIME_PICKER, 'day-grid'),
+		dayCell: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell'),
+		timePanel: bem(BLOCKS.DATE_TIME_PICKER, 'time-panel'),
+		timeColumn: bem(BLOCKS.DATE_TIME_PICKER, 'time-column'),
+		timeCell: bem(BLOCKS.DATE_TIME_PICKER, 'time-cell'),
+		footer: bem(BLOCKS.DATE_TIME_PICKER, 'footer'),
+		nowButton: bem(BLOCKS.DATE_TIME_PICKER, 'now-button'),
+		okButton: bem(BLOCKS.DATE_TIME_PICKER, 'ok-button'),
+	},
+
+	modifiers: {
+		daySelected: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'selected'),
+		dayToday: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'today'),
+		dayOtherMonth: bem(BLOCKS.DATE_TIME_PICKER, 'day-cell', 'other-month'),
+		timeCellSelected: bem(BLOCKS.DATE_TIME_PICKER, 'time-cell', 'selected'),
 	},
 };
 

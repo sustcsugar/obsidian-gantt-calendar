@@ -1,3 +1,148 @@
+/* ============================================
+   年视图组件（Year View Components）
+   BEM: gc-year-view__*
+   视觉语言：月卡片 = 圆角纸面（hairline 边框 +
+   贴面阴影），内部格子小圆角 + 2px gap 软网格
+   ============================================ */
+
+/* 月卡片 - BEM类名: gc-year-view__month-card */
+.gc-year-view__month-card {
+	background-color: var(--background-primary);
+	border: 1px solid var(--gc-border-hairline);
+	border-radius: var(--gc-radius-lg);
+	padding: 10px 12px 12px;
+	box-shadow: var(--gc-elev-1);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	transition:
+		box-shadow var(--gc-dur-fast) var(--gc-ease-out),
+		border-color var(--gc-dur-fast) var(--gc-ease-out);
+}
+
+.gc-year-view__month-card:hover {
+	box-shadow: var(--gc-elev-2);
+	border-color: var(--gc-border-strong);
+}
+
+/* 月份标题 - BEM类名: gc-year-view__month-header */
+.gc-year-view__month-header {
+	text-align: center;
+	margin-bottom: 6px;
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.gc-year-view__month-header h3 {
+	font-size: 13px;
+	font-weight: 600;
+	margin: 0;
+	color: var(--text-normal);
+	letter-spacing: 0.02em;
+}
+
+/* 星期标签容器 - BEM类名: gc-year-view__weekdays */
+.gc-year-view__weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	width: 100%;
+	margin-bottom: 2px;
+}
+
+/* 星期标签 - BEM类名: gc-year-view__weekday */
+.gc-year-view__weekday {
+	text-align: center;
+	font-size: 9px;
+	font-weight: 500;
+	color: var(--text-faint);
+	padding: 2px 0;
+	user-select: none;
+}
+
+/* 日期网格 - BEM类名: gc-year-view__days-grid */
+.gc-year-view__days-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	flex: 1;
+	gap: 2px;
+}
+
+/* 日期单元格 - BEM类名: gc-year-view__day */
+.gc-year-view__day {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	padding: 1px 2px;
+	border-radius: 5px;
+	cursor: pointer;
+	background-color: transparent;
+	border: none;
+	transition:
+		transform var(--gc-dur-fast) var(--gc-ease-out),
+		box-shadow var(--gc-dur-fast) var(--gc-ease-out),
+		background-color var(--gc-dur-fast) var(--gc-ease-out);
+	min-height: 35px;
+}
+
+.gc-year-view__day:focus-visible {
+	outline: 2px solid var(--gc-accent);
+	outline-offset: 1px;
+}
+
+/* 日期数字 - BEM类名: gc-year-view__day-number */
+.gc-year-view__day-number {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-normal);
+	line-height: 1.2;
+}
+
+/* 农历文本 - BEM类名: gc-year-view__lunar-text */
+.gc-year-view__lunar-text {
+	font-size: 7px;
+	color: var(--text-faint);
+	text-align: center;
+	line-height: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+/* 年视图月卡片中的农历字体大小可调 */
+.gc-year-view__month-card .gc-year-view__lunar-text {
+	font-size: var(--year-lunar-font-size, 10px);
+}
+
+/* 年视图农历始终显示 */
+.gc-view--year .gc-year-view__lunar-text {
+	display: block;
+}
+
+/* 任务计数 - BEM类名: gc-year-view__task-count */
+.gc-year-view__task-count {
+	font-size: 9px;
+	color: var(--text-faint);
+	line-height: 1;
+}
+
+/* 非当月日期（年视图卡片内的补位日） */
+.gc-year-view__day.outside-month {
+	opacity: 0.35;
+}
+
+.gc-year-view__day.outside-month .gc-year-view__day-number {
+	color: var(--text-faint);
+}
+
+.gc-year-view__day.outside-month .gc-year-view__lunar-text {
+	color: var(--text-faint);
+}
+
 /* ==================== 响应式设计 ==================== */
 
 /* 小屏幕适配 */
