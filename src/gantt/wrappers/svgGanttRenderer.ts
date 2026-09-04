@@ -491,7 +491,7 @@ export class SvgGanttRenderer {
 		const mainGrid = this.mainGrid;
 
 		// 鼠标按下开始拖动
-		resizer.addEventListener('mousedown', (e) => {
+		resizer.addEventListener('pointerdown', (e) => {
 			this.isResizing = true;
 			setCssProps(activeDocument.body, { cursor: 'col-resize', userSelect: 'none' });
 
@@ -563,17 +563,17 @@ export class SvgGanttRenderer {
 			}
 		};
 
-		activeDocument.addEventListener('mousemove', this.resizeMoveHandler);
-		activeDocument.addEventListener('mouseup', this.resizeEndHandler);
+		activeDocument.addEventListener('pointermove', this.resizeMoveHandler);
+		activeDocument.addEventListener('pointerup', this.resizeEndHandler);
 	}
 
 	private removeResizeListeners(): void {
 		if (this.resizeMoveHandler) {
-			activeDocument.removeEventListener('mousemove', this.resizeMoveHandler);
+			activeDocument.removeEventListener('pointermove', this.resizeMoveHandler);
 			this.resizeMoveHandler = null;
 		}
 		if (this.resizeEndHandler) {
-			activeDocument.removeEventListener('mouseup', this.resizeEndHandler);
+			activeDocument.removeEventListener('pointerup', this.resizeEndHandler);
 			this.resizeEndHandler = null;
 		}
 		this.isResizing = false;
@@ -1246,6 +1246,7 @@ export class SvgGanttRenderer {
 				this.handleTaskClick(task);
 			});
 			bar.addEventListener('mouseenter', (event: MouseEvent) => {
+			if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
 				bar.setAttribute('opacity', '1');
 				this.showPopup(task, bar, { x: event.clientX, y: event.clientY });
 			});
@@ -1257,6 +1258,7 @@ export class SvgGanttRenderer {
 			// leadBar 悬停事件（黑色引导区域 tooltip）
 			if (leadBar) {
 				leadBar.addEventListener('mouseenter', (event: MouseEvent) => {
+			if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
 					this.showPopup(task, leadBar!, { x: event.clientX, y: event.clientY });
 				});
 				leadBar.addEventListener('mouseleave', () => {

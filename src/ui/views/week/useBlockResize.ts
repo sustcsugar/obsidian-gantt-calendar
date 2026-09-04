@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import type { TimeBlock, TimeBlockSegment } from './timelineModel';
 import { MIN_DURATION_MIN, minutesToPx, pxToMinutes, snapMinutes, formatMinutes } from './timelineModel';
 import { WeekViewClasses, setCssProps } from '../../../utils/bem';
@@ -6,9 +6,9 @@ import { WeekViewClasses, setCssProps } from '../../../utils/bem';
 /**
  * 时间块上下边缘 resize 鼠标状态机（参考甘特 taskDragController 模式）：
  * - mousedown 捕获（stopPropagation，避免触发卡片 HTML5 拖源）
- * - mousemove 以 15 分钟吸附（Alt = 5 分钟），钳制在本列 [00:00, 24:00]
+ * - pointermove 以 15 分钟吸附（Alt = 5 分钟），钳制在本列 [00:00, 24:00]
  * - 预览走乐观 DOM 更新（block 的 top/height + 时刻标签 + 悬浮气泡），不触发 React 重渲染
- * - mouseup 提交；未产生时间变化不写回，提交失败由调用方用 blockEl 还原样式
+ * - pointerup 提交；未产生时间变化不写回，提交失败由调用方用 blockEl 还原样式
  *
  * 监听器闭包存于 ref，add/remove 始终匹配同一引用，无泄漏。
  */
@@ -87,8 +87,8 @@ export function useBlockResize(onCommit: BlockResizeCommit) {
 	const detach = useCallback(() => {
 		const handlers = handlersRef.current;
 		if (handlers) {
-			document.removeEventListener('mousemove', handlers.move);
-			document.removeEventListener('mouseup', handlers.end);
+			document.removeEventListener('pointermove', handlers.move);
+			document.removeEventListener('pointerup', handlers.end);
 			handlersRef.current = null;
 		}
 		if (activeRef.current) {
@@ -104,7 +104,7 @@ export function useBlockResize(onCommit: BlockResizeCommit) {
 	 * 返回 true 表示已接管该手势。
 	 */
 	const beginResize = useCallback((
-		e: ReactMouseEvent,
+		e: ReactPointerEvent,
 		block: TimeBlock,
 		seg: TimeBlockSegment,
 		edge: 'top' | 'bottom',
@@ -133,7 +133,7 @@ export function useBlockResize(onCommit: BlockResizeCommit) {
 		};
 		activeRef.current = active;
 
-		const move = (ev: MouseEvent) => {
+		const move = (ev: PointerEvent) => {
 			const rect = active.columnEl.getBoundingClientRect();
 			const minutes = snapMinutes(pxToMinutes(ev.clientY - rect.top), ev.altKey);
 
@@ -167,8 +167,8 @@ export function useBlockResize(onCommit: BlockResizeCommit) {
 
 		handlersRef.current = { move, end };
 		setCssProps(document.body, { cursor: 'ns-resize', userSelect: 'none' });
-		document.addEventListener('mousemove', move);
-		document.addEventListener('mouseup', end);
+		document.addEventListener('pointermove', move);
+		document.addEventListener('pointerup', end);
 		return true;
 	}, [detach]);
 

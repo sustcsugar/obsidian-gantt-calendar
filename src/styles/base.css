@@ -254,3 +254,10 @@
 		box-shadow: none;
 	}
 }
+
+/* 手机端：月视图容器允许纵向滚动（原 overflow:hidden 会裁掉底部行） */
+@media (max-width: 520px) {
+	.gc-view.gc-view--month {
+		overflow-y: auto;
+	}
+}

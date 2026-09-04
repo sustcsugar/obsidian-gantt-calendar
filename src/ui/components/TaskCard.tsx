@@ -13,6 +13,7 @@ import { ContextMenuTrigger, type ContextMenuSection } from './ContextMenu';
 import { useTaskTooltip } from './TooltipProvider';
 import { useDragSource } from '../utils/useDragAndDrop';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
+import { isTouchNow } from '../utils/platform';
 import { updateTaskCompletion } from '../../tasks/taskUpdater';
 import { completeRecurringTask } from '../../tasks/recurringTaskCompleter';
 import { openEditTaskModal } from '../modals/TaskFormModal';
@@ -34,6 +35,8 @@ export interface ReactTaskCardProps {
 	targetDate?: Date;
 	onClick?: (task: GCTask) => void;
 	onRefresh?: () => void;
+	/** 容器自管触屏长按手势时，禁用卡片内置长按菜单（如时间画布拖动） */
+	disableLongPressMenu?: boolean;
 }
 
 const PRIORITY_ICONS: Record<string, string> = {
@@ -66,7 +69,7 @@ function formatDateForDisplay(date: Date, precision?: 'day' | 'time'): string {
 // memo：tasks 数组引用每次刷新都会变化，但未变化的任务卡片
 //（props 中 task/config/回调均稳定）应跳过重渲染——
 // 调用方需用 useCallback 稳定 onRefresh，否则 memo 无效
-export const TaskCard = memo(function TaskCard({ task, config, targetDate, onClick, onRefresh }: ReactTaskCardProps): JSX.Element {
+export const TaskCard = memo(function TaskCard({ task, config, targetDate, onClick, onRefresh, disableLongPressMenu }: ReactTaskCardProps): JSX.Element {
 	const plugin = usePlugin();
 	const app = useApp();
 	const virtual = isVirtualTask(task);
@@ -386,7 +389,7 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 			onDragStart={dragProps.onDragStart}
 			onDragEnd={dragProps.onDragEnd}
 			onMouseEnter={(e) => {
-				if (config.enableTooltip) tooltip.show(task, e.currentTarget);
+				if (config.enableTooltip && !isTouchNow()) tooltip.show(task, e.currentTarget);
 			}}
 			onMouseLeave={() => tooltip.hide()}
 			onContextMenu={() => tooltip.cancel()}
@@ -433,7 +436,7 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 	if (virtual) return cardContent;
 
 	return (
-		<ContextMenuTrigger sections={menuSections}>
+		<ContextMenuTrigger sections={menuSections} longPressDisabled={disableLongPressMenu}>
 			{cardContent}
 		</ContextMenuTrigger>
 	);

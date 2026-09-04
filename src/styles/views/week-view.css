@@ -177,7 +177,7 @@
 /* 全天行 gutter（第 1 列第 2 行） */
 .gc-week-view__allday-gutter {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: flex-end;
 	padding: 4px 6px 0 0;
 	font-size: 11px;
@@ -529,4 +529,45 @@
 	height: 8px;
 	border-radius: 50%;
 	background-color: var(--interactive-accent);
+}
+
+/* 触屏：resize 手柄禁止浏览器手势接管（纵向拖动专属），命中区放大 */
+@media (hover: none) {
+	.gc-week-view__handle {
+		height: 18px;
+		touch-action: none;
+	}
+
+	.gc-week-view__handle--top {
+		top: 0;
+	}
+
+	.gc-week-view__handle--bottom {
+		bottom: 0;
+	}
+}
+
+/* 任务块内文本多行换行：块高度由时长决定（主），文本填充可用空间并随块裁剪（从）。
+   仅作用于时间块；全天条（固定 24px）与日视图槽位保持单行 */
+.gc-week-view__time-block .gc-task-card--timeline {
+	flex-wrap: wrap;
+	/* 垂直居中；safe 在内容溢出块高时回退为顶部对齐（避免上下两端同时被裁） */
+	align-content: center;
+	align-content: safe center;
+	align-items: center;
+}
+
+.gc-week-view__time-block .gc-task-card--timeline .gc-task-card__text {
+	white-space: normal;
+	word-break: break-word;
+	text-overflow: clip;
+	flex: 1 1 0;
+	min-width: 0;
+	/* 高度钳制在卡片（=块）内：不再向 flex 行高贡献超出部分，
+	   复选框/标签的居中参考系回到块本身；文本超出仍由 overflow 裁剪 */
+	max-height: 100%;
+}
+
+.gc-week-view__time-block .gc-task-card--timeline .gc-task-card__tags {
+	max-width: 100%;
 }

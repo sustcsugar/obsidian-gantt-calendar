@@ -470,3 +470,10 @@
 	pointer-events: auto;
 	cursor: pointer;
 }
+
+/* 手机端：任务列收窄（150px），图表区获得更多横向空间；列宽完全折叠留待后续交互改造 */
+@media (max-width: 520px) {
+	:root {
+		--task-column-width: 150px;
+	}
+}

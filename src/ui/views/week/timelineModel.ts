@@ -275,13 +275,15 @@ interface LaneInput {
  * 贪心 lane 分配（Google Calendar 式重叠分列）：
  * 按 startMin 升序（同时刻长者优先），装入最早可用的 lane；
  * 以"传递重叠簇"为单位计算簇内 lane 总数，簇内等宽分列。
- * 超过 MAX_LANE 的块钳制到最后一列并标记叠加序号。
+ * 超过 maxLane 的块钳制到最后一列并标记叠加序号。
+ * 时间网格（横向分列，列宽有限）用默认 MAX_LANE=3；
+ * 全天行（纵向堆行，行高自适应）传 Infinity 不设上限。
  */
-export function assignLanes<T extends LaneInput & LaneInfo>(items: T[]): void {
+export function assignLanes<T extends LaneInput & LaneInfo>(items: T[], maxLane: number = MAX_LANE): void {
 	if (items.length === 0) return;
 
 	const sorted = [...items].sort((a, b) =>
-		a.startMin - b.startMin || (b.endMin - b.startMin) - (a.endMin - a.startMin)
+		a.startMin - b.startMin || (b.endMin - a.startMin) - (a.endMin - a.startMin)
 	);
 
 	const cluster: T[] = [];
@@ -291,7 +293,7 @@ export function assignLanes<T extends LaneInput & LaneInfo>(items: T[]): void {
 
 	const flushCluster = () => {
 		if (cluster.length === 0) return;
-		const laneCount = Math.min(clusterMaxLane + 1, MAX_LANE);
+		const laneCount = Math.min(clusterMaxLane + 1, maxLane);
 		for (const item of cluster) {
 			if (item.lane >= laneCount) {
 				// 超出的块叠加在最后一列：stackedIndex 从 1 起
@@ -514,7 +516,8 @@ export function buildWeekTimelineModel(
 		laneCount: 1,
 		stackedIndex: 0,
 	}));
-	assignLanes(laneProxy);
+	// 全天行为纵向堆行（行高自适应），不设 lane 上限——横向 3 列上限仅适用于时间网格
+	assignLanes(laneProxy, Infinity);
 	for (const proxy of laneProxy) {
 		proxy.bar.lane = proxy.lane;
 		proxy.bar.laneCount = proxy.laneCount;

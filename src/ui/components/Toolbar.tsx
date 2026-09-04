@@ -16,6 +16,7 @@ import { DropdownMenu, type MenuItemDef, type DropdownMenuSection } from './Drop
 import type { DateFieldType, GanttCalendarSettings } from '../../settings/types';
 import { buildTagHierarchy } from '../../tasks/tags/TagHierarchyBuilder';
 import type { TagNode } from '../../tasks/tags/TagHierarchy';
+import { useIsPhone } from '../utils/platform';
 
 const VIEW_BUTTONS: Array<{ type: CalendarViewType; icon: string }> = [
 	{ type: 'day', icon: 'sun' },
@@ -201,10 +202,33 @@ export function ToolbarBar(): JSX.Element {
 		useCalendarStore.getState().bumpSettings();
 	};
 
+	// ===== 手机端溢出菜单：筛选/排序/视图专属选项/设置/同步/刷新 收纳为"⋯" =====
+	const overflowMenuSections = (): DropdownMenuSection[] => {
+		const sections: DropdownMenuSection[] = [];
+		// 状态筛选（多选，平铺为勾选项）
+		sections.push(...statusMenuSections());
+		// 排序
+		sections.push(...sortMenuSections());
+		// 任务视图专属：时间字段 + 日期范围
+		if (viewType === 'task') {
+			sections.push(...fieldMenuSections(), ...dateRangeMenuSections());
+		}
+		// 动作
+		sections.push({
+			items: [
+				{ key: '__settings__', icon: 'settings', title: i18n.t('toolbar.settingsButton.ariaLabel'), onClick: openSettings },
+				{ key: '__sync__', icon: 'cloud-download', title: i18n.t('toolbar.syncButton.defaultTitle'), onClick: () => void syncFeishuTasks(plugin as GanttCalendarPlugin) },
+				{ key: '__refresh__', icon: 'refresh-cw', title: i18n.t('toolbar.refresh.refreshTask'), onClick: () => void handleRefresh() },
+			],
+		});
+		return sections;
+	};
+
 	// ===== 渲染 =====
 	const isCalendar = viewType === 'year' || viewType === 'month' || viewType === 'week' || viewType === 'day';
 	const showStatusSort = viewType === 'month' || viewType === 'week' || viewType === 'day';
 	const requestGanttScroll = useCalendarStore((s) => s.requestGanttScroll);
+	const isPhone = useIsPhone();
 
 	return (
 		<div className={ToolbarClasses.block}>
@@ -235,34 +259,38 @@ export function ToolbarBar(): JSX.Element {
 			<div className={ToolbarClasses.elements.right}>
 				{viewType === 'task' && (
 					<>
-						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={statusMenuSections()}>
-								{({ onClick, 'aria-expanded': expanded }) => (
-									<ToolbarBtn icon="filter" label={i18n.t('toolbar.statusFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
-								)}
-							</DropdownMenu>
-						</div>
-						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={fieldMenuSections()}>
-								{({ onClick, 'aria-expanded': expanded }) => (
-									<ToolbarBtn icon="calendar-clock" label={i18n.t('toolbar.fieldFilter.label')} ariaExpanded={expanded} onClick={onClick} />
-								)}
-							</DropdownMenu>
-						</div>
-						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={dateRangeMenuSections()}>
-								{({ onClick, 'aria-expanded': expanded }) => (
-									<ToolbarBtn icon="calendar-range" label={i18n.t('toolbar.dateFilterLabel')} ariaExpanded={expanded} onClick={onClick} />
-								)}
-							</DropdownMenu>
-						</div>
-						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={sortMenuSections()}>
-								{({ onClick, 'aria-expanded': expanded }) => (
-									<ToolbarBtn icon="arrow-down-up" label={i18n.t('toolbar.sort.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
-								)}
-							</DropdownMenu>
-						</div>
+						{!isPhone && (
+							<>
+								<div className={ToolbarClasses.components.navButtons.group}>
+									<DropdownMenu sections={statusMenuSections()}>
+										{({ onClick, 'aria-expanded': expanded }) => (
+											<ToolbarBtn icon="filter" label={i18n.t('toolbar.statusFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
+										)}
+									</DropdownMenu>
+								</div>
+								<div className={ToolbarClasses.components.navButtons.group}>
+									<DropdownMenu sections={fieldMenuSections()}>
+										{({ onClick, 'aria-expanded': expanded }) => (
+											<ToolbarBtn icon="calendar-clock" label={i18n.t('toolbar.fieldFilter.label')} ariaExpanded={expanded} onClick={onClick} />
+										)}
+									</DropdownMenu>
+								</div>
+								<div className={ToolbarClasses.components.navButtons.group}>
+									<DropdownMenu sections={dateRangeMenuSections()}>
+										{({ onClick, 'aria-expanded': expanded }) => (
+											<ToolbarBtn icon="calendar-range" label={i18n.t('toolbar.dateFilterLabel')} ariaExpanded={expanded} onClick={onClick} />
+										)}
+									</DropdownMenu>
+								</div>
+								<div className={ToolbarClasses.components.navButtons.group}>
+									<DropdownMenu sections={sortMenuSections()}>
+										{({ onClick, 'aria-expanded': expanded }) => (
+											<ToolbarBtn icon="arrow-down-up" label={i18n.t('toolbar.sort.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
+										)}
+									</DropdownMenu>
+								</div>
+							</>
+						)}
 						<div className={ToolbarClasses.components.navButtons.group}>
 							<DropdownMenu
 								content={() => (
@@ -297,7 +325,7 @@ export function ToolbarBar(): JSX.Element {
 				)}
 				{isCalendar && (
 					<>
-						{showStatusSort && (
+						{showStatusSort && !isPhone && (
 							<div className={ToolbarClasses.components.navButtons.group}>
 								<DropdownMenu sections={statusMenuSections()}>
 									{({ onClick, 'aria-expanded': expanded }) => (
@@ -306,7 +334,7 @@ export function ToolbarBar(): JSX.Element {
 								</DropdownMenu>
 							</div>
 						)}
-						{showStatusSort && (
+						{showStatusSort && !isPhone && (
 							<div className={ToolbarClasses.components.navButtons.group}>
 								<DropdownMenu sections={sortMenuSections()}>
 									{({ onClick, 'aria-expanded': expanded }) => (
@@ -385,20 +413,25 @@ export function ToolbarBar(): JSX.Element {
 								onClick={() => requestGanttScroll('right')}
 							/>
 						</div>
-						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={statusMenuSections()}>
-								{({ onClick, 'aria-expanded': expanded }) => (
-									<ToolbarBtn icon="filter" label={i18n.t('toolbar.statusFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
-								)}
-							</DropdownMenu>
-						</div>
-						<div className={ToolbarClasses.components.navButtons.group}>
-							<DropdownMenu sections={sortMenuSections()}>
-								{({ onClick, 'aria-expanded': expanded }) => (
-									<ToolbarBtn icon="arrow-down-up" label={i18n.t('toolbar.sort.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
-								)}
-							</DropdownMenu>
-						</div>
+						{!isPhone && (
+							<>
+								<div className={ToolbarClasses.components.navButtons.group}>
+									<DropdownMenu sections={statusMenuSections()}>
+										{({ onClick, 'aria-expanded': expanded }) => (
+											<ToolbarBtn icon="filter" label={i18n.t('toolbar.statusFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
+										)}
+									</DropdownMenu>
+								</div>
+								<div className={ToolbarClasses.components.navButtons.group}>
+									<DropdownMenu sections={sortMenuSections()}>
+										{({ onClick, 'aria-expanded': expanded }) => (
+											<ToolbarBtn icon="arrow-down-up" label={i18n.t('toolbar.sort.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
+										)}
+									</DropdownMenu>
+								</div>
+							</>
+						)}
+						{!isPhone && (
 						<div className={ToolbarClasses.components.navButtons.group}>
 							<DropdownMenu
 								content={() => (
@@ -427,12 +460,13 @@ export function ToolbarBar(): JSX.Element {
 								{({ onClick, 'aria-expanded': expanded }) => (
 									<ToolbarBtn icon="tag" label={i18n.t('toolbar.tagFilter.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
 								)}
-							</DropdownMenu>
-						</div>
-					</>
-				)}
+								</DropdownMenu>
+							</div>
+							)}
+						</>
+					)}
 
-				<div className={ToolbarClasses.priority.priority3}>
+					<div className={ToolbarClasses.priority.priority3}>
 					<div className={ToolbarClasses.components.navButtons.group}>
 						<ToolbarBtn
 							icon="plus"
@@ -443,35 +477,49 @@ export function ToolbarBar(): JSX.Element {
 					</div>
 				</div>
 
-				<div className={ToolbarClasses.components.navButtons.group}>
-					<ToolbarBtn
-						icon="settings"
-						label={i18n.t('toolbar.settingsButton.ariaLabel')}
-						onClick={openSettings}
-					/>
-				</div>
+					{!isPhone && (
+						<>
+							<div className={ToolbarClasses.components.navButtons.group}>
+								<ToolbarBtn
+									icon="settings"
+									label={i18n.t('toolbar.settingsButton.ariaLabel')}
+									onClick={openSettings}
+								/>
+							</div>
 
-				<div className={ToolbarClasses.components.navButtons.group}>
-					<ToolbarBtn
-						icon="cloud-download"
-						label={i18n.t('toolbar.syncButton.defaultTitle')}
-						onClick={() => {
-							void syncFeishuTasks(plugin as GanttCalendarPlugin);
-						}}
-					/>
-				</div>
+							<div className={ToolbarClasses.components.navButtons.group}>
+								<ToolbarBtn
+									icon="cloud-download"
+									label={i18n.t('toolbar.syncButton.defaultTitle')}
+									onClick={() => {
+										void syncFeishuTasks(plugin as GanttCalendarPlugin);
+									}}
+								/>
+							</div>
 
-				<div className={ToolbarClasses.components.navButtons.group}>
-					<ToolbarBtn
-						icon="refresh-cw"
-						label={i18n.t('toolbar.refresh.refreshTask')}
-						onClick={() => void handleRefresh()}
-					/>
+							<div className={ToolbarClasses.components.navButtons.group}>
+								<ToolbarBtn
+									icon="refresh-cw"
+									label={i18n.t('toolbar.refresh.refreshTask')}
+									onClick={() => void handleRefresh()}
+								/>
+							</div>
+						</>
+					)}
+
+					{isPhone && (
+						<div className={ToolbarClasses.components.navButtons.group}>
+							<DropdownMenu sections={overflowMenuSections()} align="right">
+								{({ onClick, 'aria-expanded': expanded }) => (
+									<ToolbarBtn icon="more-horizontal" label={i18n.t('toolbar.more.ariaLabel')} ariaExpanded={expanded} onClick={onClick} />
+								)}
+							</DropdownMenu>
+						</div>
+					)}
 				</div>
 			</div>
-		</div>
-	);
-}
+		);
+	}
 
 interface ToolbarBtnProps {
 	icon?: string;

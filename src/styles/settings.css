@@ -660,3 +660,18 @@
 	opacity: 0.9;
 }
 
+
+/* 手机端：Tab 栏横向滚动，按钮不再均分挤压 */
+@media (max-width: 520px) {
+	.gc-settings__tab-nav {
+		overflow-x: auto;
+		flex-wrap: nowrap;
+		padding-left: max(4px, env(safe-area-inset-left));
+		padding-right: max(4px, env(safe-area-inset-right));
+	}
+
+	.gc-settings__tab-button {
+		flex: 0 0 auto;
+		padding: 7px 10px;
+	}
+}

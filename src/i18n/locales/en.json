@@ -607,6 +607,7 @@
           "notice": "Feishu authorization revoked"
         },
         "pleaseConfigureAppId": "Please configure App ID first",
+        "desktopOnly": "OAuth authorization is only available on desktop. Please complete setup on desktop, then sync here",
         "completeAuthInBrowser": "Complete Feishu authorization in browser, then copy the code from the callback URL and paste here",
         "exchangingCode": "Exchanging authorization code...",
         "pleaseConfigureAppIdAndSecret": "Please configure Feishu App ID and App Secret first",
@@ -1054,6 +1055,9 @@
       "defaultTitle": "Refresh",
       "refreshTask": "Refresh Tasks",
       "refreshGantt": "Refresh Gantt"
+    },
+    "more": {
+      "ariaLabel": "More actions"
     },
     "settingsButton": {
       "ariaLabel": "Plugin Settings"
