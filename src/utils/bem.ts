@@ -23,6 +23,7 @@ export const BLOCKS = {
 	VIEW: 'view',
 	/** 日视图 */
 	DAY_VIEW: 'day-view',
+	DAY_CANVAS: 'day-canvas',
 	/** 周视图 */
 	WEEK_VIEW: 'week-view',
 	/** 月视图 */
@@ -319,7 +320,6 @@ export const DayViewClasses = {
 		horizontal: bem(BLOCKS.DAY_VIEW, undefined, 'horizontal'),
 		vertical: bem(BLOCKS.DAY_VIEW, undefined, 'vertical'),
 		tasksOnly: bem(BLOCKS.DAY_VIEW, undefined, 'tasks-only'),
-		timeSlotDragOver: bem(BLOCKS.DAY_VIEW, 'time-slot', 'drag-over'),
 	},
 
 	/** Elements */
@@ -333,17 +333,12 @@ export const DayViewClasses = {
 		notesBody: bem(BLOCKS.DAY_VIEW, 'notes-body'),
 		divider: bem(BLOCKS.DAY_VIEW, 'divider'),
 		dividerVertical: bem(BLOCKS.DAY_VIEW, 'divider', 'vertical'),
-			// 时间轴相关
-			timeline: bem(BLOCKS.DAY_VIEW, 'timeline'),
+			// 全天区（任务区已改用共享连续画布 DayTimelineCanvas）
 			alldaySection: bem(BLOCKS.DAY_VIEW, 'allday'),
 			alldayLabel: bem(BLOCKS.DAY_VIEW, 'allday-label'),
 			alldayTasks: bem(BLOCKS.DAY_VIEW, 'allday-tasks'),
-			timeGrid: bem(BLOCKS.DAY_VIEW, 'time-grid'),
-			timeSlot: bem(BLOCKS.DAY_VIEW, 'time-slot'),
-			timeLabel: bem(BLOCKS.DAY_VIEW, 'time-label'),
-			timeTasks: bem(BLOCKS.DAY_VIEW, 'time-tasks'),
-			currentTimeLine: bem(BLOCKS.DAY_VIEW, 'timeline-current-time'),
-			slotCreate: bem(BLOCKS.DAY_VIEW, 'slot-create'),
+			alldayItem: bem(BLOCKS.DAY_VIEW, 'allday-item'),
+			alldayTime: bem(BLOCKS.DAY_VIEW, 'allday-time'),
 	},
 };
 
@@ -849,6 +844,41 @@ export const WeekViewClasses = {
 /**
  * 任务视图类名常量
  */
+/**
+ * 单日连续时间画布类名常量（日视图任务区与侧栏今日时间线共用组件）
+ */
+export const DayCanvasClasses = {
+	block: bem(BLOCKS.DAY_CANVAS),
+
+	/** Elements */
+	elements: {
+		body: bem(BLOCKS.DAY_CANVAS, 'body'),
+		gutter: bem(BLOCKS.DAY_CANVAS, 'gutter'),
+		timeLabel: bem(BLOCKS.DAY_CANVAS, 'time-label'),
+		canvas: bem(BLOCKS.DAY_CANVAS, 'canvas'),
+		block: bem(BLOCKS.DAY_CANVAS, 'block'),
+		blockTime: bem(BLOCKS.DAY_CANVAS, 'block-time'),
+		handle: bem(BLOCKS.DAY_CANVAS, 'handle'),
+		ghost: bem(BLOCKS.DAY_CANVAS, 'ghost'),
+		ghostLabel: bem(BLOCKS.DAY_CANVAS, 'ghost-label'),
+		ghostPlus: bem(BLOCKS.DAY_CANVAS, 'ghost-plus'),
+		dropLine: bem(BLOCKS.DAY_CANVAS, 'drop-line'),
+		dropPreview: bem(BLOCKS.DAY_CANVAS, 'drop-preview'),
+		currentTime: bem(BLOCKS.DAY_CANVAS, 'current-time'),
+	},
+
+	/** Modifiers */
+	modifiers: {
+		canvasDragOver: bem(BLOCKS.DAY_CANVAS, 'canvas', 'drag-over'),
+		blockContinuesBefore: bem(BLOCKS.DAY_CANVAS, 'block', 'continues-before'),
+		blockContinuesAfter: bem(BLOCKS.DAY_CANVAS, 'block', 'continues-after'),
+		blockStacked: bem(BLOCKS.DAY_CANVAS, 'block', 'stacked'),
+		handleTop: bem(BLOCKS.DAY_CANVAS, 'handle', 'top'),
+		handleBottom: bem(BLOCKS.DAY_CANVAS, 'handle', 'bottom'),
+		ghostDragging: bem(BLOCKS.DAY_CANVAS, 'ghost', 'dragging'),
+	},
+};
+
 export const TaskViewClasses = {
 	block: bem(BLOCKS.TASK_VIEW),
 
@@ -876,26 +906,12 @@ export const SidebarClasses = {
 		taskItem: bem(BLOCKS.SIDEBAR, 'task-item'),
 		emptyState: bem(BLOCKS.SIDEBAR, 'empty-state'),
 		// 今日时间线（连续画布，与周视图同语义）
-		timeline: bem(BLOCKS.SIDEBAR, 'timeline'),
 		timelineHeader: bem(BLOCKS.SIDEBAR, 'timeline-header'),
 		timelineAllDay: bem(BLOCKS.SIDEBAR, 'timeline-allday'),
 		timelineAllDayLabel: bem(BLOCKS.SIDEBAR, 'timeline-allday-label'),
 		timelineAllDayTasks: bem(BLOCKS.SIDEBAR, 'timeline-allday-tasks'),
 		timelineAllDayItem: bem(BLOCKS.SIDEBAR, 'timeline-allday-item'),
 		timelineAllDayTime: bem(BLOCKS.SIDEBAR, 'timeline-allday-time'),
-		timelineBody: bem(BLOCKS.SIDEBAR, 'timeline-body'),
-		timelineGutter: bem(BLOCKS.SIDEBAR, 'timeline-gutter'),
-		timelineTimeLabel: bem(BLOCKS.SIDEBAR, 'timeline-time-label'),
-		timelineCanvas: bem(BLOCKS.SIDEBAR, 'timeline-canvas'),
-		timelineBlock: bem(BLOCKS.SIDEBAR, 'timeline-block'),
-		timelineBlockTime: bem(BLOCKS.SIDEBAR, 'timeline-block-time'),
-		timelineHandle: bem(BLOCKS.SIDEBAR, 'timeline-handle'),
-		timelineGhost: bem(BLOCKS.SIDEBAR, 'timeline-ghost'),
-		timelineGhostLabel: bem(BLOCKS.SIDEBAR, 'timeline-ghost-label'),
-		timelineGhostPlus: bem(BLOCKS.SIDEBAR, 'timeline-ghost-plus'),
-		timelineDropLine: bem(BLOCKS.SIDEBAR, 'timeline-drop-line'),
-		timelineDropPreview: bem(BLOCKS.SIDEBAR, 'timeline-drop-preview'),
-		timelineCurrentTime: bem(BLOCKS.SIDEBAR, 'timeline-current-time'),
 		// 下拉菜单
 		dropdown: 'sidebar-dropdown',
 		dropdownItem: 'sidebar-dropdown-item',
@@ -906,13 +922,6 @@ export const SidebarClasses = {
 		taskListTab: bem(BLOCKS.SIDEBAR, undefined, 'task-list'),
 		timelineTab: bem(BLOCKS.SIDEBAR, undefined, 'timeline'),
 		// 今日时间线连续画布
-		timelineCanvasDragOver: bem(BLOCKS.SIDEBAR, 'timeline-canvas', 'drag-over'),
-		timelineBlockContinuesBefore: bem(BLOCKS.SIDEBAR, 'timeline-block', 'continues-before'),
-		timelineBlockContinuesAfter: bem(BLOCKS.SIDEBAR, 'timeline-block', 'continues-after'),
-		timelineBlockStacked: bem(BLOCKS.SIDEBAR, 'timeline-block', 'stacked'),
-		timelineHandleTop: bem(BLOCKS.SIDEBAR, 'timeline-handle', 'top'),
-		timelineHandleBottom: bem(BLOCKS.SIDEBAR, 'timeline-handle', 'bottom'),
-		timelineGhostDragging: bem(BLOCKS.SIDEBAR, 'timeline-ghost', 'dragging'),
 	},
 };
 

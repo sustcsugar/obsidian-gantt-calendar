@@ -79,72 +79,6 @@
 	gap: 4px;
 }
 
-.gc-day-view__time-grid {
-	flex: 1;
-	overflow-y: auto;
-	min-height: 0;
-	position: relative;
-}
-
-.gc-day-view__time-slot {
-	display: flex;
-	height: var(--gc-tl-slot-h);
-	overflow: hidden;
-	border-top: 1px solid var(--background-modifier-border);
-	position: relative;
-}
-
-.gc-day-view__time-slot:first-child {
-	border-top: none;
-}
-
-.gc-day-view__time-label {
-	width: 50px;
-	flex-shrink: 0;
-	font-size: 11px;
-	color: var(--text-muted);
-	padding: 4px 6px 0 0;
-	text-align: right;
-	font-variant-numeric: tabular-nums;
-}
-
-.gc-day-view__time-tasks {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: var(--gc-tl-card-gap);
-	min-height: 0;
-	overflow: hidden;
-}
-
-.gc-day-view__time-slot--drag-over {
-	background-color: var(--background-modifier-hover);
-	transition: background-color 0.15s ease;
-}
-
-/* Day View — 当前时间指示线 */
-.gc-day-view__timeline-current-time {
-	position: absolute;
-	left: 0;
-	right: 0;
-	height: 2px;
-	background-color: var(--interactive-accent);
-	z-index: 10;
-	pointer-events: none;
-}
-
-.gc-day-view__timeline-current-time::before {
-	content: '';
-	position: absolute;
-	left: -5px;
-	top: -3px;
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background-color: var(--interactive-accent);
-}
-
-
 .gc-day-view--horizontal .gc-day-view__section--tasks {
 	flex: 1 1 50%;
 	display: flex;
@@ -238,3 +172,33 @@
 	color: var(--text-normal);
 }
 
+
+/* 全天区列表项（≥24h 长区间任务带时刻标注） */
+.gc-day-view__allday-item {
+	position: relative;
+	min-width: 0;
+}
+
+.gc-day-view__allday-time {
+	position: absolute;
+	top: 2px;
+	right: 4px;
+	z-index: 2;
+	font-size: 10px;
+	line-height: 1.3;
+	padding: 0 3px;
+	border-radius: 3px;
+	background-color: color-mix(in srgb, var(--background-primary) 80%, transparent);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+/* 全天区拖放高亮 */
+.gc-day-view__allday.gc-day-view__allday--drag-over {
+	background-color: var(--gc-hover-wash);
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: -2px;
+	border-radius: 4px;
+}

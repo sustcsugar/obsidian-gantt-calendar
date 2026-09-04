@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type JSX } from 'react';
-import { taskKey } from '../utils/taskKey';
-import type { DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { Notice } from 'obsidian';
 import type { Component } from 'obsidian';
 import type { GCTask } from '../../types';
-import { getTaskDateField } from '../../types';
 import type { DailyNoteIndex } from '../../utils/dailyNoteSettingsBridge';
 import { DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../../utils/bem';
 import { DayViewConfig } from '../../components/TaskCard';
@@ -16,19 +13,28 @@ import { TaskCard } from '../components/TaskCard';
 import { Icon } from '../components/Icon';
 import { useDropTarget } from '../utils/useDragAndDrop';
 import { useResizeDivider } from '../utils/useResizeDivider';
-import { updateTaskDateField } from '../../tasks/taskUpdater';
-import { isTodayInTimezone } from '../../dateUtils/timezone';
+import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { sortTasks } from '../../tasks/taskSorter';
 import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
 import { EmbeddedNoteEditor } from '../../views/EmbeddedNoteEditor';
-import { openCreateTaskModal } from '../modals/TaskFormModal';
+import { buildDayTimelineModel, getTaskInterval } from './week/timelineModel';
+import { DayTimelineCanvas } from './week/DayTimelineCanvas';
 import { i18n } from '../../i18n/i18n';
 import { Logger } from '../../utils/logger';
 import { RegularExpressions } from '../../utils/RegularExpressions';
+import type { DateFieldType } from '../../settings/types';
+
+/** dataTransfer.taskId（filePath:lineNumber）→ 任务查找 */
+function findTaskById(tasks: GCTask[], taskId: string): GCTask | null {
+	const [filePath, lineNum] = taskId.split(':');
+	const lineNumber = parseInt(lineNum, 10);
+	return tasks.find((t) => t.filePath === filePath && t.lineNumber === lineNumber) || null;
+}
 
 /**
  * React 日视图
- * 保留原 DOM 结构与 BEM 类名，支持任务列表、时间轴布局、嵌入式 Daily Note
+ * 任务区 = 全天区 + 共享单日连续画布（与周视图/侧栏今日时间线同语义）；
+ * 保留分屏布局与嵌入式 Daily Note
  */
 export function DayView(): JSX.Element {
 	const plugin = usePlugin();
@@ -44,6 +50,8 @@ export function DayView(): JSX.Element {
 	// 手机端强制上下分屏（左右分屏在窄屏两侧各 ~160px 不可用）
 	const layout = isPhoneNow() ? 'vertical' : (plugin.settings.dayViewLayout || 'horizontal');
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
+	const startField = plugin.settings.ganttStartField || 'startDate';
+	const endField = plugin.settings.ganttEndField || 'dueDate';
 
 	const config = useMemo(() => ({ ...DayViewConfig }), []);
 	const timelineConfig = useMemo(() => ({ ...DayViewConfig, enableDrag: true, variant: 'timeline' as const }), []);
@@ -54,18 +62,9 @@ export function DayView(): JSX.Element {
 		return d;
 	}, [currentDate]);
 
-	// ===== 任务数据（保持原日视图分片逻辑） =====
-	const dayTasks = useMemo(() => {
+	// ===== 任务数据：视图筛选 + 虚拟周期实例 → 单日连续画布模型 =====
+	const model = useMemo(() => {
 		const scoped = applySort(applyTagFilter(applyStatusFilter(tasks, filter.status), filter.tag), filter.sort);
-		const real: GCTask[] = [];
-		for (const task of scoped) {
-			const dateValue = getTaskDateField(task, dateField);
-			if (!dateValue) continue;
-			const taskDate = new Date(dateValue);
-			if (isNaN(taskDate.getTime())) continue;
-			taskDate.setHours(0, 0, 0, 0);
-			if (taskDate.getTime() === normalized.getTime()) real.push(task);
-		}
 		const virtualInstances = generateVirtualInstances(
 			scoped,
 			normalized,
@@ -73,120 +72,45 @@ export function DayView(): JSX.Element {
 			dateField,
 			plugin.settings.recurringTaskDisplayLimit ?? 5
 		);
-		const sorted = sortTasks([...real, ...virtualInstances], filter.sort);
-		const allday: GCTask[] = [];
-		const timed: GCTask[] = [];
-		for (const task of sorted) {
-			if (task.datePrecision?.[dateField] === 'time') timed.push(task);
-			else allday.push(task);
-		}
-		return { sorted, allday, timed, hasTimed: timed.length > 0 };
-	}, [tasks, filter, normalized, dateField, plugin.settings.recurringTaskDisplayLimit]);
+		const combined = sortTasks([...scoped, ...virtualInstances], filter.sort).filter((t) => !t.cancelled);
+		return buildDayTimelineModel(combined, normalized, startField, endField, dateField);
+	}, [tasks, filter, normalized, dateField, startField, endField, plugin.settings.recurringTaskDisplayLimit]);
 
-	// ===== 时间轴：按小时分组（全天任务作为 0 时） =====
-	const tasksByHour = useMemo(() => {
-		const map = new Map<number, GCTask[]>();
-		for (const task of dayTasks.allday) {
-			if (!map.has(0)) map.set(0, []);
-			map.get(0)!.push(task);
-		}
-		for (const task of dayTasks.timed) {
-			const val = getTaskDateField(task, dateField);
-			if (val instanceof Date) {
-				const hour = val.getHours();
-				if (!map.has(hour)) map.set(hour, []);
-				map.get(hour)!.push(task);
-			}
-		}
-		return map;
-	}, [dayTasks, dateField]);
+	// 任务全集（拖放源查找）
+	const dragLookupTasks = useMemo(() => tasks.filter((t) => !t.cancelled), [tasks]);
 
-	// ===== 当前时间指示线 =====
-	const timeGridRef = useRef<HTMLDivElement | null>(null);
-	const [currentLineTop, setCurrentLineTop] = useState<number | null>(null);
-
-	const updateCurrentLine = useCallback(() => {
-		if (!dayTasks.hasTimed || !isTodayInTimezone(normalized)) {
-			setCurrentLineTop(null);
-			return;
-		}
-		const gridEl = timeGridRef.current;
-		if (!gridEl) return;
-		const slots = gridEl.querySelectorAll(`.${DayViewClasses.elements.timeSlot}`);
-		const currentHour = new Date().getHours();
-		const slot = slots[currentHour] as HTMLElement | undefined;
-		if (!slot) {
-			setCurrentLineTop(null);
-			return;
-		}
-		const slotTop = slot.offsetTop;
-		const slotHeight = slot.offsetHeight;
-		const minuteOffset = (new Date().getMinutes() / 60) * slotHeight;
-		setCurrentLineTop(slotTop + minuteOffset);
-	}, [dayTasks.hasTimed, normalized]);
-
-	useLayoutEffect(updateCurrentLine, [updateCurrentLine]);
-
-	// 每 30s 重算一次当前时间线，否则挂机数小时后位置严重滞后
-	useEffect(() => {
-		const timer = window.setInterval(updateCurrentLine, 30_000);
-		return () => window.clearInterval(timer);
-	}, [updateCurrentLine]);
-
-	// ===== 时间格拖放 =====
-	const handleHourDrop = useCallback((taskId: string, hour: number) => {
-		const [filePath, lineNum] = taskId.split(':');
-		const lineNumber = parseInt(lineNum, 10);
-		const sourceTask = tasks.find((t) => t.filePath === filePath && t.lineNumber === lineNumber);
-		if (!sourceTask) {
-			Logger.error('DayView', 'Source task not found:', taskId);
-			return;
+	// ===== 全天区拖放：转全天（day 精度） =====
+	const handleAllDayDrop = useCallback((taskId: string): void => {
+		const task = findTaskById(dragLookupTasks, taskId);
+		if (!task) return;
+		const interval = getTaskInterval(task, startField, endField, dateField);
+		const updates: Partial<Record<DateFieldType, Date>> = {};
+		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
+		if (interval) {
+			updates[startField] = normalized;
+			updates[endField] = normalized;
+			precision = { [startField]: 'day', [endField]: 'day' };
+		} else {
+			updates[dateField] = normalized;
+			precision = { [dateField]: 'day' };
 		}
 		void (async () => {
 			try {
-				const newDate = new Date(normalized);
-				newDate.setHours(hour, 0, 0, 0);
-				// 拖到时间格 = time 精度。传入浅拷贝而非变异 store 中的共享对象
-				const timedTask = { ...sourceTask, datePrecision: { ...sourceTask.datePrecision, [dateField]: 'time' } };
-				await updateTaskDateField(app, timedTask, dateField, newDate, plugin.settings.enabledTaskFormats);
-				await plugin.taskCache.refreshFile(sourceTask.filePath);
+				const taskToUpdate = { ...task, datePrecision: { ...task.datePrecision, ...precision } };
+				await updateTaskProperties(app, taskToUpdate, updates, plugin.settings.enabledTaskFormats || []);
+				await plugin.taskCache.refreshFile(task.filePath);
 				refreshTasks();
-				Logger.debug('DayView', 'Task time updated via drag-drop', { taskId, hour });
 			} catch (error) {
-				Logger.error('DayView', 'Error updating task time:', error);
-				new Notice(i18n.t('views.dayView.updateTimeFailed'));
+				Logger.error('DayView', 'Set all-day failed:', error);
+				new Notice(i18n.t('views.dayView.updateTaskFailed'));
 			}
 		})();
-	}, [app, dateField, plugin.settings.enabledTaskFormats, tasks, normalized]);
+	}, [dragLookupTasks, normalized, app, plugin, startField, endField, dateField, refreshTasks]);
 
-	const { onDragOver: slotDragOver, onDragLeave: slotDragLeave, onDrop: slotDrop } = useDropTarget({
-		onDrop: (taskId, e) => {
-			const slot = e.currentTarget;
-			const slotIdx = slot.dataset.hour ? parseInt(slot.dataset.hour, 10) : 0;
-			handleHourDrop(taskId, slotIdx);
-		},
-		activeClass: DayViewClasses.modifiers.timeSlotDragOver,
+	const allDayDropProps = useDropTarget({
+		onDrop: (taskId) => handleAllDayDrop(taskId),
+		activeClass: 'gc-day-view__allday--drag-over',
 	});
-
-	const slotDropProps = (hour: number): { onDragOver: (e: ReactDragEvent<HTMLDivElement>) => void; onDragLeave: (e: ReactDragEvent<HTMLDivElement>) => void; onDrop: (e: ReactDragEvent<HTMLDivElement>) => void; 'data-hour': number } => ({
-		onDragOver: slotDragOver,
-		onDragLeave: slotDragLeave,
-		onDrop: slotDrop,
-		'data-hour': hour,
-	});
-
-	// ===== 空时间格快速创建 =====
-	const handleSlotCreateClick = useCallback((e: ReactMouseEvent<HTMLDivElement>, hour: number) => {
-		e.stopPropagation();
-		openCreateTaskModal({
-			app,
-			plugin,
-			targetDate: normalized,
-			targetHour: hour,
-			onSuccess: () => {
-			},
-		});
-	}, [app, plugin, normalized]);
 
 	// ===== 分割线拖拽（水平/垂直） =====
 	const tasksSectionRef = useRef<HTMLDivElement | null>(null);
@@ -273,82 +197,43 @@ export function DayView(): JSX.Element {
 		}
 	}, [editorMode]);
 
-	// ===== 任务列表渲染（时间轴 / 列表） =====
-	const renderTaskList = (): JSX.Element => {
-		if (dayTasks.hasTimed) {
-			return (
-				<div className={DayViewClasses.elements.timeline}>
-					<div ref={timeGridRef} className={DayViewClasses.elements.timeGrid}>
-						{Array.from({ length: 24 }, (_, h) => {
-							const hourTasks = tasksByHour.get(h) || [];
-							return (
-								<div
-									key={h}
-									className={DayViewClasses.elements.timeSlot}
-									{...slotDropProps(h)}
-								>
-									<div className={DayViewClasses.elements.timeLabel}>
-										{`${String(h).padStart(2, '0')}:00`}
-									</div>
-									<div className={DayViewClasses.elements.timeTasks}>
-										{hourTasks.map((t) => (
-											<TaskCard
-												key={taskKey(t)}
-												task={t}
-												config={timelineConfig}
-												targetDate={normalized}
-												onRefresh={handleCardRefresh}
-											/>
-										))}
-									</div>
-									{hourTasks.length === 0 ? (
-										<div
-											className={DayViewClasses.elements.slotCreate}
-											role="button"
-											tabIndex={0}
-											onKeyDown={(e) => {
-												if (e.key === 'Enter' || e.key === ' ') {
-													e.preventDefault();
-													handleSlotCreateClick(e as unknown as ReactMouseEvent<HTMLDivElement>, h);
-												}
-											}}
-											onClick={(e) => handleSlotCreateClick(e, h)}
-										>
-											<Icon icon="plus" />
-										</div>
-									) : null}
-								</div>
-							);
-						})}
-						{currentLineTop !== null ? (
-							<div
-								className={DayViewClasses.elements.currentTimeLine}
-								style={{ top: `${currentLineTop}px` }}
-							/>
-						) : null}
+	// ===== 任务区渲染：全天区 + 共享连续画布 =====
+	const renderTaskList = (): JSX.Element => (
+		<>
+			{(model.allday.length > 0) ? (
+				<div className={DayViewClasses.elements.alldaySection} {...allDayDropProps}>
+					<div className={DayViewClasses.elements.alldayLabel}>
+						{i18n.t('views.weekView.allDay')}
+					</div>
+					<div className={DayViewClasses.elements.alldayTasks}>
+						{model.allday.map(({ task, timeLabel }) => (
+							<div key={`${task.filePath}:${task.lineNumber}`} className={DayViewClasses.elements.alldayItem}>
+								<TaskCard
+									task={task}
+									config={timelineConfig}
+									targetDate={normalized}
+									onRefresh={handleCardRefresh}
+								/>
+								{timeLabel ? (
+									<span className={DayViewClasses.elements.alldayTime}>{timeLabel}</span>
+								) : null}
+							</div>
+						))}
 					</div>
 				</div>
-			);
-		}
-
-		if (dayTasks.sorted.length === 0) {
-			return <div className="gantt-task-empty">{i18n.t('common.noTasks')}</div>;
-		}
-
-		return (
-			<div className={DayViewClasses.elements.taskList}>
-				{dayTasks.sorted.map((t) => (
-					<TaskCard
-						key={taskKey(t)}
-						task={t}
-						config={config}
-						targetDate={normalized}
-						onRefresh={handleCardRefresh}
-					/>
-				))}
-			</div>
-		);
-	};
+			) : null}
+			{model.blocks.length === 0 && model.allday.length === 0 ? (
+				<div className="gantt-task-empty">{i18n.t('common.noTasks')}</div>
+			) : null}
+			<DayTimelineCanvas
+				day={normalized}
+				model={model}
+				config={timelineConfig}
+				tasks={dragLookupTasks}
+				refresh={handleCardRefresh}
+			/>
+		</>
+	);
 
 	// ===== 仅任务模式（不显示 Daily Note） =====
 	if (!enableDailyNote) {
@@ -394,4 +279,3 @@ export function DayView(): JSX.Element {
 		</div>
 	);
 }
-
