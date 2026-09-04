@@ -177,7 +177,7 @@
 /* 全天行 gutter（第 1 列第 2 行） */
 .gc-week-view__allday-gutter {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: flex-end;
 	padding: 4px 6px 0 0;
 	font-size: 11px;
@@ -554,7 +554,7 @@
 	/* 垂直居中；safe 在内容溢出块高时回退为顶部对齐（避免上下两端同时被裁） */
 	align-content: center;
 	align-content: safe center;
-	align-items: flex-start;
+	align-items: center;
 }
 
 .gc-week-view__time-block .gc-task-card--timeline .gc-task-card__text {
