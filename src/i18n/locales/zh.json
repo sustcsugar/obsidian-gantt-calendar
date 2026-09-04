@@ -607,6 +607,7 @@
           "notice": "飞书授权已撤销"
         },
         "pleaseConfigureAppId": "请先配置 App ID",
+        "desktopOnly": "OAuth 授权仅支持桌面端，请在桌面端完成配置后同步使用",
         "completeAuthInBrowser": "在浏览器中完成飞书授权，然后从回调 URL 复制授权码并粘贴到此处",
         "exchangingCode": "正在交换授权码...",
         "pleaseConfigureAppIdAndSecret": "请先配置飞书 App ID 和 App Secret",

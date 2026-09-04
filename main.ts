@@ -1,4 +1,4 @@
-import { Plugin, Notice, setIcon } from 'obsidian';
+import { Plugin, Notice, Platform, setIcon } from 'obsidian';
 import { GCMainView, GC_VIEW_ID } from './src/GCMainView';
 import { GCSidebarView, GC_SIDEBAR_VIEW_ID } from './src/GCSidebarView';
 import { GanttCalendarSettingTab } from './src/settings';
@@ -211,7 +211,10 @@ export default class GanttCalendarPlugin extends Plugin {
 		});
 		ribbonIconEl.addClass('gantt-calendar-ribbon');
 
-		// 状态栏：图标和文字用独立子元素，更新时互不干扰
+		// 状态栏：图标和文字用独立子元素，更新时互不干扰。
+		// 移动端无可见状态栏，不注册（同步状态经 Notice 与视图内呈现）
+		if (Platform.isMobile) return;
+
 		this.statusBarItemEl = this.addStatusBarItem();
 		this.statusBarIcon = this.statusBarItemEl.createSpan({ cls: 'gc-status-bar-icon' });
 		setIcon(this.statusBarIcon, 'goal');

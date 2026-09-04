@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises -- 动态 settings API 回调中使用 async 函数 */
-import { Setting, SettingGroup, Notice, requestUrl, TextComponent } from 'obsidian';
+import { Setting, SettingGroup, Notice, Platform, requestUrl, TextComponent } from 'obsidian';
 import { showConfirmDialog } from '../../ui/modals/ConfirmDialog';
 import { BaseBuilder } from './BaseBuilder';
 import type { BuilderConfig, SyncConfiguration } from '../types';
@@ -525,6 +525,12 @@ export class SyncSettingsBuilder extends BaseBuilder {
 
 		if (!clientId) {
 			new Notice(i18n.t('settings.sync.oauth.pleaseConfigureAppId'));
+			return;
+		}
+
+		// 移动端 webview 中 window.open 授权页不可靠且无 obsidian:// 回调，OAuth 仅桌面端可用
+		if (Platform.isMobile) {
+			new Notice(i18n.t('settings.sync.oauth.desktopOnly'));
 			return;
 		}
 

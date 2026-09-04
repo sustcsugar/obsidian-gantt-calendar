@@ -1,4 +1,4 @@
-import { App, WorkspaceLeaf, WorkspaceSplit, WorkspaceTabs, WorkspaceContainer, WorkspaceItem, TFile, MarkdownRenderer, Component } from 'obsidian';
+import { App, Platform, WorkspaceLeaf, WorkspaceSplit, WorkspaceTabs, WorkspaceContainer, WorkspaceItem, TFile, MarkdownRenderer, Component } from 'obsidian';
 import { findDailyNoteForDate, DailyNoteIndex } from '../utils/dailyNoteSettingsBridge';
 import type { GanttCalendarSettings } from '../settings/types';
 import { Logger } from '../utils/logger';
@@ -87,6 +87,13 @@ export class EmbeddedNoteEditor {
      * 打开指定文件的编辑器
      */
     async openFile(file: TFile, parentComponent: Component): Promise<void> {
+        // 移动端：WorkspaceSplit/setActiveLeaf 内部 hack 风险高，直接走只读预览降级路径
+        if (Platform.isMobile) {
+            this.currentFilePath = file.path;
+            await this.fallbackToPreview(file, parentComponent);
+            return;
+        }
+
         // 同一文件，无需重新加载
         if (this.currentFilePath === file.path && this.leaf) {
             return;
