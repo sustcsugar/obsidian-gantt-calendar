@@ -237,12 +237,14 @@ export function WeekTimelineGrid({
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
 		if (interval && interval.kind === 'point') {
-			// 点任务：真实时刻字段是块的一个边缘——前向=上边缘即锚点；
-			// 后向（截止语义）锚在下边缘，上边缘 + 时长才是写入的截止时刻
+			// 拖动点任务 = 双写起止并自动升级为区间任务：
+			// 跨天拖动时若只写锚点字段（如仅 📅），残留的旧 🛫 仅日期字段会让任务
+			// 变成 ≥24h 跨日区间；上边缘落点为起点，+ 时长为终点，两端均 time 精度
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
-			const anchorMin = interval.pointDirection === 'backward' ? minutes + durationMin : minutes;
-			updates[interval.pointField] = atMinutes(day, anchorMin);
-			precision = { [interval.pointField]: 'time' };
+			const anchorMin = Math.max(0, Math.min(minutes, MINUTES_PER_DAY - durationMin));
+			updates[startField] = atMinutes(day, anchorMin);
+			updates[endField] = atMinutes(day, anchorMin + durationMin);
+			precision = { [startField]: 'time', [endField]: 'time' };
 		} else if (interval) {
 			// 区间任务：块上边缘落到落点后整体平移，day 精度端点保持整天语义。
 			// 仅原本就同日的区间才做"当日容纳"钳制——跨夜区间允许继续跨夜

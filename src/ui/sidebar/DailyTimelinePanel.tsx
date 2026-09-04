@@ -169,11 +169,13 @@ export function DailyTimelinePanel(): JSX.Element {
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
 		if (interval && interval.kind === 'point') {
-			// 后向点任务锚在下边缘：写入截止 = 上边缘 + 时长
+			// 拖动点任务 = 双写起止并自动升级为区间任务（与周视图同语义，
+			// 避免残留旧仅日期字段形成跨日任务）
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
-			const anchorMin = interval.pointDirection === 'backward' ? minutes + durationMin : minutes;
-			updates[interval.pointField] = atMinutes(anchorMin);
-			precision = { [interval.pointField]: 'time' };
+			const anchorMin = Math.max(0, Math.min(minutes, MINUTES_PER_DAY - durationMin));
+			updates[startField] = atMinutes(anchorMin);
+			updates[endField] = atMinutes(anchorMin + durationMin);
+			precision = { [startField]: 'time', [endField]: 'time' };
 		} else if (interval) {
 			// 仅原本同日的区间做当日容纳钳制，跨夜区间允许继续跨夜
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
