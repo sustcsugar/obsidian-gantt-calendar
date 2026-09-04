@@ -580,7 +580,9 @@
    全天区列表项（固定高卡片）保持单行 */
 .gc-sidebar__timeline-block .gc-task-card--timeline {
 	flex-wrap: wrap;
-	align-content: flex-start;
+	/* 垂直居中；safe 在内容溢出块高时回退为顶部对齐（避免上下两端同时被裁） */
+	align-content: center;
+	align-content: safe center;
 	align-items: flex-start;
 }
 
