@@ -563,6 +563,9 @@
 	text-overflow: clip;
 	flex: 1 1 0;
 	min-width: 0;
+	/* 高度钳制在卡片（=块）内：不再向 flex 行高贡献超出部分，
+	   复选框/标签的居中参考系回到块本身；文本超出仍由 overflow 裁剪 */
+	max-height: 100%;
 }
 
 .gc-week-view__time-block .gc-task-card--timeline .gc-task-card__tags {
