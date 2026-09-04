@@ -1056,6 +1056,9 @@
       "refreshTask": "刷新任务",
       "refreshGantt": "刷新甘特图"
     },
+    "more": {
+      "ariaLabel": "更多操作"
+    },
     "settingsButton": {
       "ariaLabel": "插件设置"
     },

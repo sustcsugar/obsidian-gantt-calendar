@@ -172,3 +172,29 @@
 	color: var(--text-muted);
 	background-color: var(--background-modifier-hover);
 }
+
+/* 手机端：格内任务降级为色点（状态色/主题色），格子高度压缩，容器允许纵向滚动 */
+@media (max-width: 520px) {
+	.gc-month-view__day-cell {
+		min-height: 64px;
+	}
+
+	.gc-month-view__task-item {
+		height: 5px;
+		min-height: 5px;
+		padding: 0;
+		margin: 1px 0 2px;
+		border-radius: 2px;
+		background-color: var(--task-bg-color, var(--interactive-accent));
+		overflow: hidden;
+		font-size: 0;
+	}
+
+	.gc-month-view__task-item > * {
+		display: none;
+	}
+
+	.gc-month-view__task-more {
+		font-size: 9px;
+	}
+}

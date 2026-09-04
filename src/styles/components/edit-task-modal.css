@@ -221,3 +221,10 @@
 	.gc-edit-task-modal__buttons button.mod-cta:hover {
 		background: var(--interactive-accent-hover);
 	}
+
+/* 手机端：优先级 6 列收窄为 3 列，避免文字截断溢出 */
+@media (max-width: 520px) {
+	.gc-edit-task-modal__priority-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}

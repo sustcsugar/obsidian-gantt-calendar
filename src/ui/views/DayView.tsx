@@ -10,6 +10,7 @@ import { DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../../util
 import { DayViewConfig } from '../../components/TaskCard';
 import { usePlugin, useApp } from '../pluginContext';
 import { useCalendarStore, selectViewFilter } from '../store/calendarStore';
+import { isPhoneNow } from '../utils/platform';
 import { applyStatusFilter, applyTagFilter, applySort } from '../utils/taskFilters';
 import { TaskCard } from '../components/TaskCard';
 import { Icon } from '../components/Icon';
@@ -40,7 +41,8 @@ export function DayView(): JSX.Element {
 	const handleCardRefresh = useCallback(() => refreshTasks(), [refreshTasks]);
 
 	const enableDailyNote = plugin.settings.enableDailyNote !== false;
-	const layout = plugin.settings.dayViewLayout || 'horizontal';
+	// 手机端强制上下分屏（左右分屏在窄屏两侧各 ~160px 不可用）
+	const layout = isPhoneNow() ? 'vertical' : (plugin.settings.dayViewLayout || 'horizontal');
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
 
 	const config = useMemo(() => ({ ...DayViewConfig }), []);

@@ -735,3 +735,32 @@
 	opacity: 0.7;
 }
 
+
+/* ============================================
+   手机端（<= 520px）工具栏适配
+   次要按钮已由 ⋯ 溢出菜单收纳（Toolbar.tsx isPhone 分支）
+   ============================================ */
+@media (max-width: 520px) {
+	/* 中部标题让位给视图导航与操作按钮 */
+	.gc-toolbar__center {
+		display: none;
+	}
+
+	.gc-toolbar {
+		gap: 6px;
+		padding-left: max(8px, env(safe-area-inset-left));
+		padding-right: max(8px, env(safe-area-inset-right));
+	}
+
+	/* 兜底：极端窄宽下允许横向滚动而非溢出裁剪 */
+	.gc-toolbar__right {
+		flex-shrink: 1;
+		min-width: 0;
+	}
+
+	/* 触控目标加大 */
+	.gc-nav__btn {
+		min-height: 34px;
+		min-width: 34px;
+	}
+}

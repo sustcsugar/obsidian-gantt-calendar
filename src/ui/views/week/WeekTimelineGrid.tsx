@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type JSX } from 'react';
-import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent } from 'react';
+import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { Notice } from 'obsidian';
 import type { GCTask } from '../../../types';
 import type { DateFieldType } from '../../../settings/types';
@@ -62,6 +62,10 @@ export interface WeekTimelineGridProps {
 	showLunar: boolean;
 	refreshTasks: () => void;
 	updateSeq: number;
+	/** 可见日窗口（周内索引，默认全 7 天；手机端 3 日滑动窗口） */
+	visibleDayIdxs?: number[];
+	/** 横向 swipe 翻页回调（手机端；桌面不传） */
+	onSwipe?: (dir: -1 | 1) => void;
 }
 
 /** 拖放指示线状态 */
@@ -97,10 +101,33 @@ export function WeekTimelineGrid({
 	showLunar,
 	refreshTasks,
 	updateSeq,
+	visibleDayIdxs,
+	onSwipe,
 }: WeekTimelineGridProps): JSX.Element {
 	const plugin = usePlugin();
 	const app = useApp();
 	const tooltip = useTaskTooltip();
+
+	// 可见日窗口（默认全周）；窗口内渲染位置 pos 与周索引 dayIdx 解耦
+	const visibleIdxs = visibleDayIdxs ?? [0, 1, 2, 3, 4, 5, 6];
+	const colCount = visibleIdxs.length;
+	const swipeStartRef = useRef<{ x: number; y: number; pointerType: string } | null>(null);
+
+	const handleGridPointerDown = useCallback((e: ReactPointerEvent) => {
+		swipeStartRef.current = { x: e.clientX, y: e.clientY, pointerType: e.pointerType };
+	}, []);
+
+	const handleGridPointerUp = useCallback((e: ReactPointerEvent) => {
+		const start = swipeStartRef.current;
+		swipeStartRef.current = null;
+		if (!start || !onSwipe) return;
+		const dx = e.clientX - start.x;
+		const dy = e.clientY - start.y;
+		// 横向位移显著大于纵向且超阈值才视为翻页（纵向留给滚动/创建手势）
+		if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+			onSwipe(dx < 0 ? 1 : -1);
+		}
+	}, [onSwipe]);
 
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const startField = plugin.settings.ganttStartField || 'startDate';
@@ -344,23 +371,33 @@ export function WeekTimelineGrid({
 		<div
 			className={WeekViewClasses.elements.tasksGrid}
 			ref={gridRef}
-			style={{ '--gc-tl-hour-h': `${DAY_PX / 24}px` } as CSSProperties}
+			style={{
+				'--gc-tl-hour-h': `${DAY_PX / 24}px`,
+				gridTemplateColumns: `48px repeat(${colCount}, 1fr)`,
+				// 触屏：纵向滚动交给浏览器，横向位移留给 swipe 翻页
+				touchAction: onSwipe ? 'pan-y' : undefined,
+			} as CSSProperties}
+			onPointerDown={onSwipe ? handleGridPointerDown : undefined}
+			onPointerUp={onSwipe ? handleGridPointerUp : undefined}
 		>
-			{/* 表头 */}
+			{/* 表头（仅渲染可见日窗口） */}
 			<div className={WeekViewClasses.elements.headerSpacer} style={{ gridColumn: '1', gridRow: '1' }} />
-			{days.map((day, dayIdx) => (
-				<div
-					key={`week-h-${dayIdx}`}
-					className={`${WeekViewClasses.elements.headerCell}${day.isToday ? ` ${WeekViewClasses.modifiers.today}` : ''}`}
-					style={{ gridColumn: `${dayIdx + 2}`, gridRow: '1' }}
-				>
-					<div className={WeekViewClasses.elements.dayName}>{dayNames[day.weekday]}</div>
-					<div className={WeekViewClasses.elements.dayNumber}>{day.day.toString()}</div>
-					{day.lunarText && showLunar ? (
-						<div className={WeekViewClasses.elements.lunarText}>{day.lunarText}</div>
-					) : null}
-				</div>
-			))}
+			{visibleIdxs.map((dayIdx, pos) => {
+				const day = days[dayIdx];
+				return (
+					<div
+						key={`week-h-${dayIdx}`}
+						className={`${WeekViewClasses.elements.headerCell}${day.isToday ? ` ${WeekViewClasses.modifiers.today}` : ''}`}
+						style={{ gridColumn: `${pos + 2}`, gridRow: '1' }}
+					>
+						<div className={WeekViewClasses.elements.dayName}>{dayNames[day.weekday]}</div>
+						<div className={WeekViewClasses.elements.dayNumber}>{day.day.toString()}</div>
+						{day.lunarText && showLunar ? (
+							<div className={WeekViewClasses.elements.lunarText}>{day.lunarText}</div>
+						) : null}
+					</div>
+				);
+			})}
 
 			{/* 全天行 */}
 			<div className={WeekViewClasses.elements.alldayGutter} style={{ gridColumn: '1', gridRow: '2' }}>
@@ -373,37 +410,47 @@ export function WeekTimelineGrid({
 				onDragLeave={handleAlldayDragLeave}
 				onDrop={handleAlldayDrop}
 			>
-				{days.map((day, dayIdx) => (
-					<div
-						key={`week-ac-${dayIdx}`}
-						className={`${WeekViewClasses.elements.alldayCell}${day.isToday ? ` ${WeekViewClasses.modifiers.alldayCellToday}` : ''}${alldayDragDay === dayIdx ? ` ${WeekViewClasses.modifiers.alldayCellDragOver}` : ''}`}
-						style={{ left: `${(dayIdx / 7) * 100}%`, width: `${100 / 7}%` }}
-					/>
-				))}
-				{model.allday.map((bar) => (
-					<div
-						key={`week-ab-${taskKey(bar.task)}`}
-						className={`${WeekViewClasses.elements.alldayBar}${bar.continuesBefore ? ` ${WeekViewClasses.modifiers.alldayBarContinuesBefore}` : ''}${bar.continuesAfter ? ` ${WeekViewClasses.modifiers.alldayBarContinuesAfter}` : ''}${bar.stackedIndex > 0 ? ` ${WeekViewClasses.modifiers.alldayBarStacked}` : ''}`}
-						style={{
-							left: `calc(${(bar.startDayIndex / 7) * 100}% + 2px)`,
-							width: `calc(${((bar.endDayIndex - bar.startDayIndex + 1) / 7) * 100}% - 4px)`,
-							top: `${bar.lane * ALLDAY_ROW_PX + (bar.stackedIndex > 0 ? 3 : 0)}px`,
-							zIndex: bar.stackedIndex > 0 ? 3 : 1,
-						}}
-					>
-						<TaskCard
-							task={bar.task}
-							config={config}
-							targetDate={days[bar.startDayIndex]?.date}
-							onClick={() => tooltip.hide()}
-							onRefresh={handleCardRefresh}
+				{visibleIdxs.map((dayIdx, pos) => {
+					const day = days[dayIdx];
+					return (
+						<div
+							key={`week-ac-${dayIdx}`}
+							className={`${WeekViewClasses.elements.alldayCell}${day.isToday ? ` ${WeekViewClasses.modifiers.alldayCellToday}` : ''}${alldayDragDay === dayIdx ? ` ${WeekViewClasses.modifiers.alldayCellDragOver}` : ''}`}
+							style={{ left: `${(pos / colCount) * 100}%`, width: `${100 / colCount}%` }}
 						/>
-						{/* 长区间任务的起止时刻标注（如 "22:00 → 03:00"） */}
-						{bar.timeLabel ? (
-							<span className={WeekViewClasses.elements.alldayBarTime}>{bar.timeLabel}</span>
-						) : null}
-					</div>
-				))}
+					);
+				})}
+				{model.allday.map((bar) => {
+					// 横跨条钳制到可见窗口（窗口外部分截断，延续箭头仍指示）
+					const clampedStart = Math.max(bar.startDayIndex, visibleIdxs[0]);
+					const clampedEnd = Math.min(bar.endDayIndex, visibleIdxs[colCount - 1]);
+					if (clampedStart > clampedEnd) return null;
+					const spanCount = clampedEnd - clampedStart + 1;
+					return (
+						<div
+							key={`week-ab-${taskKey(bar.task)}`}
+							className={`${WeekViewClasses.elements.alldayBar}${bar.continuesBefore || clampedStart > bar.startDayIndex ? ` ${WeekViewClasses.modifiers.alldayBarContinuesBefore}` : ''}${bar.continuesAfter || clampedEnd < bar.endDayIndex ? ` ${WeekViewClasses.modifiers.alldayBarContinuesAfter}` : ''}${bar.stackedIndex > 0 ? ` ${WeekViewClasses.modifiers.alldayBarStacked}` : ''}`}
+							style={{
+								left: `calc(${((clampedStart - visibleIdxs[0]) / colCount) * 100}% + 2px)`,
+								width: `calc(${(spanCount / colCount) * 100}% - 4px)`,
+								top: `${bar.lane * ALLDAY_ROW_PX + (bar.stackedIndex > 0 ? 3 : 0)}px`,
+								zIndex: bar.stackedIndex > 0 ? 3 : 1,
+							}}
+						>
+							<TaskCard
+								task={bar.task}
+								config={config}
+								targetDate={days[bar.startDayIndex]?.date}
+								onClick={() => tooltip.hide()}
+								onRefresh={handleCardRefresh}
+							/>
+							{/* 长区间任务的起止时刻标注（如 "22:00 → 03:00"） */}
+							{bar.timeLabel ? (
+								<span className={WeekViewClasses.elements.alldayBarTime}>{bar.timeLabel}</span>
+							) : null}
+						</div>
+					);
+				})}
 			</div>
 
 			{/* 时间沟槽：24 个整点标签 */}
@@ -415,12 +462,13 @@ export function WeekTimelineGrid({
 				))}
 			</div>
 
-			{/* 7 个日列（连续画布） */}
-			{days.map((day, dayIdx) => (
+			{/* 日列（连续画布，仅渲染可见日窗口；dayIndex 为周索引，colPos 为渲染列位） */}
+			{visibleIdxs.map((dayIdx, pos) => (
 				<DayColumn
 					key={`week-col-${dayIdx}`}
 					dayIndex={dayIdx}
-					day={day}
+					colPos={pos}
+					day={days[dayIdx]}
 					daySegs={model.days[dayIdx] || []}
 					config={config}
 					beginResize={beginResize}
@@ -464,7 +512,10 @@ function isContextMenuOpen(): boolean {
 }
 
 interface DayColumnProps {
+	/** 周内索引（0-6，模型/状态键） */
 	dayIndex: number;
+	/** 渲染列位（可见窗口内位置，0 起） */
+	colPos: number;
 	day: WeekTimelineDayInfo;
 	daySegs: DaySegment[];
 	config: TaskCardConfig;
@@ -484,6 +535,7 @@ interface DayColumnProps {
 
 function DayColumn({
 	dayIndex,
+	colPos,
 	day,
 	daySegs,
 	config,
@@ -668,7 +720,7 @@ function DayColumn({
 		<div
 			ref={colRef}
 			className={`${WeekViewClasses.elements.dayCol}${day.isToday ? ` ${WeekViewClasses.modifiers.dayColToday}` : ''}${dragOverCol === dayIndex ? ` ${WeekViewClasses.modifiers.dayColDragOver}` : ''}`}
-			style={{ gridColumn: `${dayIndex + 2}`, gridRow: '3', height: `${DAY_PX}px` }}
+			style={{ gridColumn: `${colPos + 2}`, gridRow: '3', height: `${DAY_PX}px` }}
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
 			onMouseDown={handleMouseDown}

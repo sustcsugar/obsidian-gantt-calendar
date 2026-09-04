@@ -311,3 +311,15 @@
 .gc-date-time-picker .gc-date-time-picker__ok-button:hover {
 	opacity: 0.88;
 }
+
+/* 手机端：面板上下堆叠（日历上、时分下），宽度贴合视口 */
+@media (max-width: 520px) {
+	.gc-date-time-picker .gc-date-time-picker__body {
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.gc-date-time-picker .gc-date-time-picker__calendar {
+		width: 100%;
+	}
+}

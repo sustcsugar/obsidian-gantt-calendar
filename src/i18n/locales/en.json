@@ -1056,6 +1056,9 @@
       "refreshTask": "Refresh Tasks",
       "refreshGantt": "Refresh Gantt"
     },
+    "more": {
+      "ariaLabel": "More actions"
+    },
     "settingsButton": {
       "ariaLabel": "Plugin Settings"
     },
