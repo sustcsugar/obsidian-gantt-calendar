@@ -49,7 +49,7 @@
 	flex-direction: column;
 	align-items: stretch;
 	justify-content: flex-start;
-	padding: 6px 8px;
+	padding: 6px 2px 6px 2px;
 	gap: 2px;
 	background-color: var(--background-primary);
 	border-right: 1px solid var(--gc-border-hairline);
@@ -144,10 +144,13 @@
 	overflow: hidden;
 }
 
-/* 格内任务药丸：timeline 变体在月视图的适配（单行紧凑） */
+/* 格内任务药丸：timeline 变体在月视图的适配——去边框去色条，灰底精简（与横跨条一致） */
 .gc-month-view__tasks .gc-task-card--timeline {
 	min-height: 18px;
 	font-size: 11px;
+	border: none;
+	border-radius: 0;
+	background-color: var(--background-primary-alt);
 }
 
 /* "更多"提示 chip */
@@ -217,6 +220,9 @@ body.gc-is-phone .gc-month-view__task-more {
 
 .gc-month-view__span-bar .gc-task-card--timeline {
 	height: 100%;
+	border: none;
+	border-radius: 0;
+	background-color: var(--background-primary-alt);
 }
 
 .gc-month-view__span-bar--continues-before {
