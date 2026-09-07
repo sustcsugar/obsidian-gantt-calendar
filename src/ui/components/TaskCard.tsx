@@ -85,8 +85,8 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 		if (virtual) list.push(TaskCardClasses.modifiers.virtual);
 		else if (task.repeat) list.push(TaskCardClasses.modifiers.recurring);
 		list.push(task.completed ? TaskCardClasses.modifiers.completed : TaskCardClasses.modifiers.pending);
-		// 有自定义状态时添加 task-with-status，激活 CSS 变量卡片着色
-		if (task.status && !task.completed) list.push('task-with-status');
+		// 有任务状态（含已完成）时添加 task-with-status，激活 CSS 变量卡片着色
+		if (task.status) list.push('task-with-status');
 		return list;
 	}, [config.viewModifier, config.variant, config.compact, virtual, task.repeat, task.completed, task.status]);
 
@@ -100,7 +100,7 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 			'--task-bg-color': colors.bg,
 			'--task-text-color': colors.text,
 		} as CSSProperties;
-	}, [task.status, plugin.settings, task.completed]);
+	}, [task.status, plugin.settings]);
 
 	// ===== 富文本描述 =====
 	const description = useMemo(() => {

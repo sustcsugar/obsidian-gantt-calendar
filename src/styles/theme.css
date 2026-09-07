@@ -88,13 +88,11 @@
 	color: var(--task-text-color, var(--text-normal));
 }
 
-/* 状态颜色应用到边框 - 只在没有completed/pending状态时应用 */
-.gc-task-card.task-with-status:not(.gc-task-card--completed):not(.gc-task-card--pending) {
-	border-left-color: var(--task-bg-color, var(--interactive-accent));
-}
-
-/* 已完成任务保持透明度 */
+/* 状态颜色应用到边框 - 仅已完成卡片：色条跟随用户配置的状态色，
+   双类+修饰符的特异性压过 .gc-task-card--completed 的固定绿色条。
+   未完成卡片保持 pending 橙色条（todo 默认浅色背景会让状态色条不可见） */
 .gc-task-card.task-with-status.gc-task-card--completed {
+	border-left-color: var(--task-bg-color, var(--gc-task-completed));
 	opacity: 0.7;
 }
 
@@ -192,9 +190,12 @@
 }
 
 /* 7.6 Text Decoration (已完成任务) */
-/* 排除自定义状态的已完成任务，使用自定义文字颜色 */
-.gc-task-card--completed:not(.task-with-status) .gc-task-card__text {
+/* 已完成任务一律显示删除线；文字颜色：有状态配置用状态色，否则置灰 */
+.gc-task-card--completed .gc-task-card__text {
 	text-decoration: line-through;
+}
+
+.gc-task-card--completed:not(.task-with-status) .gc-task-card__text {
 	color: var(--text-muted);
 }
 
