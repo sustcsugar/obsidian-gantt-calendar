@@ -15,7 +15,8 @@
 	margin: 8px 12px 16px;
 	position: sticky;
 	top: 8px;
-	flex: 1 1 auto;
+	/* 纵向 flex 骨架中按内容高度固定占位，不与内容区争抢空间 */
+	flex: 0 0 auto;
 	min-width: 0;
 	border-radius: 14px;
 	/* 玻璃效果核心 - 提高透明度 */

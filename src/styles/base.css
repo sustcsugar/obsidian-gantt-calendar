@@ -20,12 +20,20 @@
    Layout Structures (No Visuals)
    ======================================== */
 
+/* React 应用根容器：工具栏 + 内容区的纵向 flex 骨架。
+   内容区高度 = 视口 − 工具栏（flex 分配），避免 height:100% 与
+   工具栏占位叠加造成的恒定溢出（瀑布流模式下外层多出 ~一个工具栏高度的滚动空间） */
+.gantt-calendar-app {
+	display: flex;
+	flex-direction: column;
+}
+
 /* Main Container */
 .calendar-content {
 	padding: 12px;
-	height: 100%;
 	box-sizing: border-box;
 	flex: 1;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
 	overflow-y: auto;
