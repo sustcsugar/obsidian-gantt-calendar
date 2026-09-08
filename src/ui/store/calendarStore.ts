@@ -46,6 +46,8 @@ interface CalendarStoreState {
 	bumpSettings: () => void;
 	/** 请求甘特图滚动（每次调用自增 seq，GanttView 订阅执行） */
 	requestGanttScroll: (action: GanttScrollAction) => void;
+	/** 插件启动时从 data.json 恢复持久化筛选（main.ts 在 loadSettings 后调用） */
+	hydrateViewFilters: (filters?: Partial<Record<ViewScope, ViewFilterState>> | null) => void;
 
 	setStatusFilter: (scope: ViewScope, state: StatusFilterState) => void;
 	setTagFilter: (scope: ViewScope, tag: TagFilterState) => void;
@@ -69,30 +71,20 @@ const buildInitialFilters = (): Record<ViewScope, ViewFilterState> => {
 	}, {} as Record<ViewScope, ViewFilterState>);
 };
 
-const VIEW_FILTERS_KEY = 'gantt-calendar-view-filters';
-
-/** 从 localStorage 恢复上次会话的筛选条件 */
-function loadPersistedFilters(): Record<ViewScope, ViewFilterState> {
-	try {
-		const raw = localStorage.getItem(VIEW_FILTERS_KEY);
-		if (!raw) return buildInitialFilters();
-		const parsed = JSON.parse(raw) as Partial<Record<ViewScope, ViewFilterState>>;
-		// 合并：只覆盖有效 scope，缺失的 scope 用默认值
-		const base = buildInitialFilters();
+/**
+ * 按 scope 合并持久化的部分筛选数据到默认值上（结构演进容错：
+ * 缺失的 scope / 字段用默认值补全）
+ */
+export function mergeViewFilters(
+	partial?: Partial<Record<ViewScope, ViewFilterState>> | null
+): Record<ViewScope, ViewFilterState> {
+	const base = buildInitialFilters();
+	if (partial) {
 		for (const scope of Object.keys(base) as ViewScope[]) {
-			if (parsed[scope]) base[scope] = { ...base[scope], ...parsed[scope] };
+			if (partial[scope]) base[scope] = { ...base[scope], ...partial[scope] };
 		}
-		return base;
-	} catch {
-		return buildInitialFilters();
 	}
-}
-
-/** 保存筛选条件到 localStorage */
-function persistFilters(filters: Record<ViewScope, ViewFilterState>): void {
-	try {
-		localStorage.setItem(VIEW_FILTERS_KEY, JSON.stringify(filters));
-	} catch { /* quota exceeded 等静默忽略 */ }
+	return base;
 }
 
 export const useCalendarStore = create<CalendarStoreState>((set) => ({
@@ -101,7 +93,7 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	tasks: [],
 	changedFilePath: undefined,
 	updateSeq: 0,
-	viewFilters: loadPersistedFilters(),
+	viewFilters: buildInitialFilters(),
 	settingsVersion: 0,
 	ganttScroll: null,
 
@@ -122,28 +114,26 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	/** 任务写回后触发一次顺带重渲染（数据最终由事件总线回流） */
 	refreshTasks: () => set((s) => ({ updateSeq: s.updateSeq + 1 })),
 
+	hydrateViewFilters: (filters) => set({ viewFilters: mergeViewFilters(filters) }),
+
 	setStatusFilter: (scope, status) =>
 		set((s) => {
 			const vf = { ...s.viewFilters, [scope]: { ...s.viewFilters[scope], status } };
-			persistFilters(vf);
 			return { viewFilters: vf };
 		}),
 	setTagFilter: (scope, tag) =>
 		set((s) => {
 			const vf = { ...s.viewFilters, [scope]: { ...s.viewFilters[scope], tag } };
-			persistFilters(vf);
 			return { viewFilters: vf };
 		}),
 	setSort: (scope, sort) =>
 		set((s) => {
 			const vf = { ...s.viewFilters, [scope]: { ...s.viewFilters[scope], sort } };
-			persistFilters(vf);
 			return { viewFilters: vf };
 		}),
 	applyFilter: (scope, status, tag, sort) =>
 		set((s) => {
 			const vf = { ...s.viewFilters, [scope]: { status, tag, sort } };
-			persistFilters(vf);
 			return { viewFilters: vf };
 		}),
 }));

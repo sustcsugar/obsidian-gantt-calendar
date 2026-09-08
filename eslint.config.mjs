@@ -76,6 +76,14 @@ export default [
 		},
 	},
 	{
+		// 旧版 localStorage 筛选偏好的一次性迁移入口(读取并清除旧键);
+		// 全库仅此文件允许触碰全局 localStorage,该规则为受保护规则只能配置层关闭
+		files: ["src/utils/legacyViewFilters.ts"],
+		rules: {
+			"no-restricted-globals": "off",
+		},
+	},
+	{
 		// 禁用 no-explicit-any 的自动修复(any→unknown 会破坏构建)
 		rules: {
 			"@typescript-eslint/no-explicit-any": "warn",

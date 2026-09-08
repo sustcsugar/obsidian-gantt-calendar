@@ -17,12 +17,20 @@ import { ViewManager, activateSidebarView } from './src/managers/ViewManager';
 import { SyncManagerBridge } from './src/managers/SyncManagerBridge';
 import { DailyNoteIndex } from './src/utils/dailyNoteSettingsBridge';
 import { initModalHost, destroyModalHost } from './src/ui/modals/modalHost';
+import { useCalendarStore } from './src/ui/store/calendarStore';
+
+/** 视图筛选变更写回 data.json 的防抖间隔（点击级频率，无需即时时效） */
+const VIEW_FILTERS_SAVE_DEBOUNCE_MS = 800;
 
 export default class GanttCalendarPlugin extends Plugin {
 	settings: GanttCalendarSettings;
 	taskCache: TaskStore;
 	/** taskCache 初始化延迟句柄，onunload 时取消 */
 	private initTimeout: number | null = null;
+	/** store 订阅退订句柄，onunload 时取消 */
+	private viewFiltersUnsubscribe: (() => void) | null = null;
+	/** 视图筛选写回防抖句柄，onunload 时冲刷 */
+	private viewFiltersSaveTimer: number | null = null;
 	dailyNoteIndex: DailyNoteIndex;
 
 	private settingsManager: SettingsManager;
@@ -42,6 +50,16 @@ export default class GanttCalendarPlugin extends Plugin {
 
 		this.settingsManager = new SettingsManager(this);
 		this.settings = await this.settingsManager.loadSettings();
+
+		// 视图筛选偏好：从 data.json 水合进 store（先水合后订阅，
+		// 避免水合触发的首次 set 被当成变更写回）；
+		// 后续筛选变更经订阅防抖写回 data.json
+		useCalendarStore.getState().hydrateViewFilters(this.settings.viewFilters);
+		this.viewFiltersUnsubscribe = useCalendarStore.subscribe((state, prev) => {
+			if (state.viewFilters === prev.viewFilters) return;
+			this.settings.viewFilters = state.viewFilters;
+			this.scheduleViewFiltersSave();
+		});
 
 		// 应用用户设置的语言（覆盖系统检测）
 		if (this.settings.language && this.settings.language !== 'system') {
@@ -93,6 +111,16 @@ export default class GanttCalendarPlugin extends Plugin {
 			window.clearTimeout(this.initTimeout);
 			this.initTimeout = null;
 		}
+		// 退订筛选 store，冲刷未落盘的筛选变更
+		if (this.viewFiltersUnsubscribe) {
+			this.viewFiltersUnsubscribe();
+			this.viewFiltersUnsubscribe = null;
+		}
+		if (this.viewFiltersSaveTimer !== null) {
+			window.clearTimeout(this.viewFiltersSaveTimer);
+			this.viewFiltersSaveTimer = null;
+			void this.settingsManager.saveSettings(this.settings);
+		}
 		this.syncManagerBridge?.destroy();
 		this.dailyNoteIndex?.destroy();
 		this.themeManager?.destroy();
@@ -120,6 +148,20 @@ export default class GanttCalendarPlugin extends Plugin {
 
 	async activateView(): Promise<void> {
 		return this.viewManager.activateView();
+	}
+
+	/**
+	 * 视图筛选变更防抖写回 data.json（只走 SettingsManager.saveData 落盘，
+	 * 不经 saveSettings 的 taskCache/syncManager 重配置副作用）
+	 */
+	private scheduleViewFiltersSave(): void {
+		if (this.viewFiltersSaveTimer !== null) {
+			window.clearTimeout(this.viewFiltersSaveTimer);
+		}
+		this.viewFiltersSaveTimer = window.setTimeout(() => {
+			this.viewFiltersSaveTimer = null;
+			void this.settingsManager.saveSettings(this.settings);
+		}, VIEW_FILTERS_SAVE_DEBOUNCE_MS);
 	}
 
 	refreshCalendarViews(): void {

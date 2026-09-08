@@ -9,6 +9,8 @@ import { DEFAULT_SETTINGS } from '../settings/constants';
 import type { GanttCalendarSettings } from '../settings/types';
 import { ThemeColors, deleteLegacyColors } from '../tasks/taskStatus';
 import { setTimezoneOffset } from '../dateUtils/timezone';
+import { mergeViewFilters } from '../ui/store/calendarStore';
+import { readLegacyViewFilters } from '../utils/legacyViewFilters';
 
 /**
  * 设置管理器
@@ -38,6 +40,9 @@ export class SettingsManager {
 
 		// 迁移：将非核心默认状态降级为自定义状态
 		await this.migratePresetStatuses(settings);
+
+		// 视图筛选偏好归一化 + 旧 localStorage 键一次性导入
+		await this.migrateViewFilters(settings);
 
 		// 更新 CSS 变量
 		this.updateCSSVariables(settings);
@@ -73,6 +78,21 @@ export class SettingsManager {
 			settings.dailyNoteTemplatePath = (data as Record<string, string>).templaterTemplatePath || '';
 			await this.plugin.saveData(settings);
 		}
+	}
+
+	/**
+	 * 视图筛选偏好：按 scope 补全缺省字段；
+	 * data.json 尚无该数据时尝试导入旧 localStorage 键（导入后清除并落盘）
+	 */
+	private async migrateViewFilters(settings: GanttCalendarSettings): Promise<void> {
+		if (settings.viewFilters) {
+			settings.viewFilters = mergeViewFilters(settings.viewFilters);
+			return;
+		}
+		const legacy = readLegacyViewFilters();
+		if (!legacy) return;
+		settings.viewFilters = mergeViewFilters(legacy);
+		await this.plugin.saveData(settings);
 	}
 
 	/**

@@ -2,6 +2,7 @@ import type GanttCalendarPlugin from '../../main';
 import type { SortField, SortOrder, TagFilterOperator } from '../types';
 import type { TaskStatus } from '../tasks/taskStatus';
 import type { FeishuTaskList } from '../data-layer/sources/api/providers/feishu/FeishuTypes';
+import type { ViewFilterState, ViewScope } from '../ui/store/calendarStore';
 
 /**
  * 日期字段类型
@@ -115,6 +116,11 @@ export interface GanttCalendarSettings {
 
 	// ========== 同步设置 ==========
 	syncConfiguration?: SyncConfiguration;
+
+	// ========== 视图筛选/排序持久化 ==========
+	// 各视图作用域的筛选与排序状态，随插件设置落 data.json（按 vault 隔离、随库同步）。
+	// 运行时以 calendarStore 为准，main.ts 订阅写回；loadSettings 会按 scope 补全缺省
+	viewFilters?: Record<ViewScope, ViewFilterState>;
 }
 
 /**
