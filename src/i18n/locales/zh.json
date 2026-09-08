@@ -866,6 +866,7 @@
       "submitHint": "按 Enter 键可快捷提交",
       "errorEmptyDescription": "请输入任务描述",
       "errorDateOrder": "创建日期不能晚于截止日期",
+      "errorStartDueOrder": "截止时间不得早于开始时间",
       "success": "任务创建成功",
       "error": "创建任务失败: {{error}}",
       "dateFields": {
@@ -924,6 +925,7 @@
       "datePlaceholder": "选择日期和时间",
       "success": "任务已更新",
       "error": "更新任务失败",
+      "errorStartDueOrder": "截止时间不得早于开始时间",
       "dateFields": {
         "created": "➕ 创建",
         "start": "🛫 开始",

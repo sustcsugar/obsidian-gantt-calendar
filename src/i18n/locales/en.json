@@ -866,6 +866,7 @@
       "submitHint": "Press Enter to submit",
       "errorEmptyDescription": "Please enter a task description",
       "errorDateOrder": "Start date cannot be after due date",
+      "errorStartDueOrder": "Due date cannot be earlier than start date",
       "success": "Task created",
       "error": "Failed to create task: {{error}}",
       "dateFields": {
@@ -924,6 +925,7 @@
       "datePlaceholder": "Select date and time",
       "success": "Task updated",
       "error": "Failed to update task",
+      "errorStartDueOrder": "Due date cannot be earlier than start date",
       "dateFields": {
         "created": "➕ Created",
         "start": "🛫 Start",

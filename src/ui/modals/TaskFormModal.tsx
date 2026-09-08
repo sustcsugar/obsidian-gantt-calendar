@@ -75,6 +75,26 @@ interface DateFieldDef {
 	label: string;
 }
 
+/**
+ * 截止早于开始判定（保存前保护）：双端均带时刻才按时刻比较，
+ * 否则按日粒度比较（day 精度端点不含时刻语义，同日不算倒置）
+ */
+function isDueBeforeStart(
+	start: Date,
+	due: Date,
+	precision: Record<string, 'day' | 'time'>,
+): boolean {
+	if (precision.startDate === 'time' && precision.dueDate === 'time') {
+		return due.getTime() < start.getTime();
+	}
+	const dayMs = (d: Date) => {
+		const x = new Date(d);
+		x.setHours(0, 0, 0, 0);
+		return x.getTime();
+	};
+	return dayMs(due) < dayMs(start);
+}
+
 /** 弹窗内联样式（原 BaseTaskModal.addStyles 的内容） */
 
 /**
@@ -190,6 +210,10 @@ export function TaskFormModal({
 				new Notice(i18n.t('modals.createTask.errorDateOrder'));
 				return;
 			}
+			if (dates.startDate && dates.dueDate && isDueBeforeStart(dates.startDate, dates.dueDate, datePrecision)) {
+				new Notice(i18n.t('modals.createTask.errorStartDueOrder'));
+				return;
+			}
 			try {
 				const taskData: CreateTaskData = {
 					description: desc,
@@ -225,6 +249,10 @@ export function TaskFormModal({
 
 		// 编辑模式
 		if (!task) return;
+		if (dates.startDate && dates.dueDate && isDueBeforeStart(dates.startDate, dates.dueDate, datePrecision)) {
+			new Notice(i18n.t('modals.editTask.errorStartDueOrder'));
+			return;
+		}
 		try {
 			const updates: TaskUpdates = {};
 			if (priorityChanged) updates.priority = priority;
