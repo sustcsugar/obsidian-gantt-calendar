@@ -1270,14 +1270,15 @@ export class SvgGanttRenderer {
 
 			// leadBar 悬停事件（黑色引导区域 tooltip）
 			if (leadBar) {
-				leadBar.addEventListener('mouseenter', (event: MouseEvent) => {
+				const leadBarEl = leadBar;
+				leadBarEl.addEventListener('mouseenter', (event: MouseEvent) => {
 					if (isTouchNow()) return;
-					this.showPopup(task, leadBar!, { x: event.clientX, y: event.clientY });
+					this.showPopup(task, leadBarEl, { x: event.clientX, y: event.clientY });
 				});
-				leadBar.addEventListener('mouseleave', () => {
+				leadBarEl.addEventListener('mouseleave', () => {
 					this.hidePopup();
 				});
-				barGroup.appendChild(leadBar);
+				barGroup.appendChild(leadBarEl);
 			}
 			if (progressElement) {
 				barGroup.appendChild(progressElement);  // 进度条
