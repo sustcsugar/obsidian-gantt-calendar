@@ -28,6 +28,26 @@ export const DEFAULT_POINT_DURATION_MIN = 60;
 /** 同簇重叠块最多分 3 列，第 4 条起叠加偏移 */
 export const MAX_LANE = 3;
 
+/**
+ * 快速创建（前向默认时长）的可用终点：钳到当日 24:00 与下一个块的起点。
+ * ghost 悬浮预览与点击创建共用此判定，保证所见即所得——
+ * 下方空隙不足默认时长时按空隙收缩（例：9:00 有块、光标 8:30 → 终点 9:00）。
+ * 返回值等于 min 表示光标处即下一个块起点（无可用空隙），调用方应抑制。
+ */
+export function clampForwardPointEnd(
+	min: number,
+	segs: ReadonlyArray<{ startMin: number }>,
+	durationMin: number = DEFAULT_POINT_DURATION_MIN,
+): number {
+	let end = Math.min(min + durationMin, MINUTES_PER_DAY);
+	for (const seg of segs) {
+		if (seg.startMin >= min && seg.startMin < end) {
+			end = seg.startMin;
+		}
+	}
+	return end;
+}
+
 /** lane 布局信息（叠加在时间块分段/全天条上） */
 export interface LaneInfo {
 	lane: number;
@@ -139,6 +159,30 @@ function isEndRoleField(field: DateFieldType, endField: DateFieldType): boolean 
 	return field === endField || field === 'dueDate';
 }
 
+/**
+ * 单字段写回的对称钳制（防倒置）：拖拽落点只写 dateField 时另一端点留在原地，
+ * 落点越过对端点所在日即产生倒置数据。写终点角色字段（endField/dueDate）钳到
+ * 不早于对端点日；写起点角色字段钳到不晚于对端点日；钳制保留落点的时刻部分。
+ */
+export function clampSingleFieldWrite(
+	task: GCTask,
+	field: DateFieldType,
+	value: Date,
+	startField: DateFieldType,
+	endField: DateFieldType,
+): Date {
+	const endRole = isEndRoleField(field, endField);
+	const counterpart = getTaskDateField(task, endRole ? startField : endField);
+	if (!counterpart || isNaN(counterpart.getTime())) return value;
+	const counterpartDay = dayStart(counterpart);
+	const valueDay = dayStart(value);
+	const inverted = endRole ? valueDay < counterpartDay : valueDay > counterpartDay;
+	if (!inverted) return value;
+	const clamped = new Date(counterpartDay);
+	clamped.setHours(value.getHours(), value.getMinutes(), value.getSeconds(), 0);
+	return clamped;
+}
+
 /** 前向点任务：锚为块起点 [t, t+60)，终点钳制在当日 24:00 */
 function forwardPoint(anchorVal: Date, field: DateFieldType): TaskInterval {
 	const start = new Date(anchorVal);
@@ -162,6 +206,7 @@ function backwardPoint(anchorVal: Date, field: DateFieldType): TaskInterval {
  * 核心原则：day 精度端点不含时刻信息，不得虚构 00:00/24:00 参与时间网格定位。
  *
  * - SF时刻 + EF时刻 → 区间（<24h 分段块 / ≥24h 全天条，由上层路由）
+ * - SF时刻 + EF时刻且倒置（EF < SF）→ 前向点任务 [SF, SF+60)（倒置数据以开始为锚容错）
  * - SF时刻 + EF同日仅日期 → 前向点任务 [SF, SF+60)（EF 的 day 无时刻信息）
  * - SF时刻 + EF跨日仅日期 → 区间 [SF, EF 24:00]（必 ≥24h → 全天条 "H:mm →"）
  * - SF仅日期 + EF同日时刻 → 后向点任务 [EF-60, EF)（SF 的 day 无时刻信息）
@@ -208,10 +253,13 @@ export function getTaskInterval(
 			return { kind: 'interval', start: new Date(startVal), end: nextDayStart(endVal), pointField: startField };
 		}
 
-		// 双端带时刻（end < start 时钳制，对齐甘特 taskDataAdapter 的归一化）
+		// 双端带时刻且倒置（end < start）：降级为开始时刻的前向点任务——
+		// 甘特钳为开始日单条、月视图锚开始日格内卡，画布侧 [t, t+60) 可见，三视图一致
+		// （此前钳成零时长区间，画布渲染 0px 高度块不可见）
 		const start = new Date(startVal);
 		const end = new Date(endVal);
-		return { kind: 'interval', start, end: end < start ? new Date(start) : end, pointField: startField };
+		if (end < start) return forwardPoint(startVal, startField);
+		return { kind: 'interval', start, end, pointField: startField };
 	}
 
 	// 单字段点任务：dateFilterField 带时刻，方向取决于字段角色

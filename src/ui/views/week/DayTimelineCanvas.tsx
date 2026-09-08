@@ -19,12 +19,13 @@ import {
 	type TimeBlockSegment,
 	type DayTimelineModel,
 	getTaskInterval,
+	clampSingleFieldWrite,
+	clampForwardPointEnd,
 	minutesToPx,
 	pxToMinutes,
 	snapMinutes,
 	formatMinutes,
 	DAY_PX,
-	DEFAULT_POINT_DURATION_MIN,
 	MIN_DURATION_MIN,
 	MINUTES_PER_DAY,
 } from './timelineModel';
@@ -195,8 +196,9 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 			updates[endField] = endIsTime ? shiftedEnd : dayStartOf(shiftedEnd);
 			precision = { ...task.datePrecision };
 		} else {
-			// 全天任务 / 外部视图拖入：落点即时刻
-			updates[dateField] = atMinutes(minutes);
+			// 全天任务 / 外部视图拖入：落点即时刻；
+			// 对端钳制：落点越过对端点所在日时钳到对端点日（保留落点时刻），避免制造倒置数据
+			updates[dateField] = clampSingleFieldWrite(task, dateField, atMinutes(minutes), startField, endField);
 			precision = { [dateField]: 'time' };
 		}
 
@@ -211,6 +213,12 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 	});
 
 	// ===== 空白快速创建（单击 = 前向 1 小时区间，拖拽 = 选区） =====
+
+	/** 光标处快速创建的可用终点（ghost 与创建同源）：钳到 24:00 与下一个块起点 */
+	const quickCreateEnd = useCallback((min: number): number => {
+		return clampForwardPointEnd(min, model.blocks.map((b) => b.seg));
+	}, [model.blocks]);
+
 	const handleQuickCreate = useCallback((payload: QuickCreate): void => {
 		if (payload.type === 'range') {
 			openCreateTaskModal({
@@ -222,7 +230,9 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 			});
 			return;
 		}
-		const endMin = Math.min(payload.min + DEFAULT_POINT_DURATION_MIN, MINUTES_PER_DAY);
+		// 下方空隙不足默认时长时按空隙收缩（与 ghost 预览一致）；无空隙不弹窗
+		const endMin = quickCreateEnd(payload.min);
+		if (endMin <= payload.min) return;
 		openCreateTaskModal({
 			app,
 			plugin,
@@ -230,7 +240,7 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 			targetRange: { start: atMinutes(payload.min), end: atMinutes(endMin) },
 			onSuccess: () => {},
 		});
-	}, [app, plugin, day, atMinutes]);
+	}, [app, plugin, day, atMinutes, quickCreateEnd]);
 
 	const minutesFromEvent = useCallback((clientY: number): number => {
 		const canvas = canvasRef.current;
@@ -258,11 +268,6 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 		if (ghost) setCssProps(ghost, { display: 'none' });
 	}, []);
 
-	/** hover 时段是否与任一已有块重叠 */
-	const isTimeBusy = useCallback((min: number): boolean => {
-		return model.blocks.some((s) => min < s.seg.endMin && min + DEFAULT_POINT_DURATION_MIN > s.seg.startMin);
-	}, [model.blocks]);
-
 	// ===== hover ghost / 拖拽选区 =====
 	const handlePointerMove = useCallback((e: ReactPointerEvent) => {
 		if (isInsideBlock(e.target)) {
@@ -277,24 +282,31 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 				create.moved = true;
 			}
 			if (!create.moved) {
-				showGhost(create.anchorMin, create.anchorMin + DEFAULT_POINT_DURATION_MIN, true);
+				showGhost(create.anchorMin, quickCreateEnd(create.anchorMin), true);
 				return;
 			}
 			showGhost(Math.min(create.anchorMin, minutes), Math.max(create.anchorMin, minutes), true);
 			return;
 		}
-		// portal 浮层冒泡 / 菜单与 resize 进行中 / 时段被占用：不出 hover 提示
+		// portal 浮层冒泡 / 菜单与 resize 进行中：不出 hover 提示。
+		// ghost 终点钳到下一个块起点（与点击创建同源判定）：空隙不足 1 小时按空隙收缩，
+		// 光标处即块起点（无空隙）则不显示
 		const canvas = canvasRef.current;
 		if (!canvas || !canvas.contains(e.target as Node)) {
 			hideGhost();
 			return;
 		}
-		if (isContextMenuOpen() || isBlockResizing() || isTimeBusy(minutes)) {
+		if (isContextMenuOpen() || isBlockResizing()) {
 			hideGhost();
 			return;
 		}
-		showGhost(minutes, minutes + DEFAULT_POINT_DURATION_MIN, false);
-	}, [minutesFromEvent, showGhost, hideGhost, isTimeBusy]);
+		const endMin = quickCreateEnd(minutes);
+		if (endMin <= minutes) {
+			hideGhost();
+			return;
+		}
+		showGhost(minutes, endMin, false);
+	}, [minutesFromEvent, showGhost, hideGhost, quickCreateEnd]);
 
 	const handlePointerLeave = useCallback(() => {
 		if (!createRef.current) hideGhost();
@@ -340,13 +352,15 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 		if (!canvas || !canvas.contains(e.target as Node)) return;
 		e.preventDefault();
 		const anchorMin = minutesFromEvent(e.clientY);
+		const endMin = quickCreateEnd(anchorMin);
+		if (endMin <= anchorMin) return; // 光标处即下一个块起点：无空隙，不启动创建手势
 		createRef.current = { anchorMin, anchorY: e.clientY, lastMin: anchorMin, moved: false };
-		showGhost(anchorMin, anchorMin + DEFAULT_POINT_DURATION_MIN, true);
+		showGhost(anchorMin, endMin, true);
 		document.removeEventListener('pointerup', finishCreate);
 		document.removeEventListener('pointercancel', cancelCreateRef.current);
 		document.addEventListener('pointerup', finishCreate);
 		document.addEventListener('pointercancel', cancelCreateRef.current);
-	}, [minutesFromEvent, showGhost, finishCreate]);
+	}, [minutesFromEvent, showGhost, finishCreate, quickCreateEnd]);
 
 	// ===== HTML5 拖放（块拖动按块边缘落点 + 预览块；外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {

@@ -12,6 +12,8 @@ import {
 	minutesToPx,
 	pxToMinutes,
 	getTaskInterval,
+	clampSingleFieldWrite,
+	clampForwardPointEnd,
 	splitWeekSegments,
 	assignLanes,
 	buildWeekTimelineModel,
@@ -141,7 +143,7 @@ describe('getTaskInterval：任务区间语义', () => {
 		expect(it.end).toEqual(DAY(8, 4, 14, 0));
 	});
 
-	it('双端带时刻 → 真实区间；倒置时钳制 end = start', () => {
+	it('双端带时刻 → 真实区间；倒置时降级为开始时刻的前向点任务', () => {
 		const t = mkTask({
 			startDate: DAY(8, 1, 22, 0), dueDate: DAY(8, 2, 3, 0),
 			datePrecision: { startDate: 'time', dueDate: 'time' },
@@ -150,12 +152,16 @@ describe('getTaskInterval：任务区间语义', () => {
 		expect(it.kind).toBe('interval');
 		expect(it.end.getTime() - it.start.getTime()).toBe(5 * 3600 * 1000);
 
+		// 倒置（截止早于开始）：以开始为锚的前向点任务 [SF, SF+60)，
+		// 不再钳成零时长区间（画布 0px 高度块不可见），与甘特钳到开始日、月视图锚开始日一致
 		const bad = mkTask({
 			startDate: DAY(8, 2, 10, 0), dueDate: DAY(8, 1, 9, 0),
 			datePrecision: { startDate: 'time', dueDate: 'time' },
 		});
-		const clamped = getTaskInterval(bad, F.startField, F.endField, F.dateField)!;
-		expect(clamped.end.getTime()).toBe(clamped.start.getTime());
+		const point = getTaskInterval(bad, F.startField, F.endField, F.dateField)!;
+		expect(point.kind).toBe('point');
+		expect(point.start).toEqual(DAY(8, 2, 10, 0));
+		expect(point.end.getTime() - point.start.getTime()).toBe(60 * 60000);
 	});
 
 	it('双端仅日期 → null（全天条）', () => {
@@ -179,6 +185,68 @@ describe('getTaskInterval：任务区间语义', () => {
 		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
 		expect(it.start).toEqual(DAY(8, 4, 0, 0));
 		expect(it.end.getMinutes()).toBe(30);
+	});
+});
+
+// ===== 单字段写回对端钳制 =====
+
+describe('clampSingleFieldWrite（拖拽单字段写回防倒置）', () => {
+	it('终点角色落到对端点之前 → 钳到对端点日并保留落点时刻', () => {
+		const t = mkTask({ startDate: DAY(8, 10) });
+		const clamped = clampSingleFieldWrite(t, 'dueDate', DAY(8, 8, 14, 30), 'startDate', 'dueDate');
+		expect(clamped).toEqual(DAY(8, 10, 14, 30));
+	});
+
+	it('终点角色落到对端点之后 → 原样返回（有序）', () => {
+		const t = mkTask({ startDate: DAY(8, 10) });
+		const value = DAY(8, 12, 9, 0);
+		expect(clampSingleFieldWrite(t, 'dueDate', value, 'startDate', 'dueDate')).toBe(value);
+	});
+
+	it('起点角色落到对端点之后 → 钳到对端点日并保留落点时刻', () => {
+		const t = mkTask({ dueDate: DAY(8, 10) });
+		const clamped = clampSingleFieldWrite(t, 'startDate', DAY(8, 12, 8, 0), 'startDate', 'dueDate');
+		expect(clamped).toEqual(DAY(8, 10, 8, 0));
+	});
+
+	it('无对端点 → 原样返回', () => {
+		const t = mkTask({});
+		const value = DAY(8, 8, 14, 30);
+		expect(clampSingleFieldWrite(t, 'dueDate', value, 'startDate', 'dueDate')).toBe(value);
+	});
+});
+
+// ===== 快速创建可用终点（ghost 与创建同源） =====
+
+describe('clampForwardPointEnd', () => {
+	const seg = (startMin: number) => ({ startMin });
+
+	it('下方无块：默认 1 小时', () => {
+		expect(clampForwardPointEnd(510, [])).toBe(570); // 8:30 → 9:30
+	});
+
+	it('下方空隙不足 1 小时：钳到下一个块起点（8:30 光标 + 9:00 块 → 9:00）', () => {
+		expect(clampForwardPointEnd(510, [seg(540)])).toBe(540);
+	});
+
+	it('空隙充足：维持默认 1 小时（下一块在 1 小时之外）', () => {
+		expect(clampForwardPointEnd(510, [seg(580)])).toBe(570);
+	});
+
+	it('多个块取最近的起点', () => {
+		expect(clampForwardPointEnd(510, [seg(600), seg(545), seg(700)])).toBe(545);
+	});
+
+	it('光标上方开始的块不参与钳制（并行 lane 场景）', () => {
+		expect(clampForwardPointEnd(510, [seg(480)])).toBe(570);
+	});
+
+	it('日末钳制：23:30 光标 → 24:00', () => {
+		expect(clampForwardPointEnd(1410, [])).toBe(1440);
+	});
+
+	it('光标处即块起点：返回值等于 min（无空隙，调用方抑制）', () => {
+		expect(clampForwardPointEnd(540, [seg(540)])).toBe(540);
 	});
 });
 

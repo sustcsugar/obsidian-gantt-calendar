@@ -13,7 +13,7 @@ import { TaskCard } from '../components/TaskCard';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { toISOStringLocal } from '../../dateUtils/timezone';
 import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
-import { buildMonthTimelineModel, getTaskInterval } from './week/timelineModel';
+import { buildMonthTimelineModel, getTaskInterval, clampSingleFieldWrite } from './week/timelineModel';
 import { sortTasks } from '../../tasks/taskSorter';
 import { i18n } from '../../i18n/i18n';
 import { Logger } from '../../utils/logger';
@@ -146,8 +146,9 @@ export function MonthView(): JSX.Element {
 				updates[endField] = endIsTime ? newEnd : atMinutes(newEnd, 0);
 				precision = { ...sourceTask.datePrecision };
 			} else {
-				// 全天单字段：dateField 平移到目标日（day 精度，现状语义）
-				updates[dateField] = target;
+				// 全天单字段：dateField 平移到目标日（day 精度）；
+				// 对端钳制：落点越过对端点所在日时钳到对端点日，避免制造倒置数据
+				updates[dateField] = clampSingleFieldWrite(sourceTask, dateField, target, startField, endField);
 				precision = { [dateField]: 'day' };
 			}
 

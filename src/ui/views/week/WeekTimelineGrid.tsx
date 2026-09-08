@@ -22,12 +22,13 @@ import {
 	type TimeBlockSegment,
 	type DaySegment,
 	getTaskInterval,
+	clampSingleFieldWrite,
+	clampForwardPointEnd,
 	minutesToPx,
 	pxToMinutes,
 	snapMinutes,
 	formatMinutes,
 	DAY_PX,
-	DEFAULT_POINT_DURATION_MIN,
 	MIN_DURATION_MIN,
 	MINUTES_PER_DAY,
 } from './timelineModel';
@@ -266,8 +267,9 @@ export function WeekTimelineGrid({
 			updates[endField] = endIsTime ? shiftedEnd : atMinutes(shiftedEnd, 0);
 			precision = { ...task.datePrecision };
 		} else {
-			// 全天任务 / 外部视图拖入：落点即时刻（dateField 转 time 精度）
-			updates[dateField] = atMinutes(day, minutes);
+			// 全天任务 / 外部视图拖入：落点即时刻（dateField 转 time 精度）；
+			// 对端钳制：落点越过对端点所在日时钳到对端点日（保留落点时刻），避免制造倒置数据
+			updates[dateField] = clampSingleFieldWrite(task, dateField, atMinutes(day, minutes), startField, endField);
 			precision = { [dateField]: 'time' };
 		}
 
@@ -287,7 +289,8 @@ export function WeekTimelineGrid({
 			updates[endField] = day;
 			precision = { [startField]: 'day', [endField]: 'day' };
 		} else {
-			updates[dateField] = day;
+			// 对端钳制：落点越过对端点所在日时钳到对端点日，避免制造倒置数据
+			updates[dateField] = clampSingleFieldWrite(task, dateField, day, startField, endField);
 			precision = { [dateField]: 'day' };
 		}
 
@@ -316,9 +319,12 @@ export function WeekTimelineGrid({
 			return;
 		}
 		// 单击 = 前向 1 小时区间：预填 startDate + dueDate（createdDate 由弹窗默认当日），
-		// 保存后为双时刻区间任务，渲染与 hover 虚拟框完全重合，不留空开始字段
+		// 保存后为双时刻区间任务，渲染与 hover 虚拟框完全重合，不留空开始字段。
+		// 下方空隙不足默认时长时按空隙收缩（与 ghost 预览同源判定）；无空隙不弹窗
 		const min = payload.min;
-		const endMin = Math.min(min + DEFAULT_POINT_DURATION_MIN, MINUTES_PER_DAY);
+		const daySegs = model.days[payload.dayIndex] || [];
+		const endMin = clampForwardPointEnd(min, daySegs.map((s) => s.seg));
+		if (endMin <= min) return;
 		openCreateTaskModal({
 			app,
 			plugin,
@@ -326,7 +332,7 @@ export function WeekTimelineGrid({
 			targetRange: { start: atMinutes(dayInfo.date, min), end: atMinutes(dayInfo.date, endMin) },
 			onSuccess: refreshTasks,
 		});
-	}, [app, plugin, days, atMinutes, refreshTasks]);
+	}, [app, plugin, days, atMinutes, refreshTasks, model]);
 
 	// ===== 当前时间指示线（按分钟直接计算，每 30s 重画） =====
 	useEffect(() => {
@@ -634,9 +640,9 @@ function DayColumn({
 		if (ghost) setCssProps(ghost, { display: 'none' });
 	}, []);
 
-	/** hover 时段 [min, min+默认时长) 是否与任一已有块重叠（重叠则不显示"+ 可添加"提示） */
-	const isTimeBusy = useCallback((min: number): boolean => {
-		return daySegs.some((s) => min < s.seg.endMin && min + DEFAULT_POINT_DURATION_MIN > s.seg.startMin);
+	/** 光标处快速创建的可用终点（ghost 与创建同源）：钳到 24:00 与下一个块起点 */
+	const quickCreateEnd = useCallback((min: number): number => {
+		return clampForwardPointEnd(min, daySegs.map((s) => s.seg));
 	}, [daySegs]);
 
 	// ===== hover ghost / 拖拽选区 =====
@@ -655,8 +661,8 @@ function DayColumn({
 				create.moved = true;
 			}
 			if (!create.moved) {
-				// 抖动范围内：维持 1 小时预览（按下瞬间不坍缩）
-				showGhost(create.anchorMin, create.anchorMin + DEFAULT_POINT_DURATION_MIN, true);
+				// 抖动范围内：维持可用空隙预览（按下瞬间不坍缩）
+				showGhost(create.anchorMin, quickCreateEnd(create.anchorMin), true);
 				return;
 			}
 			showGhost(Math.min(create.anchorMin, minutes), Math.max(create.anchorMin, minutes), true);
@@ -669,14 +675,21 @@ function DayColumn({
 			hideGhost();
 			return;
 		}
-		// 菜单打开 / 块边缘 resize 进行中 / 时段已被占用：不出 hover 提示（点击仍可创建）
-		if (isContextMenuOpen() || isBlockResizing() || isTimeBusy(minutes)) {
+		// 菜单打开 / 块边缘 resize 进行中：不出 hover 提示。
+		// ghost 终点钳到下一个块起点（与点击创建同源判定）：空隙不足 1 小时按空隙收缩，
+		// 光标处即块起点（无空隙）则不显示
+		if (isContextMenuOpen() || isBlockResizing()) {
 			hideGhost();
 			return;
 		}
-		// hover：默认时长 ghost + 时刻标签
-		showGhost(minutes, minutes + DEFAULT_POINT_DURATION_MIN, false);
-	}, [minutesFromEvent, showGhost, hideGhost, isTimeBusy]);
+		// hover：可用空隙 ghost + 时刻标签
+		const endMin = quickCreateEnd(minutes);
+		if (endMin <= minutes) {
+			hideGhost();
+			return;
+		}
+		showGhost(minutes, endMin, false);
+	}, [minutesFromEvent, showGhost, hideGhost, quickCreateEnd]);
 
 	const handleMouseLeave = useCallback(() => {
 		if (!createRef.current) hideGhost();
@@ -718,15 +731,17 @@ function DayColumn({
 		if (!col || !col.contains(e.target as Node)) return;
 		e.preventDefault();
 		const anchorMin = minutesFromEvent(e.clientY);
+		const endMin = quickCreateEnd(anchorMin);
+		if (endMin <= anchorMin) return; // 光标处即下一个块起点：无空隙，不启动创建手势
 		createRef.current = { anchorMin, anchorY: e.clientY, lastMin: anchorMin, moved: false };
-		// 按下瞬间维持 hover 的 1 小时块（仅切换激活样式），像素级拖动后才变为选区
-		showGhost(anchorMin, anchorMin + DEFAULT_POINT_DURATION_MIN, true);
+		// 按下瞬间维持 hover 的可用空隙块（仅切换激活样式），像素级拖动后才变为选区
+		showGhost(anchorMin, endMin, true);
 		// 防御：上一手势未正常收尾时先解绑，避免 finishCreate 重复触发
 		document.removeEventListener('pointerup', finishCreate);
 		document.removeEventListener('pointercancel', cancelCreateRef.current);
 		document.addEventListener('pointerup', finishCreate);
 		document.addEventListener('pointercancel', cancelCreateRef.current);
-	}, [minutesFromEvent, showGhost, finishCreate, cancelCreate]);
+	}, [minutesFromEvent, showGhost, finishCreate, cancelCreate, quickCreateEnd]);
 
 	// ===== HTML5 拖放（整体平移；块拖动按块边缘落点 + 预览块，外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {
