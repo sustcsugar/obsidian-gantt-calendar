@@ -35,8 +35,9 @@ export class TagPill {
 
 		// 创建容器元素
 		const pillEl = createSpan();
-		pillEl.addClass(TagClasses.block);
-		pillEl.addClass(TagClasses.colors[finalColorIndex]);
+		for (const cls of this.buildClassList(finalColorIndex)) {
+			pillEl.addClass(cls);
+		}
 
 		// 添加状态类
 		if (selectable) {
@@ -46,7 +47,7 @@ export class TagPill {
 			pillEl.addClass(TagClasses.states.selected);
 		}
 
-		// 存储标签名称到 dataset
+	// 存储标签名称到 dataset
 		pillEl.dataset.tag = label;
 		pillEl.dataset.selected = String(selected);
 
@@ -67,7 +68,7 @@ export class TagPill {
 		// 创建标签文本元素
 		const labelEl = createSpan();
 		labelEl.addClass(TagClasses.elements.label);
-		labelEl.textContent = showHash ? `#${label}` : label;
+		labelEl.textContent = this.formatLabel(label, showHash);
 		pillEl.appendChild(labelEl);
 
 		// 添加后缀（如数量徽章）
@@ -137,6 +138,17 @@ export class TagPill {
 			hash = hash & hash; // Convert to 32bit integer
 		}
 		return Math.abs(hash) % this.COLOR_COUNT;
+	}
+
+	/**
+	 * 组装胶囊类名（React TagPillSpan 与 DOM 端共用，单一来源）
+	 */
+	static buildClassList(colorIndex: number, extraClasses?: string[]): string[] {
+		const classes = [TagClasses.block, TagClasses.colors[colorIndex]];
+		if (extraClasses) {
+			classes.push(...extraClasses.filter(Boolean));
+		}
+		return classes;
 	}
 
 	/**

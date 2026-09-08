@@ -1,8 +1,15 @@
 import type { IPluginContext, GCTask } from '../types';
-import { formatDate } from '../dateUtils/dateUtilsIndex';
-import { i18n } from '../i18n/i18n';
-import { TagPill } from '../components/tagPill';
 import { TooltipClasses, setCssProps } from './bem';
+import { TagPill } from '../components/tagPill';
+import {
+	buildTooltipSections,
+	type TooltipPropRow,
+} from '../components/tooltip/tooltipSections';
+import { computeTooltipPosition } from '../components/tooltip/tooltipPosition';
+import {
+	registerTooltipHolder,
+	claimExclusiveTooltip,
+} from '../components/tooltip/tooltipCoordinator';
 
 interface TooltipConfig {
 	showDelay?: number;
@@ -15,10 +22,10 @@ export interface MousePosition {
 }
 
 /**
- * Tooltip 单例管理器
+ * Tooltip 单例管理器（甘特图 SVG 渲染器专用）
  *
- * 分组展示：时间 → 优先级 → 标签 → 元数据 → 文件位置，
- * 每组用带底色的 section 容器包裹，视觉统一。
+ * 内容构建与定位算法同 React TooltipProvider 共享（components/tooltip），
+ * 分组展示：时间 → 优先级 → 标签 → 元数据 → 文件位置。
  */
 export class TooltipManager {
 	private static instance: TooltipManager | null = null;
@@ -37,11 +44,16 @@ export class TooltipManager {
 		properties?: HTMLElement;
 	} = {};
 
+	/** 跨实例互斥协调器注销句柄（绑定本实例的 cancel） */
+	private readonly coordinatorCancel = () => this.cancel();
+	private unregisterCoordinator: (() => void) | null = null;
+
 	private constructor(private plugin: IPluginContext, config: TooltipConfig = {}) {
 		this.config = {
 			showDelay: config.showDelay ?? 400,
 			hideDelay: config.hideDelay ?? 100
 		};
+		this.unregisterCoordinator = registerTooltipHolder(this.coordinatorCancel);
 	}
 
 	static getInstance(plugin: IPluginContext, config?: TooltipConfig): TooltipManager {
@@ -60,8 +72,6 @@ export class TooltipManager {
 			this.cachedElements.properties = this.tooltip.createDiv(TooltipClasses.elements.properties);
 
 			this.cachedElements.properties.addClass('gc-u-hidden');
-
-			this.tooltip.addClass(TooltipClasses.modifiers.initialized);
 		}
 		return this.tooltip;
 	}
@@ -114,6 +124,7 @@ export class TooltipManager {
 
 	private showInternal(task: GCTask, card: HTMLElement): void {
 		const tooltip = this.ensureTooltip();
+		claimExclusiveTooltip(this.coordinatorCancel);
 		this.updateContent(task);
 		this.updatePosition(card);
 		setCssProps(tooltip, { opacity: '1' });
@@ -121,82 +132,18 @@ export class TooltipManager {
 	}
 
 	/**
-	 * 分组收集属性并渲染。
-	 * 顺序：时间 → 优先级 → 标签 → 元数据 → 文件位置，
-	 * 每组用 section 容器包裹（带底色和缩进）。
+	 * 渲染共享构建的分组内容（与 React TooltipProvider 同源）
 	 */
 	private updateContent(task: GCTask): void {
 		if (!this.cachedElements.description) return;
 
 		// === 描述 ===
-		const displayText = task.description || '';
 		this.cachedElements.description.empty();
 		const strongEl = this.cachedElements.description.createEl('strong');
-		strongEl.setText(displayText);
+		strongEl.setText(task.description || '');
 
-		// === 分组收集属性 ===
-		type PropRow = { label: string; value: string; valueClass?: string; isOverdue?: boolean };
-		type Section = { key: string; rows: PropRow[] };
-		const sections: Section[] = [];
+		const sections = buildTooltipSections(task);
 
-		// --- 1. 时间组 ---
-		const timeRows: PropRow[] = [];
-		if (task.createdDate) {
-			timeRows.push({ label: i18n.t('taskCard.created'), value: formatDate(task.createdDate, task.datePrecision?.createdDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
-		}
-		if (task.startDate) {
-			timeRows.push({ label: i18n.t('taskCard.start'), value: formatDate(task.startDate, task.datePrecision?.startDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
-		}
-		if (task.scheduledDate) {
-			timeRows.push({ label: i18n.t('taskCard.scheduled'), value: formatDate(task.scheduledDate, task.datePrecision?.scheduledDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
-		}
-		if (task.dueDate) {
-			const isOverdue = task.dueDate < new Date() && !task.completed;
-			timeRows.push({ label: i18n.t('taskCard.due'), value: formatDate(task.dueDate, task.datePrecision?.dueDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'), isOverdue });
-		}
-		if (task.cancelledDate) {
-			timeRows.push({ label: i18n.t('taskCard.cancelled'), value: formatDate(task.cancelledDate, task.datePrecision?.cancelledDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
-		}
-		if (task.completionDate) {
-			timeRows.push({ label: i18n.t('taskCard.done'), value: formatDate(task.completionDate, task.datePrecision?.completionDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
-		}
-		if (task.repeat) {
-			timeRows.push({ label: i18n.t('taskCard.repeat'), value: task.repeat });
-		}
-		if (timeRows.length > 0) {
-			sections.push({ key: 'time', rows: timeRows });
-		}
-
-		// --- 2. 优先级组 ---
-		if (task.priority && task.priority !== 'normal') {
-			const priorityIcon = this.getPriorityIcon(task.priority);
-			const priorityLabel = i18n.t(`common.priority.${task.priority}`);
-			sections.push({
-				key: 'priority',
-				rows: [{ label: i18n.t('taskCard.priority'), value: `${priorityIcon} ${priorityLabel}`, valueClass: `priority-${task.priority}` }]
-			});
-		}
-
-		// --- 3. 标签组 ---
-		if (task.tags && task.tags.length > 0) {
-			sections.push({ key: 'tags', rows: [] });
-		}
-
-		// --- 4. 元数据字段组 (%%[key::value]%%) ---
-		if (task.metadataFields && task.metadataFields.length > 0) {
-			sections.push({
-				key: 'metadata',
-				rows: task.metadataFields.map(f => ({ label: f.key, value: f.value || i18n.t('taskCard.emptyValue') }))
-			});
-		}
-
-		// --- 5. 文件位置组 ---
-		sections.push({
-			key: 'file',
-			rows: [{ label: i18n.t('taskCard.fileLocation'), value: `${task.fileName}:${task.lineNumber}` }]
-		});
-
-		// === 分组渲染 ===
 		if (this.cachedElements.properties) {
 			this.cachedElements.properties.empty();
 
@@ -215,25 +162,10 @@ export class TooltipManager {
 						const tagsRow = sectionEl.createDiv(TooltipClasses.elements.tags);
 						TagPill.createMultiple(task.tags!, tagsRow, { showHash: true });
 					} else if (section.key === 'file') {
-						const rowEl = sectionEl.createDiv(TooltipClasses.elements.propertyRow);
-						const labelEl = rowEl.createDiv(TooltipClasses.elements.propertyLabel);
-						labelEl.setText(section.rows[0].label);
-						const valueEl = rowEl.createDiv(TooltipClasses.elements.propertyValue);
-						valueEl.addClass(TooltipClasses.elements.fileLocation);
-						valueEl.setText(section.rows[0].value);
+						this.appendPropertyRow(sectionEl, section.rows[0], true);
 					} else {
 						for (const row of section.rows) {
-							const rowEl = sectionEl.createDiv(TooltipClasses.elements.propertyRow);
-							const labelEl = rowEl.createDiv(TooltipClasses.elements.propertyLabel);
-							labelEl.setText(row.label);
-							const valueEl = rowEl.createDiv(TooltipClasses.elements.propertyValue);
-							if (row.valueClass) {
-								valueEl.addClass(row.valueClass);
-							}
-							if (row.isOverdue) {
-								valueEl.addClass(TooltipClasses.modifiers.propertyValueOverdue);
-							}
-							valueEl.setText(row.value);
+							this.appendPropertyRow(sectionEl, row);
 						}
 					}
 				}
@@ -245,83 +177,33 @@ export class TooltipManager {
 		}
 	}
 
+	private appendPropertyRow(container: HTMLElement, row: TooltipPropRow, isFileLocation = false): void {
+		const rowEl = container.createDiv(TooltipClasses.elements.propertyRow);
+		const labelEl = rowEl.createDiv(TooltipClasses.elements.propertyLabel);
+		labelEl.setText(row.label);
+		const valueEl = rowEl.createDiv(TooltipClasses.elements.propertyValue);
+		if (isFileLocation) {
+			valueEl.addClass(TooltipClasses.elements.fileLocation);
+		}
+		if (row.valueClass) {
+			valueEl.addClass(row.valueClass);
+		}
+		if (row.isOverdue) {
+			valueEl.addClass(TooltipClasses.modifiers.propertyValueOverdue);
+		}
+		valueEl.setText(row.value);
+	}
+
 	private updatePosition(card: HTMLElement): void {
 		if (!this.tooltip) return;
 
-		// 实测尺寸（tooltip 已渲染且 opacity 为 0，不影响布局测量）
-		const tooltipWidth = this.tooltip.offsetWidth || 300;
-		const tooltipHeight = this.tooltip.offsetHeight || this.estimateTooltipHeight();
-		const gap = 12;
-
-		const rect = card.getBoundingClientRect();
-
-		let left: number;
-		let top: number;
-
-		// 优先锚定卡片矩形：右侧放置、顶部对齐；卡片无尺寸时退回光标坐标
-		if (rect.width > 0 && rect.height > 0) {
-			left = rect.right + gap;
-			top = rect.top;
-		} else if (this.mousePosition) {
-			left = this.mousePosition.x + gap;
-			top = this.mousePosition.y + gap;
-		} else {
-			left = rect.right + gap;
-			top = rect.top;
-		}
-
-		// 水平：右侧放不下则翻到左侧，再做边界钳制
-		if (left + tooltipWidth > window.innerWidth) {
-			left = rect.left - tooltipWidth - gap;
-		}
-		left = Math.max(10, Math.min(left, window.innerWidth - tooltipWidth - 10));
-
-		// 垂直：顶部对齐，溢出底部则向上收缩，并做边界钳制
-		top = Math.max(10, top);
-		if (top + tooltipHeight > window.innerHeight - 10) {
-			top = Math.max(10, window.innerHeight - tooltipHeight - 10);
-		}
-
+		const { left, top } = computeTooltipPosition({
+			anchorRect: card.getBoundingClientRect(),
+			mouse: this.mousePosition,
+			width: this.tooltip.offsetWidth || 300,
+			height: this.tooltip.offsetHeight || 160,
+		});
 		setCssProps(this.tooltip, { left: `${left}px`, top: `${top}px` });
-	}
-
-	private estimateTooltipHeight(): number {
-		if (!this.currentTask) return 80;
-
-		let height = 40; // description + base
-
-		let sectionCount = 0;
-		let rowCount = 0;
-
-		if (this.currentTask.createdDate) rowCount++;
-		if (this.currentTask.startDate) rowCount++;
-		if (this.currentTask.scheduledDate) rowCount++;
-		if (this.currentTask.dueDate) rowCount++;
-		if (this.currentTask.cancelledDate) rowCount++;
-		if (this.currentTask.completionDate) rowCount++;
-		if (this.currentTask.repeat) rowCount++;
-		if (rowCount > 0) sectionCount++;
-
-		if (this.currentTask.priority && this.currentTask.priority !== 'normal') {
-			rowCount++;
-			sectionCount++;
-		}
-
-		if (this.currentTask.tags && this.currentTask.tags.length > 0) sectionCount++;
-
-		if (this.currentTask.metadataFields) {
-			rowCount += this.currentTask.metadataFields.length;
-			if (this.currentTask.metadataFields.length > 0) sectionCount++;
-		}
-
-		// file section
-		sectionCount++;
-		rowCount++;
-
-		height += rowCount * 24;
-		height += sectionCount * 12;
-
-		return Math.min(height, 400);
 	}
 
 	cancel(): void {
@@ -368,17 +250,8 @@ export class TooltipManager {
 		this.cachedElements = {};
 		this.currentTask = null;
 		this.currentCard = null;
-	}
-
-	private getPriorityIcon(priority?: string): string {
-		switch (priority) {
-			case 'highest': return '🔺';
-			case 'high': return '⏫';
-			case 'medium': return '🔼';
-			case 'low': return '🔽';
-			case 'lowest': return '⏬';
-			default: return '';
-		}
+		this.unregisterCoordinator?.();
+		this.unregisterCoordinator = null;
 	}
 
 	static reset(): void {

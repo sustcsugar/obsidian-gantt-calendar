@@ -388,7 +388,9 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 			onDragStart={dragProps.onDragStart}
 			onDragEnd={dragProps.onDragEnd}
 			onMouseEnter={(e) => {
-				if (config.enableTooltip && !isTouchNow()) tooltip.show(task, e.currentTarget);
+				if (config.enableTooltip && !isTouchNow()) {
+					tooltip.show(task, e.currentTarget, config.tooltipFollowMouse ? { x: e.clientX, y: e.clientY } : undefined);
+				}
 			}}
 			onMouseLeave={() => tooltip.hide()}
 			onContextMenu={() => tooltip.cancel()}

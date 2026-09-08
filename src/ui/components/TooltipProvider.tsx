@@ -8,25 +8,29 @@ import {
 	useRef,
 	useState,
 	type JSX,
-	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import type { GCTask } from '../../types';
-import { formatDate } from '../../dateUtils/dateUtilsIndex';
-import { i18n } from '../../i18n/i18n';
 import { TooltipClasses } from '../../utils/bem';
 import { TagPillSpan } from './TagPillSpan';
-import { isTouchNow } from '../utils/platform';
 import { MOTION, tooltipVariants, easeOutTransition } from '../motion';
+import {
+	buildTooltipSections,
+	type TooltipSection,
+} from '../../components/tooltip/tooltipSections';
+import { computeTooltipPosition } from '../../components/tooltip/tooltipPosition';
+import {
+	registerTooltipHolder,
+	claimExclusiveTooltip,
+} from '../../components/tooltip/tooltipCoordinator';
 
 interface TooltipState {
 	task: GCTask;
 	anchor: HTMLElement;
-	/** 相对视口的锚点位置（鼠标位置优先） */
-	x: number;
-	y: number;
+	/** 悬停入口的光标位置（提供时鼠标优先锚定；未提供时仅作锚点无尺寸的回退） */
+	mouse: { x: number; y: number } | null;
 }
 
 interface TooltipContextValue {
@@ -48,7 +52,7 @@ const HIDE_DELAY = 100;
 
 /**
  * 声明式任务 Tooltip 宿主：在 body 上渲染单个 tooltip
- * 替换命令式 TooltipManager 单例（输出相同 BEM 类名）
+ * 内容构建与定位算法同命令式 TooltipManager 共享（components/tooltip）
  */
 export function TooltipProvider({ children }: { children: ReactNode }): JSX.Element {
 	const [state, setState] = useState<TooltipState | null>(null);
@@ -66,18 +70,21 @@ export function TooltipProvider({ children }: { children: ReactNode }): JSX.Elem
 		}
 	}, []);
 
+	const cancel = useCallback(() => {
+		clearTimers();
+		setState(null);
+	}, [clearTimers]);
+
+	// 注册到跨实例互斥协调器：其他宿主（甘特图单例/别的 React root）弹出时立即隐藏本实例
+	useEffect(() => registerTooltipHolder(cancel), [cancel]);
+
 	const show = useCallback((task: GCTask, anchor: HTMLElement, pos?: { x: number; y: number }) => {
 		clearTimers();
 		showTimer.current = window.setTimeout(() => {
-			const rect = anchor.getBoundingClientRect();
-			setState({
-				task,
-				anchor,
-				x: pos?.x ?? rect.right + 10,
-				y: pos?.y ?? rect.top,
-			});
+			claimExclusiveTooltip(cancel);
+			setState({ task, anchor, mouse: pos ?? null });
 		}, SHOW_DELAY);
-	}, [clearTimers]);
+	}, [clearTimers, cancel]);
 
 	const hide = useCallback(() => {
 		if (showTimer.current !== null) {
@@ -88,11 +95,6 @@ export function TooltipProvider({ children }: { children: ReactNode }): JSX.Elem
 			setState(null);
 		}, HIDE_DELAY);
 	}, []);
-
-	const cancel = useCallback(() => {
-		clearTimers();
-		setState(null);
-	}, [clearTimers]);
 
 	useEffect(() => clearTimers, [clearTimers]);
 
@@ -113,39 +115,8 @@ export function TooltipProvider({ children }: { children: ReactNode }): JSX.Elem
 	);
 }
 
-/**
- * 触发组件：包裹需要悬浮提示的元素
- */
-export function TaskTooltipTrigger({
-	task,
-	children,
-}: {
-	task: GCTask;
-	children: ReactNode;
-}): JSX.Element {
-	const { show, hide, cancel } = useTaskTooltip();
-	const ref = useRef<HTMLSpanElement | null>(null);
-
-	const handleEnter = (e: ReactMouseEvent) => {
-		show(task, e.currentTarget as HTMLElement, { x: e.clientX, y: e.clientY });
-	};
-
-	return (
-		<span
-			ref={ref}
-			className="gc-u-inline"
-			onMouseEnter={(e) => { if (!isTouchNow()) handleEnter(e); }}
-			onMouseLeave={hide}
-			onContextMenu={cancel}
-			onDragStart={cancel}
-		>
-			{children}
-		</span>
-	);
-}
-
 function TooltipContent({ state, onClose }: { state: TooltipState; onClose: () => void }): JSX.Element {
-	const { task, anchor, x, y } = state;
+	const { task, anchor, mouse } = state;
 	const tooltipRef = useRef<HTMLDivElement | null>(null);
 	const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
 
@@ -153,27 +124,16 @@ function TooltipContent({ state, onClose }: { state: TooltipState; onClose: () =
 	useLayoutEffect(() => {
 		const el = tooltipRef.current;
 		if (!el) return;
-		const tooltipWidth = el.offsetWidth || 300;
-		const tooltipHeight = el.offsetHeight || 160;
-		const gap = 12;
-
-		const rect = anchor.getBoundingClientRect();
-
-		let left: number;
-		let top: number;
-		if (rect.width > 0 && rect.height > 0) {
-			left = rect.right + gap;
-			top = rect.top;
-		} else {
-			left = x + gap;
-			top = y + gap;
-		}
-		if (left + tooltipWidth > window.innerWidth) left = rect.left - tooltipWidth - gap;
-		left = Math.max(10, Math.min(left, window.innerWidth - tooltipWidth - 10));
-		top = Math.max(10, top);
-		if (top + tooltipHeight > window.innerHeight - 10) top = Math.max(10, window.innerHeight - tooltipHeight - 10);
+		const { left, top } = computeTooltipPosition({
+			anchorRect: anchor.getBoundingClientRect(),
+			mouse,
+			// 调用方传入光标坐标即视为鼠标优先锚定（月视图等场景）
+			preferMouse: mouse !== null,
+			width: el.offsetWidth || 300,
+			height: el.offsetHeight || 160,
+		});
 		setPosition({ left, top });
-	}, [state, anchor, x, y]);
+	}, [state, anchor, mouse]);
 
 	const sections = useMemo(() => buildTooltipSections(task), [task]);
 
@@ -192,7 +152,7 @@ function TooltipContent({ state, onClose }: { state: TooltipState; onClose: () =
 				<strong>{task.description || ''}</strong>
 			</div>
 			<div className={TooltipClasses.elements.properties}>
-				{sections.map((section, idx) => (
+				{sections.map((section: TooltipSection, idx: number) => (
 					<div key={section.key}>
 						{idx > 0 ? <div className={TooltipClasses.elements.propertyDivider} /> : null}
 						<div className={TooltipClasses.elements.propertySection}>
@@ -232,68 +192,4 @@ function TooltipContent({ state, onClose }: { state: TooltipState; onClose: () =
 		</motion.div>,
 		document.body
 	);
-}
-
-interface PropRow {
-	label: string;
-	value: string;
-	valueClass?: string;
-	isOverdue?: boolean;
-}
-
-interface TooltipSection {
-	key: string;
-	rows: PropRow[];
-}
-
-function buildTooltipSections(task: GCTask): TooltipSection[] {
-	const sections: TooltipSection[] = [];
-
-	const timeRows: PropRow[] = [];
-	const pushTime = (date: Date | undefined, label: string, precision?: 'day' | 'time') => {
-		if (!date) return;
-		timeRows.push({ label, value: formatDate(date, precision === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') });
-	};
-	pushTime(task.createdDate, i18n.t('taskCard.created'), task.datePrecision?.createdDate);
-	pushTime(task.startDate, i18n.t('taskCard.start'), task.datePrecision?.startDate);
-	pushTime(task.scheduledDate, i18n.t('taskCard.scheduled'), task.datePrecision?.scheduledDate);
-	if (task.dueDate) {
-		timeRows.push({
-			label: i18n.t('taskCard.due'),
-			value: formatDate(task.dueDate, task.datePrecision?.dueDate === 'time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'),
-			isOverdue: task.dueDate < new Date() && !task.completed,
-		});
-	}
-	pushTime(task.cancelledDate, i18n.t('taskCard.cancelled'), task.datePrecision?.cancelledDate);
-	pushTime(task.completionDate, i18n.t('taskCard.done'), task.datePrecision?.completionDate);
-	if (task.repeat) timeRows.push({ label: i18n.t('taskCard.repeat'), value: task.repeat });
-	if (timeRows.length > 0) sections.push({ key: 'time', rows: timeRows });
-
-	if (task.priority && task.priority !== 'normal') {
-		const icons: Record<string, string> = { highest: '🔺', high: '⏫', medium: '🔼', low: '🔽', lowest: '⏬' };
-		sections.push({
-			key: 'priority',
-			rows: [{
-				label: i18n.t('taskCard.priority'),
-				value: `${icons[task.priority] || ''} ${i18n.t(`common.priority.${task.priority}`)}`,
-				valueClass: `priority-${task.priority}`,
-			}],
-		});
-	}
-
-	if (task.tags && task.tags.length > 0) sections.push({ key: 'tags', rows: [] });
-
-	if (task.metadataFields && task.metadataFields.length > 0) {
-		sections.push({
-			key: 'metadata',
-			rows: task.metadataFields.map((f) => ({ label: f.key, value: f.value || i18n.t('taskCard.emptyValue') })),
-		});
-	}
-
-	sections.push({
-		key: 'file',
-		rows: [{ label: i18n.t('taskCard.fileLocation'), value: `${task.fileName}:${task.lineNumber}` }],
-	});
-
-	return sections;
 }

@@ -70,6 +70,8 @@ export interface TaskCardConfig {
 
 	/** 启用悬浮提示 */
 	enableTooltip: boolean;
+	/** 悬浮提示跟随鼠标定位（锚定光标右下侧；缺省锚定卡片矩形右侧） */
+	tooltipFollowMouse?: boolean;
 	/** 启用拖拽 */
 	enableDrag: boolean;
 	/** 整个卡片可点击 */

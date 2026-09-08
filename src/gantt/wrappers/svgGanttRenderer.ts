@@ -22,6 +22,7 @@ import { renderGrid, renderTodayLine } from './gridRenderer';
 import type { IPluginContext,  GCTask } from '../../types';
 import { GanttClasses, setCssProps } from '../../utils/bem';
 import { TooltipManager, type MousePosition } from '../../utils/tooltipManager';
+import { isTouchNow } from '../../ui/utils/platform';
 import { Logger } from '../../utils/logger';
 import { LinkRenderer } from '../../utils/linkRenderer';
 import { getTodayInTimezone } from '../../dateUtils/timezone';
@@ -1258,7 +1259,7 @@ export class SvgGanttRenderer {
 				this.handleTaskClick(task);
 			});
 			bar.addEventListener('mouseenter', (event: MouseEvent) => {
-			if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+				if (isTouchNow()) return;
 				bar.setAttribute('opacity', '1');
 				this.showPopup(task, bar, { x: event.clientX, y: event.clientY });
 			});
@@ -1270,7 +1271,7 @@ export class SvgGanttRenderer {
 			// leadBar 悬停事件（黑色引导区域 tooltip）
 			if (leadBar) {
 				leadBar.addEventListener('mouseenter', (event: MouseEvent) => {
-			if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+					if (isTouchNow()) return;
 					this.showPopup(task, leadBar!, { x: event.clientX, y: event.clientY });
 				});
 				leadBar.addEventListener('mouseleave', () => {
@@ -1290,13 +1291,6 @@ export class SvgGanttRenderer {
 		});
 
 		svg.appendChild(tasksGroup);
-	}
-
-	/**
-	 * 渲染弹窗容器
-	 */
-	private renderPopupContainer(): void {
-		// 弹窗由 TooltipManager 统一管理
 	}
 
 	/**

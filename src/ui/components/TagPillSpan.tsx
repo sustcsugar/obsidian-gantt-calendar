@@ -23,13 +23,15 @@ export function TagPillSpan({
 	style,
 	title,
 }: ReactTagPillProps): JSX.Element {
-	const index = colorIndex ?? TagPill.getColorIndex(label);
-	const classes = [TagClasses.block, TagClasses.colors[index]];
-	if (className) classes.push(className);
+	// 类名与文本格式化均复用 TagPill 静态方法（单一来源）
+	const classes = TagPill.buildClassList(
+		colorIndex ?? TagPill.getColorIndex(label),
+		className ? [className] : undefined,
+	);
 
 	return (
 		<span className={classes.join(' ')} data-tag={label} style={style} title={title}>
-			<span className={TagClasses.elements.label}>{showHash ? `#${label}` : label}</span>
+			<span className={TagClasses.elements.label}>{TagPill.formatLabel(label, showHash)}</span>
 		</span>
 	);
 }

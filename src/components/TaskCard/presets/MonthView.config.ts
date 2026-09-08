@@ -23,6 +23,7 @@ export const MonthViewConfig: TaskCardConfig = {
 
 	// 交互功能
 	enableTooltip: true,
+	tooltipFollowMouse: true,    // 格子小、横跨条长，锚定卡片矩形易出屏，跟随鼠标定位
 	enableDrag: true,
 	clickable: true,
 

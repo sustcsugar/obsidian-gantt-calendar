@@ -1,123 +1,50 @@
-/* ==================== Task Tooltip ==================== */
-/* BEM命名: gc-task-tooltip */
-.gc-task-tooltip {
-	position: fixed;
-	z-index: 1000;
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	padding: 12px;
-	max-width: 300px;
-	min-width: 250px;
-	font-size: 13px;
-	line-height: 1.47;
-	letter-spacing: -0.01px;
-	pointer-events: none;
-	opacity: 0;
-	transform: translateY(-8px) scale(0.95);
-	transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-	            transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* ==================== Week View Components ==================== */
+/* （月视图样式已迁至 views/month-view.css，年视图计数已迁至 views/year-view.css，
+    任务悬浮卡片已迁至 components/tooltip.css；
+    平铺列 tasks-column 已随双模式移除，剩余时间线样式在下方） */
 
-.gc-task-tooltip--visible {
-	opacity: 1;
-	transform: translateY(0) scale(1);
-}
-
-.gc-task-tooltip .gc-task-tooltip__description {
-	margin-bottom: 8px;
-	padding-bottom: 8px;
-	border-bottom: 1px solid var(--divider-color);
-	color: var(--text-normal);
-	word-break: break-word;
-}
-
-.gc-task-tooltip .gc-task-tooltip__description strong {
-	font-weight: 600;
-	font-size: 14px;
-}
-
-/* --- 属性区域 --- */
-.gc-task-tooltip .gc-task-tooltip__properties {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	margin-bottom: 8px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-section {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	padding: 8px 8px 8px 12px;
-	background-color: var(--background-secondary);
-	border-radius: 6px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-row {
-	display: flex;
-	align-items: baseline;
-	gap: 8px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-label {
-	flex-shrink: 0;
-	min-width: 36px;
-	white-space: nowrap;
-	font-size: 12px;
-	color: var(--text-muted);
-	letter-spacing: -0.01px;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-value {
-	color: var(--text-normal);
-	font-size: 13px;
-	word-break: break-word;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-value--overdue {
-	color: var(--gc-color-red, #d73a49);
-	font-weight: 600;
-}
-
-.gc-task-tooltip .gc-task-tooltip__property-divider {
-	height: 1px;
-	background-color: rgba(0, 0, 0, 0.06);
-	margin: 2px 0;
-}
-
-.gc-task-tooltip .priority-highest {
-	color: var(--gc-color-red, #d73a49);
-}
-
-.gc-task-tooltip .priority-high {
-	color: var(--gc-color-orange, #e36209);
-}
-
-.gc-task-tooltip .priority-medium {
-	color: var(--gc-color-yellow, #ffd33d);
-}
-
-.gc-task-tooltip .priority-low {
-	color: var(--gc-color-green, #28a745);
-}
-
-.gc-task-tooltip .priority-lowest {
-	color: var(--gc-color-blue, #0366d6);
-}
-
-.gc-task-tooltip .gc-task-tooltip__tags {
+.gc-week-view__header-cell {
+	padding: 12px 20%;
+	text-align: center;
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 2px solid var(--background-modifier-border);
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	justify-content: space-between;
 	gap: 6px;
-	flex-wrap: wrap;
+	background-color: var(--background-primary);
+	position: sticky;
+	top: 0;
+	z-index: 4;
 }
 
-.gc-task-tooltip .gc-task-tooltip__file-location {
-	font-size: 11px;
-	color: var(--text-muted);
+.gc-week-view__header-cell:last-child {
+	border-right: none;
+}
+
+.gc-week-view__day-name {
+	flex: 1;
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--text-normal);
+	text-align: left;
+}
+
+.gc-week-view__day-number {
+	flex: 1;
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--text-normal);
+	text-align: center;
+}
+
+.gc-week-view__lunar-text {
+	flex: 1;
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--text-normal);
+	text-align: right;
 }
 
 /* ==================== Week View Timeline（连续时间画布） ==================== */

@@ -210,7 +210,6 @@ export const TooltipClasses = {
 
 		modifiers: {
 			visible: bem(BLOCKS.TASK_TOOLTIP, undefined, 'visible'),
-			initialized: bem(BLOCKS.TASK_TOOLTIP, undefined, 'initialized'),
 			propertyValueOverdue: bem(BLOCKS.TASK_TOOLTIP, 'property-value', 'overdue'),
 		},
 	};
