@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useCallback, type JSX } from 'react';
+import { Fragment, useMemo, useCallback, useEffect, useRef, type JSX } from 'react';
 import { taskKey } from '../utils/taskKey';
 import type { DragEvent as ReactDragEvent } from 'react';
 import { Notice } from 'obsidian';
@@ -12,6 +12,7 @@ import { applyStatusFilter, applyTagFilter, applySort } from '../utils/taskFilte
 import { TaskCard } from '../components/TaskCard';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { toISOStringLocal } from '../../dateUtils/timezone';
+import { createMonthWheelStep, shiftMonth } from '../utils/monthWheel';
 import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
 import { buildMonthTimelineModel, getTaskInterval, clampSingleFieldWrite } from './week/timelineModel';
 import { sortTasks } from '../../tasks/taskSorter';
@@ -52,6 +53,25 @@ export function MonthView(): JSX.Element {
 	const refreshTasks = useCalendarStore((s) => s.refreshTasks);
 	// 稳定回调：TaskCard 已 memo，内联箭头函数会使 memo 失效
 	const handleCardRefresh = useCallback(() => refreshTasks(), [refreshTasks]);
+
+	// ===== 滚轮切月：悬停月视图滚动即切换月份（累计阈值 + 冷却防惯性连跳） =====
+	// 原生监听（passive: false）而非 React onWheel：后者在根容器注册为 passive，
+	// preventDefault 可能失效；月视图内容不溢出，滚轮原本无滚动目标，无冲突。
+	const viewRef = useRef<HTMLDivElement>(null);
+	const stepWheelRef = useRef(createMonthWheelStep());
+
+	useEffect(() => {
+		const el = viewRef.current;
+		if (!el) return;
+		const onWheel = (e: WheelEvent) => {
+			const dir = stepWheelRef.current(e.deltaY, e.deltaMode, Date.now());
+			if (dir === 0) return;
+			e.preventDefault();
+			setCurrentDate(shiftMonth(currentDate, dir));
+		};
+		el.addEventListener('wheel', onWheel, { passive: false });
+		return () => el.removeEventListener('wheel', onWheel);
+	}, [currentDate, setCurrentDate]);
 
 	const startOnMonday = !!plugin.settings.startOnMonday;
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
@@ -163,7 +183,7 @@ export function MonthView(): JSX.Element {
 	}, [app, dateField, startField, endField, enabledFormats, dragLookupTasks, plugin, refreshTasks]);
 
 	if (!monthData) {
-		return <div className="gc-view gc-view--month" />;
+		return <div ref={viewRef} className="gc-view gc-view--month" />;
 	}
 
 	const labelsSunFirst = i18n.t('views.monthView.weekdays') as unknown as string[];
@@ -174,7 +194,7 @@ export function MonthView(): JSX.Element {
 	const taskLimit = plugin.settings.monthViewTaskLimit || 5;
 
 	return (
-		<div className="gc-view gc-view--month">
+		<div ref={viewRef} className="gc-view gc-view--month">
 			<div className={`${MonthViewClasses.elements.weekday} gc-month-view__weekday--empty`} />
 			{weekdayLabels.map((label, i) => (
 				<div key={i} className={MonthViewClasses.elements.weekday}>
