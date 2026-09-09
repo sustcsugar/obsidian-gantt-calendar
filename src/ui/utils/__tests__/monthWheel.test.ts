@@ -5,7 +5,7 @@
  * 月份位移的跨年与日号钳制（防 1/31 → 3/3 跳月）。
  */
 
-import { createMonthWheelStep, shiftMonth, WHEEL_STEP_PX, WHEEL_COOLDOWN_MS } from '../monthWheel';
+import { createMonthWheelStep, shiftMonth, getMonthKey, monthTravelDir, WHEEL_STEP_PX, WHEEL_COOLDOWN_MS } from '../monthWheel';
 
 describe('createMonthWheelStep（滚轮步进状态机）', () => {
 	it('未达阈值返回 0', () => {
@@ -83,5 +83,25 @@ describe('shiftMonth（月份位移 + 日号钳制）', () => {
 
 	it('闰日 2/29 +1 → 3/29（钳制保留日号，不虚构 3/29 不存在的问题）', () => {
 		expect(shiftMonth(new Date(2024, 1, 29), 1)).toEqual(new Date(2024, 2, 29));
+	});
+});
+
+describe('getMonthKey / monthTravelDir（切月动画方向）', () => {
+	it('月键零基且同月不变', () => {
+		expect(getMonthKey(new Date(2026, 8, 15))).toBe('2026-8');
+		expect(getMonthKey(new Date(2026, 8, 30))).toBe('2026-8');
+	});
+
+	it('相邻月：下月 +1 / 上月 -1（含跨年）', () => {
+		expect(monthTravelDir('2026-8', '2026-9')).toBe(1);
+		expect(monthTravelDir('2026-9', '2026-8')).toBe(-1);
+		expect(monthTravelDir('2026-11', '2027-0')).toBe(1);
+		expect(monthTravelDir('2026-0', '2025-11')).toBe(-1);
+	});
+
+	it('同月或跨多月 → 0（动画降级淡入淡出）', () => {
+		expect(monthTravelDir('2026-8', '2026-8')).toBe(0);
+		expect(monthTravelDir('2026-8', '2026-10')).toBe(0);
+		expect(monthTravelDir('2026-10', '2026-8')).toBe(0);
 	});
 });

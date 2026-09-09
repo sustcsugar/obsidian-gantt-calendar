@@ -56,3 +56,21 @@ export function shiftMonth(current: Date, dir: -1 | 1): Date {
 	const lastDay = new Date(y, m + 1, 0).getDate();
 	return new Date(y, m, Math.min(current.getDate(), lastDay));
 }
+
+/** 月份键：'YYYY-M'（零基月），用于动画重挂 key（同月不变） */
+export function getMonthKey(date: Date): string {
+	return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
+/**
+ * 相邻月切换的位移方向：-1 上月 / +1 下月 / 0 同月或跨多月
+ * （跨多月跳转不适合左右平移，动画降级为淡入淡出）
+ */
+export function monthTravelDir(prevKey: string, nextKey: string): -1 | 0 | 1 {
+	const [py, pm] = prevKey.split('-').map(Number);
+	const [ny, nm] = nextKey.split('-').map(Number);
+	const diff = ny * 12 + nm - (py * 12 + pm);
+	if (diff === -1) return -1;
+	if (diff === 1) return 1;
+	return 0;
+}

@@ -5,6 +5,14 @@
    无卡片圆角/无悬浮阴影/无 gap，今天用 accent 淡染整格 + 数字反白圆徽标
    ============================================ */
 
+/* 切月动画容器：铺满内容区并为 popLayout 退场面板提供定位锚点，裁切水平滑动 */
+.gc-month-anim {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
 /* 星期标签 - Grid 第1行 */
 .gc-month-view__weekday {
 	font-size: var(--gc-font-xs);

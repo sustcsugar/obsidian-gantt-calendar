@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useCallback, useEffect, useRef, type JSX } from 'react';
+import { AnimatePresence, motion, type Variants } from 'motion/react';
 import { taskKey } from '../utils/taskKey';
 import type { DragEvent as ReactDragEvent } from 'react';
 import { Notice } from 'obsidian';
@@ -12,7 +13,8 @@ import { applyStatusFilter, applyTagFilter, applySort } from '../utils/taskFilte
 import { TaskCard } from '../components/TaskCard';
 import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { toISOStringLocal } from '../../dateUtils/timezone';
-import { createMonthWheelStep, shiftMonth } from '../utils/monthWheel';
+import { createMonthWheelStep, shiftMonth, getMonthKey, monthTravelDir } from '../utils/monthWheel';
+import { MOTION, easeOutTransition } from '../motion';
 import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
 import { buildMonthTimelineModel, getTaskInterval, clampSingleFieldWrite } from './week/timelineModel';
 import { sortTasks } from '../../tasks/taskSorter';
@@ -72,6 +74,14 @@ export function MonthView(): JSX.Element {
 		el.addEventListener('wheel', onWheel, { passive: false });
 		return () => el.removeEventListener('wheel', onWheel);
 	}, [currentDate, setCurrentDate]);
+
+	// ===== 相邻月切月动画：方向由上次渲染的月份键推导（±1 平移 / 其余淡入淡出） =====
+	const monthKey = getMonthKey(currentDate);
+	const prevMonthKeyRef = useRef(monthKey);
+	const slideDir = monthTravelDir(prevMonthKeyRef.current, monthKey);
+	useEffect(() => {
+		prevMonthKeyRef.current = monthKey;
+	}, [monthKey]);
 
 	const startOnMonday = !!plugin.settings.startOnMonday;
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
@@ -194,8 +204,20 @@ export function MonthView(): JSX.Element {
 	const taskLimit = plugin.settings.monthViewTaskLimit || 5;
 
 	return (
-		<div ref={viewRef} className="gc-view gc-view--month">
-			<div className={`${MonthViewClasses.elements.weekday} gc-month-view__weekday--empty`} />
+		<div className="gc-month-anim">
+			<AnimatePresence initial={false} custom={slideDir} mode="popLayout">
+				<motion.div
+					key={monthKey}
+					ref={viewRef}
+					className="gc-view gc-view--month"
+					custom={slideDir}
+					variants={monthSlideVariants}
+					initial="enter"
+					animate="center"
+					exit="exit"
+					transition={easeOutTransition(MOTION.dur.normal)}
+				>
+				<div className={`${MonthViewClasses.elements.weekday} gc-month-view__weekday--empty`} />
 			{weekdayLabels.map((label, i) => (
 				<div key={i} className={MonthViewClasses.elements.weekday}>
 					{label}
@@ -317,9 +339,11 @@ export function MonthView(): JSX.Element {
 								</div>
 							);
 						})}
-					</Fragment>
-				);
-			})}
+				</Fragment>
+			);
+		})}
+				</motion.div>
+			</AnimatePresence>
 		</div>
 	);
 }
@@ -339,3 +363,13 @@ function festivalClass(type: 'solar' | 'lunar' | 'solarTerm'): string {
 		case 'solarTerm': return MonthViewClasses.modifiers.festivalSolarTerm;
 	}
 }
+
+/**
+ * 相邻月切换滑入/滑出变体：dir=±1 时整宽双向平移（新板边贴边同速推进），
+ * dir=0（同月/跨多月）仅淡入淡出，不做长距离滑屏。
+ */
+const monthSlideVariants: Variants = {
+	enter: (dir: number) => ({ x: dir === 0 ? 0 : `${dir * 100}%`, opacity: 0 }),
+	center: { x: 0, opacity: 1 },
+	exit: (dir: number) => ({ x: dir === 0 ? 0 : `${-dir * 100}%`, opacity: 0 }),
+};
