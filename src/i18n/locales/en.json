@@ -1077,7 +1077,8 @@
       "andTitle": "Intersection: contains all selected tags",
       "orTitle": "Union: contains any selected tag",
       "notTitle": "Exclude: does not contain selected tags",
-      "empty": "No tags"
+      "empty": "No tags",
+      "staleTags": "Stale tags (click to remove)"
     },
     "buttonGroup": {
       "todayText": "Today",

@@ -45,11 +45,11 @@ export class GCSidebarView extends ItemView {
 			await this.plugin.taskCache.whenReady();
 		}
 
-		// 初始化 store：时区感知的"今天" + 当前任务
+		// 初始化 store：时区感知的"今天" + 当前任务（SetTasks 触发幽灵标签剔除）
 		useCalendarStore.setState({
 			currentDate: getTodayInTimezone(),
-			tasks: this.plugin.taskCache?.getAllTasks() || [],
 		});
+		useCalendarStore.getState().setTasks(this.plugin.taskCache?.getAllTasks() || []);
 
 		// 挂载 React 应用（需 TooltipProvider/ModalProvider 包裹，TaskCard 依赖其 context）
 		if (!this.unmountReact) {

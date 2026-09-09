@@ -46,12 +46,13 @@ export class GCMainView extends ItemView {
 			await this.plugin.taskCache.whenReady();
 		}
 
-		// 初始化 store：使用设置中的默认视图 + 时区感知的"今天"
+		// 初始化 store：使用设置中的默认视图 + 时区感知的"今天"；
+		// 任务经 setTasks 写入以便触发幽灵标签剔除（见 calendarStore.pruneTagFilters）
 		useCalendarStore.setState({
 			viewType: this.plugin.settings.defaultView || 'year',
 			currentDate: getTodayInTimezone(),
-			tasks: this.plugin.taskCache?.getAllTasks() || [],
 		});
+		useCalendarStore.getState().setTasks(this.plugin.taskCache?.getAllTasks() || []);
 
 		// 挂载 React 应用
 		if (!this.unmountReact) {

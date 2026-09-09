@@ -127,6 +127,20 @@ export function TagTreeFilter({
 		[tree, aggCounts]
 	);
 
+	/**
+	 * 幽灵标签：已选中但当前任务集里已不存在的标签——树里没有对应行，
+	 * 界面上看不到勾选却仍在生效（NOT 模式≈不过滤，OR/AND 模式≈全空）。
+	 * 点击即可移除（onToggle 对已选中的标签执行的是去掉）。
+	 */
+	const staleTags = useMemo(() => {
+		if (selectedTags.length === 0) return [];
+		const lower = new Set(allTags.map((t) => t.toLowerCase()));
+		return selectedTags.filter((sel) => {
+			const s = sel.toLowerCase();
+			return !lower.has(s) && !Array.from(lower).some((t) => t.startsWith(s + '/'));
+		});
+	}, [selectedTags, allTags]);
+
 	const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
 
 	const toggleExpand = (fp: string) => {
@@ -224,6 +238,39 @@ export function TagTreeFilter({
 				) : (
 					sortedRoots.map(root => renderTagNode(root, 0))
 				)}
+				{staleTags.length > 0 ? (
+					<div style={{ marginTop: '6px', borderTop: '1px solid var(--background-modifier-border)', paddingTop: '4px' }}>
+						<div style={{ padding: '2px 6px', fontSize: '11px', color: 'var(--text-faint)' }}>
+							{i18n.t('toolbar.tagFilter.staleTags')}
+						</div>
+						{staleTags.map((tag) => (
+							<div
+								key={`stale-${tag}`}
+								role="option"
+								tabIndex={0}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(tag); }
+								}}
+								onClick={() => onToggle(tag)}
+								title={i18n.t('toolbar.tagFilter.staleTags')}
+								style={{
+									display: 'flex', alignItems: 'center', gap: '4px',
+									padding: '3px 6px', cursor: 'pointer', borderRadius: '6px',
+									borderLeft: '2px solid var(--interactive-accent)', minHeight: '28px',
+								}}
+							>
+								<ColorDot fullPath={tag} />
+								<span style={{
+									flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+									fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'line-through',
+								}}>
+									{tag}
+								</span>
+								<Icon icon="x" />
+							</div>
+						))}
+					</div>
+				) : null}
 			</div>
 		</div>
 	);

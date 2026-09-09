@@ -87,6 +87,42 @@ export function mergeViewFilters(
 	return base;
 }
 
+/**
+ * 剔除「幽灵标签」：selectedTags 中在当前任务集里已不存在的标签。
+ * 幽灵标签会形成隐形筛选（树里看不到勾选）：NOT 模式下匹配不到任何任务≈不过滤，
+ * OR/AND 模式下匹配不到任何任务=全空。层级语义与 applyTagFilter 一致——
+ * 父标签（如 work）在存在子标签（如 work/cyclops）时保留；大小写不敏感。
+ * 任务集为空（如水合早于缓存就绪）时不做剔除，防误删真实筛选。
+ * 无变化时返回原引用，避免触发订阅写回。
+ */
+export function pruneTagFilters(
+	viewFilters: Record<ViewScope, ViewFilterState>,
+	tasks: GCTask[]
+): Record<ViewScope, ViewFilterState> {
+	if (tasks.length === 0) return viewFilters;
+	const tagSet = new Set<string>();
+	for (const task of tasks) {
+		for (const tag of task.tags || []) tagSet.add(tag.toLowerCase());
+	}
+
+	let changed = false;
+	const next: Record<ViewScope, ViewFilterState> = { ...viewFilters };
+	for (const scope of Object.keys(next) as ViewScope[]) {
+		const { tag } = next[scope];
+		if (tag.selectedTags.length === 0) continue;
+		const kept = tag.selectedTags.filter((sel) => {
+			const s = sel.toLowerCase();
+			if (tagSet.has(s)) return true;
+			return Array.from(tagSet).some((t) => t.startsWith(s + '/'));
+		});
+		if (kept.length !== tag.selectedTags.length) {
+			changed = true;
+			next[scope] = { ...next[scope], tag: { ...tag, selectedTags: kept } };
+		}
+	}
+	return changed ? next : viewFilters;
+}
+
 export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	viewType: 'year',
 	currentDate: new Date(),
@@ -105,16 +141,30 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 			// 第二次传入的数组引用相同（L1 缓存）——直接跳过，
 			// 避免 updateSeq 重复自增引发二次重渲染
 			if (tasks === s.tasks && filePath === s.changedFilePath) return s;
-			return { tasks, changedFilePath: filePath, updateSeq: s.updateSeq + 1 };
+			// 任务集刷新时同步剔除失效标签（幽灵标签隐形筛选的根治）
+			return {
+				tasks,
+				changedFilePath: filePath,
+				updateSeq: s.updateSeq + 1,
+				viewFilters: pruneTagFilters(s.viewFilters, tasks),
+			};
 		}),
-	setTasks: (tasks) => set({ tasks }),
+	setTasks: (tasks) =>
+		set((s) => ({
+			tasks,
+			viewFilters: pruneTagFilters(s.viewFilters, tasks),
+		})),
 	bumpSettings: () => set((s) => ({ settingsVersion: s.settingsVersion + 1 })),
 	requestGanttScroll: (action) =>
 		set((s) => ({ ganttScroll: { seq: (s.ganttScroll?.seq ?? 0) + 1, action } })),
 	/** 任务写回后触发一次顺带重渲染（数据最终由事件总线回流） */
 	refreshTasks: () => set((s) => ({ updateSeq: s.updateSeq + 1 })),
 
-	hydrateViewFilters: (filters) => set({ viewFilters: mergeViewFilters(filters) }),
+	hydrateViewFilters: (filters) =>
+		set((s) => ({
+			// 水合时按当前任务集剔除幽灵标签；任务集未就绪（空）时不动，待任务到来再剔除
+			viewFilters: pruneTagFilters(mergeViewFilters(filters), s.tasks),
+		})),
 
 	setStatusFilter: (scope, status) =>
 		set((s) => {

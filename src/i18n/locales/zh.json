@@ -1077,7 +1077,8 @@
       "andTitle": "交集：包含所有选中标签",
       "orTitle": "并集：包含任一选中标签",
       "notTitle": "排除：不包含选中标签",
-      "empty": "暂无标签"
+      "empty": "暂无标签",
+      "staleTags": "失效标签（点击移除）"
     },
     "buttonGroup": {
       "todayText": "今天",
