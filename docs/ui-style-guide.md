@@ -61,7 +61,7 @@
 - **筛选栏**：图标按钮 6px 圆角、hover 中性 wash；**激活筛选 = accent 图标 + accent-soft 洗色**（功能性强调，保留 accent）
 - **下拉菜单**：hairline 边框 + 8px 圆角 + elev-3 双层投影；菜单项 6px 圆角、hover 中性 wash；选中项 = 中性背景块 + 文字提亮（操作符小按钮选中保留 accent）
 - **任务列表**：间距 6px；**任务卡 = Plane kanban 卡解剖**——8px 圆角 + 1px hairline 边框 + 极轻 rest 投影；hover = 上/右/下边框加深 + 投影微升，**背景不变**（Plane 的"边框优先"手感）
-- **今日时间线**：小时分隔线换 hairline；当前小时 = 中性 wash 染色；全天区 = secondary 底 + hairline 边框 + 8px 圆角；当前时间指示线保持 accent（语义强调）；拖拽落点 = wash + accent 虚线框；空档 "+" 按钮 hover 浮现
+- **每日时间线**：日期标题行 = 左标题 + 右导航（`‹ 今天 ›`，图标按钮走 clickable-icon 中性 wash、"今天"文字药丸 22px 高、已在今天时禁用态占位）；小时分隔线换 hairline；当前小时 = 中性 wash 染色；全天区 = secondary 底 + hairline 边框 + 8px 圆角；当前时间指示线保持 accent（语义强调）；拖拽落点 = wash + accent 虚线框；空档 "+" 按钮 hover 浮现
 
 ## 5. 任务卡（gc-task-card，全局基座）
 

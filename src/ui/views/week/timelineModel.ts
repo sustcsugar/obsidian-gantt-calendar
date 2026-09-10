@@ -575,7 +575,7 @@ export function buildWeekTimelineModel(
 	return { days, blocks, allday };
 }
 
-// ===== 单日时间线（侧边栏今日时间线） =====
+// ===== 单日时间线（侧边栏每日时间线） =====
 
 /** 全天列表项（单日无横跨条，纵向卡片 + 可选时刻标注） */
 export interface DayAlldayItem {

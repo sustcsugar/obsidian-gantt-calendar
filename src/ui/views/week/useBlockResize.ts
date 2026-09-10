@@ -53,7 +53,7 @@ export function isBlockResizing(): boolean {
 }
 
 /**
- * 整块拖动的抓取信息（跨视图共享的模块级状态：周视图与侧栏今日时间线）。
+ * 整块拖动的抓取信息（跨视图共享的模块级状态：周视图与侧栏每日时间线）。
  * dragover 阶段 dataTransfer.getData 不可用（只能读 types），落点预览与
  * 边缘锚定所需的偏移/时长存在这里；dragend / drop 清零
  */

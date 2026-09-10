@@ -208,15 +208,76 @@
 }
 
 /* ============================================
-   今日时间线样式
+   每日时间线样式
    ============================================ */
 
+/* 日期标题行：左标题 + 右导航（导航用中性 wash，与侧栏层级语言一致） */
 .gc-sidebar__timeline-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
 	padding: 8px 4px;
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-normal);
 	margin-bottom: 8px;
+}
+
+.gc-sidebar__timeline-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+/* 导航按钮组：前后箭头 + "今天"药丸 */
+.gc-sidebar__timeline-nav {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	flex-shrink: 0;
+}
+
+.gc-sidebar__timeline-nav .clickable-icon {
+	padding: 3px;
+	color: var(--text-muted);
+}
+
+.gc-sidebar__timeline-nav .clickable-icon:hover {
+	color: var(--text-normal);
+	background-color: var(--gc-hover-wash);
+}
+
+/* "今天"按钮：已在今天时禁用（禁用态仍占位，避免标题行左右抖动） */
+.gc-sidebar__timeline-nav .gc-sidebar__timeline-today-btn {
+	height: 22px;
+	padding: 0 8px;
+	border: none;
+	border-radius: var(--gc-radius-xs);
+	background-color: transparent;
+	box-shadow: none;
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1;
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		color var(--gc-dur-fast) var(--gc-ease-out),
+		background-color var(--gc-dur-fast) var(--gc-ease-out);
+}
+
+.gc-sidebar__timeline-nav .gc-sidebar__timeline-today-btn:hover:not(:disabled) {
+	color: var(--text-normal);
+	background-color: var(--gc-hover-wash);
+}
+
+.gc-sidebar__timeline-nav .gc-sidebar__timeline-today-btn:disabled {
+	color: var(--text-faint);
+	cursor: default;
 }
 
 /* 全天区域 */

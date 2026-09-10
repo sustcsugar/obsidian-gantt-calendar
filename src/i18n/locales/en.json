@@ -1399,7 +1399,13 @@
         "Fri",
         "Sat"
       ],
-      "noTasks": "No tasks today",
+      "nav": {
+        "prevDay": "Previous day",
+        "nextDay": "Next day",
+        "today": "Today",
+        "goToday": "Go to today"
+      },
+      "noTasks": "No tasks on this day",
       "allDay": "All Day"
     }
   },

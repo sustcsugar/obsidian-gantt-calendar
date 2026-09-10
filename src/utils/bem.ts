@@ -853,7 +853,7 @@ export const WeekViewClasses = {
  * 任务视图类名常量
  */
 /**
- * 单日连续时间画布类名常量（日视图任务区与侧栏今日时间线共用组件）
+ * 单日连续时间画布类名常量（日视图任务区与侧栏每日时间线共用组件）
  */
 export const DayCanvasClasses = {
 	block: bem(BLOCKS.DAY_CANVAS),
@@ -917,8 +917,11 @@ export const SidebarClasses = {
 		taskList: bem(BLOCKS.SIDEBAR, 'task-list'),
 		taskItem: bem(BLOCKS.SIDEBAR, 'task-item'),
 		emptyState: bem(BLOCKS.SIDEBAR, 'empty-state'),
-		// 今日时间线（连续画布，与周视图同语义）
+		// 每日时间线（连续画布，与周视图同语义）
 		timelineHeader: bem(BLOCKS.SIDEBAR, 'timeline-header'),
+		timelineTitle: bem(BLOCKS.SIDEBAR, 'timeline-title'),
+		timelineNav: bem(BLOCKS.SIDEBAR, 'timeline-nav'),
+		timelineTodayBtn: bem(BLOCKS.SIDEBAR, 'timeline-today-btn'),
 		timelineAllDay: bem(BLOCKS.SIDEBAR, 'timeline-allday'),
 		timelineAllDayLabel: bem(BLOCKS.SIDEBAR, 'timeline-allday-label'),
 		timelineAllDayTasks: bem(BLOCKS.SIDEBAR, 'timeline-allday-tasks'),
@@ -933,7 +936,7 @@ export const SidebarClasses = {
 	modifiers: {
 		taskListTab: bem(BLOCKS.SIDEBAR, undefined, 'task-list'),
 		timelineTab: bem(BLOCKS.SIDEBAR, undefined, 'timeline'),
-		// 今日时间线连续画布
+		// 每日时间线连续画布
 	},
 };
 

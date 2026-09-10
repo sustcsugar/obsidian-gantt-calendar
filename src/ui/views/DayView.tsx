@@ -33,7 +33,7 @@ function findTaskById(tasks: GCTask[], taskId: string): GCTask | null {
 
 /**
  * React 日视图
- * 任务区 = 全天区 + 共享单日连续画布（与周视图/侧栏今日时间线同语义）；
+ * 任务区 = 全天区 + 共享单日连续画布（与周视图/侧栏每日时间线同语义）；
  * 保留分屏布局与嵌入式 Daily Note
  */
 export function DayView(): JSX.Element {

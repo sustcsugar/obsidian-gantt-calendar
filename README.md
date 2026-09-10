@@ -228,7 +228,8 @@ Two-tab sidebar for quick task access:
 - Click task to navigate to source file
 
 **Daily Timeline Tab**
-- 24-hour timeline for today's timed tasks
+- 24-hour timeline for timed tasks (defaults to today)
+- Date navigation on the right of the title row (previous / today / next)
 - All-day task section
 - Current time indicator line
 - Drag & drop to adjust time

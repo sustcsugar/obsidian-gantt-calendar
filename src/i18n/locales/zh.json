@@ -1387,7 +1387,7 @@
     },
     "tabTitles": {
       "taskList": "任务列表",
-      "dailyTimeline": "今日时间线"
+      "dailyTimeline": "每日时间线"
     },
     "dailyTimeline": {
       "weekdays": [
@@ -1399,7 +1399,13 @@
         "周五",
         "周六"
       ],
-      "noTasks": "今天没有任务",
+      "nav": {
+        "prevDay": "前一天",
+        "nextDay": "后一天",
+        "today": "今天",
+        "goToday": "回到今天"
+      },
+      "noTasks": "这一天没有任务",
       "allDay": "全天",
       "alldayMore": "还有 {{count}} 个全天任务…",
       "alldayCollapse": "收起全天任务"
