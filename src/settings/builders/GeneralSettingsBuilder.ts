@@ -41,6 +41,20 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						}));
 			});
 
+			// 点击任务卡片行为
+			addSetting(setting => {
+				setting.setName(i18n.t('settings.general.taskCardClickAction.name'))
+					.setDesc(i18n.t('settings.general.taskCardClickAction.description'))
+					.addDropdown(drop => drop
+						.addOption('openFile', i18n.t('settings.general.taskCardClickAction.options.openFile'))
+						.addOption('editModal', i18n.t('settings.general.taskCardClickAction.options.editModal'))
+						.setValue(this.plugin.settings.taskCardClickAction || 'openFile')
+						.onChange((value) => {
+							this.plugin.settings.taskCardClickAction = value as 'openFile' | 'editModal';
+							void this.saveAndRefreshViews();
+						}));
+			});
+
 			// 开发者模式
 			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.debugMode.name'))

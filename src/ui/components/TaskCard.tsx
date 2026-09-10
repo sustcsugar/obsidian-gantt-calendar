@@ -259,6 +259,8 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 	});
 
 	// ===== 交互事件 =====
+	// 点击行为由设置决定（跳转源文件 / 编辑面板）；重复任务虚拟实例一律跳回源任务，
+	// 因为编辑面板需要真实行号定位
 	const handleClick = () => {
 		if (virtual) {
 			void (async () => {
@@ -271,12 +273,17 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 			})();
 			return;
 		}
-		if (config.clickable) {
-			void (async () => {
-				await openFileInExistingLeaf(app, task.filePath, task.lineNumber);
-				onClick?.(task);
-			})();
+		if (!config.clickable) return;
+		if (plugin.settings.taskCardClickAction === 'editModal') {
+			// 与右键菜单「编辑任务」同一入口，保证编辑态一致
+			openEditTaskModal(app, task, plugin.settings.enabledTaskFormats || ['tasks'], onRefresh || (() => {}), true);
+			onClick?.(task);
+			return;
 		}
+		void (async () => {
+			await openFileInExistingLeaf(app, task.filePath, task.lineNumber);
+			onClick?.(task);
+		})();
 	};
 
 	const handleCheckboxChange = (checked: boolean) => {

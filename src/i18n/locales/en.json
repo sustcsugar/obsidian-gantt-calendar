@@ -152,6 +152,14 @@
           "gantt": "Gantt Chart"
         }
       },
+      "taskCardClickAction": {
+        "name": "Task Card Click",
+        "description": "What happens when a task card is clicked; recurring instances and Gantt bars are unaffected (both jump to the source file)",
+        "options": {
+          "openFile": "Jump to Markdown source file",
+          "editModal": "Open edit panel"
+        }
+      },
       "debugMode": {
         "name": "Developer Mode",
         "description": "Enable detailed debug logs. When disabled, only statistics and errors are shown"

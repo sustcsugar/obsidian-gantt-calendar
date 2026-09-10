@@ -11,7 +11,6 @@ import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { getTaskInterval } from '../views/week/timelineModel';
 import { buildDayTimelineModel } from '../views/week/timelineModel';
 import { DayTimelineCanvas } from '../views/week/DayTimelineCanvas';
-import { openFileInExistingLeaf } from '../../utils/fileOpener';
 import { Logger } from '../../utils/logger';
 import { usePlugin, useApp } from '../pluginContext';
 import { useCalendarStore } from '../store/calendarStore';
@@ -184,7 +183,7 @@ export function DailyTimelinePanel(): JSX.Element {
 				<div className={SidebarClasses.elements.timelineAllDayTasks}>
 					{model.allday.map(({ task, timeLabel }) => (
 						<div key={`${task.filePath}:${task.lineNumber}`} className={SidebarClasses.elements.timelineAllDayItem}>
-							<TaskCard task={task} config={timelineConfig} onClick={(t) => void openFileInExistingLeaf(app, t.filePath, t.lineNumber)} />
+							<TaskCard task={task} config={timelineConfig} />
 							{timeLabel ? (
 								<span className={SidebarClasses.elements.timelineAllDayTime}>{timeLabel}</span>
 							) : null}

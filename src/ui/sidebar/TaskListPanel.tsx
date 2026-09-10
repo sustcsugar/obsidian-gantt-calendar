@@ -4,14 +4,13 @@ import { DEFAULT_STATUS_FILTER_STATE } from '../../types';
 import { SidebarClasses } from '../../utils/bem';
 import { buildSidebarConfig } from '../../components/TaskCard';
 import { sortTasks } from '../../tasks/taskSorter';
-import { openFileInExistingLeaf } from '../../utils/fileOpener';
 import { DEFAULT_TASK_STATUSES } from '../../tasks/taskStatus';
 import { isToday } from '../../dateUtils/dateCompare';
 import { isThisWeek } from '../../dateUtils/week';
 import { isThisMonth } from '../../dateUtils/dateCompare';
 import { i18n } from '../../i18n/i18n';
 import { TagTreeFilter } from '../components/TagTreeFilter';
-import { usePlugin, useApp } from '../pluginContext';
+import { usePlugin } from '../pluginContext';
 import { useCalendarStore } from '../store/calendarStore';
 import { TaskCard } from '../components/TaskCard';
 import { DropdownMenu, type DropdownMenuSection } from '../components/DropdownMenu';
@@ -127,7 +126,6 @@ function filterTasks(
  */
 export function TaskListPanel(): JSX.Element {
 	const plugin = usePlugin();
-	const app = useApp();
 	const tasks = useCalendarStore((s) => s.tasks);
 
 	const [searchQuery, setSearchQuery] = useState('');
@@ -345,9 +343,6 @@ export function TaskListPanel(): JSX.Element {
 							key={`${task.filePath}:${task.lineNumber}`}
 							task={task}
 							config={config}
-							onClick={() => {
-								void openFileInExistingLeaf(app, task.filePath, task.lineNumber);
-							}}
 						/>
 					))
 				)}

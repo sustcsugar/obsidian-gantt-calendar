@@ -225,7 +225,7 @@ Two-tab sidebar for quick task access:
 - Keyword search (debounced)
 - Multi-dimensional filters: status, priority, tags (OR/AND), date range
 - Sort by: priority / due date / start date
-- Click task to navigate to source file
+- Click a task card to jump to the source file or open the edit panel (Settings → General → Task Card Click)
 
 **Daily Timeline Tab**
 - 24-hour timeline for timed tasks (defaults to today)

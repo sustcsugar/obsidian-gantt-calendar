@@ -152,6 +152,14 @@
           "gantt": "甘特图"
         }
       },
+      "taskCardClickAction": {
+        "name": "点击任务卡片",
+        "description": "点击任务卡片时的行为；重复任务实例与甘特图内的任务条不受此项影响（均跳转到源文件）",
+        "options": {
+          "openFile": "跳转到 Markdown 源文件",
+          "editModal": "弹出编辑面板"
+        }
+      },
       "debugMode": {
         "name": "开发者模式",
         "description": "启用后将输出详细的调试日志，关闭后仅显示统计信息和错误"
