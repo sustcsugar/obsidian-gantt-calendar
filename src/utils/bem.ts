@@ -892,6 +892,10 @@ export const TaskViewClasses = {
 
 	elements: {
 		empty: 'gantt-task-empty',
+		/** 任务行（序号 + 卡片） */
+		row: bem(BLOCKS.TASK_VIEW, 'row'),
+		/** 左侧序号 */
+		index: bem(BLOCKS.TASK_VIEW, 'index'),
 	},
 };
 

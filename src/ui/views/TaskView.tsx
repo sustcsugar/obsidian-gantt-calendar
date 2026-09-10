@@ -11,6 +11,9 @@ import { i18n } from '../../i18n/i18n';
 import { generateVirtualInstances } from '../../tasks/virtualTaskGenerator';
 import { Logger } from '../../utils/logger';
 
+/** 视图容器类名：通用视图块 + 任务视图修饰符 + 任务视图块（序号列元素挂在该块下） */
+const VIEW_CLASS = `${ViewClasses.block} ${ViewClasses.modifiers.task} ${TaskViewClasses.block}`;
+
 export function TaskView(): JSX.Element {
 	const plugin = usePlugin();
 	const tasks = useCalendarStore((s) => s.tasks);
@@ -86,7 +89,7 @@ export function TaskView(): JSX.Element {
 
 	if (viewData === null) {
 		return (
-			<div className={`${ViewClasses.block} ${ViewClasses.modifiers.task}`}>
+			<div className={VIEW_CLASS}>
 				<div className={TaskViewClasses.elements.empty}>{i18n.t('views.taskView.loadError')}</div>
 			</div>
 		);
@@ -94,21 +97,24 @@ export function TaskView(): JSX.Element {
 
 	if (viewData.length === 0) {
 		return (
-			<div className={`${ViewClasses.block} ${ViewClasses.modifiers.task}`}>
+			<div className={VIEW_CLASS}>
 				<div className={TaskViewClasses.elements.empty}>{i18n.t('views.taskView.noTasks')}</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className={`${ViewClasses.block} ${ViewClasses.modifiers.task}`}>
-			{viewData.map((task) => (
-				<TaskCard
-					key={taskKey(task)}
-					task={task}
-					config={config}
-					onRefresh={handleCardRefresh}
-				/>
+		<div className={VIEW_CLASS}>
+			{viewData.map((task, index) => (
+				<div key={taskKey(task)} className={TaskViewClasses.elements.row}>
+					{/* 序号是行装饰，不参与无障碍朗读与文本选择 */}
+					<span className={TaskViewClasses.elements.index} aria-hidden="true">{index + 1}</span>
+					<TaskCard
+						task={task}
+						config={config}
+						onRefresh={handleCardRefresh}
+					/>
+				</div>
 			))}
 		</div>
 	);

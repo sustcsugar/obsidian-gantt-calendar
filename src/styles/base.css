@@ -241,6 +241,40 @@
 	width: 100%;
 }
 
+/* ==================== Task View 序号列 ==================== */
+/* BEM命名: gc-task-view__row / gc-task-view__index
+   与甘特图序号列（muted / 居中 / 小字号 / 中等字重）保持同一视觉语言 */
+.gc-task-view__row {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.gc-task-view__index {
+	flex: 0 0 32px;
+	/* 13px = 卡片 1px 边框 + 10px 内边距 + 与首行文字行盒的半高差，
+	   使序号垂直居中于任务标题首行（卡片首行行高 1.4 倍 font-sm） */
+	padding-top: 13px;
+	font-size: var(--gc-font-xs);
+	font-weight: 500;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+	color: var(--text-muted);
+	text-align: center;
+	user-select: none;
+}
+
+/* 行悬停时序号提亮，强化"序号 ↔ 卡片"的同一行归属 */
+.gc-task-view__row:hover .gc-task-view__index {
+	color: var(--text-normal);
+}
+
+/* 卡片占满序号列之外的宽度；min-width:0 允许长内容收缩而非撑破行 */
+.gc-task-view__row .gc-task-card {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
 
 /* ========================================
    触屏设备适配（移动端 / 触控屏）
