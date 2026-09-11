@@ -9,9 +9,7 @@ manifest.version = targetVersion;
 writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t"));
 
 // update versions.json with target version and minAppVersion from manifest.json
-// but only if the target version is not already in versions.json
+// always write, so a corrected minAppVersion also propagates to existing entries
 const versions = JSON.parse(readFileSync('versions.json', 'utf8'));
-if (!(targetVersion in versions)) {
-    versions[targetVersion] = minAppVersion;
-    writeFileSync('versions.json', JSON.stringify(versions, null, '\t'));
-}
+versions[targetVersion] = minAppVersion;
+writeFileSync('versions.json', JSON.stringify(versions, null, '\t'));
