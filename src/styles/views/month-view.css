@@ -2,7 +2,8 @@
    月视图组件（Month View Components）
    BEM: gc-month-view__*
    视觉语言：网格式 — 细线分隔日期格子（border-right + border-bottom 拼合），
-   无卡片圆角/无悬浮阴影/无 gap，今天用 accent 淡染整格 + 数字反白圆徽标
+   无卡片圆角/无悬浮阴影/无 gap，日期头部整条淡色底与任务区分层，
+   今天用 accent 淡染整格 + 数字反白圆徽标
    ============================================ */
 
 /* 切月动画容器：铺满内容区并为 popLayout 退场面板提供定位锚点，裁切水平滑动 */
@@ -77,14 +78,23 @@
 	outline-offset: -2px;
 }
 
-/* 日期头部：数字 + 农历，左对齐、无分隔线 */
+/* 日期头部：数字 + 农历，左对齐；整条底色 + 发丝线与任务区分层。
+   负外边距吸收 cell 的 6px/2px padding 铺满格子；条高 6+22+3+1=32px
+   须与 MonthView.tsx 的 SPAN_HEADER_OFFSET_PX 对齐（横跨条自此线下开始）。
+   底色半透明：今天淡染/hover/拖放高亮设在 cell 上，仍能透显。
+   宽度用 align-self:stretch 而非 width:100%：stretch 会计入负外边距，
+   在 Obsidian 全局 border-box 下 100% 会把 padding 扣进宽度、两端各缩 2px */
 .gc-month-view__day-header {
 	display: flex;
 	flex-direction: row;
 	justify-content: flex-start;
 	align-items: center;
-	width: 100%;
+	align-self: stretch;
 	gap: 6px;
+	margin: -6px -2px 0;
+	padding: 6px 2px 3px;
+	background-color: color-mix(in srgb, var(--text-normal) 6%, transparent);
+	border-bottom: 1px solid var(--gc-border-hairline);
 }
 
 /* 日期数字（今天变 accent 反白圆徽标） */
