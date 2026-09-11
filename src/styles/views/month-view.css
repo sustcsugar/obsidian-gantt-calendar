@@ -50,9 +50,10 @@
 }
 
 /* 日期格 — 圆角卡片 */
-/* 日格：细线网格风格——无圆角/无卡片边框/无阴影，用 border-right+bottom 拼合 */
+/* 日格：细线网格风格——无圆角/无卡片边框/无阴影，用 border-right+bottom 拼合。
+   无 min-height：行高由网格严格均分（minmax(0,1fr)），内容超出靠 overflow:hidden 裁切；
+   固定最小高度会让格子溢出行而不是抬高行 */
 .gc-month-view__day-cell {
-	min-height: 100px;
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
@@ -179,7 +180,7 @@
 }
 
 
-/* 手机/窄窗口（宽度断点）：格子高度压缩（空间适配） */
+/* 手机/窄窗口（宽度断点）：行改内容尺寸可滚动，格子保留最小高度触发滚动 */
 @media (max-width: 520px) {
 	.gc-month-view__day-cell {
 		min-height: 64px;
@@ -215,6 +216,8 @@ body.gc-is-phone .gc-month-view__task-more {
 	z-index: 1;
 	pointer-events: none;
 	margin: 0 1px;
+	/* 行数超上限的极端配置下，条带随 max-height 钳制裁切，不溢出到下一周 */
+	overflow: hidden;
 }
 
 /* 横跨条：容器透明无装饰（与周视图统一），视觉完全靠内部 TaskCard */

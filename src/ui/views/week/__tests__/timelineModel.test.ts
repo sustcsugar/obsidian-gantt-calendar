@@ -3,7 +3,7 @@
  *
  * 覆盖面：吸附与换算、点任务锚定方向体系（前向/后向）、day 精度不虚构时刻、
  * 跨日路由（≥24h 全天条 / <24h 分段）、周内分段延续标记、lane 布局（含上限与
- * 全天行不设上限）、周/单日模型构建的端到端语义。
+ * 全天行不设上限）、周/单日模型构建的端到端语义、月模型横跨条行数上限。
  */
 
 import {
@@ -18,6 +18,7 @@ import {
 	assignLanes,
 	buildWeekTimelineModel,
 	buildDayTimelineModel,
+	buildMonthTimelineModel,
 	HOUR_PX,
 	MINUTES_PER_DAY,
 	type TimeBlockSegment,
@@ -425,5 +426,69 @@ describe('buildDayTimelineModel', () => {
 		], TODAY, 'startDate', 'dueDate', 'dueDate');
 		expect(model.blocks).toHaveLength(0);
 		expect(model.allday).toHaveLength(2); // 覆盖日 + 命中日；命中 09-11 的不算
+	});
+});
+
+// ===== 月模型（横跨条行数上限） =====
+
+describe('buildMonthTimelineModel maxSpanLanes', () => {
+	/** 以 2026-09-07（周一）为始的一周 */
+	const mkWeek = (start: Date): Array<{ days: Array<{ date: Date }> }> => [
+		{ days: Array.from({ length: 7 }, (_, i) => ({ date: DAY(8, start.getDate() + i) })) },
+	];
+	/** day 精度跨日区间任务（🛫~📅 全周横跨条） */
+	const mkSpan = (n: number, from: number, to: number): GCTask => mkTask({
+		lineNumber: n,
+		content: `span${n}`,
+		startDate: DAY(8, 7 + from),
+		dueDate: DAY(8, 7 + to),
+		datePrecision: { startDate: 'day', dueDate: 'day' },
+	});
+
+	it('重叠横跨条超过上限：lane 钳到最后一行并标记叠加，spanLaneCount 不超上限', () => {
+		const tasks = [0, 1, 2, 3, 4].map((i) => mkSpan(i + 1, 0, 6)); // 5 条全周重叠
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate', 3);
+
+		const bars = model[0].spanBars;
+		expect(bars).toHaveLength(5);
+		expect(model[0].spanLaneCount).toBe(3);
+		// 全部条仍在渲染集内，lane 不越界，超出的两条叠加在最后一行
+		expect(bars.every((b) => b.lane <= 2)).toBe(true);
+		expect(bars.filter((b) => b.stackedIndex > 0)).toHaveLength(2);
+	});
+
+	it('不传上限（默认 Infinity）：行为与历史一致，全部各占一行不叠加', () => {
+		const tasks = [0, 1, 2, 3, 4].map((i) => mkSpan(i + 1, 0, 6));
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate');
+
+		expect(model[0].spanLaneCount).toBe(5);
+		expect(model[0].spanBars.every((b) => b.stackedIndex === 0)).toBe(true);
+	});
+
+	it('按簇分列：行数取最大簇，簇内未超上限不叠加', () => {
+		const tasks = [
+			mkSpan(1, 0, 2), // 簇1：周一~周三
+			mkSpan(2, 1, 3), // 簇1：周二~周四（与上一条重叠）
+			mkSpan(3, 4, 6), // 簇2：周五~周日
+		];
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate', 3);
+
+		const bars = model[0].spanBars;
+		expect(model[0].spanLaneCount).toBe(2);
+		expect(bars.every((b) => b.stackedIndex === 0)).toBe(true);
+		expect(bars.find((b) => b.task.content === 'span3')?.lane).toBe(0);
+	});
+
+	it('跨周横跨条钳制到本周列并标记延续，不影响行数上限', () => {
+		const tasks = [mkSpan(1, -3, 10), mkSpan(2, -5, 12)]; // 两周以上的长任务
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate', 1);
+
+		const bars = model[0].spanBars;
+		expect(bars).toHaveLength(2);
+		expect(bars.every((b) => b.startCol === 0 && b.endCol === 6)).toBe(true);
+		expect(bars.every((b) => b.continuesBefore && b.continuesAfter)).toBe(true);
+		// 上限 1：第一条占 lane 0，第二条叠加
+		expect(model[0].spanLaneCount).toBe(1);
+		expect(bars.filter((b) => b.stackedIndex > 0)).toHaveLength(1);
 	});
 });

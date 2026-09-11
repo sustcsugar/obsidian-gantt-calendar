@@ -722,6 +722,8 @@ export interface MonthWeekModel {
  * - <24h 定时任务（点/区间）→ 锚日格内（前向锚=开始日，后向锚=截止日）
  * - 单字段 day 精度 → dateField 命中日格内（维持现状）
  * @param weeks 月网格的周数组（含跨月补齐日），days 为该周 7 天
+ * @param maxSpanLanes 横跨条每周最大行数（月视图无滚动，行数须受控防撑高格子；
+ *   超出的条叠加到最后一行 stackedIndex，周视图全天行纵向不设上限是因其行高自适应可滚动）
  */
 export function buildMonthTimelineModel(
 	tasks: GCTask[],
@@ -729,6 +731,7 @@ export function buildMonthTimelineModel(
 	startField: DateFieldType,
 	endField: DateFieldType,
 	dateField: DateFieldType,
+	maxSpanLanes: number = Infinity,
 ): MonthWeekModel[] {
 	// 预分类：跨日区间任务与锚日格内任务
 	const spans: Array<{ task: GCTask; startDay: Date; endDay: Date; timeLabel?: string }> = [];
@@ -809,14 +812,15 @@ export function buildMonthTimelineModel(
 			});
 		}
 
-		// lane 布局（纵向堆行，不设上限，与周视图全天行同教训）
+		// lane 布局：月视图行高固定不可滚动，行数受 maxSpanLanes 上限，
+		// 超出的条叠加到最后一行（stackedIndex，渲染层加偏移与阴影提示）
 		const laneProxy = weekBars.map((bar) => ({
 			bar,
 			startMin: bar.startCol * MINUTES_PER_DAY,
 			endMin: (bar.endCol + 1) * MINUTES_PER_DAY,
 			lane: 0, laneCount: 1, stackedIndex: 0,
 		}));
-		assignLanes(laneProxy, Infinity);
+		assignLanes(laneProxy, Math.max(1, maxSpanLanes));
 		for (const p of laneProxy) {
 			p.bar.lane = p.lane;
 			p.bar.laneCount = p.laneCount;

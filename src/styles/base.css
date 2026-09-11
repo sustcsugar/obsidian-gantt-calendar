@@ -164,8 +164,9 @@
    ======================================== */
 .gc-view.gc-view--month {
 	display: grid;
-	/* 7行: 第1行星期标题(自动高度) + 6行日期(均分空间) */
-	grid-template-rows: auto repeat(6, 1fr);
+	/* 7行: 第1行星期标题(自动高度) + 6行日期(严格均分，minmax(0,·) 使内容不撑高行——
+	   月视图无滚动，格子内容超出时自行裁切，保证 6 周始终完整可见) */
+	grid-template-rows: auto repeat(6, minmax(0, 1fr));
 	/* 8列: 第1列周数(40px固定) + 7列星期(均分) */
 	grid-template-columns: 40px repeat(7, 1fr);
 	gap: 0;
@@ -299,9 +300,12 @@
 	}
 }
 
-/* 手机端：月视图容器允许纵向滚动（原 overflow:hidden 会裁掉底部行） */
+/* 手机端：月视图容器允许纵向滚动（原 overflow:hidden 会裁掉底部行）。
+   行改回内容尺寸（auto 轨道既有内容下限又均分剩余空间），配合格子 min-height 触发滚动；
+   桌面行模板 minmax(0,1fr) 严格均分不随内容增长，滚动永远不会触发 */
 @media (max-width: 520px) {
 	.gc-view.gc-view--month {
 		overflow-y: auto;
+		grid-template-rows: auto repeat(6, auto);
 	}
 }

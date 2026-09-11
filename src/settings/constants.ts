@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	dailyNotePath: 'DailyNotes', // 默认 daily note 文件夹路径
 	dailyNoteNameFormat: 'yyyy-MM-dd', // 默认文件名格式
 	followObsidianDailyNote: false, // 默认不跟随 Obsidian 日记设置
-	monthViewTaskLimit: 3, // 默认每天显示5个任务
+	monthViewTaskLimit: 3, // 月视图每格任务数上限，兼作每周横跨条行数上限
 	yearShowTaskCount: true,
 	yearHeatmapEnabled: true,
 	yearHeatmapPalette: 'blue',

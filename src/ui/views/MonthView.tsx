@@ -41,8 +41,9 @@ function findTaskById(tasks: GCTask[], taskId: string): GCTask | null {
 
 /**
  * React 月视图（时间线语义版）
- * 7 列 × N 周网格；跨日区间任务渲染为每周行顶部的横跨条（周内钳制 + 延续箭头 + 时刻标注），
- * 单日/定时任务在锚日格内显示卡片；拖放语义与周/日/侧栏画布对齐。
+ * 7 列 × N 周网格；跨日区间任务渲染为每周行顶部的横跨条（周内钳制 + 延续箭头 + 时刻标注，
+ * 行数受 taskLimit 上限防撑高格子），单日/定时任务在锚日格内显示卡片（同受 taskLimit）；
+ * 拖放语义与周/日/侧栏画布对齐。
  */
 export function MonthView(): JSX.Element {
 	const plugin = usePlugin();
@@ -88,6 +89,8 @@ export function MonthView(): JSX.Element {
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
+	// 任务数量上限：同时约束格内卡片数与每周横跨条行数（月视图无滚动，防撑高格子）
+	const taskLimit = plugin.settings.monthViewTaskLimit || 5;
 
 	// 月视图统一使用 timeline 变体：格内卡片与横跨条同一视觉语言
 	const config = useMemo(() => ({
@@ -125,12 +128,12 @@ export function MonthView(): JSX.Element {
 		);
 	}, [scoped, monthData, dateField, plugin.settings.recurringTaskDisplayLimit]);
 
-	// 月视图时间线模型：跨日横跨条 + 格内任务（锚日语义）
+	// 月视图时间线模型：跨日横跨条 + 格内任务（锚日语义）；横跨条行数受 taskLimit 上限
 	const monthModel = useMemo(() => {
 		if (!monthData) return [];
 		const combined = sortTasks([...scoped, ...virtualInstances], filter.sort).filter((t) => !t.cancelled);
-		return buildMonthTimelineModel(combined, monthData.weeks, startField, endField, dateField);
-	}, [scoped, virtualInstances, monthData, filter.sort, startField, endField, dateField]);
+		return buildMonthTimelineModel(combined, monthData.weeks, startField, endField, dateField, taskLimit);
+	}, [scoped, virtualInstances, monthData, filter.sort, startField, endField, dateField, taskLimit]);
 
 	// 任务全集（拖放源查找）
 	const dragLookupTasks = useMemo(() => tasks.filter((t) => !t.cancelled), [tasks]);
@@ -201,7 +204,6 @@ export function MonthView(): JSX.Element {
 	const weekdayLabels = startOnMonday ? labelsMonFirst : labelsSunFirst;
 
 	const monthFontSize = plugin.settings.monthLunarFontSize || 10;
-	const taskLimit = plugin.settings.monthViewTaskLimit || 5;
 
 	return (
 		<div className="gc-month-anim">
@@ -237,21 +239,23 @@ export function MonthView(): JSX.Element {
 						>
 							<span>W{week.weekNumber}</span>
 						</div>
-						{/* 横跨条带 overlay：与 7 个日格同行同区域，从日期头部下方开始，pointer-events 穿透到格 */}
+						{/* 横跨条带 overlay：与 7 个日格同行同区域，从日期头部下方开始，pointer-events 穿透到格。
+						    max-height 钳到周行内：行高固定（minmax(0,1fr)）时极端配置下裁切而非溢出到下一周 */}
 						<div
 							className={MonthViewClasses.elements.spanStrip}
-							style={{ gridRow: `${weekRow}`, gridColumn: '2 / -1', marginTop: `${SPAN_HEADER_OFFSET_PX}px`, height: `${stripH}px` }}
+							style={{ gridRow: `${weekRow}`, gridColumn: '2 / -1', marginTop: `${SPAN_HEADER_OFFSET_PX}px`, height: `${stripH}px`, maxHeight: `calc(100% - ${SPAN_HEADER_OFFSET_PX}px)` }}
 						>
 							{(weekModel?.spanBars ?? []).map((bar) => (
 								<div
 									key={`span-${taskKey(bar.task)}`}
 									className={`${MonthViewClasses.elements.spanBar}${bar.continuesBefore ? ` ${MonthViewClasses.modifiers.spanBarContinuesBefore}` : ''}${bar.continuesAfter ? ` ${MonthViewClasses.modifiers.spanBarContinuesAfter}` : ''}${bar.stackedIndex > 0 ? ` ${MonthViewClasses.modifiers.spanBarStacked}` : ''}`}
-									style={{
-										left: `calc(${(bar.startCol / 7) * 100}% + 1px)`,
-										width: `calc(${((bar.endCol - bar.startCol + 1) / 7) * 100}% - 2px)`,
-										top: `${bar.lane * SPAN_ROW_PX}px`,
-										zIndex: bar.stackedIndex > 0 ? 3 : 1,
-									}}
+										style={{
+											left: `calc(${(bar.startCol / 7) * 100}% + 1px)`,
+											width: `calc(${((bar.endCol - bar.startCol + 1) / 7) * 100}% - 2px)`,
+											// 超出行数上限叠加到最后一行：+3px 下沉偏移 + 阴影提示（与周视图全天条同视觉）
+											top: `${bar.lane * SPAN_ROW_PX + (bar.stackedIndex > 0 ? 3 : 0)}px`,
+											zIndex: bar.stackedIndex > 0 ? 3 : 1,
+										}}
 								>
 									<TaskCard
 										task={bar.task}

@@ -359,7 +359,7 @@
       "groupTitle": "Month View",
       "taskLimit": {
         "name": "Tasks Per Day",
-        "description": "Set the maximum number of tasks displayed per date card in month view (1-10)"
+        "description": "Maximum tasks shown per date cell in month view; also caps cross-day span bar rows per week (1-10)"
       },
       "lunarFontSize": {
         "name": "Month Lunar Font Size",
