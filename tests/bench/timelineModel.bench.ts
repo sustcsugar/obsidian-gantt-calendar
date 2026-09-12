@@ -7,7 +7,6 @@
  * 运行：npm run bench
  */
 
-/* eslint-disable no-console */
 import {
 	buildWeekTimelineModel,
 	buildDayTimelineModel,
@@ -42,7 +41,7 @@ function makeTasks(n: number, weekStart: Date): Task[] {
 
 		switch (shape) {
 			case 'point':
-				tasks.push({ ...base, dueDate: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 8 + (i % 12), (i % 4) * 15), datePrecision: { dueDate: 'time' } } as Task);
+				tasks.push({ ...base, dueDate: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 8 + (i % 12), (i % 4) * 15), datePrecision: { dueDate: 'time' } });
 				break;
 			case 'sameday': {
 				const h = 9 + (i % 8);
@@ -51,7 +50,7 @@ function makeTasks(n: number, weekStart: Date): Task[] {
 					startDate: new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0),
 					dueDate: new Date(day.getFullYear(), day.getMonth(), day.getDate(), h + 1 + (i % 3), 30),
 					datePrecision: { startDate: 'time', dueDate: 'time' },
-				} as Task);
+				});
 				break;
 			}
 			case 'overnight': {
@@ -60,7 +59,7 @@ function makeTasks(n: number, weekStart: Date): Task[] {
 					startDate: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 22, 0),
 					dueDate: new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1, 3, 0),
 					datePrecision: { startDate: 'time', dueDate: 'time' },
-				} as Task);
+				});
 				break;
 			}
 			case 'long':
@@ -69,7 +68,7 @@ function makeTasks(n: number, weekStart: Date): Task[] {
 					startDate: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 9, 0),
 					dueDate: new Date(day.getFullYear(), day.getMonth(), day.getDate() + 2 + (i % 5), 18, 0),
 					datePrecision: { startDate: 'time', dueDate: 'time' },
-				} as Task);
+				});
 				break;
 			case 'allday':
 				tasks.push({
@@ -77,7 +76,7 @@ function makeTasks(n: number, weekStart: Date): Task[] {
 					startDate: new Date(day.getFullYear(), day.getMonth(), day.getDate()),
 					dueDate: new Date(day.getFullYear(), day.getMonth(), day.getDate() + (i % 4)),
 					datePrecision: { startDate: 'day', dueDate: 'day' },
-				} as Task);
+				});
 				break;
 		}
 	}

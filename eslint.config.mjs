@@ -43,6 +43,33 @@ export default [
 		},
 	},
 	{
+		// 性能基准脚本(node 直跑),打印结果就是其用途;
+		// no-console 经 obsidianmd/rule-custom-message 包装,受保护规则
+		// 禁止行内 disable,只能在配置层为 bench 放行 console(保留 no-new-func 包装);
+		// 脚本仅由 npm run bench 在 Node 下单独打包运行,不进 main.js,
+		// 因此声明 process 全局供 no-undef 识别
+		files: ["tests/bench/**"],
+		languageOptions: {
+			globals: {
+				process: "readonly",
+			},
+		},
+		rules: {
+			"no-console": "off",
+			"obsidianmd/rule-custom-message": [
+				"error",
+				{
+					"no-new-func": {
+						messages: {
+							"The Function constructor is eval":
+								"Using the `Function` constructor is dangerous because it executes arbitrary code, similar to `eval()`",
+						},
+					},
+				},
+			],
+		},
+	},
+	{
 		// 测试文件:添加 Jest 全局变量
 		files: ["tests/**/*.ts", "src/**/__tests__/**/*.ts"],
 		languageOptions: {

@@ -1,11 +1,10 @@
 import { parseSingleTaskLine } from '../src/tasks/taskParser/main';
 import { serializeTask } from '../src/tasks/taskSerializer';
-import type { GCTask } from '../src/types';
 import type { TaskFormatType } from '../src/tasks/taskSerializerSymbols';
 import { App } from 'obsidian';
 
 // 模拟 App（serializeTask 需要读插件设置）
-const appWithPlugins = {} as any;
+const appWithPlugins = {} as App;
 
 function roundTrip(line: string, format: TaskFormatType = 'tasks'): string | null {
     const parsed = parseSingleTaskLine(line, 'notes/p.md', 'p.md', 1, [format]);
@@ -110,7 +109,6 @@ describe('taskSerializer round-trip', () => {
         const parsed = parseSingleTaskLine(line, 'notes/p.md', 'p.md', 1, ['tasks']);
         expect(parsed).not.toBeNull();
         const serialized = serializeTask(appWithPlugins, parsed!, {}, 'tasks');
-        console.log('serialized:', JSON.stringify(serialized));
         // 验证序列化包含预期字段
         expect(serialized).toContain('稳定任务');
         expect(serialized).toContain('⏫');

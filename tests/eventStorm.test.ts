@@ -3,7 +3,7 @@
  * 修改文件中单个任务时，只有该任务进入 updated，
  * 其余未变化任务不再产生 task:updated 事件。
  */
-import { TFile, type FileStats } from 'obsidian';
+import { TFile } from 'obsidian';
 import { MarkdownDataSource } from '../src/data-layer/MarkdownDataSource';
 import type { DataSourceChanges } from '../src/data-layer/types';
 import type { GCTask } from '../src/types';
