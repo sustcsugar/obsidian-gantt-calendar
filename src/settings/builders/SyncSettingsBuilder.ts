@@ -130,7 +130,6 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					.addSlider(slider => slider
 						.setLimits(0, 120, 5)
 						.setValue(syncConfig.syncInterval)
-						.setDynamicTooltip()
 						.onChange(async (value: number) => {
 							this.updateSyncConfig({ syncInterval: value });
 							await this.saveAndRefreshViews();
@@ -494,7 +493,7 @@ export class SyncSettingsBuilder extends BaseBuilder {
 					.setDesc(i18n.t('settings.sync.oauth.resetAuth.description'))
 					.addButton(button => button
 						.setButtonText(i18n.t('settings.sync.oauth.resetAuth.button'))
-						.setWarning()
+						.setDestructive()
 						.onClick(async () => {
 							this.updateSyncConfig({
 								api: {

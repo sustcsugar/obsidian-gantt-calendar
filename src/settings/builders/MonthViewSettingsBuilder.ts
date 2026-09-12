@@ -24,7 +24,6 @@ export class MonthViewSettingsBuilder extends BaseBuilder {
 					.addSlider(slider => slider
 						.setLimits(1, 10, 1)
 						.setValue(this.plugin.settings.monthViewTaskLimit)
-						.setDynamicTooltip()
 						.onChange((value) => {
 							void (async () => {
 								this.plugin.settings.monthViewTaskLimit = value;
@@ -40,7 +39,6 @@ export class MonthViewSettingsBuilder extends BaseBuilder {
 					.addSlider(slider => slider
 						.setLimits(8, 18, 1)
 						.setValue(this.plugin.settings.monthLunarFontSize)
-						.setDynamicTooltip()
 						.onChange((value) => {
 							void (async () => {
 								this.plugin.settings.monthLunarFontSize = value;

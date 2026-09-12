@@ -95,19 +95,12 @@ export default [
 		},
 	},
 	{
-		// 设置面板保留命令式 Builder 架构(重构决策);
-		// 声明式设置 API 迁移另行规划,该规则为受保护规则只能配置层关闭
+		// 设置面板兼容层:minAppVersion=1.11.0,display() 是 1.13 以下唯一的
+		// 渲染入口(官方文档认定的 fallback 用法),其内部对 this.display()
+		// 的重入引用会触发 no-deprecated 误报;该规则为受保护规则只能配置层关闭
 		files: ["src/settings/SettingTab.ts"],
 		rules: {
-			"obsidianmd/settings-tab/prefer-setting-definitions": "off",
-		},
-	},
-	{
-		// 旧版 localStorage 筛选偏好的一次性迁移入口(读取并清除旧键);
-		// 全库仅此文件允许触碰全局 localStorage,该规则为受保护规则只能配置层关闭
-		files: ["src/utils/legacyViewFilters.ts"],
-		rules: {
-			"no-restricted-globals": "off",
+			"@typescript-eslint/no-deprecated": "off",
 		},
 	},
 	{

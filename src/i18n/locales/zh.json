@@ -136,7 +136,12 @@
       "calendar": "日历",
       "views": "视图",
       "tasks": "任务",
-      "sync": "同步"
+      "sync": "同步",
+      "generalDesc": "语言、默认视图、时间格式、任务卡片点击行为与开发者模式",
+      "calendarDesc": "Daily Notes、日历视图、农历节日显示与节日颜色",
+      "viewsDesc": "日/周/月/年视图、甘特图与任务卡片显示",
+      "tasksDesc": "任务解析与全局过滤、创建默认值、任务状态",
+      "syncDesc": "飞书任务同步与推送过滤"
     },
     "general": {
       "groupTitle": "通用",

@@ -136,7 +136,12 @@
       "calendar": "Calendar",
       "views": "Views",
       "tasks": "Tasks",
-      "sync": "Sync"
+      "sync": "Sync",
+      "generalDesc": "Language, default view, time format, task card click action, developer mode",
+      "calendarDesc": "Daily Notes, calendar view, lunar & festivals, festival colors",
+      "viewsDesc": "Day/week/month/year views, Gantt chart, task card display",
+      "tasksDesc": "Task parsing & global filter, creation defaults, task statuses",
+      "syncDesc": "Feishu task sync and push filters"
     },
     "general": {
       "groupTitle": "General",

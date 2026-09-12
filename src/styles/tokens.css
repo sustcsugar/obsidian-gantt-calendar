@@ -150,12 +150,16 @@ Author: sugar
 	--gc-elev-4: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
 
-/* 系统开启"减少动态效果"：动效全部降级为瞬切 */
+/* 系统开启"减少动态效果"：动效全部降级为瞬切。
+   :root:root 双伪类把特异性提到 (0,2,0)，稳定压过全库动效声明
+   （均为单类选择器，最高 (0,1,x)），无需 !important */
 @media (prefers-reduced-motion: reduce) {
-	* {
-		transition-duration: 0.01ms !important;
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
+	:root:root *,
+	:root:root *::before,
+	:root:root *::after {
+		transition-duration: 0.01ms;
+		animation-duration: 0.01ms;
+		animation-iteration-count: 1;
 	}
 }
 

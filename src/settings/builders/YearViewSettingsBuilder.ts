@@ -37,7 +37,6 @@ export class YearViewSettingsBuilder extends BaseBuilder {
 					.addSlider(slider => slider
 						.setLimits(8, 18, 1)
 						.setValue(this.plugin.settings.yearLunarFontSize)
-						.setDynamicTooltip()
 						.onChange((value) => {
 							this.plugin.settings.yearLunarFontSize = value;
 							void this.saveAndRefreshViews();
