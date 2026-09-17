@@ -28,7 +28,7 @@ REFACTOR_COMMANDS.md
 ref
 
 
-
+*.log
 
 .claude/settings.local.json
 .*buddy/
