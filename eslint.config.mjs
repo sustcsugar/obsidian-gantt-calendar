@@ -95,15 +95,6 @@ export default [
 		},
 	},
 	{
-		// 设置面板兼容层:minAppVersion=1.11.0,display() 是 1.13 以下唯一的
-		// 渲染入口(官方文档认定的 fallback 用法),其内部对 this.display()
-		// 的重入引用会触发 no-deprecated 误报;该规则为受保护规则只能配置层关闭
-		files: ["src/settings/SettingTab.ts"],
-		rules: {
-			"@typescript-eslint/no-deprecated": "off",
-		},
-	},
-	{
 		// 禁用 no-explicit-any 的自动修复(any→unknown 会破坏构建)
 		rules: {
 			"@typescript-eslint/no-explicit-any": "warn",
