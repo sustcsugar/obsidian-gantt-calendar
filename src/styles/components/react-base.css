@@ -105,9 +105,10 @@ button.gc-dropdown-menu__item:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--background-modifier-cover) 55%, transparent);
-    backdrop-filter: blur(4px);
-    animation: gc-modal-fade-in 0.15s ease;
+    /* 对齐 Obsidian 官方 .modal-bg 做法：不用 backdrop-filter（全屏模糊在
+       Electron/软件合成下是弹窗卡顿的主因，且遮罩底下工具栏自身也是
+       backdrop-filter，pass 叠加）；进场动画由 Modal.tsx 的 motion 统一驱动 */
+    background: color-mix(in srgb, var(--background-modifier-cover) 80%, transparent);
 }
 
 .gc-modal__panel {
@@ -119,8 +120,8 @@ button.gc-dropdown-menu__item:hover {
     border-radius: 14px;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
-    animation: gc-modal-pop-in 0.18s ease;
+    /* 48px→24px：大模糊半径阴影在 scale 动画期间反复重栅格化 */
+    box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3);
 }
 
 .gc-modal__header {
@@ -162,15 +163,9 @@ button.gc-dropdown-menu__item:hover {
     overflow-y: auto;
 }
 
-@keyframes gc-modal-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes gc-modal-pop-in {
-    from { opacity: 0; transform: scale(0.96) translateY(6px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
+/* gc-modal-fade-in / gc-modal-pop-in 已删除：与 Modal.tsx 中 motion 的
+   overlayVariants/modalVariants 对同一属性（opacity/transform）双重驱动，
+   属组件迁移到 React 后的遗留冗余 */
 
 /* --- React 右键菜单 (gc-context-menu) --- */
 .gc-context-menu {

@@ -29,11 +29,18 @@ export const panelVariants: Variants = {
 	exit: { opacity: 0, scale: 0.97, y: -2 },
 };
 
-/** 模态框预设：更大位移、更长时长 */
+/**
+ * 模态框预设：纯 opacity 淡入
+ * 注意：不要给面板加 scale/y 等 transform 动画——transform 缩放会要求
+ * Chromium 在动画期间对面板图层（文字+边框+阴影）逐帧重栅格化，在
+ * GPU 合成能力弱的机器（Electron 混合显卡/驱动黑名单/关闭硬件加速）
+ * 上每帧 10-30ms，是弹窗"一顿一顿"的直接来源；opacity 是纯合成属性，
+ * 零重栅格化。对齐官方 Modal 的做法（官方连 opacity 动画都没有）。
+ */
 export const modalVariants: Variants = {
-	initial: { opacity: 0, scale: 0.94, y: 8 },
-	animate: { opacity: 1, scale: 1, y: 0 },
-	exit: { opacity: 0, scale: 0.96, y: 4 },
+	initial: { opacity: 0 },
+	animate: { opacity: 1 },
+	exit: { opacity: 0 },
 };
 
 /** 遮罩淡入淡出 */

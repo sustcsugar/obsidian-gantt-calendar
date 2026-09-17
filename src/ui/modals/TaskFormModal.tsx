@@ -179,10 +179,12 @@ export function TaskFormModal({
 	const [tagsChanged, setTagsChanged] = useState(false);
 
 	// 创建模式自动聚焦描述框
+	// rAF 等一帧让弹窗先进入 DOM 并开始进场动画，随后立即聚焦
+	// （原 100ms 定时器造成“弹出后还要等一下才能打字”的感知延迟）
 	useEffect(() => {
 		if (mode === 'create') {
-			const t = window.setTimeout(() => descriptionRef.current?.focus(), 100);
-			return () => window.clearTimeout(t);
+			const raf = window.requestAnimationFrame(() => descriptionRef.current?.focus());
+			return () => window.cancelAnimationFrame(raf);
 		}
 	}, [mode]);
 

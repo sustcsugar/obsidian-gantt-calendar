@@ -70,16 +70,14 @@
 .gc-toolbar__view-toggle-btn {
 	padding: 6px 12px;
 	border: 1px solid var(--background-modifier-border);
-	/* 玻璃效果 - 半透明背景 */
-	background-color: color-mix(in srgb, var(--background-primary) 25%, transparent);
+	/* 半透明底色（无 backdrop-filter：6 个按钮各自做模糊对视觉贡献极小，
+	   却让合成器多 6 个滤镜 pass，弹窗遮罩/滚动场景全部放大） */
+	background-color: color-mix(in srgb, var(--background-primary) 35%, transparent);
 	border-radius: 6px;
 	color: var(--text-normal);
 	cursor: pointer;
 	transition: all 0.15s ease;
 	font-size: var(--gc-font-sm);
-	/* 按钮玻璃效果 */
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
@@ -87,8 +85,6 @@
 	background-color: var(--interactive-accent);
 	border-color: var(--interactive-accent);
 	color: white;
-	/* 选中时关闭模糊以提高对比度 */
-	backdrop-filter: none;
 }
 
 .gc-toolbar__view-toggle-btn:hover {
@@ -168,8 +164,9 @@
 .gc-toolbar__btn {
 	padding: 2px 6px;
 	border: 1px solid var(--background-modifier-border);
-	/* 玻璃效果 */
-	background-color: color-mix(in srgb, var(--background-primary) 20%, transparent);
+	/* 半透明底色；不带 backdrop-filter（现行 DOM 中本类的按钮全部位于
+	   .gc-toolbar__nav-buttons 内，该作用域本就覆盖为 none） */
+	background-color: color-mix(in srgb, var(--background-primary) 30%, transparent);
 	border-radius: var(--gc-radius-sm);
 	cursor: pointer;
 	font-size: var(--gc-font-xs);
@@ -181,8 +178,6 @@
 		transform var(--gc-dur-fast) var(--gc-ease-out);
 	min-width: 24px;
 	text-align: center;
-	backdrop-filter: blur(6px);
-	-webkit-backdrop-filter: blur(6px);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
@@ -208,7 +203,6 @@
 	font-size: var(--gc-font-sm);
 	min-width: 20px;
 	text-align: center;
-	backdrop-filter: none;
 	box-shadow: none;
 	display: flex;
 	align-items: center;
