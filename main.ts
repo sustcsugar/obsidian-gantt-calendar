@@ -237,7 +237,10 @@ export default class GanttCalendarPlugin extends Plugin {
 					this.settings.enabledTaskFormats
 				).then(async () => {
 					Logger.stats('Main', 'Task cache initialized');
-					this.refreshCalendarViews();
+					// P1：此处不再 refreshCalendarViews()——数据推送已由
+					// TaskStore.notifyListeners()（onUpdate）与视图 whenReady 订阅
+					// 承担；旧实现经 bumpSettings()++settingsVersion 触发
+					// AnimatePresence 整视图卸载重挂，数据刚填充即闪烁重排。
 					await this.loadLastSyncTime();
 				}).catch(error => {
 					Logger.error('Main', 'Failed to initialize task cache:', error);
