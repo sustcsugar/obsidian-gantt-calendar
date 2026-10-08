@@ -8,6 +8,7 @@ import { mountReact } from './ui/reactBridge';
 import { SidebarApp } from './ui/sidebar/SidebarApp';
 import { TooltipProvider } from './ui/components/TooltipProvider';
 import { ModalProvider } from './ui/components/ModalProvider';
+import { Logger } from './utils/logger';
 
 export const GC_SIDEBAR_VIEW_ID = 'gantt-calendar-sidebar-view';
 
@@ -40,18 +41,13 @@ export class GCSidebarView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
-		// 等待任务缓存准备完成
-		if (this.plugin?.taskCache?.whenReady) {
-			await this.plugin.taskCache.whenReady();
-		}
-
-		// 初始化 store：时区感知的"今天" + 当前任务（SetTasks 触发幽灵标签剔除）
+		// P0 启动解耦：onOpen 不再 await 全库首扫（与 GCMainView 同源修复，
+		// 打断 layout 恢复 ↔ onOpen ↔ onLayoutReady 的循环等待），先挂骨架。
 		useCalendarStore.setState({
 			currentDate: getTodayInTimezone(),
 		});
-		useCalendarStore.getState().setTasks(this.plugin.taskCache?.getAllTasks() || []);
 
-		// 挂载 React 应用（需 TooltipProvider/ModalProvider 包裹，TaskCard 依赖其 context）
+		// 骨架先行：以空任务集挂载 React，布局恢复不再被本视图拖住
 		if (!this.unmountReact) {
 			this.unmountReact = mountReact(
 				this.contentEl,
@@ -67,7 +63,7 @@ export class GCSidebarView extends ItemView {
 			);
 		}
 
-		// 订阅缓存更新事件 → 通知 store（视图自动重渲染）
+		// 订阅先行：保证首扫完成的通知不早于订阅而丢失
 		this.cacheUpdateListener = (filePath?: string) => {
 			if (this.containerEl.isConnected) {
 				useCalendarStore.getState().notifyTasksUpdated(
@@ -77,6 +73,21 @@ export class GCSidebarView extends ItemView {
 			}
 		};
 		this.plugin?.taskCache?.onUpdate(this.cacheUpdateListener);
+
+		// 数据就绪后推入（不阻塞 onOpen）；失败兜底：空任务集解除骨架（P0''）
+		const ready = this.plugin?.taskCache?.whenReady?.();
+		if (ready) {
+			void ready
+				.then(() => {
+					useCalendarStore.getState().setTasks(
+						this.plugin.taskCache?.getAllTasks() || []
+					);
+				})
+				.catch((error: unknown) => {
+					Logger.error('GCSidebarView', 'Task cache failed to initialize:', error);
+					useCalendarStore.getState().setTasks([]);
+				});
+		}
 	}
 
 	/**

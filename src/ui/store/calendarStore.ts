@@ -26,6 +26,8 @@ interface CalendarStoreState {
 	viewType: CalendarViewType;
 	currentDate: Date;
 	tasks: GCTask[];
+	/** 首扫是否已推入任务（whenReady 或事件回流任一路径）；false 时视图渲染骨架 */
+	tasksReady: boolean;
 	changedFilePath?: string;
 	updateSeq: number;
 	/** 设置变更版本号：刷新设置时自增，用于触发 React 视图整体重挂载 */
@@ -127,6 +129,7 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	viewType: 'year',
 	currentDate: new Date(),
 	tasks: [],
+	tasksReady: false,
 	changedFilePath: undefined,
 	updateSeq: 0,
 	viewFilters: buildInitialFilters(),
@@ -144,6 +147,7 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 			// 任务集刷新时同步剔除失效标签（幽灵标签隐形筛选的根治）
 			return {
 				tasks,
+				tasksReady: true,
 				changedFilePath: filePath,
 				updateSeq: s.updateSeq + 1,
 				viewFilters: pruneTagFilters(s.viewFilters, tasks),
@@ -152,6 +156,7 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	setTasks: (tasks) =>
 		set((s) => ({
 			tasks,
+			tasksReady: true,
 			viewFilters: pruneTagFilters(s.viewFilters, tasks),
 		})),
 	bumpSettings: () => set((s) => ({ settingsVersion: s.settingsVersion + 1 })),
@@ -193,3 +198,4 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
  */
 export const selectViewFilter = (state: CalendarStoreState, scope: ViewScope): ViewFilterState =>
 	state.viewFilters[scope] || defaultFilter();
+

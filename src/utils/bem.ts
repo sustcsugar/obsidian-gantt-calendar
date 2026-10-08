@@ -38,6 +38,9 @@ export const BLOCKS = {
 	/** 工具栏 */
 	TOOLBAR: 'toolbar',
 
+	/** 启动期任务加载骨架（P0 骨架先行） */
+	CALENDAR_SKELETON: 'calendar-skeleton',
+
 	/** 任务卡片 */
 	TASK_CARD: 'task-card',
 	/** 任务工具提示 */
@@ -365,6 +368,17 @@ export const ViewClasses = {
 		day: bem(BLOCKS.VIEW, undefined, 'day'),
 		task: bem(BLOCKS.VIEW, undefined, 'task'),
 		gantt: bem(BLOCKS.VIEW, undefined, 'gantt'),
+	},
+};
+
+/**
+ * 启动期任务加载骨架类名（P0：tasksReady=false 时内容区占位）
+ */
+export const CalendarSkeletonClasses = {
+	block: bem(BLOCKS.CALENDAR_SKELETON),
+
+	elements: {
+		bar: bem(BLOCKS.CALENDAR_SKELETON, 'bar'),
 	},
 };
 
@@ -1212,3 +1226,4 @@ export function setCssProps(el: HTMLElement, props: Record<string, string | numb
 		el.style.setProperty(toKebabCase(key), String(value));
 	}
 }
+

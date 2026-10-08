@@ -7,6 +7,7 @@ import { useCalendarStore } from './ui/store/calendarStore';
 import { PluginContext } from './ui/pluginContext';
 import { mountReact } from './ui/reactBridge';
 import { App } from './ui/App';
+import { Logger } from './utils/logger';
 
 export const GC_VIEW_ID = 'gantt-calendar-view';
 
@@ -41,20 +42,16 @@ export class GCMainView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
-		// 等待任务缓存准备完成
-		if (this.plugin?.taskCache?.whenReady) {
-			await this.plugin.taskCache.whenReady();
-		}
-
-		// 初始化 store：使用设置中的默认视图 + 时区感知的"今天"；
-		// 任务经 setTasks 写入以便触发幽灵标签剔除（见 calendarStore.pruneTagFilters）
+		// P0 启动解耦：onOpen 不再 await 全库首扫。旧行为与「首扫被钉在
+		// onLayoutReady 之后」互相等待成环，会把 ~1s 的扫描放大成 ~10s 的
+		// Load layout 卡顿（docs/report-startup-layout-block-2026-09-23.md §4）。
+		// 现在先挂骨架（tasksReady=false）立即返回，数据就绪后由 store 驱动接管。
 		useCalendarStore.setState({
 			viewType: this.plugin.settings.defaultView || 'year',
 			currentDate: getTodayInTimezone(),
 		});
-		useCalendarStore.getState().setTasks(this.plugin.taskCache?.getAllTasks() || []);
 
-		// 挂载 React 应用
+		// 骨架先行：以空任务集挂载 React，布局恢复不再被本视图拖住
 		if (!this.unmountReact) {
 			this.unmountReact = mountReact(
 				this.contentEl,
@@ -66,7 +63,7 @@ export class GCMainView extends ItemView {
 			);
 		}
 
-		// 订阅缓存更新事件 → 通知 store（视图自动重渲染）
+		// 订阅先行：保证首扫完成的通知不早于订阅而丢失
 		this.cacheUpdateListener = (filePath?: string) => {
 			if (this.containerEl.isConnected) {
 				useCalendarStore.getState().notifyTasksUpdated(
@@ -76,6 +73,22 @@ export class GCMainView extends ItemView {
 			}
 		};
 		this.plugin?.taskCache?.onUpdate(this.cacheUpdateListener);
+
+		// 数据就绪后推入（不阻塞 onOpen）；失败兜底：空任务集解除骨架，
+		// 避免初始化失败时永久停留在加载态（P0''）
+		const ready = this.plugin?.taskCache?.whenReady?.();
+		if (ready) {
+			void ready
+				.then(() => {
+					useCalendarStore.getState().setTasks(
+						this.plugin.taskCache?.getAllTasks() || []
+					);
+				})
+				.catch((error: unknown) => {
+					Logger.error('GCMainView', 'Task cache failed to initialize:', error);
+					useCalendarStore.getState().setTasks([]);
+				});
+		}
 	}
 
 	/**

@@ -4,6 +4,8 @@ import { i18n } from '../../i18n/i18n';
 import { Icon } from '../components/Icon';
 import { TaskListPanel } from './TaskListPanel';
 import { DailyTimelinePanel } from './DailyTimelinePanel';
+import { CalendarSkeleton } from '../components/CalendarSkeleton';
+import { useCalendarStore } from '../store/calendarStore';
 
 type SidebarTab = 'taskList' | 'dailyTimeline';
 
@@ -13,6 +15,7 @@ type SidebarTab = 'taskList' | 'dailyTimeline';
  */
 export function SidebarApp(): JSX.Element {
 	const [tab, setTab] = useState<SidebarTab>('dailyTimeline');
+	const tasksReady = useCalendarStore((s) => s.tasksReady);
 
 	const switchTab = (next: SidebarTab) => {
 		if (tab === next) return;
@@ -44,12 +47,18 @@ export function SidebarApp(): JSX.Element {
 				</div>
 			</div>
 			<div className={SidebarClasses.elements.content}>
-				<div style={{ display: tab === 'taskList' ? undefined : 'none' }}>
-					<TaskListPanel />
-				</div>
-				<div style={{ display: tab === 'dailyTimeline' ? undefined : 'none' }}>
-					<DailyTimelinePanel />
-				</div>
+				{tasksReady ? (
+					<>
+						<div style={{ display: tab === 'taskList' ? undefined : 'none' }}>
+							<TaskListPanel />
+						</div>
+						<div style={{ display: tab === 'dailyTimeline' ? undefined : 'none' }}>
+							<DailyTimelinePanel />
+						</div>
+					</>
+				) : (
+					<CalendarSkeleton />
+				)}
 			</div>
 		</div>
 	);

@@ -45,6 +45,8 @@ export class TaskStore {
 	private isInitializing: boolean = false;
 	/** 初始化完成门闩：whenReady() 等待此 Promise（initPromise 实现） */
 	private initResolve: (() => void) | null = null;
+	/** 失败兜底：初始化抛错时 reject 同一门闩，避免 whenReady() 永久挂起（P0''） */
+	private initReject: ((reason?: unknown) => void) | null = null;
 	private initPromise: Promise<void> | null = null;
 	private updateListeners: Set<TaskStoreUpdateListener> = new Set();
 
@@ -129,8 +131,9 @@ export class TaskStore {
 
 	/** 创建新的初始化门闩（constructor 与每次重新 initialize 时调用） */
 	private createInitGate(): void {
-		this.initPromise = new Promise<void>((resolve) => {
+		this.initPromise = new Promise<void>((resolve, reject) => {
 			this.initResolve = resolve;
+			this.initReject = reject;
 		});
 	}
 
@@ -150,6 +153,12 @@ export class TaskStore {
 		this.isInitializing = true;
 		try {
 			await this.initializeInternal(globalTaskFilter, enabledFormats, retryCount);
+		} catch (error) {
+			// 失败也必须结算门闩：否则 whenReady() 的等待者（视图骨架）永久挂起
+			this.initResolve = null;
+			this.initReject?.(error);
+			this.initReject = null;
+			throw error;
 		} finally {
 			this.isInitializing = false;
 		}
@@ -418,3 +427,4 @@ export class TaskStore {
 		}
 	}
 }
+

@@ -2,6 +2,7 @@ import { type JSX } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCalendarStore } from './store/calendarStore';
 import { ToolbarBar } from './components/Toolbar';
+import { MobileNavDock } from './components/MobileNavDock';
 import { TooltipProvider } from './components/TooltipProvider';
 import { ModalProvider } from './components/ModalProvider';
 import { YearView } from './views/YearView';
@@ -10,6 +11,7 @@ import { WeekView } from './views/WeekView';
 import { DayView } from './views/DayView';
 import { TaskView } from './views/TaskView';
 import { GanttView } from './views/GanttView';
+import { CalendarSkeleton } from './components/CalendarSkeleton';
 import type { CalendarViewType } from '../types';
 import { MOTION, easeOutTransition } from './motion';
 import { useEffect } from 'react';
@@ -43,8 +45,14 @@ export function App(): JSX.Element {
 		return () => document.body.classList.remove('gc-is-phone');
 	}, []);
 
-	const viewType = useCalendarStore((s) => s.viewType);
+	const viewTypeRaw = useCalendarStore((s) => s.viewType);
 	const settingsVersion = useCalendarStore((s) => s.settingsVersion);
+	const tasksReady = useCalendarStore((s) => s.tasksReady);
+
+	// 手机端形态：工具栏取消（改 MobileNavDock 悬浮菜单），且不提供甘特图
+	// （触屏拖拽/列宽操作不可用；若缓存视图为甘特则回退周视图）
+	const isPhone = isPhoneNow();
+	const viewType: CalendarViewType = isPhone && viewTypeRaw === 'gantt' ? 'week' : viewTypeRaw;
 
 	const isGantt = viewType === 'gantt';
 	const isWaterfall = viewType === 'day' || viewType === 'week' || viewType === 'task' || viewType === 'year';
@@ -56,7 +64,7 @@ export function App(): JSX.Element {
 					className={`gantt-calendar-app${isGantt ? ' gantt-root' : ''}`}
 					style={{ overflow: isWaterfall ? 'auto' : undefined, height: '100%' }}
 				>
-					<ToolbarBar />
+					{isPhone ? <MobileNavDock /> : <ToolbarBar />}
 					<AnimatePresence mode="wait" initial={false}>
 						{!isGantt ? (
 							<motion.div
@@ -68,14 +76,14 @@ export function App(): JSX.Element {
 								exit={{ opacity: 0 }}
 								transition={easeOutTransition(MOTION.dur.normal)}
 							>
-								{renderView(viewType)}
+								{tasksReady ? renderView(viewType) : <CalendarSkeleton />}
 							</motion.div>
 						) : (
 							<div
 								key={`gantt-${settingsVersion}`}
 								className="calendar-content gantt-mode"
 							>
-								<GanttView />
+								{tasksReady ? <GanttView /> : <CalendarSkeleton />}
 							</div>
 						)}
 					</AnimatePresence>
