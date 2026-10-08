@@ -95,9 +95,20 @@ export default [
 		},
 	},
 	{
+		// jsdom 渲染测试：运行在 jsdom 而非 Obsidian 环境中，
+		// 没有 createDiv/createEl 等 Obsidian 全局 DOM 助手，也不涉及 popout
+		// window（globalThis 仅用于设置 React act 标志），因此在配置层放行这两条规则
+		files: ["tests/app.skeleton.test.ts", "tests/dayViewNarrowLayout.test.ts"],
+		rules: {
+			"obsidianmd/prefer-create-el": "off",
+			"obsidianmd/no-global-this": "off",
+		},
+	},
+	{
 		// 禁用 no-explicit-any 的自动修复(any→unknown 会破坏构建)
 		rules: {
 			"@typescript-eslint/no-explicit-any": "warn",
 		},
 	},
 ];
+

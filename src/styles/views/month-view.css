@@ -197,19 +197,24 @@
 	}
 }
 
-/* 手机（仅设备信号 body.gc-is-phone，桌面窄窗口不降级信息）：格内任务降级为状态色点 */
-body.gc-is-phone .gc-month-view__task-item {
+/* 手机（仅设备信号 body.gc-is-phone，桌面窄窗口不降级信息）：格内任务降级为状态色点。
+   修复：格内任务现渲染为 TaskCard（gc-month-view__task-item 已不在 DOM），
+   以 .gc-month-view__tasks 容器作用域，避免波及跨日横跨条（其自身另有 520px 色带降级）；
+   色点颜色取 TaskCard 内联的 --task-bg-color（状态色） */
+body.gc-is-phone .gc-month-view__tasks .gc-task-card {
 	height: 5px;
 	min-height: 5px;
 	padding: 0;
 	margin: 1px 0 2px;
+	border: none;
 	border-radius: 2px;
+	box-shadow: none;
 	background-color: var(--task-bg-color, var(--interactive-accent));
 	overflow: hidden;
 	font-size: 0;
 }
 
-body.gc-is-phone .gc-month-view__task-item > * {
+body.gc-is-phone .gc-month-view__tasks .gc-task-card > * {
 	display: none;
 }
 

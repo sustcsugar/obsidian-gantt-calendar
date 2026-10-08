@@ -7,7 +7,7 @@ import { DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../../util
 import { DayViewConfig } from '../../components/TaskCard';
 import { usePlugin, useApp } from '../pluginContext';
 import { useCalendarStore, selectViewFilter } from '../store/calendarStore';
-import { isPhoneNow } from '../utils/platform';
+import { isPhoneNow, useIsNarrow } from '../utils/platform';
 import { applyStatusFilter, applyTagFilter, applySort } from '../utils/taskFilters';
 import { TaskCard } from '../components/TaskCard';
 import { Icon } from '../components/Icon';
@@ -47,8 +47,9 @@ export function DayView(): JSX.Element {
 	const handleCardRefresh = useCallback(() => refreshTasks(), [refreshTasks]);
 
 	const enableDailyNote = plugin.settings.enableDailyNote !== false;
-	// 手机端强制上下分屏（左右分屏在窄屏两侧各 ~160px 不可用）
-	const layout = isPhoneNow() ? 'vertical' : (plugin.settings.dayViewLayout || 'horizontal');
+	// 手机端与桌面窄窗口都强制上下分屏：这是空间适配，左右分屏在两侧各 ~160px 时不可用
+	const isNarrow = useIsNarrow();
+	const layout = isPhoneNow() || isNarrow ? 'vertical' : (plugin.settings.dayViewLayout || 'horizontal');
 	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
@@ -285,3 +286,4 @@ export function DayView(): JSX.Element {
 		</div>
 	);
 }
+

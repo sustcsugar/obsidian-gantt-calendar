@@ -323,3 +323,10 @@
 		width: 100%;
 	}
 }
+
+/* 移动端原生 datetime-local 输入（DateTimePicker USE_NATIVE_PICKER 分支）：
+   16px 字号规避 iOS WebView 聚焦自动放大；加高触控目标 */
+.gc-date-time-picker .gc-date-time-picker__input--native {
+	font-size: 16px;
+	min-height: 32px;
+}

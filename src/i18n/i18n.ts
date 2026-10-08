@@ -36,9 +36,16 @@ function resolve(obj: TranslationMap, path: string): unknown {
 
 function interpolate(template: string, params?: Record<string, unknown>): string {
 	if (!params) return template;
-	return template.replace(/\{\{(\w+)\}\}/g, (_match: string, key: string) =>
-		params[key] != null ? String(params[key]) : `{{${key}}}`
-	);
+	return template.replace(/\{\{(\w+)\}\}/g, (_match: string, key: string) => {
+		const value = params[key];
+		if (value == null) return `{{${key}}}`;
+		if (typeof value === 'string') return value;
+		// 插值仅支持原始值；对象等其余类型 JSON 序列化兜底（直接 String() 是 "[object Object]"）
+		if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+			return String(value);
+		}
+		return JSON.stringify(value) ?? '';
+	});
 }
 
 export async function initializeI18n(language?: string): Promise<void> {

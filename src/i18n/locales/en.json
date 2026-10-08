@@ -1078,6 +1078,10 @@
     "more": {
       "ariaLabel": "More actions"
     },
+    "navDock": {
+      "ariaLabel": "Calendar menu",
+      "viewsTitle": "Switch view"
+    },
     "settingsButton": {
       "ariaLabel": "Plugin Settings"
     },

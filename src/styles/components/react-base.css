@@ -163,6 +163,24 @@ button.gc-dropdown-menu__item:hover {
     overflow-y: auto;
 }
 
+/* 软键盘补偿（Modal.tsx 监听 visualViewport 写入 --gc-kb-vvh）：
+   键盘弹出时改顶部对齐，面板高度钳到可视视口内，
+   表单底部（保存按钮等）不再被键盘遮挡，内部滚动可达 */
+.gc-modal__overlay.gc-kb-open {
+    align-items: flex-start;
+    padding-top: 10px;
+}
+
+.gc-modal__overlay.gc-kb-open .gc-modal__panel {
+    max-height: var(--gc-kb-vvh, 85vh);
+}
+
+/* 键盘弹出时放开编辑表单内层滚动钳制（65vh 会超出被压缩的面板），
+   让表单在面板内滚动、按钮行保持在面板底部可见 */
+.gc-modal__overlay.gc-kb-open .gc-edit-task-modal__scroll-container {
+    max-height: none;
+}
+
 /* gc-modal-fade-in / gc-modal-pop-in 已删除：与 Modal.tsx 中 motion 的
    overlayVariants/modalVariants 对同一属性（opacity/transform）双重驱动，
    属组件迁移到 React 后的遗留冗余 */
@@ -315,4 +333,86 @@ button.gc-context-menu__item--disabled {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+/* ===== 手机端悬浮导航（MobileNavDock：FAB + 底部视图菜单） ===== */
+.gc-nav-dock__fab {
+	position: fixed;
+	right: max(16px, env(safe-area-inset-right));
+	bottom: calc(16px + env(safe-area-inset-bottom));
+	z-index: calc(var(--layer-popover, 100) - 1);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	padding: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	cursor: pointer;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+	-webkit-tap-highlight-color: transparent;
+}
+
+.gc-nav-dock__fab svg {
+	width: 24px;
+	height: 24px;
+}
+
+.gc-nav-dock__fab:active {
+	transform: scale(0.94);
+}
+
+/* 面板头部：当前日期上下文（手机无工具栏标题，此处置顶显示） */
+.gc-nav-dock__sheet-header {
+	padding: 2px 16px 8px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+/* ============================================================
+ * 启动期任务加载骨架（P0：tasksReady=false 时的内容区占位）
+ * ============================================================ */
+.gc-calendar-skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	width: min(420px, 60%);
+	margin: 15% auto 0;
+}
+
+.gc-calendar-skeleton__bar {
+	height: 38px;
+	border-radius: var(--radius-m, 8px);
+	background: var(--background-modifier-hover, rgba(128, 128, 128, 0.12));
+	animation: gc-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.gc-calendar-skeleton__bar:nth-child(2) {
+	width: 86%;
+	animation-delay: 0.12s;
+}
+
+.gc-calendar-skeleton__bar:nth-child(3) {
+	width: 64%;
+	animation-delay: 0.24s;
+}
+
+@keyframes gc-skeleton-pulse {
+	0%,
+	100% {
+		opacity: 0.55;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.gc-calendar-skeleton__bar {
+		animation: none;
+	}
 }

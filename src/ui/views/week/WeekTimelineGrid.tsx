@@ -609,7 +609,7 @@ function DayColumn({
 	const ghostRef = useRef<HTMLDivElement | null>(null);
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
 	/** 拖拽选区创建状态（mousedown 于空白处时激活；moved 以像素位移判定，防点击抖动） */
-	const createRef = useRef<{ anchorMin: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
+	const createRef = useRef<{ anchorMin: number; anchorX: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
 	/** pointercancel 清理经 ref 桥接，避免与 finishCreate 形成循环推断 */
 	const cancelCreateRef = useRef<() => void>(() => {});
 
@@ -695,13 +695,20 @@ function DayColumn({
 		if (!createRef.current) hideGhost();
 	}, [hideGhost]);
 
-	const finishCreate = useCallback((): void => {
+	const finishCreate = useCallback((e?: PointerEvent): void => {
 		const create = createRef.current;
 		createRef.current = null;
 		document.removeEventListener('pointerup', finishCreate);
 		document.removeEventListener('pointercancel', cancelCreateRef.current);
 		hideGhost();
 		if (!create) return;
+		// 触屏横滑翻页与快速创建互斥：横向位移达 swipe 阈值（|dx|>40 且 |dx|>1.5|dy|，
+		// 与 handleGridPointerUp 判定同源）时视为翻页手势，静默放弃创建，不弹窗
+		if (e) {
+			const dx = e.clientX - create.anchorX;
+			const dy = e.clientY - create.anchorY;
+			if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) return;
+		}
 		if (create.moved && Math.abs(create.lastMin - create.anchorMin) >= MIN_DURATION_MIN) {
 			const start = Math.min(create.anchorMin, create.lastMin);
 			const end = Math.max(create.anchorMin, create.lastMin);
@@ -733,7 +740,7 @@ function DayColumn({
 		const anchorMin = minutesFromEvent(e.clientY);
 		const endMin = quickCreateEnd(anchorMin);
 		if (endMin <= anchorMin) return; // 光标处即下一个块起点：无空隙，不启动创建手势
-		createRef.current = { anchorMin, anchorY: e.clientY, lastMin: anchorMin, moved: false };
+		createRef.current = { anchorMin, anchorX: e.clientX, anchorY: e.clientY, lastMin: anchorMin, moved: false };
 		// 按下瞬间维持 hover 的可用空隙块（仅切换激活样式），像素级拖动后才变为选区
 		showGhost(anchorMin, endMin, true);
 		// 防御：上一手势未正常收尾时先解绑，避免 finishCreate 重复触发
@@ -847,13 +854,16 @@ function DayColumn({
 								{`${formatMinutes(seg.startMin)} – ${formatMinutes(seg.endMin)}`}
 							</span>
 						) : null}
-						<TaskCard
-							task={block.task}
-							config={config}
-							targetDate={day.date}
-							onClick={hideTooltip}
-							onRefresh={onCardRefresh}
-						/>
+					<TaskCard
+						task={block.task}
+						config={config}
+						targetDate={day.date}
+						onClick={hideTooltip}
+						onRefresh={onCardRefresh}
+						// 触屏长按菜单由画布手势自管（长按未移动 → 合成 contextmenu），
+						// 禁用 TaskCard 内置长按，避免拖拽模式与菜单同时触发
+						disableLongPressMenu
+					/>
 						{/* 仅真实起止边缘有 resize 手柄（虚拟实例不可写回模板，禁编辑） */}
 						{!seg.continuesBefore && resizable ? (
 							<div

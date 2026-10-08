@@ -37,6 +37,7 @@ export function Modal({
 	onExited,
 }: ModalProps): JSX.Element | null {
 	const panelRef = useRef<HTMLDivElement | null>(null);
+	const overlayRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		if (!open) return;
@@ -54,12 +55,44 @@ export function Modal({
 		};
 	}, [open, closeOnEsc, onClose]);
 
+	useEffect(() => {
+		if (!open) return;
+		// 软键盘补偿（移动端）：键盘弹出时 visualViewport 变矮而 layout viewport 不变，
+		// 固定定位的面板仍按全屏居中 → 表单底部被键盘遮挡。把可视视口高度写入
+		// overlay 的 CSS 变量，react-base.css 据此切换顶部对齐并钳制面板高度；
+		// 键盘收起自动还原。阈值滤掉地址栏/工具栏伸缩等非键盘的高度变化。
+		const overlay = overlayRef.current;
+		const vv = window.visualViewport;
+		if (!overlay || !vv) return;
+		const KEYBOARD_THRESHOLD_PX = 120;
+		const update = () => {
+			const keyboard = window.innerHeight - vv.height - vv.offsetTop;
+			if (keyboard > KEYBOARD_THRESHOLD_PX) {
+				overlay.classList.add('gc-kb-open');
+				overlay.style.setProperty('--gc-kb-vvh', `${Math.max(240, Math.round(vv.height - 16))}px`);
+			} else {
+				overlay.classList.remove('gc-kb-open');
+				overlay.style.removeProperty('--gc-kb-vvh');
+			}
+		};
+		update();
+		vv.addEventListener('resize', update);
+		vv.addEventListener('scroll', update);
+		return () => {
+			vv.removeEventListener('resize', update);
+			vv.removeEventListener('scroll', update);
+			overlay.classList.remove('gc-kb-open');
+			overlay.style.removeProperty('--gc-kb-vvh');
+		};
+	}, [open]);
+
 	const classes = [ModalClasses.overlay, className].filter(Boolean).join(' ');
 
 	return createPortal(
 		<AnimatePresence onExitComplete={onExited}>
 			{open ? (
 				<motion.div
+					ref={overlayRef}
 					className={classes}
 					variants={overlayVariants}
 					initial="initial"

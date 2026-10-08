@@ -1078,6 +1078,10 @@
     "more": {
       "ariaLabel": "更多操作"
     },
+    "navDock": {
+      "ariaLabel": "日历菜单",
+      "viewsTitle": "切换视图"
+    },
     "settingsButton": {
       "ariaLabel": "插件设置"
     },

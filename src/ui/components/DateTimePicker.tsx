@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { createPortal } from 'react-dom';
+import { Platform } from 'obsidian';
 import { DateTimePickerClasses, setCssProps } from '../../utils/bem';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { i18n } from '../../i18n/i18n';
@@ -64,6 +65,14 @@ function relativeLabel(d: Date, now: Date): string | null {
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** 移动端：自造面板在触屏上（60 行滚动列选分钟）体验差，改用原生 datetime-local 轮盘 */
+const USE_NATIVE_PICKER = Platform.isMobile;
+
+/** Date → datetime-local 输入值（本地时区，无时区后缀） */
+function toLocalInputValue(d: Date): string {
+	return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
 
 /**
  * 日期时间选择器（Ant Design showTime 面板复刻）
@@ -260,22 +269,40 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 	return (
 		<div className={DateTimePickerClasses.block} ref={rootRef}>
 			<div className={DateTimePickerClasses.elements.trigger}>
-				<input
-					className={DateTimePickerClasses.elements.input}
-					type="text"
-					value={displayText}
-					placeholder={placeholder ?? ''}
-					spellCheck={false}
-					onChange={(e) => setInputText(e.target.value)}
-					onFocus={() => { if (open) return; openPanel(); }}
-					onBlur={() => applyDateText()}
-					onKeyDown={(e) => {
-						if (e.key === 'Enter') {
-							applyDateText();
-							(e.target as HTMLInputElement).blur();
-						}
-					}}
-				/>
+				{USE_NATIVE_PICKER ? (
+					/* 移动端：原生 datetime-local（系统轮盘），16px 字号避免 iOS 聚焦自动放大 */
+					<input
+						className={`${DateTimePickerClasses.elements.input} gc-date-time-picker__input--native`}
+						type="datetime-local"
+						value={value ? toLocalInputValue(value) : ''}
+						onChange={(e) => {
+							const v = e.target.value;
+							if (!v) {
+								onChange(null);
+								return;
+							}
+							const d = new Date(v);
+							if (!isNaN(d.getTime())) onChange(d);
+						}}
+					/>
+				) : (
+					<input
+						className={DateTimePickerClasses.elements.input}
+						type="text"
+						value={displayText}
+						placeholder={placeholder ?? ''}
+						spellCheck={false}
+						onChange={(e) => setInputText(e.target.value)}
+						onFocus={() => { if (open) return; openPanel(); }}
+						onBlur={() => applyDateText()}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter') {
+								applyDateText();
+								(e.target as HTMLInputElement).blur();
+							}
+						}}
+					/>
+				)}
 				{value ? (
 					<button
 						className={DateTimePickerClasses.elements.triggerClear}
@@ -288,17 +315,19 @@ export function DateTimePicker({ value, onChange, placeholder }: DateTimePickerP
 						<Icon icon="x" />
 					</button>
 				) : null}
-				<button
-					className={[DateTimePickerClasses.elements.triggerIcon, open ? 'is-open' : ''].join(' ')}
-					aria-expanded={open}
-					tabIndex={-1}
-					onClick={toggle}
-				>
-					<Icon icon="calendar" />
-				</button>
+				{!USE_NATIVE_PICKER ? (
+					<button
+						className={[DateTimePickerClasses.elements.triggerIcon, open ? 'is-open' : ''].join(' ')}
+						aria-expanded={open}
+						tabIndex={-1}
+						onClick={toggle}
+					>
+						<Icon icon="calendar" />
+					</button>
+				) : null}
 			</div>
 
-			{open ? createPortal(
+			{open && !USE_NATIVE_PICKER ? createPortal(
 				<div
 					className={DateTimePickerClasses.elements.popover}
 					role="dialog"

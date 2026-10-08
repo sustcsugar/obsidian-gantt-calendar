@@ -289,7 +289,7 @@
 	.gc-dropdown-menu__item,
 	.gc-context-menu__item,
 	.gc-month-view__day-cell,
-	.gc-sidebar__tab-button {
+	.gc-sidebar__tab-btn {
 		min-height: 32px;
 	}
 

@@ -342,16 +342,6 @@
    响应式适配 - 基于容器宽度的响应式布局
    ============================================ */
 
-/* 紧凑模式 - 当中间区域文本溢出时，左侧视图按钮只显示图标 */
-.gc-toolbar--compact .gc-toolbar__view-selector-group .gc-toolbar__view-selector-label {
-	display: none;
-}
-
-.gc-toolbar--compact .gc-toolbar__view-selector-group .gc-toolbar__view-selector-btn {
-	padding: 6px 10px;
-	min-width: 36px;
-}
-
 /* 仅图标模式 - 通过设置项控制 */
 .gc-toolbar__view-selector-group--icon-only .gc-toolbar__view-selector-label {
 	display: none;
@@ -418,8 +408,8 @@
 		font-size: var(--gc-font-sm);
 	}
 
-	/* 导航按钮缩小 */
-	.gc-nav__btn {
+	/* 导航按钮缩小（修复：原 .gc-nav__btn 为不存在的类名，规则从未生效） */
+	.gc-toolbar__nav-buttons .gc-toolbar__btn {
 		padding: 4px 8px;
 		font-size: var(--gc-font-xs);
 	}
@@ -753,8 +743,8 @@
 		min-width: 0;
 	}
 
-	/* 触控目标加大 */
-	.gc-nav__btn {
+	/* 触控目标加大（导航按钮实际类名 gc-toolbar__btn，挂在 gc-toolbar__nav-buttons 组内） */
+	.gc-toolbar__nav-buttons .gc-toolbar__btn {
 		min-height: 34px;
 		min-width: 34px;
 	}
