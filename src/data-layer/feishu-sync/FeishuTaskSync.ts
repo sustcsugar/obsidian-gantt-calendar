@@ -13,12 +13,21 @@ import type { FeishuTaskRaw } from '../sources/api/providers/feishu/FeishuTypes'
 import type { FeishuProvider } from '../sources/api/providers/FeishuProvider';
 import { SyncStateManager, SyncRecord } from './syncState';
 import {
-    toFeishuTaskPayload,
+    fromFeishuCompletedAt,
+    hasMixedFeishuPrecision,
+    isSameFeishuTime,
+    normalizeLocalDate,
+    normalizePrecision,
+} from './feishuTimeCodec';
+import {
     fromFeishuTask,
     GCTaskUpdates,
+    toFeishuCompletionTime,
+    toFeishuTaskPayload,
 } from './taskMapper';
-import { parseTasksFromFile } from '../../tasks/taskParser/main';
+import { parseSingleTaskLine, parseTasksFromFile } from '../../tasks/taskParser/main';
 import { serializeTask, TaskUpdates } from '../../tasks/taskSerializer';
+import { updateTaskProperties } from '../../tasks/taskUpdater';
 import { Logger } from '../../utils/logger';
 import { PushFilterConfig, applyPushFilter, passesPushFilter } from '../../utils/taskFilter';
 import type { Priority } from '../types';
@@ -647,17 +656,40 @@ export class FeishuTaskSync {
     }
 
     /**
-     * 计算任务关键字段的内容哈希
+     * 计算任务关键字段的内容哈希。
+     *
+     * v2 哈希纳入开始/截止/完成时间与逐字段日期精度；定时任务按分钟归一化，
+     * 全天任务按本地日历日午夜归一化，避免飞书秒级数据造成循环同步。
      */
     private hashTask(task: GCTask): string {
+        const startDate = this.normalizedDateKey(task.startDate, task.datePrecision?.startDate);
+        const dueDate = this.normalizedDateKey(task.dueDate, task.datePrecision?.dueDate);
+        const completionDate = this.normalizedDateKey(task.completionDate, task.datePrecision?.completionDate);
+        const precision = [
+            normalizePrecision(task.datePrecision?.startDate),
+            normalizePrecision(task.datePrecision?.dueDate),
+            normalizePrecision(task.datePrecision?.completionDate),
+        ].join('/');
+
         const parts = [
+            'v2',
             task.description || '',
             task.completed ? '1' : '0',
             task.priority || 'normal',
-            task.dueDate?.getTime() || '0',
-            task.startDate?.getTime() || '0',
+            startDate,
+            dueDate,
+            completionDate,
+            precision,
         ];
         return parts.join('|');
+    }
+
+    private normalizedDateKey(
+        date: Date | undefined,
+        precision: 'day' | 'time' | undefined
+    ): string {
+        if (!date) return '0';
+        return String(normalizeLocalDate(date, normalizePrecision(precision)).getTime());
     }
 
     /**
@@ -672,29 +704,50 @@ export class FeishuTaskSync {
     }
 
     /**
-     * 检测飞书与 OB 任务的时间精度是否不一致
+     * 检测飞书与 OB 任务的日期值或时间精度是否不一致。
      *
-     * 当飞书任务有具体时间（is_all_day === false）但 OB 任务只有日期时，
-     * 视为飞书侧变更，触发 pull-update 以拉取时间信息。
+     * 比较是双向的：本地 day ↔ 远端 timed、本地 timed ↔ 远端 all-day、
+     * 以及同一精度下的时间值差异都会被发现。秒级差异按本地分钟精度忽略。
      */
     private hasTimePrecisionMismatch(feishu: FeishuTaskRaw, obsidian: GCTask): boolean {
-        const feishuDueHasTime = feishu.due && feishu.due.is_all_day !== true && feishu.due.timestamp;
-        const obDueHasTime = obsidian.datePrecision?.dueDate === 'time';
+        const dueMismatch = !isSameFeishuTime(obsidian.dueDate, obsidian.datePrecision?.dueDate, feishu.due);
+        const startMismatch = !isSameFeishuTime(obsidian.startDate, obsidian.datePrecision?.startDate, feishu.start);
 
         Logger.debug('FeishuTaskSync', `hasTimePrecisionMismatch [${feishu.summary || obsidian.description || '?'}]`, {
             feishu_due: feishu.due,
-            feishuDueHasTime,
-            obDueHasTime,
+            feishu_start: feishu.start,
+            ob_dueDate: obsidian.dueDate,
+            ob_startDate: obsidian.startDate,
             ob_datePrecision: obsidian.datePrecision,
+            dueMismatch,
+            startMismatch,
         });
 
-        if (feishuDueHasTime && !obDueHasTime) return true;
+        return dueMismatch || startMismatch;
+    }
 
-        const feishuStartHasTime = feishu.start && feishu.start.is_all_day !== true && feishu.start.timestamp;
-        const obStartTime = obsidian.datePrecision?.startDate === 'time';
-        if (feishuStartHasTime && !obStartTime) return true;
+    /** 本地完成时间出站值；历史已完成任务缺少 ✅ 时间时才使用当前时间。 */
+    private toLocalCompletionTimestamp(task: GCTask): string {
+        if (!task.completed) return '0';
+        return toFeishuCompletionTime(task) ?? String(Date.now());
+    }
 
-        return false;
+    /**
+     * 比较本地与远端完成状态及完成时间。
+     *
+     * 本地历史完成任务可能没有 completionDate；为避免用“现在”覆盖远端既有
+     * 完成时间，这种情况在双方均完成时视为等价，后续远端变更会回填本地。
+     */
+    private isSameCompletion(task: GCTask, feishu: FeishuTaskRaw): boolean {
+        const remoteCompleted = this.isFeishuCompleted(feishu);
+        if (task.completed !== remoteCompleted) return false;
+        if (!task.completed) return true;
+        if (!task.completionDate) return true;
+
+        const remoteCompletion = fromFeishuCompletedAt(feishu.completed_at);
+        return !!remoteCompletion
+            && normalizeLocalDate(task.completionDate, 'time').getTime()
+                === remoteCompletion.getTime();
     }
 
     /**
@@ -746,12 +799,17 @@ export class FeishuTaskSync {
 
     /** Push: Obsidian → 飞书 (新建) */
     private async pushCreate(task: GCTask, result: SyncResult): Promise<void> {
-        const payload = toFeishuTaskPayload(task);
-
-        // v2 API 用 completed_at（毫秒时间戳）表示完成状态
-        if (task.completed) {
-            payload.completed_at = String(task.completionDate?.getTime() || Date.now());
+        if (hasMixedFeishuPrecision(task)) {
+            result.skipped++;
+            Logger.warn(
+                'FeishuTaskSync',
+                `Skip push-create because start/due precisions differ: ${task.filePath}:${task.lineNumber}`
+            );
+            return;
         }
+
+        const payload = toFeishuTaskPayload(task);
+        payload.completed_at = this.toLocalCompletionTimestamp(task);
 
         // 设置负责人为授权用户
         if (this.options.creatorOpenId) {
@@ -760,22 +818,21 @@ export class FeishuTaskSync {
 
         Logger.info('FeishuTaskSync', `Push creating: "${task.description?.substring(0, 30)}" → tasklist=${this.options.tasklistGuid || 'default'}`);
 
-        const guid = await this.provider.createFeishuTask(payload, this.options.tasklistGuid);
+        const remoteTask = await this.provider.createFeishuTask(payload, this.options.tasklistGuid);
 
-        // 写回 GUID 到 Obsidian
-        await this.writeGuidToObsidian(task, guid);
+        // 写回 GUID 到 Obsidian，并重读实际任务行作为同步基线
+        const updatedTask = await this.writeGuidToObsidian(task, remoteTask.guid);
 
-        // 记录同步状态
-        this.state.setRecord(guid, {
+        this.state.setRecord(remoteTask.guid, {
             lastSyncAt: new Date().toISOString(),
-            obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
-            feishuUpdatedAt: String(Date.now()),
-            lastSyncedContent: this.hashTask(task),
+            obsidianTaskId: SyncStateManager.makeTaskId(updatedTask.filePath, updatedTask.lineNumber),
+            feishuUpdatedAt: remoteTask.updated_at || String(Date.now()),
+            lastSyncedContent: this.hashTask(updatedTask),
             feishuCompleted: task.completed,
         });
 
         result.pushed++;
-        Logger.info('FeishuTaskSync', `Push created: ${task.description} → ${guid}`);
+        Logger.info('FeishuTaskSync', `Push created: ${task.description} → ${remoteTask.guid}`);
     }
 
     /** Push: Obsidian → 飞书 (更新) */
@@ -784,42 +841,48 @@ export class FeishuTaskSync {
         task: GCTask,
         result: SyncResult
     ): Promise<void> {
-        const payload = toFeishuTaskPayload(task);
+        if (hasMixedFeishuPrecision(task)) {
+            result.skipped++;
+            Logger.warn(
+                'FeishuTaskSync',
+                `Skip push-update because start/due precisions differ: ${task.filePath}:${task.lineNumber}`
+            );
+            return;
+        }
+
+        // 更新时显式携带 null，才能清除远端开始/截止日期。
+        const payload = toFeishuTaskPayload(task, { includeClearedDates: true });
 
         Logger.debug('FeishuTaskSync', `pushUpdate [${task.description || '?'}]`, {
-            ob_dueDate: task.dueDate?.toISOString(),
+            ob_dueDate: task.dueDate,
+            ob_startDate: task.startDate,
             ob_completed: task.completed,
             payload_due: payload.due,
-            payload_completed_at: payload.completed_at,
+            payload_start: payload.start,
         });
 
-        // 同步完成状态：v2 API 使用 completed_at（毫秒时间戳），"0" 表示恢复未完成
-        // 注意：feishu.completed 可能未返回（undefined），需同时检查 completed_at 判断实际状态
-        const feishuIsCompleted = this.isFeishuCompleted(feishu);
-
-        if (task.completed !== feishuIsCompleted) {
-            payload.completed_at = task.completed
-                ? String(task.completionDate?.getTime() || Date.now())
-                : '0';
+        if (!this.isSameCompletion(task, feishu)) {
+            payload.completed_at = this.toLocalCompletionTimestamp(task);
         }
 
         if (Object.keys(payload).length === 0) {
-            // 无有效字段变更
-            const record = this.state.getRecord(feishu.guid);
-            if (record) {
-                record.lastSyncedContent = this.hashTask(task);
-                record.lastSyncAt = new Date().toISOString();
-            }
+            this.state.setRecord(feishu.guid, {
+                lastSyncAt: new Date().toISOString(),
+                obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
+                feishuUpdatedAt: feishu.updated_at || String(Date.now()),
+                lastSyncedContent: this.hashTask(task),
+                feishuCompleted: task.completed,
+            });
             result.skipped++;
             return;
         }
 
-        await this.provider.updateFeishuTask(feishu.guid, payload);
+        const remoteTask = await this.provider.updateFeishuTask(feishu.guid, payload);
 
         this.state.setRecord(feishu.guid, {
             lastSyncAt: new Date().toISOString(),
             obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
-            feishuUpdatedAt: feishu.updated_at || String(Date.now()),
+            feishuUpdatedAt: remoteTask.updated_at || String(Date.now()),
             lastSyncedContent: this.hashTask(task),
             feishuCompleted: task.completed,
         });
@@ -835,6 +898,7 @@ export class FeishuTaskSync {
             summary: feishu.summary,
             description: feishu.description,
             completed: this.isFeishuCompleted(feishu),
+            completed_at: feishu.completed_at,
             due_time: feishu.due,
             start_time: feishu.start,
             priority: feishu.priority,
@@ -847,15 +911,13 @@ export class FeishuTaskSync {
             return content.trimEnd() + '\n' + line + '\n';
         });
 
-        // 获取新行号
-        const newContent = await this.app.vault.cachedRead(file);
-        const lineNumber = newContent.split('\n').length - 1; // 最后一行（0-based 转 1-based）
-
+        // 基于写回后的真实任务行记录行号和内容哈希，避免序列化差异造成下一轮伪变更。
+        const createdTask = await this.rereadTaskByGuid(file.path, feishu.guid);
         this.state.setRecord(feishu.guid, {
             lastSyncAt: new Date().toISOString(),
-            obsidianTaskId: SyncStateManager.makeTaskId(file.path, lineNumber),
+            obsidianTaskId: SyncStateManager.makeTaskId(createdTask.filePath, createdTask.lineNumber),
             feishuUpdatedAt: feishu.updated_at || String(Date.now()),
-            lastSyncedContent: '',
+            lastSyncedContent: this.hashTask(createdTask),
             feishuCompleted: this.isFeishuCompleted(feishu),
         });
 
@@ -874,6 +936,7 @@ export class FeishuTaskSync {
             summary: feishu.summary,
             description: feishu.description,
             completed: this.isFeishuCompleted(feishu),
+            completed_at: feishu.completed_at,
             due_time: feishu.due,
             start_time: feishu.start,
             priority: feishu.priority,
@@ -888,14 +951,12 @@ export class FeishuTaskSync {
             ob_precision_before: task.datePrecision,
         });
 
-        await this.updateObsidianTaskLine(task, updates);
-
-        const updatedTask = { ...task, ...updates };
+        const updatedTask = await this.updateObsidianTaskLine(task, updates);
         this.state.setRecord(feishu.guid, {
             lastSyncAt: new Date().toISOString(),
-            obsidianTaskId: SyncStateManager.makeTaskId(task.filePath, task.lineNumber),
+            obsidianTaskId: SyncStateManager.makeTaskId(updatedTask.filePath, updatedTask.lineNumber),
             feishuUpdatedAt: feishu.updated_at || String(Date.now()),
-            lastSyncedContent: this.hashTask(updatedTask as GCTask),
+            lastSyncedContent: this.hashTask(updatedTask),
             feishuCompleted: this.isFeishuCompleted(feishu),
         });
 
@@ -986,8 +1047,9 @@ export class FeishuTaskSync {
             description: updates.description || '',
             completed: updates.completed || false,
             priority: updates.priority || 'normal',
-            dueDate: updates.dueDate,
-            startDate: updates.startDate,
+            dueDate: updates.dueDate ?? undefined,
+            startDate: updates.startDate ?? undefined,
+            completionDate: updates.completionDate ?? undefined,
             feishuGuid: updates.feishuGuid ?? undefined,
             datePrecision: updates.datePrecision,
         };
@@ -998,6 +1060,7 @@ export class FeishuTaskSync {
             feishuGuid: updates.feishuGuid,
             dueDate: updates.dueDate,
             startDate: updates.startDate,
+            completionDate: updates.completionDate,
             priority: updates.priority as Priority,
             datePrecision: updates.datePrecision,
         };
@@ -1008,59 +1071,132 @@ export class FeishuTaskSync {
     }
 
     /**
-     * 更新 Obsidian 文件中的单行任务
+     * 更新 Obsidian 文件中的单行任务。
      *
-     * 保留原始行的缩进和列表标记（- 或 *），只替换任务内容部分。
+     * 统一走 updateTaskProperties，复用行漂移校验、文件写锁和未知字段保留；
+     * 更新后重读真实任务行，作为同步状态的内容基线。
      */
-    private async updateObsidianTaskLine(task: GCTask, updates: GCTaskUpdates): Promise<void> {
-        const file = this.app.vault.getAbstractFileByPath(task.filePath);
-        if (!(file instanceof TFile)) {
-            throw new Error(`File not found: ${task.filePath}`);
+    private async updateObsidianTaskLine(
+        task: GCTask,
+        updates: GCTaskUpdates
+    ): Promise<GCTask> {
+        const taskUpdates = this.toTaskUpdates(task, updates);
+        await updateTaskProperties(this.app, task, taskUpdates, this.options.enabledFormats);
+
+        const expectedGuid = updates.feishuGuid === null
+            ? undefined
+            : (updates.feishuGuid ?? task.feishuGuid);
+        return this.rereadTask(task, expectedGuid);
+    }
+
+    private toTaskUpdates(task: GCTask, updates: GCTaskUpdates): TaskUpdates {
+        const taskUpdates: TaskUpdates = {
+            completed: updates.completed,
+            content: updates.description,
+            feishuGuid: updates.feishuGuid,
+            dueDate: updates.dueDate,
+            startDate: updates.startDate,
+            completionDate: updates.completionDate,
+            priority: updates.priority as Priority,
+            datePrecision: this.mergeDatePrecision(task, updates),
+        };
+
+        if (updates.completed !== undefined) {
+            taskUpdates.status = updates.completed ? 'done' : 'todo';
         }
 
-        await this.app.vault.process(file, (content: string) => {
-            const lines = content.split('\n');
-            const idx = task.lineNumber - 1; // 1-based → 0-based
+        return taskUpdates;
+    }
 
-            if (idx < 0 || idx >= lines.length) {
-                throw new Error(`Line ${task.lineNumber} out of range in ${task.filePath}`);
-            }
+    /**
+     * 逐字段合并日期精度；日期被清除时同步移除对应精度，避免半更新覆盖整个 map。
+     */
+    private mergeDatePrecision(
+        task: GCTask,
+        updates: GCTaskUpdates
+    ): TaskUpdates['datePrecision'] {
+        const merged: NonNullable<TaskUpdates['datePrecision']> = {
+            ...task.datePrecision,
+        };
 
-            const originalLine = lines[idx];
-
-            // 提取原始缩进和列表标记（与 taskUpdater.ts 保持一致）
-            const listMatch = originalLine.match(/^(\s*)([-*])\s+\[.\]/);
-
-            // 构建更新后的任务内容
-            const taskUpdates: TaskUpdates = {
-                completed: updates.completed !== undefined ? updates.completed : task.completed,
-                content: updates.description,
-                feishuGuid: updates.feishuGuid,
-                dueDate: updates.dueDate !== undefined ? updates.dueDate : task.dueDate,
-                startDate: updates.startDate !== undefined ? updates.startDate : task.startDate,
-                priority: updates.priority as Priority,
-                datePrecision: updates.datePrecision !== undefined ? updates.datePrecision : task.datePrecision,
-            };
-
-            // completed 变更时同步 status，避免 serializeTask 用旧 status 覆盖 checkbox
-            if (updates.completed !== undefined) {
-                taskUpdates.status = updates.completed ? 'done' : 'todo';
-            }
-
-            const taskContent = serializeTask(this.app, task, taskUpdates, task.format || this.getDefaultFormat());
-
-            // 拼接完整行：缩进 + 列表标记 + 空格 + 任务内容
-            if (listMatch) {
-                const indent = listMatch[1];
-                const listMarker = listMatch[2];
-                lines[idx] = `${indent}${listMarker} ${taskContent}`;
+        if (updates.startDate !== undefined) {
+            if (updates.startDate) {
+                merged.startDate = updates.datePrecision?.startDate || 'day';
             } else {
-                // 降级处理：原始行没有列表标记，直接补上 "- "
-                lines[idx] = `- ${taskContent}`;
+                delete merged.startDate;
             }
+        }
 
-            return lines.join('\n');
+        if (updates.dueDate !== undefined) {
+            if (updates.dueDate) {
+                merged.dueDate = updates.datePrecision?.dueDate || 'day';
+            } else {
+                delete merged.dueDate;
+            }
+        }
+
+        if (updates.completionDate !== undefined) {
+            if (updates.completionDate) {
+                merged.completionDate = updates.datePrecision?.completionDate || 'time';
+            } else {
+                delete merged.completionDate;
+            }
+        }
+
+        return Object.keys(merged).length > 0 ? merged : undefined;
+    }
+
+    private async rereadTaskByGuid(filePath: string, guid: string): Promise<GCTask> {
+        const task = await this.findParsedTask(filePath, parsed => parsed.feishuGuid === guid);
+        if (!task) {
+            throw new Error(`Updated task with Feishu GUID ${guid} not found in ${filePath}`);
+        }
+        return task;
+    }
+
+    private async rereadTask(task: GCTask, expectedGuid?: string): Promise<GCTask> {
+        if (expectedGuid) {
+            const byGuid = await this.findParsedTask(
+                task.filePath,
+                parsed => parsed.feishuGuid === expectedGuid
+            );
+            if (byGuid) return byGuid;
+        }
+
+        const fallback = await this.findParsedTask(task.filePath, parsed => {
+            const sameLine = parsed.lineNumber === task.lineNumber;
+            const sameContent = parsed.content === task.content || parsed.description === task.description;
+            return sameLine || sameContent;
         });
+        if (!fallback) {
+            throw new Error(`Updated task not found after write: ${task.filePath}:${task.lineNumber}`);
+        }
+        return fallback;
+    }
+
+    private async findParsedTask(
+        filePath: string,
+        predicate: (task: GCTask) => boolean
+    ): Promise<GCTask | undefined> {
+        const file = this.app.vault.getAbstractFileByPath(filePath);
+        if (!(file instanceof TFile)) {
+            throw new Error(`File not found: ${filePath}`);
+        }
+
+        const content = await this.app.vault.read(file);
+        const lines = content.split('\n');
+        for (let index = 0; index < lines.length; index++) {
+            const parsed = parseSingleTaskLine(
+                lines[index],
+                file.path,
+                file.basename,
+                index + 1,
+                this.options.enabledFormats,
+                this.options.globalFilter
+            );
+            if (parsed && predicate(parsed)) return parsed;
+        }
+        return undefined;
     }
 
     /**
@@ -1068,10 +1204,11 @@ export class FeishuTaskSync {
      *
      * 在 push-create 后调用，将飞书返回的 GUID 写入对应任务行。
      */
-    private async writeGuidToObsidian(task: GCTask, guid: string): Promise<void> {
+    private async writeGuidToObsidian(task: GCTask, guid: string): Promise<GCTask> {
         Logger.info('FeishuTaskSync', `Writing GUID ${guid} to ${task.filePath}:${task.lineNumber} "${task.description?.substring(0, 30)}"`);
-        await this.updateObsidianTaskLine(task, { feishuGuid: guid });
+        const updatedTask = await this.updateObsidianTaskLine(task, { feishuGuid: guid });
         Logger.info('FeishuTaskSync', `GUID written successfully: ${guid}`);
+        return updatedTask;
     }
 
     /**

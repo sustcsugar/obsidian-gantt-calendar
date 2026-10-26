@@ -9,6 +9,11 @@ import { IDataSource, ChangeEventHandler } from '../../IDataSource';
 import type { GCTask } from '../../../types';
 import type { DataSourceConfig, DataSourceChanges, SyncStatus, TaskChanges } from '../../types';
 import type { GCTaskWithSync } from '../../sync/syncTypes';
+import {
+    areSameCompletionDates,
+    areSameDatePrecisionMaps,
+    areSameTaskDates,
+} from '../../sync/taskTimeComparison';
 import { Logger } from '../../../utils/logger';
 
 /**
@@ -21,6 +26,9 @@ export interface APITaskDTO {
     completed: boolean;
     dueDate?: string;  // ISO 8601
     startDate?: string;
+    completionDate?: string;
+    lastModified?: string;  // ISO 8601 或 provider 约定的时间字符串
+    datePrecision?: GCTask['datePrecision'];
     priority?: string;
     tags?: string[];
     status?: string;
@@ -245,6 +253,9 @@ export abstract class APIDataSource implements IDataSource {
             completed: task.completed,
             dueDate: task.dueDate?.toISOString(),
             startDate: task.startDate?.toISOString(),
+            completionDate: task.completionDate?.toISOString(),
+            lastModified: task.lastModified?.toISOString(),
+            datePrecision: task.datePrecision,
             priority: task.priority,
             tags: task.tags,
             status: task.status,
@@ -266,9 +277,22 @@ export abstract class APIDataSource implements IDataSource {
             tags: dto.tags,
             dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
             startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+            completionDate: dto.completionDate ? new Date(dto.completionDate) : undefined,
+            datePrecision: dto.datePrecision,
+            lastModified: this.parseLastModified(dto.lastModified),
             status: dto.status,
             sourceId: dto.id,
         };
+    }
+
+    private parseLastModified(value?: string): Date | undefined {
+        if (!value) return undefined;
+
+        const numericValue = Number(value);
+        const date = Number.isFinite(numericValue) && value.trim() !== ''
+            ? new Date(numericValue)
+            : new Date(value);
+        return Number.isNaN(date.getTime()) ? undefined : date;
     }
 
     /**
@@ -300,7 +324,7 @@ export abstract class APIDataSource implements IDataSource {
                     sourceId: dto.id,
                     syncId: existing?.syncId,
                     version: (existing?.version || 0) + 1,
-                    lastModified: new Date(),
+                    lastModified: task.lastModified || new Date(),
                 };
 
                 this.cache.set(dto.id, taskWithSync);
@@ -361,16 +385,28 @@ export abstract class APIDataSource implements IDataSource {
             old.description !== newTask.description ||
             old.completed !== newTask.completed ||
             old.priority !== newTask.priority ||
-            old.dueDate?.getTime() !== newTask.dueDate?.getTime() ||
-            old.startDate?.getTime() !== newTask.startDate?.getTime()
+            !areSameTaskDates(
+                old.dueDate,
+                old.datePrecision?.dueDate,
+                newTask.dueDate,
+                newTask.datePrecision?.dueDate
+            ) ||
+            !areSameTaskDates(
+                old.startDate,
+                old.datePrecision?.startDate,
+                newTask.startDate,
+                newTask.datePrecision?.startDate
+            ) ||
+            !areSameCompletionDates(old.completionDate, newTask.completionDate) ||
+            !areSameDatePrecisionMaps(old.datePrecision, newTask.datePrecision)
         );
     }
 
     /**
      * 获取任务变化
      */
-    protected getTaskChanges(old: GCTask, newTask: GCTask): Partial<GCTask> {
-        const changes: Partial<GCTask> = {};
+    protected getTaskChanges(old: GCTask, newTask: GCTask): TaskChanges {
+        const changes: TaskChanges = {};
 
         if (old.description !== newTask.description) {
             changes.description = newTask.description;
@@ -381,11 +417,27 @@ export abstract class APIDataSource implements IDataSource {
         if (old.priority !== newTask.priority) {
             changes.priority = newTask.priority;
         }
-        if (old.dueDate?.getTime() !== newTask.dueDate?.getTime()) {
+        if (!areSameTaskDates(
+            old.dueDate,
+            old.datePrecision?.dueDate,
+            newTask.dueDate,
+            newTask.datePrecision?.dueDate
+        )) {
             changes.dueDate = newTask.dueDate;
         }
-        if (old.startDate?.getTime() !== newTask.startDate?.getTime()) {
+        if (!areSameTaskDates(
+            old.startDate,
+            old.datePrecision?.startDate,
+            newTask.startDate,
+            newTask.datePrecision?.startDate
+        )) {
             changes.startDate = newTask.startDate;
+        }
+        if (!areSameCompletionDates(old.completionDate, newTask.completionDate)) {
+            changes.completionDate = newTask.completionDate;
+        }
+        if (!areSameDatePrecisionMaps(old.datePrecision, newTask.datePrecision)) {
+            changes.datePrecision = newTask.datePrecision;
         }
 
         return changes;

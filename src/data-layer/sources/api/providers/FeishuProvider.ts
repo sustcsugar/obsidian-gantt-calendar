@@ -12,24 +12,15 @@ import { Logger } from '../../../../utils/logger';
 import { i18n } from '../../../../i18n/i18n';
 import { FeishuOAuth } from './feishu/FeishuOAuth';
 import type { FeishuOAuthConfig, FeishuTaskRaw, FeishuTaskResponse, FeishuTaskCreateResponse } from './feishu/FeishuTypes';
+import {
+    fromFeishuCompletedAt,
+    fromFeishuTaskTime,
+    toFeishuCompletedAt,
+    toFeishuTaskTime,
+} from '../../../feishu-sync/feishuTimeCodec';
 import type { FeishuTaskPayload } from '../../../feishu-sync/taskMapper';
 
-/**
- * 飞书任务 DTO
- */
-interface FeishuTaskDTO {
-    task_key: string;
-    summary: string;
-    note?: string;
-    status: 'done' | 'in_progress' | 'archived';
-    due: {
-        timestamp?: number;
-    };
-    priority: 'high' | 'normal' | 'low';
-    completed_time?: number;
-    create_time: number;
-    modify_time: number;
-}
+type FeishuTaskDTO = FeishuTaskRaw;
 
 /**
  * 飞书 API 响应
@@ -168,21 +159,23 @@ export class FeishuProvider extends APIDataSource {
         const feishuTask = this.toFeishuDTO(dto);
 
         try {
-            const response = await this.callAPI<FeishuAPIResponse<{ task_key: string }>>(
+            const response = await this.callAPI<FeishuTaskCreateResponse>(
                 '/open-apis/task/v2/tasks',
                 'POST',
                 {
                     summary: feishuTask.summary,
-                    note: feishuTask.note,
+                    description: feishuTask.description,
                     due: feishuTask.due,
+                    start: feishuTask.start,
+                    completed_at: feishuTask.completed_at,
                     priority: feishuTask.priority,
                 }
             );
 
-            if (response.code === 0 && response.data) {
+            if (response.code === 0 && response.data?.task) {
                 return {
                     success: true,
-                    data: response.data.task_key,
+                    data: response.data.task.guid,
                 };
             }
 
@@ -210,8 +203,10 @@ export class FeishuProvider extends APIDataSource {
         const task: Record<string, unknown> = {};
 
         if (feishuTask.summary) task.summary = feishuTask.summary;
-        if (feishuTask.note) task.description = feishuTask.note;
+        if (feishuTask.description) task.description = feishuTask.description;
         if (feishuTask.due) task.due = feishuTask.due;
+        if (feishuTask.start) task.start = feishuTask.start;
+        if (feishuTask.completed_at !== undefined) task.completed_at = feishuTask.completed_at;
         if (feishuTask.priority) task.priority = feishuTask.priority;
 
         const update_fields = Object.keys(task);
@@ -319,7 +314,7 @@ export class FeishuProvider extends APIDataSource {
      * 使用 v2 API 创建任务，两步法：先创建任务，再将其加入指定清单。
      * v2 响应格式: { data: { task: { guid: "..." } } }
      */
-    async createFeishuTask(payload: FeishuTaskPayload, tasklistGuid?: string): Promise<string> {
+    async createFeishuTask(payload: FeishuTaskPayload, tasklistGuid?: string): Promise<FeishuTaskRaw> {
         await this.ensureAccessToken();
 
         // 构建 v2 API 请求体（只使用 v2 认识的字段）
@@ -330,10 +325,10 @@ export class FeishuProvider extends APIDataSource {
 
         // v2 API 时间字段使用嵌套对象 { timestamp: "毫秒时间戳" }
         if (payload.due?.timestamp) {
-            body.due = { timestamp: payload.due.timestamp };
+            body.due = { timestamp: payload.due.timestamp, is_all_day: payload.due.is_all_day ?? false };
         }
         if (payload.start?.timestamp) {
-            body.start = { timestamp: payload.start.timestamp };
+            body.start = { timestamp: payload.start.timestamp, is_all_day: payload.start.is_all_day ?? false };
         }
 
         // v2 完成状态：completed_at（毫秒时间戳）
@@ -384,7 +379,20 @@ export class FeishuProvider extends APIDataSource {
             }
         }
 
-        return guid;
+        // 创建/加入清单后的响应可能缺少最新 updated_at，重新读取一次用于同步状态。
+        return await this.fetchFeishuTask(guid);
+    }
+
+    /**
+     * 获取单个飞书任务（同步引擎用）
+     */
+    async fetchFeishuTask(guid: string): Promise<FeishuTaskRaw> {
+        const response = await this.callAPI<FeishuTaskCreateResponse>(`/open-apis/task/v2/tasks/${guid}`);
+        if (response.code !== 0 || !response.data?.task) {
+            const errMsg = response.msg || 'Unknown error';
+            throw new Error(`获取飞书任务失败: ${errMsg} (code: ${response.code}, guid: ${guid})`);
+        }
+        return response.data.task;
     }
 
     /**
@@ -405,7 +413,7 @@ export class FeishuProvider extends APIDataSource {
      *
      * 使用 v2 API 更新任务。请求体格式：{ update_fields: [...], task: { ... } }
      */
-    async updateFeishuTask(guid: string, payload: FeishuTaskPayload): Promise<void> {
+    async updateFeishuTask(guid: string, payload: FeishuTaskPayload): Promise<FeishuTaskRaw> {
         await this.ensureAccessToken();
 
         // 构建 task 子对象（只包含需要更新的字段）
@@ -414,11 +422,15 @@ export class FeishuProvider extends APIDataSource {
         if (payload.summary) task.summary = payload.summary;
         if (payload.description) task.description = payload.description;
 
-        if (payload.due?.timestamp) {
-            task.due = { timestamp: payload.due.timestamp };
+        if (payload.due !== undefined) {
+            task.due = payload.due?.timestamp
+                ? { timestamp: payload.due.timestamp, is_all_day: payload.due.is_all_day ?? false }
+                : null;
         }
-        if (payload.start?.timestamp) {
-            task.start = { timestamp: payload.start.timestamp };
+        if (payload.start !== undefined) {
+            task.start = payload.start?.timestamp
+                ? { timestamp: payload.start.timestamp, is_all_day: payload.start.is_all_day ?? false }
+                : null;
         }
 
         // completed_at: 毫秒时间戳字符串表示完成，"0" 表示恢复未完成
@@ -434,7 +446,7 @@ export class FeishuProvider extends APIDataSource {
         const update_fields = Object.keys(task);
         if (update_fields.length === 0) {
             Logger.info('FeishuProvider', `No fields to update for task ${guid}, skipping`);
-            return;
+            return await this.fetchFeishuTask(guid);
         }
 
         const body = { update_fields, task };
@@ -454,6 +466,9 @@ export class FeishuProvider extends APIDataSource {
         }
 
         Logger.info('FeishuProvider', `Task updated: guid=${guid}`);
+
+        const updatedTask = response.data?.task;
+        return updatedTask?.updated_at ? updatedTask : await this.fetchFeishuTask(guid);
     }
 
     /**
@@ -609,11 +624,7 @@ export class FeishuProvider extends APIDataSource {
     private async getTaskList(
         pageSize: number = 100,
         pageToken?: string
-    ): Promise<FeishuAPIResponse<{
-        items: FeishuTaskDTO[];
-        has_more: boolean;
-        page_token: string;
-    }>> {
+    ): Promise<FeishuTaskResponse> {
         const params = new URLSearchParams({
             page_size: String(pageSize),
         });
@@ -622,24 +633,35 @@ export class FeishuProvider extends APIDataSource {
             params.append('page_token', pageToken);
         }
 
-        return this.callAPI(`/open-apis/task/v2/tasks?${params.toString()}`);
+        return this.callAPI<FeishuTaskResponse>(`/open-apis/task/v2/tasks?${params.toString()}`);
     }
 
     /**
      * 将飞书 DTO 转换为通用 DTO
      */
     private fromFeishuDTO = (feishu: FeishuTaskDTO): APITaskDTO => {
+        const completed = feishu.completed === true
+            || (!!feishu.completed_at && feishu.completed_at !== '0');
+        const due = fromFeishuTaskTime(feishu.due);
+        const start = fromFeishuTaskTime(feishu.start);
+        const completionDate = fromFeishuCompletedAt(feishu.completed_at);
+
         return {
-            id: feishu.task_key,
+            id: feishu.guid,
             title: feishu.summary,
-            description: feishu.note,
-            completed: feishu.status === 'done',
-            dueDate: feishu.due?.timestamp
-                ? new Date(feishu.due.timestamp * 1000).toISOString()
-                : undefined,
-            priority: this.mapFeishuPriority(feishu.priority),
+            description: feishu.description,
+            completed,
+            dueDate: due.date?.toISOString(),
+            startDate: start.date?.toISOString(),
+            completionDate: completionDate?.toISOString(),
+            priority: this.mapFeishuPriority(feishu.priority || ''),
             status: feishu.status,
-            lastModified: new Date(feishu.modify_time * 1000),
+            lastModified: feishu.updated_at || undefined,
+            datePrecision: {
+                dueDate: due.precision,
+                startDate: start.precision,
+                completionDate: completionDate ? 'time' : undefined,
+            },
         };
     };
 
@@ -647,13 +669,19 @@ export class FeishuProvider extends APIDataSource {
      * 将通用 DTO 转换为飞书 DTO
      */
     private toFeishuDTO(dto: APITaskDTO): Partial<FeishuTaskDTO> {
+        const due = dto.dueDate ? new Date(dto.dueDate) : undefined;
+        const start = dto.startDate ? new Date(dto.startDate) : undefined;
+        const completionDate = dto.completionDate ? new Date(dto.completionDate) : undefined;
+
         return {
             summary: dto.title,
-            note: dto.description,
-            status: dto.completed ? 'done' : 'in_progress',
-            due: dto.dueDate
-                ? { timestamp: Math.floor(new Date(dto.dueDate).getTime() / 1000) }
-                : undefined,
+            description: dto.description,
+            completed: dto.completed,
+            completed_at: dto.completed
+                ? (toFeishuCompletedAt(completionDate) || String(Date.now()))
+                : '0',
+            due: due ? toFeishuTaskTime(due, dto.datePrecision?.dueDate) : undefined,
+            start: start ? toFeishuTaskTime(start, dto.datePrecision?.startDate) : undefined,
             priority: this.mapToFeishuPriority(dto.priority),
         };
     }

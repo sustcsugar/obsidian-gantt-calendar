@@ -246,7 +246,7 @@ export function setTaskDateField(task: GCTask, field: DateFieldType, value: Date
 /**
  * 可合并的任务字段类型（用于同步冲突解决）
  */
-export type MergeableTaskField = 'description' | 'completed' | 'dueDate' | 'startDate' | 'priority' | 'status' | 'tags';
+export type MergeableTaskField = 'description' | 'completed' | 'completionDate' | 'datePrecision' | 'dueDate' | 'startDate' | 'priority' | 'status' | 'tags';
 
 /**
  * 安全写入任务的可合并字段
@@ -256,6 +256,10 @@ export function setTaskMergeableField(task: GCTask, field: MergeableTaskField, v
 	switch (field) {
 		case 'description': task.description = value as string; break;
 		case 'completed': task.completed = value as boolean; break;
+		case 'completionDate': task.completionDate = value as Date | undefined; break;
+		case 'datePrecision': task.datePrecision = value
+			? { ...(value as NonNullable<GCTask['datePrecision']>) }
+			: undefined; break;
 		case 'dueDate': task.dueDate = value as Date | undefined; break;
 		case 'startDate': task.startDate = value as Date | undefined; break;
 		case 'priority': task.priority = value as string; break;

@@ -104,7 +104,8 @@ describe('飞书字段映射', () => {
 			const task = makeGCTask({ dueDate: new Date('2024-06-15') });
 			const payload = toFeishuTaskPayload(task);
 			expect(payload.due).toBeDefined();
-			expect(payload.due!.timestamp).toBe(String(task.dueDate!.getTime()));
+			expect(payload.due!.timestamp).toBe(String(new Date(2024, 5, 15).getTime()));
+			expect(payload.due!.is_all_day).toBe(true);
 		});
 
 		it('FS-21i: 含 startDate 时映射 start 字段', () => {
@@ -207,7 +208,11 @@ describe('飞书字段映射', () => {
 				summary: '',
 			};
 			const updates = fromFeishuTask(feishu);
-			expect(Object.keys(updates)).toHaveLength(0);
+			expect(updates).toEqual({
+				completionDate: null,
+				dueDate: null,
+				startDate: null,
+			});
 		});
 	});
 });

@@ -280,7 +280,7 @@ export class MicrosoftTodoProvider extends APIDataSource {
                 ? new Date(ms.dueDateTime.dateTime).toISOString()
                 : undefined,
             priority: this.mapMicrosoftPriority(ms.importance),
-            lastModified: new Date(ms.lastModifiedDateTime),
+            lastModified: new Date(ms.lastModifiedDateTime).toISOString(),
         };
     };
 

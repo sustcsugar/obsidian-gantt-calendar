@@ -7,14 +7,20 @@
 
 import type { GCTask } from '../../types';
 import type { FeishuTask, FeishuTaskTime } from '../sources/api/providers/feishu/FeishuTypes';
+import {
+    fromFeishuCompletedAt,
+    fromFeishuTaskTime,
+    toFeishuCompletedAt,
+    toFeishuTaskTime,
+} from './feishuTimeCodec';
 import { RegularExpressions } from '../../utils/RegularExpressions';
 
 /** 飞书任务 API 的 create/update 请求体 */
 export interface FeishuTaskPayload {
     summary?: string;
     description?: string;
-    due?: { timestamp?: string; is_all_day?: boolean };
-    start?: { timestamp?: string; is_all_day?: boolean };
+    due?: FeishuTaskTime | null;
+    start?: FeishuTaskTime | null;
     priority?: string;
     completed?: boolean;
     completed_at?: string;  // v2 API 完成时间（毫秒时间戳字符串），"0" 表示恢复未完成
@@ -29,7 +35,10 @@ export interface FeishuTaskPayload {
  * @param task - Obsidian 任务对象
  * @returns 飞书 API create/update 请求体
  */
-export function toFeishuTaskPayload(task: GCTask): FeishuTaskPayload {
+export function toFeishuTaskPayload(
+    task: GCTask,
+    options?: { includeClearedDates?: boolean }
+): FeishuTaskPayload {
     const payload: FeishuTaskPayload = {};
 
     // summary ↔ description（剥离 markdown 链接的 URL 部分，保留显示文本；wikilink 原样保留）
@@ -37,18 +46,18 @@ export function toFeishuTaskPayload(task: GCTask): FeishuTaskPayload {
         payload.summary = sanitizeSummary(task.description);
     }
 
-    // dueDate → due
+    // dueDate → due；datePrecision.dueDate → due.is_all_day
     if (task.dueDate) {
-        payload.due = {
-            timestamp: String(task.dueDate.getTime()),
-        };
+        payload.due = toFeishuTaskTime(task.dueDate, task.datePrecision?.dueDate);
+    } else if (options?.includeClearedDates) {
+        payload.due = null;
     }
 
-    // startDate → start
+    // startDate → start；datePrecision.startDate → start.is_all_day
     if (task.startDate) {
-        payload.start = {
-            timestamp: String(task.startDate.getTime()),
-        };
+        payload.start = toFeishuTaskTime(task.startDate, task.datePrecision?.startDate);
+    } else if (options?.includeClearedDates) {
+        payload.start = null;
     }
 
     // priority mapping
@@ -66,6 +75,11 @@ export function toFeishuCompleted(task: GCTask): boolean {
     return task.completed;
 }
 
+/** 获取本地完成时间的出站值（本地仅支持分钟精度）。 */
+export function toFeishuCompletionTime(task: GCTask): string | undefined {
+    return task.completed ? toFeishuCompletedAt(task.completionDate) : '0';
+}
+
 // ==================== 飞书 → GCTask ====================
 
 /**
@@ -76,16 +90,20 @@ export interface GCTaskUpdates {
     feishuGuid?: string | null;   // null 表示清除飞书 GUID
     completed?: boolean;
     priority?: string;
-    dueDate?: Date;
-    startDate?: Date;
+    dueDate?: Date | null;
+    startDate?: Date | null;
+    completionDate?: Date | null;
     datePrecision?: {
         dueDate?: 'day' | 'time';
         startDate?: 'day' | 'time';
+        completionDate?: 'day' | 'time';
     };
 }
 
 /**
  * 将飞书任务映射为 GCTask 更新字段
+ *
+ * 日期字段使用 `null` 表示飞书侧已清除，本地也应清除；未变化的字段由同步引擎合并。
  *
  * @param feishu - 飞书任务对象
  * @returns GCTask 更新字段
@@ -103,29 +121,28 @@ export function fromFeishuTask(feishu: FeishuTask): GCTaskUpdates {
         updates.description = feishu.summary;
     }
 
-    // completed
+    // completed / completed_at
     if (feishu.completed !== undefined) {
         updates.completed = feishu.completed;
     }
+    const completionDate = fromFeishuCompletedAt(feishu.completed_at);
+    updates.completionDate = completionDate ?? null;
+    if (completionDate) {
+        updates.datePrecision = { ...updates.datePrecision, completionDate: 'time' };
+    }
 
     // due_time → dueDate（根据 is_all_day 保留时间精度）
-    if (feishu.due_time?.timestamp) {
-        const millis = parseInt(feishu.due_time.timestamp, 10);
-        if (!isNaN(millis)) {
-            updates.dueDate = new Date(millis);
-            if (!updates.datePrecision) updates.datePrecision = {};
-            updates.datePrecision.dueDate = feishu.due_time.is_all_day === true ? 'day' : 'time';
-        }
+    const due = fromFeishuTaskTime(feishu.due_time);
+    updates.dueDate = due.date ?? null;
+    if (due.precision) {
+        updates.datePrecision = { ...updates.datePrecision, dueDate: due.precision };
     }
 
     // start_time → startDate（根据 is_all_day 保留时间精度）
-    if (feishu.start_time?.timestamp) {
-        const millis = parseInt(feishu.start_time.timestamp, 10);
-        if (!isNaN(millis)) {
-            updates.startDate = new Date(millis);
-            if (!updates.datePrecision) updates.datePrecision = {};
-            updates.datePrecision.startDate = feishu.start_time.is_all_day === true ? 'day' : 'time';
-        }
+    const start = fromFeishuTaskTime(feishu.start_time);
+    updates.startDate = start.date ?? null;
+    if (start.precision) {
+        updates.datePrecision = { ...updates.datePrecision, startDate: start.precision };
     }
 
     // priority

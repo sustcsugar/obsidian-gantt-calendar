@@ -130,6 +130,7 @@ export interface TaskChanges {
 	dueDate?: Date;
 	cancelledDate?: Date;
 	completionDate?: Date;
+	datePrecision?: GCTask['datePrecision'];
 }
 
 /**

@@ -8,6 +8,11 @@
 import type { GCTask } from '../../types';
 import { setTaskMergeableField } from '../../types';
 import type { MergeableTaskField } from '../../types';
+import {
+    areSameCompletionDates,
+    areSameDatePrecisionMaps,
+    areSameTaskDates,
+} from './taskTimeComparison';
 import type {
     GCTaskWithSync,
     ConflictResolution,
@@ -23,6 +28,8 @@ import type {
 const CRITICAL_FIELDS: (keyof GCTask)[] = [
     'description',
     'completed',
+    'completionDate',
+    'datePrecision',
     'dueDate',
     'startDate',
     'priority',
@@ -135,22 +142,41 @@ export class ConflictResolver {
         const conflicts: string[] = [];
 
         for (const field of CRITICAL_FIELDS) {
-            const val1 = task1[field];
-            const val2 = task2[field];
-
-            if (val1 !== val2) {
-                // 处理 Date 类型的比较
-                if (val1 instanceof Date && val2 instanceof Date) {
-                    if (val1.getTime() !== val2.getTime()) {
-                        conflicts.push(field);
-                    }
-                } else {
-                    conflicts.push(field);
-                }
+            if (this.areCriticalFieldsDifferent(task1, task2, field)) {
+                conflicts.push(field);
             }
         }
 
         return conflicts;
+    }
+
+    private areCriticalFieldsDifferent(
+        task1: GCTask,
+        task2: GCTask,
+        field: keyof GCTask
+    ): boolean {
+        switch (field) {
+            case 'dueDate':
+                return !areSameTaskDates(
+                    task1.dueDate,
+                    task1.datePrecision?.dueDate,
+                    task2.dueDate,
+                    task2.datePrecision?.dueDate
+                );
+            case 'startDate':
+                return !areSameTaskDates(
+                    task1.startDate,
+                    task1.datePrecision?.startDate,
+                    task2.startDate,
+                    task2.datePrecision?.startDate
+                );
+            case 'completionDate':
+                return !areSameCompletionDates(task1.completionDate, task2.completionDate);
+            case 'datePrecision':
+                return !areSameDatePrecisionMaps(task1.datePrecision, task2.datePrecision);
+            default:
+                return task1[field] !== task2[field];
+        }
     }
 
     /**
@@ -206,8 +232,8 @@ export class ConflictResolver {
             const localVal = local[rule.field];
             const remoteVal = remote[rule.field];
 
-            // 如果值相同，跳过
-            if (localVal === remoteVal) {
+            // 如果语义相同，跳过；Date 与 datePrecision 不能比较对象引用
+            if (!this.areCriticalFieldsDifferent(local, remote, rule.field)) {
                 continue;
             }
 
@@ -311,6 +337,8 @@ export function createDefaultMergeRules(): FieldMergeRule[] {
         { field: 'dueDate', winner: 'local' },
         { field: 'startDate', winner: 'local' },
         { field: 'completed', winner: 'remote' },
+        { field: 'completionDate', winner: 'remote' },
+        { field: 'datePrecision', winner: 'local' },
         { field: 'priority', winner: 'newest' },
     ];
 }

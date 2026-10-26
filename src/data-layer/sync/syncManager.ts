@@ -19,6 +19,11 @@ import type { DataSourceChanges } from '../types';
 import { TaskMatcher } from './taskMatcher';
 import { ConflictResolver } from './conflictResolver';
 import { VersionTracker } from './versionTracker';
+import {
+    areSameCompletionDates,
+    areSameDatePrecisionMaps,
+    areSameTaskDates,
+} from './taskTimeComparison';
 import { Logger } from '../../utils/logger';
 
 /**
@@ -301,45 +306,82 @@ export class SyncManager {
     private calculateTaskChanges(local: GCTaskWithSync, remote: GCTaskWithSync): Partial<GCTask> {
         const changes: Partial<GCTask> = {};
 
-        // 比较关键字段
-        const fieldsToCompare: (keyof GCTask)[] = [
-            'description', 'completed', 'dueDate', 'startDate',
-            'priority', 'status', 'tags',
+        // 比较关键字段；日期和精度必须按语义归一化后比较，不能比较对象引用
+        const fieldsToCompare: MergeableTaskField[] = [
+            'description',
+            'completed',
+            'completionDate',
+            'datePrecision',
+            'dueDate',
+            'startDate',
+            'priority',
+            'status',
+            'tags',
         ];
 
         for (const field of fieldsToCompare) {
+            if (!this.isTaskFieldDifferent(local, remote, field)) continue;
+
+            // 根据合并规则决定使用哪个值
+            const rule = this.configuration.fieldMergeRules?.find(r => r.field === field);
             const localVal = local[field];
             const remoteVal = remote[field];
 
-            if (localVal !== remoteVal) {
-                // 根据合并规则决定使用哪个值
-                const rule = this.configuration.fieldMergeRules?.find(r => r.field === field);
-
-                if (rule) {
-                    switch (rule.winner) {
-                        case 'local':
-                            setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localVal);
-                            break;
-                        case 'remote':
-                            if (remoteVal !== undefined) {
-                                setTaskMergeableField(changes as GCTask, field as MergeableTaskField, remoteVal);
-                            }
-                            break;
-                        case 'newest': {
-                            const localTime = local.lastModified?.getTime() || 0;
-                            const remoteTime = remote.lastModified?.getTime() || 0;
-                            setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localTime >= remoteTime ? localVal : remoteVal);
-                            break;
-                        }
+            if (rule) {
+                switch (rule.winner) {
+                    case 'local':
+                        setTaskMergeableField(changes as GCTask, field, localVal);
+                        break;
+                    case 'remote':
+                        setTaskMergeableField(changes as GCTask, field, remoteVal);
+                        break;
+                    case 'newest': {
+                        const localTime = local.lastModified?.getTime() || 0;
+                        const remoteTime = remote.lastModified?.getTime() || 0;
+                        setTaskMergeableField(
+                            changes as GCTask,
+                            field,
+                            localTime >= remoteTime ? localVal : remoteVal
+                        );
+                        break;
                     }
-                } else {
-                    // 默认使用本地值
-                    setTaskMergeableField(changes as GCTask, field as MergeableTaskField, localVal);
                 }
+            } else {
+                // 默认使用本地值
+                setTaskMergeableField(changes as GCTask, field, localVal);
             }
         }
 
         return changes;
+    }
+
+    private isTaskFieldDifferent(
+        local: GCTask,
+        remote: GCTask,
+        field: MergeableTaskField
+    ): boolean {
+        switch (field) {
+            case 'dueDate':
+                return !areSameTaskDates(
+                    local.dueDate,
+                    local.datePrecision?.dueDate,
+                    remote.dueDate,
+                    remote.datePrecision?.dueDate
+                );
+            case 'startDate':
+                return !areSameTaskDates(
+                    local.startDate,
+                    local.datePrecision?.startDate,
+                    remote.startDate,
+                    remote.datePrecision?.startDate
+                );
+            case 'completionDate':
+                return !areSameCompletionDates(local.completionDate, remote.completionDate);
+            case 'datePrecision':
+                return !areSameDatePrecisionMaps(local.datePrecision, remote.datePrecision);
+            default:
+                return local[field] !== remote[field];
+        }
     }
 
     /**
