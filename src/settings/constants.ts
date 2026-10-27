@@ -17,7 +17,6 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	globalTaskFilter: '🎯 ',        // 全局任务筛选标记
 	enabledTaskFormats: ['tasks'], // 启用的任务格式
 	showGlobalFilterInTaskText: true, // 默认显示 global filter
-	dateFilterField: 'dueDate', // 默认使用截止日期作为筛选字段
 	enableDailyNote: true, // 默认在日视图中显示 Daily Note
 	dayViewLayout: 'horizontal', // 默认水平（左右分屏）布局
 	dailyNotePath: 'DailyNotes', // 默认 daily note 文件夹路径

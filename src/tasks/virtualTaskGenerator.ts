@@ -5,7 +5,7 @@
  * 使用 WeakMap 追踪虚拟任务元数据，不污染 GCTask 接口。
  */
 
-import { GCTask, getTaskDateField, setTaskDateField } from '../types';
+import { GCTask, getTaskDateField, setTaskDateField, resolveAnchorDateField } from '../types';
 import type { DateFieldType } from '../settings/types';
 import { parseRepeatRule, getOccurrencesInRange, ParsedRecurrenceRule } from './recurrenceCalculator';
 
@@ -45,14 +45,14 @@ export function getVirtualMetadata(task: GCTask): VirtualTaskMetadata | undefine
  * @param tasks 所有已过滤的任务列表（真实任务）
  * @param rangeStart 可见范围起始日期
  * @param rangeEnd 可见范围结束日期
- * @param dateField 日期字段名（如 'dueDate', 'startDate', 'scheduledDate'）
+ * @param dateField 展开基准日期字段（如 'dueDate', 'startDate'）；不传时按锚定回退链（due→scheduled→start）逐任务解析
  * @returns 虚拟任务数组
  */
 export function generateVirtualInstances(
     tasks: GCTask[],
     rangeStart: Date,
     rangeEnd: Date,
-    dateField: string,
+    dateField?: string,
     maxCount: number = 50
 ): GCTask[] {
     const virtualTasks: GCTask[] = [];
@@ -65,8 +65,10 @@ export function generateVirtualInstances(
         // 跳过已取消的任务
         if (task.cancelled) continue;
 
-        // 获取基准日期
-        const baseDate = getDateFieldValue(task, dateField);
+        // 获取基准日期（未指定字段时按锚定回退链解析）
+        const baseField = dateField ?? resolveAnchorDateField(task);
+        if (!baseField) continue;
+        const baseDate = getDateFieldValue(task, baseField);
         if (!baseDate || !(baseDate instanceof Date) || isNaN(baseDate.getTime())) continue;
 
         // 解析 repeat 规则
@@ -77,7 +79,7 @@ export function generateVirtualInstances(
         const occurrences = getOccurrencesInRange(rule, baseDate, rangeStart, rangeEnd, maxCount);
 
         for (const occDate of occurrences) {
-            const virtualTask = createVirtualTask(task, occDate, dateField, rule);
+            const virtualTask = createVirtualTask(task, occDate, baseField, rule);
             if (virtualTask) {
                 virtualTasks.push(virtualTask);
             }

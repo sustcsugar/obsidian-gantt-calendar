@@ -198,7 +198,7 @@
 | YV-07 | 响应式布局 — 宽屏 | 容器宽度 > 1200px | 4x3 网格布局 |
 | YV-08 | 响应式布局 — 窄屏 | 容器宽度 < 500px | 1x12 堆叠布局 |
 | YV-09 | 增量刷新 | 任务数变化 | 仅更新热力图 CSS 和计数，不重建 DOM |
-| YV-10 | 日期字段配置 | dateFilterField 设为 dueDate | 热力图按 dueDate 计数 |
+| YV-10 | 锚定字段回退链 | 任务仅有 scheduledDate（无 due/start） | 热力图按 scheduledDate 命中日计数（due→scheduled→start 回退链） |
 | YV-11 | 任务计数显示 | 开启任务计数显示 | 每个日期显示任务数量 |
 | YV-12 | 今日高亮 | 当前日期 | 今日单元格高亮显示 |
 

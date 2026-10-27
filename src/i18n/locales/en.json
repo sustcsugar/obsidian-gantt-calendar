@@ -238,10 +238,6 @@
     },
     "calendarView": {
       "groupTitle": "Calendar View",
-      "dateFilterField": {
-        "name": "Date Filter Field",
-        "description": "Calendar views always use this field to filter tasks; Task view can switch flexibly in the toolbar"
-      },
       "weekStart": {
         "name": "Week Start Day",
         "description": "Select the first day of the week",

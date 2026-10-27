@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { Dispatch, SetStateAction, DragEvent as ReactDragEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { Notice } from 'obsidian';
 import type { GCTask } from '../../../types';
+import { resolveAnchorDateField } from '../../../types';
 import type { DateFieldType } from '../../../settings/types';
 import type { TaskCardConfig } from '../../../components/TaskCard/TaskCardConfig';
 import { WeekViewClasses, ContextMenuClasses, setCssProps } from '../../../utils/bem';
@@ -134,7 +135,6 @@ export function WeekTimelineGrid({
 		}
 	}, [onSwipe]);
 
-	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
@@ -236,7 +236,7 @@ export function WeekTimelineGrid({
 	// ===== 拖放落点：整体平移块（保留时长与精度；minutes = 块上边缘的吸附时刻） =====
 	const commitBlockMove = useCallback((task: GCTask, dayIndex: number, minutes: number): void => {
 		const day = dayDate(dayIndex);
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		const updates: Partial<Record<DateFieldType, Date>> = {};
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
@@ -267,19 +267,20 @@ export function WeekTimelineGrid({
 			updates[endField] = endIsTime ? shiftedEnd : atMinutes(shiftedEnd, 0);
 			precision = { ...task.datePrecision };
 		} else {
-			// 全天任务 / 外部视图拖入：落点即时刻（dateField 转 time 精度）；
+			// 全天任务 / 外部视图拖入：落点即时刻（锚定字段转 time 精度，无锚点写 gantt 终点字段）；
 			// 对端钳制：落点越过对端点所在日时钳到对端点日（保留落点时刻），避免制造倒置数据
-			updates[dateField] = clampSingleFieldWrite(task, dateField, atMinutes(day, minutes), startField, endField);
-			precision = { [dateField]: 'time' };
+			const anchorField = resolveAnchorDateField(task) ?? endField;
+			updates[anchorField] = clampSingleFieldWrite(task, anchorField, atMinutes(day, minutes), startField, endField);
+			precision = { [anchorField]: 'time' };
 		}
 
 		void persistTaskUpdate(task, updates, precision, 'views.dayView.updateTimeFailed');
-	}, [dayDate, atMinutes, startField, endField, dateField, persistTaskUpdate]);
+	}, [dayDate, atMinutes, startField, endField, persistTaskUpdate]);
 
 	// ===== 全天行拖放：转全天（day 精度） =====
 	const commitAlldayMove = useCallback((task: GCTask, dayIndex: number): void => {
 		const day = dayDate(dayIndex);
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		const updates: Partial<Record<DateFieldType, Date>> = {};
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
@@ -290,12 +291,13 @@ export function WeekTimelineGrid({
 			precision = { [startField]: 'day', [endField]: 'day' };
 		} else {
 			// 对端钳制：落点越过对端点所在日时钳到对端点日，避免制造倒置数据
-			updates[dateField] = clampSingleFieldWrite(task, dateField, day, startField, endField);
-			precision = { [dateField]: 'day' };
+			const anchorField = resolveAnchorDateField(task) ?? endField;
+			updates[anchorField] = clampSingleFieldWrite(task, anchorField, day, startField, endField);
+			precision = { [anchorField]: 'day' };
 		}
 
 		void persistTaskUpdate(task, updates, precision, 'views.dayView.updateTaskFailed');
-	}, [dayDate, startField, endField, dateField, persistTaskUpdate]);
+	}, [dayDate, startField, endField, persistTaskUpdate]);
 
 	// 触屏整块拖动（长按 500ms 起拖；提交与落点预览复用现有链路）
 	const beginBlockTouchPress = useCanvasTouchDrag({

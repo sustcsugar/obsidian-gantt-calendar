@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 import { Notice } from 'obsidian';
 import type { GCTask } from '../../types';
+import { resolveAnchorDateField } from '../../types';
 import type { DateFieldType } from '../../settings/types';
 import { i18n } from '../../i18n/i18n';
 import { SidebarClasses } from '../../utils/bem';
@@ -77,16 +78,15 @@ export function DailyTimelinePanel(): JSX.Element {
 	// 时间线内统一使用紧凑变体，高度由块容器按时长撑开
 	const timelineConfig = useMemo(() => ({ ...config, variant: 'timeline' as const }), [config]);
 
-	// 侧栏语义保持以 dueDate 为读取字段；区间路由用 gantt 起止字段（与周视图一致）
-	const dateField: DateFieldType = 'dueDate';
+	// 区间路由用 gantt 起止字段（与周视图一致）；单日期锚定按回退链解析
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
 
 	const candidates = useMemo(() => tasks.filter((t) => !t.cancelled), [tasks]);
 	const model = useMemo(() => (
-		buildDayTimelineModel(candidates, day, startField, endField, dateField)
-	), [candidates, day, startField, endField, dateField]);
+		buildDayTimelineModel(candidates, day, startField, endField)
+	), [candidates, day, startField, endField]);
 
 	// ===== 日期导航 =====
 	const goPrevDay = useCallback(() => setPickedDate(shiftDay(day, -1)), [day]);
@@ -97,7 +97,7 @@ export function DailyTimelinePanel(): JSX.Element {
 	const handleAllDayDrop = useCallback((taskId: string): void => {
 		const task = findTaskById(candidates, taskId);
 		if (!task) return;
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		const updates: Partial<Record<DateFieldType, Date>> = {};
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 		if (interval) {
@@ -105,8 +105,9 @@ export function DailyTimelinePanel(): JSX.Element {
 			updates[endField] = day;
 			precision = { [startField]: 'day', [endField]: 'day' };
 		} else {
-			updates[dateField] = day;
-			precision = { [dateField]: 'day' };
+			const anchorField = resolveAnchorDateField(task) ?? endField;
+			updates[anchorField] = day;
+			precision = { [anchorField]: 'day' };
 		}
 		void (async () => {
 			try {
@@ -119,7 +120,7 @@ export function DailyTimelinePanel(): JSX.Element {
 				new Notice(i18n.t('views.dayView.updateTaskFailed'));
 			}
 		})();
-	}, [candidates, day, app, plugin, startField, endField, dateField, enabledFormats]);
+	}, [candidates, day, app, plugin, startField, endField, enabledFormats]);
 
 	const allDayDropProps = useDropTarget({
 		onDrop: (taskId) => handleAllDayDrop(taskId),

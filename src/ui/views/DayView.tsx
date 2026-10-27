@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'rea
 import { Notice } from 'obsidian';
 import type { Component } from 'obsidian';
 import type { GCTask } from '../../types';
+import { resolveAnchorDateField } from '../../types';
 import type { DailyNoteIndex } from '../../utils/dailyNoteSettingsBridge';
 import { DayViewClasses, EmbeddedEditorClasses, withModifiers } from '../../utils/bem';
 import { DayViewConfig } from '../../components/TaskCard';
@@ -50,7 +51,6 @@ export function DayView(): JSX.Element {
 	// 手机端与桌面窄窗口都强制上下分屏：这是空间适配，左右分屏在两侧各 ~160px 时不可用
 	const isNarrow = useIsNarrow();
 	const layout = isPhoneNow() || isNarrow ? 'vertical' : (plugin.settings.dayViewLayout || 'horizontal');
-	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 
@@ -71,19 +71,19 @@ export function DayView(): JSX.Element {
 		return d;
 	}, [currentDate]);
 
-	// ===== 任务数据：视图筛选 + 虚拟周期实例 → 单日连续画布模型 =====
+	// ===== 任务数据：视图筛选 + 虚拟周期实例（锚定回退链解析）→ 单日连续画布模型 =====
 	const model = useMemo(() => {
 		const scoped = applySort(applyTagFilter(applyStatusFilter(tasks, filter.status), filter.tag), filter.sort);
 		const virtualInstances = generateVirtualInstances(
 			scoped,
 			normalized,
 			normalized,
-			dateField,
+			undefined,
 			plugin.settings.recurringTaskDisplayLimit ?? 5
 		);
 		const combined = sortTasks([...scoped, ...virtualInstances], filter.sort).filter((t) => !t.cancelled);
-		return buildDayTimelineModel(combined, normalized, startField, endField, dateField);
-	}, [tasks, filter, normalized, dateField, startField, endField, plugin.settings.recurringTaskDisplayLimit]);
+		return buildDayTimelineModel(combined, normalized, startField, endField);
+	}, [tasks, filter, normalized, startField, endField, plugin.settings.recurringTaskDisplayLimit]);
 
 	// 任务全集（拖放源查找）
 	const dragLookupTasks = useMemo(() => tasks.filter((t) => !t.cancelled), [tasks]);
@@ -92,7 +92,7 @@ export function DayView(): JSX.Element {
 	const handleAllDayDrop = useCallback((taskId: string): void => {
 		const task = findTaskById(dragLookupTasks, taskId);
 		if (!task) return;
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		const updates: Partial<Record<DateFieldType, Date>> = {};
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 		if (interval) {
@@ -100,8 +100,9 @@ export function DayView(): JSX.Element {
 			updates[endField] = normalized;
 			precision = { [startField]: 'day', [endField]: 'day' };
 		} else {
-			updates[dateField] = normalized;
-			precision = { [dateField]: 'day' };
+			const anchorField = resolveAnchorDateField(task) ?? endField;
+			updates[anchorField] = normalized;
+			precision = { [anchorField]: 'day' };
 		}
 		void (async () => {
 			try {
@@ -114,7 +115,7 @@ export function DayView(): JSX.Element {
 				new Notice(i18n.t('views.dayView.updateTaskFailed'));
 			}
 		})();
-	}, [dragLookupTasks, normalized, app, plugin, startField, endField, dateField, refreshTasks]);
+	}, [dragLookupTasks, normalized, app, plugin, startField, endField, refreshTasks]);
 
 	const allDayDropProps = useDropTarget({
 		onDrop: (taskId) => handleAllDayDrop(taskId),

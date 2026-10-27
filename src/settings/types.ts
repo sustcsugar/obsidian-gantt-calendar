@@ -24,7 +24,6 @@ export interface GanttCalendarSettings {
 	globalTaskFilter: string;
 	enabledTaskFormats: string[];
 	showGlobalFilterInTaskText: boolean; // 是否在任务列表文本中显示 global filter 前缀
-	dateFilterField: 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate'; // 日历视图的筛选字段，任务视图的初始字段
 	enableDailyNote: boolean; // 是否在日视图中显示 Daily Note
 	dayViewLayout: 'horizontal' | 'vertical'; // 日视图布局：水平（左右分屏）或垂直（上下分屏）
 	dailyNotePath: string; // Daily note 文件夹路径

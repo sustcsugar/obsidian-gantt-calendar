@@ -16,6 +16,9 @@
 
 ## ✅ 已完成（按日期倒序）
 
+### 2026-10-27
+- [x] dateFilterField 设置退场，单日期任务锚定改为内置回退链 due→scheduled→start：新增 resolveAnchorDateField（src/types.ts），timelineModel 三个模型构建器与 getTaskInterval 去 dateField 参数改为链内解析，拖拽写入目标 = 锚定字段 ?? ganttEndField，generateVirtualInstances 第 4 参改可选（任务视图仍传 taskViewTimeFieldFilter，甘特仍传 ganttStartField），TaskCard 重复任务完成写入走链；设置项/常量/i18n 键移除；tsc + 437 Jest 用例（新增回退链 6 例）+ build 全部通过
+
 ### 2026-10-16
 - [x] T15.1 飞书同步日期+时间精度适配修复：完成 is_all_day 透传、双向精度检测、日期/完成时间归一化、哈希与合并适配；通过 tsc、431 个 Jest 测试和 npm run build
 
@@ -88,4 +91,9 @@
 
 ## 💡 新需求（会话中提出，待排期）
 
-（暂无）
+### GitHub Issue #35 审查结论（2026-10-27，https://github.com/sustcsugar/obsidian-gantt-calendar/issues/35）
+> 设计澄清（用户 2026-10-27）：任务视图定位是独立全功能筛选面板（自带 taskViewTimeFieldFilter，不跟 dateFilterField 联动是有意为之）；日/周/月/年时间线重设计后跨度任务由 ganttStartField/ganttEndField 驱动。#35 的「任务视图不跟设置走」部分属设计如此，非 bug，回复 issue 解释设计即可。
+- [x] dateFilterField 设置退场：单日期任务改为内置回退链锚定（due→scheduled→start，resolveAnchorDateField），替代原 4 个残留角色（单日期可见性/锚定、时间线拖拽写入目标、重复任务展开字段、TaskCard 重复完成写入）；设置项与 i18n 键已移除，旧 data.json 残留键无害
+- [ ] 子诉求·分视图打开命令：open-calendar-view 硬编码 switchView('month')（src/commands/common.ts:21），需增加日/周/月三条命令
+- [ ] 子诉求·排序「保持原样」：SORT_OPTIONS（src/tasks/taskSorter.ts:12）无 original 项，需新增保序选项
+- [ ] 子诉求·标签后置显示：extractTags 按全文匹配位置无关，预计解析层已支持，待端到端验证后回复用户

@@ -1,5 +1,5 @@
 import type { GCTask } from '../../../types';
-import { getTaskDateField } from '../../../types';
+import { getTaskDateField, resolveAnchorDateField } from '../../../types';
 import type { DateFieldType } from '../../../settings/types';
 
 /**
@@ -9,7 +9,7 @@ import type { DateFieldType } from '../../../settings/types';
  * 由组件以 CSS 变量 --gc-tl-hour-h 注入样式）。
  * 任务在时间线内分三类：
  * 1. 区间任务（ganttStartField+ganttEndField 都有值且至少一个带时刻）→ 时间网格块
- * 2. 点任务（仅 dateFilterField 带时刻）→ 默认时长的块，resize 时升级为区间任务
+ * 2. 点任务（仅锚定字段带时刻，锚定字段按 due→scheduled→start 回退链解析）→ 默认时长的块，resize 时升级为区间任务
  * 3. 全天任务（day 精度）→ 全天行横跨条
  */
 
@@ -212,13 +212,12 @@ function backwardPoint(anchorVal: Date, field: DateFieldType): TaskInterval {
  * - SF仅日期 + EF同日时刻 → 后向点任务 [EF-60, EF)（SF 的 day 无时刻信息）
  * - SF仅日期 + EF跨日时刻 → 区间 [SF 00:00, EF]（必 ≥24h → 全天条 "→ H:mm"）
  * - 双 day → null（全天横跨条）
- * - 单字段（dateFilterField）带时刻：终点角色 → 后向点；其余 → 前向点
+ * - 单字段点任务：锚定字段（due→scheduled→start 回退链）带时刻，终点角色 → 后向点；其余 → 前向点
  */
 export function getTaskInterval(
 	task: GCTask,
 	startField: DateFieldType,
 	endField: DateFieldType,
-	dateField: DateFieldType,
 ): TaskInterval | null {
 	const startVal = getTaskDateField(task, startField);
 	const endVal = getTaskDateField(task, endField);
@@ -262,11 +261,14 @@ export function getTaskInterval(
 		return { kind: 'interval', start, end, pointField: startField };
 	}
 
-	// 单字段点任务：dateFilterField 带时刻，方向取决于字段角色
-	const dateVal = getTaskDateField(task, dateField);
-	if (dateVal && task.datePrecision?.[dateField] === 'time') {
-		if (isEndRoleField(dateField, endField)) return backwardPoint(dateVal, dateField);
-		return forwardPoint(dateVal, dateField);
+	// 单字段点任务：锚定字段（回退链解析）带时刻，方向取决于字段角色
+	const anchorField = resolveAnchorDateField(task);
+	if (anchorField) {
+		const dateVal = getTaskDateField(task, anchorField);
+		if (dateVal && task.datePrecision?.[anchorField] === 'time') {
+			if (isEndRoleField(anchorField, endField)) return backwardPoint(dateVal, anchorField);
+			return forwardPoint(dateVal, anchorField);
+		}
 	}
 
 	return null;
@@ -456,7 +458,6 @@ export function buildWeekTimelineModel(
 	weekStart: Date,
 	startField: DateFieldType,
 	endField: DateFieldType,
-	dateField: DateFieldType,
 ): WeekTimelineModel {
 	const blocks: TimeBlock[] = [];
 	const alldayTasks: GCTask[] = [];
@@ -466,7 +467,7 @@ export function buildWeekTimelineModel(
 	const allday: AlldayBar[] = [];
 
 	for (const task of tasks) {
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		if (interval) {
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
 			// 长区间任务（≥24h）：全天行横跨条，时刻标注取自两端精度
@@ -501,8 +502,9 @@ export function buildWeekTimelineModel(
 			continue;
 		}
 
-		// 全天任务：按 dateFilterField 的命中日出现（维持现有语义）
-		const dateVal = getTaskDateField(task, dateField);
+		// 全天任务：按锚定字段（回退链）的命中日出现
+		const anchorField = resolveAnchorDateField(task);
+		const dateVal = anchorField ? getTaskDateField(task, anchorField) : undefined;
 		if (dateVal && !isNaN(dateVal.getTime())) {
 			alldayTasks.push(task);
 		}
@@ -520,7 +522,7 @@ export function buildWeekTimelineModel(
 		daySegs.sort((a, b) => a.seg.startMin - b.seg.startMin || b.seg.lane - a.seg.lane);
 	}
 
-	// 全天行：day 精度跨日渲染横跨条，单日维持 dateFilterField 命中日
+	// 全天行：day 精度跨日渲染横跨条，单日维持锚定字段（回退链）命中日
 	for (const task of alldayTasks) {
 		const startVal = getTaskDateField(task, startField);
 		const endVal = getTaskDateField(task, endField);
@@ -535,8 +537,10 @@ export function buildWeekTimelineModel(
 		}
 
 		if (!bar) {
-			// 单日全天：按 dateFilterField 命中日
-			const dateVal = getTaskDateField(task, dateField);
+			// 单日全天：按锚定字段（回退链）命中日
+			const anchorField = resolveAnchorDateField(task);
+			if (!anchorField) continue;
+			const dateVal = getTaskDateField(task, anchorField);
 			if (!dateVal) continue;
 			const d = dayStart(dateVal);
 			const dayIndex = Math.round((d.getTime() - weekStart.getTime()) / 86400000);
@@ -615,7 +619,7 @@ function clipToDay(start: Date, end: Date, dayStart: Date): TimeBlockSegment | n
  * 构建单日时间线模型（与周视图同语义）：
  * - <24h 区间/点任务 → 裁剪到当日的时段块（lane 布局，延续边标记）
  * - ≥24h 长区间（覆盖当日）→ 全天列表 + 时刻标注，不进时间网格
- * - day 精度：gantt 区间覆盖当日，或 dateField 命中当日 → 全天列表
+ * - day 精度：gantt 区间覆盖当日，或锚定字段（回退链）命中当日 → 全天列表
  * @param tasks  未过滤取消态的任务全集（模型不筛 cancelled，由调用方决定）
  */
 export function buildDayTimelineModel(
@@ -623,7 +627,6 @@ export function buildDayTimelineModel(
 	day: Date,
 	startField: DateFieldType,
 	endField: DateFieldType,
-	dateField: DateFieldType,
 ): DayTimelineModel {
 	// 注意：参数名用 day，避免遮蔽模块级 dayStart() 工具函数
 	const dayEnd = new Date(day);
@@ -634,7 +637,7 @@ export function buildDayTimelineModel(
 	const allday: DayAlldayItem[] = [];
 
 	for (const task of tasks) {
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		if (interval) {
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
 			if (interval.kind === 'interval' && durationMin >= MINUTES_PER_DAY) {
@@ -666,14 +669,15 @@ export function buildDayTimelineModel(
 			continue;
 		}
 
-		// day 精度：gantt 双字段区间覆盖当日，或 dateField 命中当日
+		// day 精度：gantt 双字段区间覆盖当日，或锚定字段（回退链）命中当日
 		const startVal = getTaskDateField(task, startField);
 		const endVal = getTaskDateField(task, endField);
 		if (startVal && endVal && coversDay(dayStart(startVal), nextDayStart(endVal))) {
 			allday.push({ task });
 			continue;
 		}
-		const dateVal = getTaskDateField(task, dateField);
+		const anchorField = resolveAnchorDateField(task);
+		const dateVal = anchorField ? getTaskDateField(task, anchorField) : undefined;
 		if (dateVal && dayStart(dateVal).getTime() === day.getTime()) {
 			allday.push({ task });
 		}
@@ -730,7 +734,6 @@ export function buildMonthTimelineModel(
 	weeks: Array<{ days: Array<{ date: Date }> }>,
 	startField: DateFieldType,
 	endField: DateFieldType,
-	dateField: DateFieldType,
 	maxSpanLanes: number = Infinity,
 ): MonthWeekModel[] {
 	// 预分类：跨日区间任务与锚日格内任务
@@ -738,7 +741,7 @@ export function buildMonthTimelineModel(
 	const anchored: Array<{ task: GCTask; day: Date }> = [];
 
 	for (const task of tasks) {
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		if (interval) {
 			const durationMin = Math.round((interval.end.getTime() - interval.start.getTime()) / 60000);
 			if (interval.kind === 'interval' && durationMin >= MINUTES_PER_DAY) {
@@ -772,8 +775,9 @@ export function buildMonthTimelineModel(
 			}
 		}
 
-		// 单字段：dateField 命中日
-		const dateVal = getTaskDateField(task, dateField);
+		// 单字段：锚定字段（回退链）命中日
+		const anchorField = resolveAnchorDateField(task);
+		const dateVal = anchorField ? getTaskDateField(task, anchorField) : undefined;
 		if (dateVal && !isNaN(dateVal.getTime())) {
 			anchored.push({ task, day: dayStart(dateVal) });
 		}

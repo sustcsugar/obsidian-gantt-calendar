@@ -244,6 +244,26 @@ export function setTaskDateField(task: GCTask, field: DateFieldType, value: Date
 }
 
 /**
+ * 单日期任务锚定字段回退链：dueDate → scheduledDate → startDate。
+ * dateFilterField 设置退场后，只有一个日期字段（或首个命中字段）的任务
+ * 以此链决定在日/周/月视图的锚定日与拖拽写入目标；
+ * created/completion/cancelled 不参与锚定（完成态另有处理）。
+ */
+export const ANCHOR_DATE_FIELD_CHAIN: readonly DateFieldType[] = ['dueDate', 'scheduledDate', 'startDate'];
+
+/**
+ * 解析任务的单日期锚定字段：回退链中首个有值者。
+ * 三字段全空返回 null（任务不锚定任何一天）。
+ */
+export function resolveAnchorDateField(task: GCTask): DateFieldType | null {
+	for (const field of ANCHOR_DATE_FIELD_CHAIN) {
+		const value = getTaskDateField(task, field);
+		if (value && !isNaN(value.getTime())) return field;
+	}
+	return null;
+}
+
+/**
  * 可合并的任务字段类型（用于同步冲突解决）
  */
 export type MergeableTaskField = 'description' | 'completed' | 'completionDate' | 'datePrecision' | 'dueDate' | 'startDate' | 'priority' | 'status' | 'tags';

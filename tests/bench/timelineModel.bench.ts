@@ -102,8 +102,8 @@ function main(): void {
 	console.log(`timelineModel bench — ${N} tasks × ${ITER} iterations\n`);
 
 	const rows = [
-		bench('buildWeekTimelineModel', () => buildWeekTimelineModel(tasks, weekStart, 'startDate', 'dueDate', 'dueDate'), ITER),
-		bench('buildDayTimelineModel  ', () => buildDayTimelineModel(tasks, midWeek, 'startDate', 'dueDate', 'dueDate'), ITER),
+		bench('buildWeekTimelineModel', () => buildWeekTimelineModel(tasks, weekStart, 'startDate', 'dueDate'), ITER),
+		bench('buildDayTimelineModel  ', () => buildDayTimelineModel(tasks, midWeek, 'startDate', 'dueDate'), ITER),
 	];
 
 	for (const r of rows) {

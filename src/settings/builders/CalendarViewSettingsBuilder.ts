@@ -19,28 +19,6 @@ export class CalendarViewSettingsBuilder extends BaseBuilder {
 				group.addSetting(cb);
 			};
 
-			// 日期筛选字段
-			addSetting(setting => {
-				setting.setName(i18n.t('settings.calendarView.dateFilterField.name'))
-					.setDesc(i18n.t('settings.calendarView.dateFilterField.description'))
-					.addDropdown(drop => drop
-						.addOptions({
-							'createdDate': i18n.t('common.dateFields.createdDate'),
-							'startDate': i18n.t('common.dateFields.startDate'),
-							'scheduledDate': i18n.t('common.dateFields.scheduledDate'),
-							'dueDate': i18n.t('common.dateFields.dueDate'),
-							'completionDate': i18n.t('common.dateFields.completionDate'),
-							'cancelledDate': i18n.t('common.dateFields.cancelledDate'),
-						})
-						.setValue(this.plugin.settings.dateFilterField)
-						.onChange((value) => {
-							void (async () => {
-								this.plugin.settings.dateFilterField = value as 'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'completionDate' | 'cancelledDate';
-								await this.saveAndRefreshViews();
-							})();
-						}));
-			});
-
 			// 一周开始日
 			addSetting(setting => {
 				setting.setName(i18n.t('settings.calendarView.weekStart.name'))

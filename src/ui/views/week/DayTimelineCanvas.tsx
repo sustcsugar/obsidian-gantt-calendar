@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { DragEvent as ReactDragEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { Notice } from 'obsidian';
 import type { GCTask } from '../../../types';
+import { resolveAnchorDateField } from '../../../types';
 import type { DateFieldType } from '../../../settings/types';
 import type { TaskCardConfig } from '../../../components/TaskCard/TaskCardConfig';
 import { DayCanvasClasses, ContextMenuClasses, setCssProps } from '../../../utils/bem';
@@ -81,7 +82,6 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 	const plugin = usePlugin();
 	const app = useApp();
 
-	const dateField = 'dueDate';
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
@@ -167,7 +167,7 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 
 	// ===== 整块拖放落点（minutes = 块上边缘吸附时刻） =====
 	const commitBlockMove = useCallback((task: GCTask, minutes: number): void => {
-		const interval = getTaskInterval(task, startField, endField, dateField);
+		const interval = getTaskInterval(task, startField, endField);
 		const updates: Partial<Record<DateFieldType, Date>> = {};
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
@@ -198,12 +198,13 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 		} else {
 			// 全天任务 / 外部视图拖入：落点即时刻；
 			// 对端钳制：落点越过对端点所在日时钳到对端点日（保留落点时刻），避免制造倒置数据
-			updates[dateField] = clampSingleFieldWrite(task, dateField, atMinutes(minutes), startField, endField);
-			precision = { [dateField]: 'time' };
+			const anchorField = resolveAnchorDateField(task) ?? endField;
+			updates[anchorField] = clampSingleFieldWrite(task, anchorField, atMinutes(minutes), startField, endField);
+			precision = { [anchorField]: 'time' };
 		}
 
 		void persistTaskUpdate(task, updates, precision, 'views.dayView.updateTimeFailed');
-	}, [atMinutes, startField, endField, dateField, persistTaskUpdate]);
+	}, [atMinutes, startField, endField, persistTaskUpdate]);
 
 	// 触屏整块拖动（长按 500ms 起拖；单日画布 dayIndex 恒为 0）
 	const beginBlockTouchPress = useCanvasTouchDrag({

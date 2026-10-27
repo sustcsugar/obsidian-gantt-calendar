@@ -26,7 +26,6 @@ export function WeekView(): JSX.Element {
 	const refreshTasks = useCalendarStore((s) => s.refreshTasks);
 
 	const startOnMonday = !!plugin.settings.startOnMonday;
-	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const ganttStartField = plugin.settings.ganttStartField || 'startDate';
 	const ganttEndField = plugin.settings.ganttEndField || 'dueDate';
 	const showLunar = !!plugin.settings.showLunar;
@@ -64,10 +63,10 @@ export function WeekView(): JSX.Element {
 		applySort(applyTagFilter(applyStatusFilter(tasks, filter.status), filter.tag), filter.sort)
 	), [tasks, filter]);
 
-	// 预生成整周的虚拟周期实例
+	// 预生成整周的虚拟周期实例（锚定回退链解析）
 	const virtualInstances = useMemo(() => (
-		generateVirtualInstances(scoped, weekStart, weekEnd, dateField, recurringLimit)
-	), [scoped, weekStart, weekEnd, dateField, recurringLimit]);
+		generateVirtualInstances(scoped, weekStart, weekEnd, undefined, recurringLimit)
+	), [scoped, weekStart, weekEnd, recurringLimit]);
 
 	// 本周任务全集（真实 + 虚拟，已排序）
 	const combined = useMemo(() => (
@@ -76,8 +75,8 @@ export function WeekView(): JSX.Element {
 
 	// 连续画布模型：时间块分段 + lane 布局 + 全天横跨条
 	const model = useMemo(() => (
-		buildWeekTimelineModel(combined, weekStart, ganttStartField, ganttEndField, dateField)
-	), [combined, weekStart, ganttStartField, ganttEndField, dateField]);
+		buildWeekTimelineModel(combined, weekStart, ganttStartField, ganttEndField)
+	), [combined, weekStart, ganttStartField, ganttEndField]);
 
 	const handleRefresh = useCallback(() => refreshTasks(), [refreshTasks]);
 

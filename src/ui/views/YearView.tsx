@@ -1,7 +1,7 @@
 import { useMemo, type JSX } from 'react';
 import type { CSSProperties } from 'react';
 import { generateMonthCalendar } from '../../calendar/calendarGenerator';
-import { getTaskDateField } from '../../types';
+import { getTaskDateField, resolveAnchorDateField } from '../../types';
 import { YearViewClasses } from '../../utils/bem';
 import { usePlugin } from '../pluginContext';
 import { useCalendarStore, selectViewFilter } from '../store/calendarStore';
@@ -22,7 +22,6 @@ export function YearView(): JSX.Element {
 
 	const year = currentDate.getFullYear();
 	const startOnMonday = !!plugin.settings.startOnMonday;
-	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const showLunar = plugin.settings.showLunar;
 	const showCount = plugin.settings.yearShowTaskCount;
 
@@ -31,21 +30,23 @@ export function YearView(): JSX.Element {
 		const end = new Date(year, 11, 31);
 		const scoped = applyTagFilter(tasks, filter.tag);
 
-		// 重复任务：生成虚拟实例并合并计数
+		// 重复任务：生成虚拟实例并合并计数（锚定回退链解析）
 		const recurringLimit = plugin.settings.recurringTaskDisplayLimit ?? 5;
-		const virtuals = generateVirtualInstances(scoped, start, end, dateField, recurringLimit);
+		const virtuals = generateVirtualInstances(scoped, start, end, undefined, recurringLimit);
 		const allTasks = [...scoped, ...virtuals];
 
 		const counts = new Map<string, number>();
 		for (const t of allTasks) {
-			const d = getTaskDateField(t, dateField);
+			const anchorField = resolveAnchorDateField(t);
+			if (!anchorField) continue;
+			const d = getTaskDateField(t, anchorField);
 			if (!d) continue;
 			if (d < start || d > end) continue;
 			const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 			counts.set(key, (counts.get(key) || 0) + 1);
 		}
 		return counts;
-	}, [tasks, filter, year, dateField]);
+	}, [tasks, filter, year, plugin.settings.recurringTaskDisplayLimit]);
 
 	const months = useMemo(() => {
 		const palette = plugin.settings.yearHeatmapPalette || 'blue';

@@ -238,10 +238,6 @@
     },
     "calendarView": {
       "groupTitle": "日历视图",
-      "dateFilterField": {
-        "name": "日期筛选字段",
-        "description": "日历视图始终使用此字段筛选任务；任务视图可在工具栏灵活切换"
-      },
       "weekStart": {
         "name": "一周开始日",
         "description": "选择一周的起始日",

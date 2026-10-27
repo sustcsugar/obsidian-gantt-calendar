@@ -1,5 +1,6 @@
 import { memo, useMemo, type CSSProperties, type JSX } from 'react';
 import type { GCTask } from '../../types';
+import { resolveAnchorDateField } from '../../types';
 import type { TaskCardConfig } from '../../components/TaskCard/TaskCardConfig';
 import { TaskCardClasses, TimeBadgeClasses } from '../../utils/bem';
 import { isVirtualTask, getVirtualMetadata } from '../../tasks/virtualTaskGenerator';
@@ -290,7 +291,8 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 		void (async () => {
 			try {
 				if (checked && task.repeat && !virtual) {
-					const dateField = plugin.settings.dateFilterField || 'dueDate';
+					// 重复任务完成：写入锚定字段（回退链，无锚点写截止日）
+					const dateField = resolveAnchorDateField(task) ?? 'dueDate';
 					await completeRecurringTask(app, task, plugin.settings.enabledTaskFormats, dateField);
 				} else if (!virtual) {
 					await updateTaskCompletion(app, task, checked, plugin.settings.enabledTaskFormats);

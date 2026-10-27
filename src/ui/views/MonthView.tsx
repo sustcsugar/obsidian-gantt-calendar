@@ -5,6 +5,7 @@ import type { DragEvent as ReactDragEvent } from 'react';
 import { Notice } from 'obsidian';
 import { generateMonthCalendar } from '../../calendar/calendarGenerator';
 import type { GCTask } from '../../types';
+import { resolveAnchorDateField } from '../../types';
 import { MonthViewConfig } from '../../components/TaskCard';
 import { MonthViewClasses, setCssProps } from '../../utils/bem';
 import { usePlugin, useApp } from '../pluginContext';
@@ -85,7 +86,6 @@ export function MonthView(): JSX.Element {
 	}, [monthKey]);
 
 	const startOnMonday = !!plugin.settings.startOnMonday;
-	const dateField = plugin.settings.dateFilterField || 'dueDate';
 	const startField = plugin.settings.ganttStartField || 'startDate';
 	const endField = plugin.settings.ganttEndField || 'dueDate';
 	const enabledFormats = plugin.settings.enabledTaskFormats || [];
@@ -111,7 +111,7 @@ export function MonthView(): JSX.Element {
 		applySort(applyTagFilter(applyStatusFilter(tasks, filter.status), filter.tag), filter.sort)
 	), [tasks, filter]);
 
-	// 预生成整月虚拟周期实例
+	// 预生成整月虚拟周期实例（锚定回退链解析）
 	const virtualInstances = useMemo(() => {
 		if (!monthData) return [];
 		const allDays = monthData.days;
@@ -123,17 +123,17 @@ export function MonthView(): JSX.Element {
 			scoped,
 			monthStart,
 			monthEnd,
-			dateField,
+			undefined,
 			plugin.settings.recurringTaskDisplayLimit ?? 5
 		);
-	}, [scoped, monthData, dateField, plugin.settings.recurringTaskDisplayLimit]);
+	}, [scoped, monthData, plugin.settings.recurringTaskDisplayLimit]);
 
 	// 月视图时间线模型：跨日横跨条 + 格内任务（锚日语义）；横跨条行数受 taskLimit 上限
 	const monthModel = useMemo(() => {
 		if (!monthData) return [];
 		const combined = sortTasks([...scoped, ...virtualInstances], filter.sort).filter((t) => !t.cancelled);
-		return buildMonthTimelineModel(combined, monthData.weeks, startField, endField, dateField, taskLimit);
-	}, [scoped, virtualInstances, monthData, filter.sort, startField, endField, dateField, taskLimit]);
+		return buildMonthTimelineModel(combined, monthData.weeks, startField, endField, taskLimit);
+	}, [scoped, virtualInstances, monthData, filter.sort, startField, endField, taskLimit]);
 
 	// 任务全集（拖放源查找）
 	const dragLookupTasks = useMemo(() => tasks.filter((t) => !t.cancelled), [tasks]);
@@ -154,7 +154,7 @@ export function MonthView(): JSX.Element {
 
 		const target = new Date(targetDate);
 		target.setHours(0, 0, 0, 0);
-		const interval = getTaskInterval(sourceTask, startField, endField, dateField);
+		const interval = getTaskInterval(sourceTask, startField, endField);
 		const updates: Partial<Record<DateFieldType, Date>> = {};
 		let precision: Partial<Record<DateFieldType, 'day' | 'time'>> = {};
 
@@ -179,10 +179,11 @@ export function MonthView(): JSX.Element {
 				updates[endField] = endIsTime ? newEnd : atMinutes(newEnd, 0);
 				precision = { ...sourceTask.datePrecision };
 			} else {
-				// 全天单字段：dateField 平移到目标日（day 精度）；
+				// 全天单字段：锚定字段（回退链，无锚点时写 gantt 终点字段）平移到目标日（day 精度）；
 				// 对端钳制：落点越过对端点所在日时钳到对端点日，避免制造倒置数据
-				updates[dateField] = clampSingleFieldWrite(sourceTask, dateField, target, startField, endField);
-				precision = { [dateField]: 'day' };
+				const anchorField = resolveAnchorDateField(sourceTask) ?? endField;
+				updates[anchorField] = clampSingleFieldWrite(sourceTask, anchorField, target, startField, endField);
+				precision = { [anchorField]: 'day' };
 			}
 
 			const taskToUpdate = { ...sourceTask, datePrecision: { ...sourceTask.datePrecision, ...precision } };
@@ -193,7 +194,7 @@ export function MonthView(): JSX.Element {
 			Logger.error('MonthView', 'Error updating task date:', error);
 			new Notice(i18n.t('views.dayView.updateDateFailed'));
 		}
-	}, [app, dateField, startField, endField, enabledFormats, dragLookupTasks, plugin, refreshTasks]);
+	}, [app, startField, endField, enabledFormats, dragLookupTasks, plugin, refreshTasks]);
 
 	if (!monthData) {
 		return <div ref={viewRef} className="gc-view gc-view--month" />;

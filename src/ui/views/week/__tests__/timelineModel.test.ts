@@ -3,7 +3,8 @@
  *
  * 覆盖面：吸附与换算、点任务锚定方向体系（前向/后向）、day 精度不虚构时刻、
  * 跨日路由（≥24h 全天条 / <24h 分段）、周内分段延续标记、lane 布局（含上限与
- * 全天行不设上限）、周/单日模型构建的端到端语义、月模型横跨条行数上限。
+ * 全天行不设上限）、周/单日模型构建的端到端语义、月模型横跨条行数上限、
+ * 单日期任务锚定回退链（due → scheduled → start，dateFilterField 设置退场）。
  */
 
 import {
@@ -24,6 +25,7 @@ import {
 	type TimeBlockSegment,
 	type LaneInfo,
 } from '../timelineModel';
+import { resolveAnchorDateField } from '../../../../types';
 import type { GCTask } from '../../../../types';
 
 // ===== 测试工具 =====
@@ -90,20 +92,20 @@ describe('snapMinutes / formatMinutes / px 换算', () => {
 // ===== 点任务锚定方向体系 =====
 
 describe('getTaskInterval：任务区间语义', () => {
-	const F = { startField: 'startDate', endField: 'dueDate', dateField: 'dueDate' } as const;
+	const F = { startField: 'startDate', endField: 'dueDate' } as const;
 
 	it('仅 📅 带时刻（终点角色）→ 后向点 [t-60, t)，锚定方向 backward', () => {
 		const t = mkTask({ dueDate: DAY(8, 4, 14, 0), datePrecision: { dueDate: 'time' } });
-		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.kind).toBe('point');
 		expect(it.pointDirection).toBe('backward');
 		expect(it.start).toEqual(DAY(8, 4, 13, 0));
 		expect(it.end).toEqual(DAY(8, 4, 14, 0));
 	});
 
-	it('仅 🛫 带时刻（起点角色，作为 dateField）→ 前向点 [t, t+60)', () => {
+	it('仅 🛫 带时刻（起点角色，回退链锚定 start）→ 前向点 [t, t+60)', () => {
 		const t = mkTask({ startDate: DAY(8, 4, 9, 0), datePrecision: { startDate: 'time' } });
-		const it = getTaskInterval(t, F.startField, F.endField, 'startDate')!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.kind).toBe('point');
 		expect(it.pointDirection).toBe('forward');
 		expect(it.start).toEqual(DAY(8, 4, 9, 0));
@@ -115,7 +117,7 @@ describe('getTaskInterval：任务区间语义', () => {
 			startDate: DAY(8, 4), dueDate: DAY(8, 4, 14, 0),
 			datePrecision: { startDate: 'day', dueDate: 'time' },
 		});
-		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.kind).toBe('point');
 		expect(it.pointDirection).toBe('backward');
 		expect(it.start.getHours()).toBe(13);
@@ -126,7 +128,7 @@ describe('getTaskInterval：任务区间语义', () => {
 			startDate: DAY(8, 4, 9, 0), dueDate: DAY(8, 4),
 			datePrecision: { startDate: 'time', dueDate: 'day' },
 		});
-		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.kind).toBe('point');
 		expect(it.pointDirection).toBe('forward');
 		expect(it.start.getHours()).toBe(9);
@@ -138,7 +140,7 @@ describe('getTaskInterval：任务区间语义', () => {
 			startDate: DAY(8, 1), dueDate: DAY(8, 4, 14, 0),
 			datePrecision: { startDate: 'day', dueDate: 'time' },
 		});
-		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.kind).toBe('interval');
 		expect(it.start).toEqual(DAY(8, 1, 0, 0));
 		expect(it.end).toEqual(DAY(8, 4, 14, 0));
@@ -149,7 +151,7 @@ describe('getTaskInterval：任务区间语义', () => {
 			startDate: DAY(8, 1, 22, 0), dueDate: DAY(8, 2, 3, 0),
 			datePrecision: { startDate: 'time', dueDate: 'time' },
 		});
-		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.kind).toBe('interval');
 		expect(it.end.getTime() - it.start.getTime()).toBe(5 * 3600 * 1000);
 
@@ -159,7 +161,7 @@ describe('getTaskInterval：任务区间语义', () => {
 			startDate: DAY(8, 2, 10, 0), dueDate: DAY(8, 1, 9, 0),
 			datePrecision: { startDate: 'time', dueDate: 'time' },
 		});
-		const point = getTaskInterval(bad, F.startField, F.endField, F.dateField)!;
+		const point = getTaskInterval(bad, F.startField, F.endField)!;
 		expect(point.kind).toBe('point');
 		expect(point.start).toEqual(DAY(8, 2, 10, 0));
 		expect(point.end.getTime() - point.start.getTime()).toBe(60 * 60000);
@@ -170,12 +172,12 @@ describe('getTaskInterval：任务区间语义', () => {
 			startDate: DAY(8, 1), dueDate: DAY(8, 5),
 			datePrecision: { startDate: 'day', dueDate: 'day' },
 		});
-		expect(getTaskInterval(t, F.startField, F.endField, F.dateField)).toBeNull();
+		expect(getTaskInterval(t, F.startField, F.endField)).toBeNull();
 	});
 
 	it('前向点午夜钳制：23:30 起点 → 终点 = 24:00（时长缩短）', () => {
 		const t = mkTask({ startDate: DAY(8, 4, 23, 30), datePrecision: { startDate: 'time' } });
-		const it = getTaskInterval(t, F.startField, F.endField, 'startDate')!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.start.getHours()).toBe(23);
 		expect(it.start.getMinutes()).toBe(30);
 		expect(it.end).toEqual(new Date(2026, 8, 5, 0, 0));
@@ -183,9 +185,39 @@ describe('getTaskInterval：任务区间语义', () => {
 
 	it('后向点午夜钳制：00:30 截止 → 起点 = 00:00（时长缩短）', () => {
 		const t = mkTask({ dueDate: DAY(8, 4, 0, 30), datePrecision: { dueDate: 'time' } });
-		const it = getTaskInterval(t, F.startField, F.endField, F.dateField)!;
+		const it = getTaskInterval(t, F.startField, F.endField)!;
 		expect(it.start).toEqual(DAY(8, 4, 0, 0));
 		expect(it.end.getMinutes()).toBe(30);
+	});
+
+	it('仅 ⏳ 带时刻（回退链锚定 scheduled，非终点角色）→ 前向点 [t, t+60)', () => {
+		const t = mkTask({ scheduledDate: DAY(8, 4, 9, 30), datePrecision: { scheduledDate: 'time' } });
+		const it = getTaskInterval(t, F.startField, F.endField)!;
+		expect(it.kind).toBe('point');
+		expect(it.pointDirection).toBe('forward');
+		expect(it.start).toEqual(DAY(8, 4, 9, 30));
+		expect(it.end).toEqual(DAY(8, 4, 10, 30));
+	});
+});
+
+// ===== 单日期锚定回退链（dateFilterField 设置退场后的内置规则） =====
+
+describe('resolveAnchorDateField：due → scheduled → start 回退链', () => {
+	it('due 优先：三字段全有值时锚定截止日', () => {
+		const t = mkTask({
+			startDate: DAY(8, 1), scheduledDate: DAY(8, 2), dueDate: DAY(8, 3),
+		});
+		expect(resolveAnchorDateField(t)).toBe('dueDate');
+	});
+
+	it('无 due 回退 scheduled，再回退 start', () => {
+		expect(resolveAnchorDateField(mkTask({ scheduledDate: DAY(8, 2), startDate: DAY(8, 1) }))).toBe('scheduledDate');
+		expect(resolveAnchorDateField(mkTask({ startDate: DAY(8, 1) }))).toBe('startDate');
+	});
+
+	it('created/completion/cancelled 不参与锚定；三字段全空返回 null', () => {
+		expect(resolveAnchorDateField(mkTask({ createdDate: DAY(8, 1), completionDate: DAY(8, 2), cancelledDate: DAY(8, 3) }))).toBeNull();
+		expect(resolveAnchorDateField(mkTask({}))).toBeNull();
 	});
 });
 
@@ -342,7 +374,7 @@ describe('buildWeekTimelineModel', () => {
 				lineNumber: 4, startDate: DAY(8, 8), dueDate: DAY(8, 12),
 				datePrecision: { startDate: 'day', dueDate: 'day' },
 			}),
-		], WEEK_START, 'startDate', 'dueDate', 'dueDate');
+		], WEEK_START, 'startDate', 'dueDate');
 
 		// 周四（dayIndex 3）：后向点 [780, 840)（截止 14:00 为块终点）+ 跨夜区间的尾段 [0, 180)
 		const thursday = model.days[3].map((d) => d.seg);
@@ -359,10 +391,20 @@ describe('buildWeekTimelineModel', () => {
 		expect([plain.startDayIndex, plain.endDayIndex]).toEqual([1, 5]);
 	});
 
-	it('单日全天按 dateField 命中日进全天行', () => {
+	it('单日全天按锚定字段命中日进全天行', () => {
 		const model = buildWeekTimelineModel([
 			mkTask({ lineNumber: 5, dueDate: DAY(8, 11), datePrecision: { dueDate: 'day' } }),
-		], WEEK_START, 'startDate', 'dueDate', 'dueDate');
+		], WEEK_START, 'startDate', 'dueDate');
+		expect(model.blocks).toHaveLength(0);
+		expect(model.allday).toHaveLength(1);
+		expect(model.allday[0].startDayIndex).toBe(4);
+		expect(model.allday[0].endDayIndex).toBe(4);
+	});
+
+	it('仅有 ⏳ 计划日期的任务按回退链锚定计划日（issue #35 场景：不再依赖设置）', () => {
+		const model = buildWeekTimelineModel([
+			mkTask({ lineNumber: 6, scheduledDate: DAY(8, 11), datePrecision: { scheduledDate: 'day' } }),
+		], WEEK_START, 'startDate', 'dueDate');
 		expect(model.blocks).toHaveLength(0);
 		expect(model.allday).toHaveLength(1);
 		expect(model.allday[0].startDayIndex).toBe(4);
@@ -375,7 +417,7 @@ describe('buildWeekTimelineModel', () => {
 			startDate: DAY(8, 8, 9, i * 15), dueDate: DAY(8, 8, 11, 0),
 			datePrecision: { startDate: 'time', dueDate: 'time' },
 		}));
-		const model = buildWeekTimelineModel(four, WEEK_START, 'startDate', 'dueDate', 'dueDate');
+		const model = buildWeekTimelineModel(four, WEEK_START, 'startDate', 'dueDate');
 		const lanes = model.days[1].map((d) => d.seg.lane);
 		expect(Math.max(...lanes)).toBe(2); // 上限 3 列
 		expect(model.days[1].some((d) => d.seg.stackedIndex > 0)).toBe(true);
@@ -385,7 +427,7 @@ describe('buildWeekTimelineModel', () => {
 			startDate: DAY(8, 8), dueDate: DAY(8, 10),
 			datePrecision: { startDate: 'day', dueDate: 'day' },
 		}));
-		const m2 = buildWeekTimelineModel(fiveBars, WEEK_START, 'startDate', 'dueDate', 'dueDate');
+		const m2 = buildWeekTimelineModel(fiveBars, WEEK_START, 'startDate', 'dueDate');
 		const barLanes = m2.allday.map((b) => b.lane);
 		expect(Math.max(...barLanes)).toBe(4); // 全天行无上限
 	});
@@ -410,7 +452,7 @@ describe('buildDayTimelineModel', () => {
 			}),
 			// 与当日无关
 			mkTask({ lineNumber: 3, dueDate: DAY(8, 11, 14, 0), datePrecision: { dueDate: 'time' } }),
-		], TODAY, 'startDate', 'dueDate', 'dueDate');
+		], TODAY, 'startDate', 'dueDate');
 
 		expect(model.blocks).toHaveLength(1);
 		expect(model.blocks[0].seg).toMatchObject({ startMin: 0, endMin: 180, continuesBefore: true });
@@ -418,14 +460,23 @@ describe('buildDayTimelineModel', () => {
 		expect(model.allday[0].timeLabel).toBe('09:00 → 18:00');
 	});
 
-	it('day 精度：gantt 区间覆盖当日 或 dateField 命中日 → 全天列表', () => {
+	it('day 精度：gantt 区间覆盖当日 或锚定字段命中日 → 全天列表', () => {
 		const model = buildDayTimelineModel([
 			mkTask({ lineNumber: 1, startDate: DAY(8, 8), dueDate: DAY(8, 12), datePrecision: { startDate: 'day', dueDate: 'day' } }),
 			mkTask({ lineNumber: 2, dueDate: DAY(8, 10), datePrecision: { dueDate: 'day' } }),
 			mkTask({ lineNumber: 3, dueDate: DAY(8, 11), datePrecision: { dueDate: 'day' } }),
-		], TODAY, 'startDate', 'dueDate', 'dueDate');
+		], TODAY, 'startDate', 'dueDate');
 		expect(model.blocks).toHaveLength(0);
 		expect(model.allday).toHaveLength(2); // 覆盖日 + 命中日；命中 09-11 的不算
+	});
+
+	it('仅 ⏳ 命中当日 → 全天列表（回退链锚定计划日）', () => {
+		const model = buildDayTimelineModel([
+			mkTask({ lineNumber: 4, scheduledDate: DAY(8, 10), datePrecision: { scheduledDate: 'day' } }),
+			mkTask({ lineNumber: 5, scheduledDate: DAY(8, 11), datePrecision: { scheduledDate: 'day' } }),
+		], TODAY, 'startDate', 'dueDate');
+		expect(model.blocks).toHaveLength(0);
+		expect(model.allday).toHaveLength(1); // 只有命中 09-10 的进列表
 	});
 });
 
@@ -447,7 +498,7 @@ describe('buildMonthTimelineModel maxSpanLanes', () => {
 
 	it('重叠横跨条超过上限：lane 钳到最后一行并标记叠加，spanLaneCount 不超上限', () => {
 		const tasks = [0, 1, 2, 3, 4].map((i) => mkSpan(i + 1, 0, 6)); // 5 条全周重叠
-		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate', 3);
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 3);
 
 		const bars = model[0].spanBars;
 		expect(bars).toHaveLength(5);
@@ -459,7 +510,7 @@ describe('buildMonthTimelineModel maxSpanLanes', () => {
 
 	it('不传上限（默认 Infinity）：行为与历史一致，全部各占一行不叠加', () => {
 		const tasks = [0, 1, 2, 3, 4].map((i) => mkSpan(i + 1, 0, 6));
-		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate');
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate');
 
 		expect(model[0].spanLaneCount).toBe(5);
 		expect(model[0].spanBars.every((b) => b.stackedIndex === 0)).toBe(true);
@@ -471,7 +522,7 @@ describe('buildMonthTimelineModel maxSpanLanes', () => {
 			mkSpan(2, 1, 3), // 簇1：周二~周四（与上一条重叠）
 			mkSpan(3, 4, 6), // 簇2：周五~周日
 		];
-		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate', 3);
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 3);
 
 		const bars = model[0].spanBars;
 		expect(model[0].spanLaneCount).toBe(2);
@@ -481,7 +532,7 @@ describe('buildMonthTimelineModel maxSpanLanes', () => {
 
 	it('跨周横跨条钳制到本周列并标记延续，不影响行数上限', () => {
 		const tasks = [mkSpan(1, -3, 10), mkSpan(2, -5, 12)]; // 两周以上的长任务
-		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 'dueDate', 1);
+		const model = buildMonthTimelineModel(tasks, mkWeek(WEEK_START), 'startDate', 'dueDate', 1);
 
 		const bars = model[0].spanBars;
 		expect(bars).toHaveLength(2);
