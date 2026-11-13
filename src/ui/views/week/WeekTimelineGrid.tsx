@@ -35,6 +35,7 @@ import {
 } from './timelineModel';
 import { useBlockResize, isBlockResizing, setBlockDragMeta, getBlockDragMeta, clearBlockDragMeta } from './useBlockResize';
 import { useCanvasTouchDrag } from './useCanvasTouchDrag';
+import { LONG_PRESS_MS, attachTouchScrollGuard, type CreateGesture } from './timelineTouchCreate';
 
 /** 全天行单行高度（卡片 24px + 间距 4px，与 CSS 令牌对应） */
 const ALLDAY_ROW_PX = 28;
@@ -610,10 +611,12 @@ function DayColumn({
 	const colRef = useRef<HTMLDivElement | null>(null);
 	const ghostRef = useRef<HTMLDivElement | null>(null);
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
-	/** 拖拽选区创建状态（mousedown 于空白处时激活；moved 以像素位移判定，防点击抖动） */
-	const createRef = useRef<{ anchorMin: number; anchorX: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
-	/** pointercancel 清理经 ref 桥接，避免与 finishCreate 形成循环推断 */
+	const createRef = useRef<CreateGesture | null>(null);
+	/** document 级监听用稳定包装：业务回调重建时仍能正确解绑 */
+	const finishCreateRef = useRef<(e: PointerEvent) => void>(() => {});
 	const cancelCreateRef = useRef<() => void>(() => {});
+	const onDocumentPointerUp = useCallback((e: PointerEvent) => finishCreateRef.current(e), []);
+	const onDocumentPointerCancel = useCallback(() => cancelCreateRef.current(), []);
 
 	const minutesFromEvent = useCallback((clientY: number): number => {
 		const col = colRef.current;
@@ -657,6 +660,8 @@ function DayColumn({
 		const minutes = minutesFromEvent(e.clientY);
 		const create = createRef.current;
 		if (create) {
+			// 触屏长按未完成：不绘制预览，移动由 touchmove 守卫判定是否为滚动
+			if (!create.armed) return;
 			create.lastMin = minutes;
 			// 像素位移超阈值才算拖拽选区（吸附步长对点击抖动过于敏感）
 			if (!create.moved && Math.abs(e.clientY - create.anchorY) > CREATE_DRAG_THRESHOLD_PX) {
@@ -668,6 +673,11 @@ function DayColumn({
 				return;
 			}
 			showGhost(Math.min(create.anchorMin, minutes), Math.max(create.anchorMin, minutes), true);
+			return;
+		}
+		// 触屏手指在画布上移动属于滚动或长按等待，不显示 hover 预览
+		if (e.pointerType === 'touch') {
+			hideGhost();
 			return;
 		}
 		// DOM 物理包含校验：portal 浮层（右键菜单/弹窗）的 mousemove 虽从 React 树冒泡进列内，
@@ -697,20 +707,29 @@ function DayColumn({
 		if (!createRef.current) hideGhost();
 	}, [hideGhost]);
 
-	const finishCreate = useCallback((e?: PointerEvent): void => {
+	/** 结束手势：统一清理监听、长按定时器、滚动拦截与预览 */
+	const endCreateGesture = useCallback((): CreateGesture | null => {
 		const create = createRef.current;
 		createRef.current = null;
-		document.removeEventListener('pointerup', finishCreate);
-		document.removeEventListener('pointercancel', cancelCreateRef.current);
-		hideGhost();
-		if (!create) return;
-		// 触屏横滑翻页与快速创建互斥：横向位移达 swipe 阈值（|dx|>40 且 |dx|>1.5|dy|，
-		// 与 handleGridPointerUp 判定同源）时视为翻页手势，静默放弃创建，不弹窗
-		if (e) {
-			const dx = e.clientX - create.anchorX;
-			const dy = e.clientY - create.anchorY;
-			if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) return;
+		document.removeEventListener('pointerup', onDocumentPointerUp);
+		document.removeEventListener('pointercancel', onDocumentPointerCancel);
+		if (create) {
+			window.clearTimeout(create.timer);
+			create.guard?.dispose();
 		}
+		hideGhost();
+		return create;
+	}, [hideGhost, onDocumentPointerUp, onDocumentPointerCancel]);
+
+	const finishCreate = useCallback((e: PointerEvent): void => {
+		const create = endCreateGesture();
+		// 触屏短按：长按未完成时松手，不创建任务
+		if (!create || !create.armed) return;
+		// 横滑翻页与快速创建互斥：横向位移达 swipe 阈值（|dx|>40 且 |dx|>1.5|dy|，
+		// 与 handleGridPointerUp 判定同源）时视为翻页手势，静默放弃创建，不弹窗
+		const dx = e.clientX - create.anchorX;
+		const dy = e.clientY - create.anchorY;
+		if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) return;
 		if (create.moved && Math.abs(create.lastMin - create.anchorMin) >= MIN_DURATION_MIN) {
 			const start = Math.min(create.anchorMin, create.lastMin);
 			const end = Math.max(create.anchorMin, create.lastMin);
@@ -718,17 +737,20 @@ function DayColumn({
 		} else {
 			onQuickCreate({ type: 'point', dayIndex, min: create.anchorMin });
 		}
-	}, [dayIndex, onQuickCreate, hideGhost]);
+	}, [dayIndex, onQuickCreate, endCreateGesture]);
 
 	/** 触屏滚动接管手势（pointercancel）：静默放弃创建，不弹窗 */
 	const cancelCreate = useCallback((): void => {
-		createRef.current = null;
-		document.removeEventListener('pointerup', finishCreate);
-		document.removeEventListener('pointercancel', cancelCreateRef.current);
-		hideGhost();
-	}, [finishCreate, hideGhost]);
+		endCreateGesture();
+	}, [endCreateGesture]);
 
+	finishCreateRef.current = finishCreate;
 	cancelCreateRef.current = cancelCreate;
+
+	// 组件卸载时清理未结束的手势，避免定时器、监听与 touch-action 残留
+	useEffect(() => () => {
+		endCreateGesture();
+	}, [endCreateGesture]);
 
 	const handleMouseDown = useCallback((e: ReactPointerEvent) => {
 		if (e.button !== 0 || isInsideBlock(e.target)) return;
@@ -738,19 +760,51 @@ function DayColumn({
 		// 但其目标不在本列 DOM 中，不能视为画布上的按下
 		const col = colRef.current;
 		if (!col || !col.contains(e.target as Node)) return;
-		e.preventDefault();
+		if (createRef.current) return; // 已有手势在进行（例如第二根手指按下）
+		const isTouch = e.pointerType === 'touch';
 		const anchorMin = minutesFromEvent(e.clientY);
 		const endMin = quickCreateEnd(anchorMin);
 		if (endMin <= anchorMin) return; // 光标处即下一个块起点：无空隙，不启动创建手势
-		createRef.current = { anchorMin, anchorX: e.clientX, anchorY: e.clientY, lastMin: anchorMin, moved: false };
-		// 按下瞬间维持 hover 的可用空隙块（仅切换激活样式），像素级拖动后才变为选区
-		showGhost(anchorMin, endMin, true);
-		// 防御：上一手势未正常收尾时先解绑，避免 finishCreate 重复触发
-		document.removeEventListener('pointerup', finishCreate);
-		document.removeEventListener('pointercancel', cancelCreateRef.current);
-		document.addEventListener('pointerup', finishCreate);
-		document.addEventListener('pointercancel', cancelCreateRef.current);
-	}, [minutesFromEvent, showGhost, finishCreate, cancelCreate, quickCreateEnd]);
+		const create: CreateGesture = {
+			anchorMin,
+			anchorX: e.clientX,
+			anchorY: e.clientY,
+			lastMin: anchorMin,
+			moved: false,
+			armed: !isTouch,
+			timer: 0,
+			guard: null,
+		};
+		createRef.current = create;
+		// 防御：上一手势未正常收尾时先解绑，避免重复触发
+		document.removeEventListener('pointerup', onDocumentPointerUp);
+		document.removeEventListener('pointercancel', onDocumentPointerCancel);
+		document.addEventListener('pointerup', onDocumentPointerUp);
+		document.addEventListener('pointercancel', onDocumentPointerCancel);
+
+		if (!isTouch) {
+			e.preventDefault();
+			// 按下瞬间维持 hover 的可用空隙块（仅切换激活样式），像素级拖动后才变为选区
+			showGhost(anchorMin, endMin, true);
+			return;
+		}
+
+		// 触屏：按下时既不显示预览也不阻止滚动，等长按完成再接管手势
+		create.guard = attachTouchScrollGuard(col, {
+			originX: e.clientX,
+			originY: e.clientY,
+			isArmed: () => !!createRef.current?.armed,
+			onAbandon: () => cancelCreateRef.current(),
+		});
+		create.timer = window.setTimeout(() => {
+			const active = createRef.current;
+			if (!active || active !== create) return;
+			active.armed = true;
+			active.guard?.arm();
+			navigator.vibrate?.(10);
+			showGhost(active.anchorMin, quickCreateEnd(active.anchorMin), true);
+		}, LONG_PRESS_MS);
+	}, [minutesFromEvent, showGhost, quickCreateEnd, onDocumentPointerUp, onDocumentPointerCancel]);
 
 	// ===== HTML5 拖放（整体平移；块拖动按块边缘落点 + 预览块，外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {

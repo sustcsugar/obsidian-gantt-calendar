@@ -16,6 +16,9 @@
 
 ## ✅ 已完成（按日期倒序）
 
+### 2026-11-13
+- [x] 移动端时间线触屏创建手势重做：按下不再立即显示蓝色预览、不再阻止滚动；长按 500ms 后才允许创建，长按后拖动为自定义区间、长按后不拖动为默认 1 小时区间，短按与普通滑动不创建任务；桌面鼠标路径（点击创建、拖拽选区、hover 预览）保持原样。新增共享模块 `src/ui/views/week/timelineTouchCreate.ts`（长按与抖动阈值、非被动 touchmove 滚动拦截、统一手势状态类型）；改造 `DayTimelineCanvas`（侧栏每日时间线 + 日视图）与 `WeekTimelineGrid` 的 DayColumn（周视图）；document 监听改用稳定包装函数统一解绑，避免 `touch-action: none` 残留导致画布无法滚动；两个画布补 user-select / touch-callout 禁用。新增 4 个 jsdom 回归用例；lint 0 error（4 个既有 warning）、tsc + build 通过、441 个 Jest 用例全过。
+
 ### 2026-10-27
 - [x] dateFilterField 设置退场，单日期任务锚定改为内置回退链 due→scheduled→start：新增 resolveAnchorDateField（src/types.ts），timelineModel 三个模型构建器与 getTaskInterval 去 dateField 参数改为链内解析，拖拽写入目标 = 锚定字段 ?? ganttEndField，generateVirtualInstances 第 4 参改可选（任务视图仍传 taskViewTimeFieldFilter，甘特仍传 ganttStartField），TaskCard 重复任务完成写入走链；设置项/常量/i18n 键移除；tsc + 437 Jest 用例（新增回退链 6 例）+ build 全部通过
 
@@ -90,6 +93,9 @@
 ---
 
 ## 💡 新需求（会话中提出，待排期）
+
+### 移动端触屏创建手势真机验证（2026-11-13 提出）
+- [ ] 在 Obsidian 移动端侧栏 / 日视图 / 周视图实测：上下滑动时间线顺畅无蓝色预览闪烁、长按后拖动可创建自定义区间、长按不拖动创建默认 1 小时区间；确认长按 500ms 与抖动阈值 12px 的手感是否合适
 
 ### GitHub Issue #35 审查结论（2026-10-27，https://github.com/sustcsugar/obsidian-gantt-calendar/issues/35）
 > 设计澄清（用户 2026-10-27）：任务视图定位是独立全功能筛选面板（自带 taskViewTimeFieldFilter，不跟 dateFilterField 联动是有意为之）；日/周/月/年时间线重设计后跨度任务由 ganttStartField/ganttEndField 驱动。#35 的「任务视图不跟设置走」部分属设计如此，非 bug，回复 issue 解释设计即可。

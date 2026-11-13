@@ -32,6 +32,7 @@ import {
 } from './timelineModel';
 import { useBlockResize, isBlockResizing, setBlockDragMeta, getBlockDragMeta, clearBlockDragMeta } from './useBlockResize';
 import { useCanvasTouchDrag } from './useCanvasTouchDrag';
+import { LONG_PRESS_MS, attachTouchScrollGuard, type CreateGesture } from './timelineTouchCreate';
 
 /**
  * 创建手势的像素位移阈值（与周视图一致）：超过才视为拖拽选区
@@ -89,9 +90,12 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 	const canvasRef = useRef<HTMLDivElement | null>(null);
 	const ghostRef = useRef<HTMLDivElement | null>(null);
 	const ghostLabelRef = useRef<HTMLSpanElement | null>(null);
-	const createRef = useRef<{ anchorMin: number; anchorY: number; lastMin: number; moved: boolean } | null>(null);
-	/** pointercancel 清理经 ref 桥接，避免与 finishCreate 形成循环推断 */
+	const createRef = useRef<CreateGesture | null>(null);
+	/** document 级监听用稳定包装：业务回调重建时仍能正确解绑 */
+	const finishCreateRef = useRef<() => void>(() => {});
 	const cancelCreateRef = useRef<() => void>(() => {});
+	const onDocumentPointerUp = useCallback(() => finishCreateRef.current(), []);
+	const onDocumentPointerCancel = useCallback(() => cancelCreateRef.current(), []);
 
 	// ===== 拖放 UI 状态 =====
 	const [dropLine, setDropLine] = useState<number | null>(null);
@@ -278,6 +282,8 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 		const minutes = minutesFromEvent(e.clientY);
 		const create = createRef.current;
 		if (create) {
+			// 触屏长按未完成：不绘制预览，移动由 touchmove 守卫判定是否为滚动
+			if (!create.armed) return;
 			create.lastMin = minutes;
 			if (!create.moved && Math.abs(e.clientY - create.anchorY) > CREATE_DRAG_THRESHOLD_PX) {
 				create.moved = true;
@@ -287,6 +293,11 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 				return;
 			}
 			showGhost(Math.min(create.anchorMin, minutes), Math.max(create.anchorMin, minutes), true);
+			return;
+		}
+		// 触屏手指在画布上移动属于滚动或长按等待，不显示 hover 预览
+		if (e.pointerType === 'touch') {
+			hideGhost();
 			return;
 		}
 		// portal 浮层冒泡 / 菜单与 resize 进行中：不出 hover 提示。
@@ -313,55 +324,95 @@ export function DayTimelineCanvas({ day, model, config, tasks, refresh }: DayTim
 		if (!createRef.current) hideGhost();
 	}, [hideGhost]);
 
-	const finishCreate = useCallback((): void => {
+	/** 结束手势：统一清理监听、长按定时器、滚动拦截与预览 */
+	const endCreateGesture = useCallback((): CreateGesture | null => {
 		const create = createRef.current;
 		createRef.current = null;
-		document.removeEventListener('pointerup', finishCreate);
-		document.removeEventListener('pointercancel', cancelCreateRef.current);
+		document.removeEventListener('pointerup', onDocumentPointerUp);
+		document.removeEventListener('pointercancel', onDocumentPointerCancel);
+		if (create) {
+			window.clearTimeout(create.timer);
+			create.guard?.dispose();
+		}
 		hideGhost();
-		if (!create) return;
+		return create;
+	}, [hideGhost, onDocumentPointerUp, onDocumentPointerCancel]);
+
+	const finishCreate = useCallback((): void => {
+		const create = endCreateGesture();
+		// 触屏短按：长按未完成时松手，不创建任务
+		if (!create || !create.armed) return;
 		if (create.moved && Math.abs(create.lastMin - create.anchorMin) >= MIN_DURATION_MIN) {
-			onQuickCreateRange(create.anchorMin, create.lastMin);
+			handleQuickCreate({
+				type: 'range',
+				startMin: Math.min(create.anchorMin, create.lastMin),
+				endMin: Math.max(create.anchorMin, create.lastMin),
+			});
 		} else {
 			handleQuickCreate({ type: 'point', min: create.anchorMin });
 		}
-		// eslint 未配置 exhaustive-deps；依赖经下方 ref 桥接
-	}, [hideGhost, handleQuickCreate]);
+	}, [endCreateGesture, handleQuickCreate]);
 
 	/** 触屏滚动接管手势（pointercancel）：静默放弃创建，不弹窗 */
 	const cancelCreate = useCallback((): void => {
-		createRef.current = null;
-		document.removeEventListener('pointerup', finishCreate);
-		document.removeEventListener('pointercancel', cancelCreateRef.current);
-		hideGhost();
-	}, [finishCreate, hideGhost]);
+		endCreateGesture();
+	}, [endCreateGesture]);
+	finishCreateRef.current = finishCreate;
 	cancelCreateRef.current = cancelCreate;
 
-	/** 选区创建（独立函数避免 finishCreate 循环依赖） */
-	const onQuickCreateRange = useCallback((anchor: number, last: number) => {
-		handleQuickCreate({
-			type: 'range',
-			startMin: Math.min(anchor, last),
-			endMin: Math.max(anchor, last),
-		});
-	}, [handleQuickCreate]);
+	// 组件卸载时清理未结束的手势，避免定时器、监听与 touch-action 残留
+	useEffect(() => () => {
+		endCreateGesture();
+	}, [endCreateGesture]);
 
 	const handlePointerDown = useCallback((e: ReactPointerEvent) => {
 		if (e.button !== 0 || isInsideBlock(e.target)) return;
 		if (isContextMenuOpen()) return;
 		const canvas = canvasRef.current;
 		if (!canvas || !canvas.contains(e.target as Node)) return;
-		e.preventDefault();
+		if (createRef.current) return; // 已有手势在进行（例如第二根手指按下）
+		const isTouch = e.pointerType === 'touch';
 		const anchorMin = minutesFromEvent(e.clientY);
 		const endMin = quickCreateEnd(anchorMin);
 		if (endMin <= anchorMin) return; // 光标处即下一个块起点：无空隙，不启动创建手势
-		createRef.current = { anchorMin, anchorY: e.clientY, lastMin: anchorMin, moved: false };
-		showGhost(anchorMin, endMin, true);
-		document.removeEventListener('pointerup', finishCreate);
-		document.removeEventListener('pointercancel', cancelCreateRef.current);
-		document.addEventListener('pointerup', finishCreate);
-		document.addEventListener('pointercancel', cancelCreateRef.current);
-	}, [minutesFromEvent, showGhost, finishCreate, quickCreateEnd]);
+		const create: CreateGesture = {
+			anchorMin,
+			anchorX: e.clientX,
+			anchorY: e.clientY,
+			lastMin: anchorMin,
+			moved: false,
+			armed: !isTouch,
+			timer: 0,
+			guard: null,
+		};
+		createRef.current = create;
+		document.removeEventListener('pointerup', onDocumentPointerUp);
+		document.removeEventListener('pointercancel', onDocumentPointerCancel);
+		document.addEventListener('pointerup', onDocumentPointerUp);
+		document.addEventListener('pointercancel', onDocumentPointerCancel);
+
+		if (!isTouch) {
+			e.preventDefault();
+			showGhost(anchorMin, endMin, true);
+			return;
+		}
+
+		// 触屏：按下时既不显示预览也不阻止滚动，等长按完成再接管手势
+		create.guard = attachTouchScrollGuard(canvas, {
+			originX: e.clientX,
+			originY: e.clientY,
+			isArmed: () => !!createRef.current?.armed,
+			onAbandon: () => cancelCreateRef.current(),
+		});
+		create.timer = window.setTimeout(() => {
+			const active = createRef.current;
+			if (!active || active !== create) return;
+			active.armed = true;
+			active.guard?.arm();
+			navigator.vibrate?.(10);
+			showGhost(active.anchorMin, quickCreateEnd(active.anchorMin), true);
+		}, LONG_PRESS_MS);
+	}, [minutesFromEvent, showGhost, quickCreateEnd, onDocumentPointerUp, onDocumentPointerCancel]);
 
 	// ===== HTML5 拖放（块拖动按块边缘落点 + 预览块；外部拖入按指针 + 指示线） =====
 	const handleDragOver = useCallback((e: ReactDragEvent) => {

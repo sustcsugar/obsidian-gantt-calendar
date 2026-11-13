@@ -34,6 +34,10 @@
 	position: relative;
 	flex: 1;
 	min-width: 0;
+	/* 长按空白处创建任务时，不触发系统文本选择与长按菜单 */
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 	border-right: 1px solid var(--gc-border-hairline);
 	background-image:
 		repeating-linear-gradient(
