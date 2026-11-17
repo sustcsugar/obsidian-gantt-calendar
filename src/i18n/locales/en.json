@@ -1238,7 +1238,11 @@
     "feishuAuthRenewed": "Feishu authorization auto-renewed"
   },
   "commands": {
-    "openCalendarView": "Open Calendar View",
+    "openDayView": "Open Day View",
+    "openWeekView": "Open Week View",
+    "openMonthView": "Open Month View",
+    "openYearView": "Open Year View",
+    "openGanttView": "Open Gantt View",
     "openTaskView": "Open Task View",
     "openSidebarView": "Open Sidebar",
     "feishuSync": "Feishu Task Bidirectional Sync",

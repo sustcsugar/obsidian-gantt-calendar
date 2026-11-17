@@ -16,6 +16,9 @@
 
 ## ✅ 已完成（按日期倒序）
 
+### 2026-11-17
+- [x] GitHub issue 定期监控：新增 `scripts/check_github_issues.py`（抓取 issues 列表页内嵌 JSON，无需认证、规避 API 匿名限流）；创建 Harness 定时任务「检查 GitHub issue 并发送汇总」，每天 10:00（Asia/Shanghai）运行脚本并与历史对比汇总新增/有更新的 issue 到本会话。注：基线 11 个 open issues（#31/#34-#43）
+
 ### 2026-11-13
 - [x] 移动端时间线触屏创建手势重做：按下不再立即显示蓝色预览、不再阻止滚动；长按 500ms 后才允许创建，长按后拖动为自定义区间、长按后不拖动为默认 1 小时区间，短按与普通滑动不创建任务；桌面鼠标路径（点击创建、拖拽选区、hover 预览）保持原样。新增共享模块 `src/ui/views/week/timelineTouchCreate.ts`（长按与抖动阈值、非被动 touchmove 滚动拦截、统一手势状态类型）；改造 `DayTimelineCanvas`（侧栏每日时间线 + 日视图）与 `WeekTimelineGrid` 的 DayColumn（周视图）；document 监听改用稳定包装函数统一解绑，避免 `touch-action: none` 残留导致画布无法滚动；两个画布补 user-select / touch-callout 禁用。新增 4 个 jsdom 回归用例；lint 0 error（4 个既有 warning）、tsc + build 通过、441 个 Jest 用例全过。
 
@@ -100,6 +103,6 @@
 ### GitHub Issue #35 审查结论（2026-10-27，https://github.com/sustcsugar/obsidian-gantt-calendar/issues/35）
 > 设计澄清（用户 2026-10-27）：任务视图定位是独立全功能筛选面板（自带 taskViewTimeFieldFilter，不跟 dateFilterField 联动是有意为之）；日/周/月/年时间线重设计后跨度任务由 ganttStartField/ganttEndField 驱动。#35 的「任务视图不跟设置走」部分属设计如此，非 bug，回复 issue 解释设计即可。
 - [x] dateFilterField 设置退场：单日期任务改为内置回退链锚定（due→scheduled→start，resolveAnchorDateField），替代原 4 个残留角色（单日期可见性/锚定、时间线拖拽写入目标、重复任务展开字段、TaskCard 重复完成写入）；设置项与 i18n 键已移除，旧 data.json 残留键无害
-- [ ] 子诉求·分视图打开命令：open-calendar-view 硬编码 switchView('month')（src/commands/common.ts:21），需增加日/周/月三条命令
+- [x] 子诉求·分视图打开命令（2026-11-17 完成）：移除 open-calendar-view，改为 open-day/week/month/year/gantt-view 五条分视图命令 + open-task-view（src/commands/common.ts 重构为映射表循环注册），i18n 键同步更新；tsc + build + 441 Jest 用例全过
 - [ ] 子诉求·排序「保持原样」：SORT_OPTIONS（src/tasks/taskSorter.ts:12）无 original 项，需新增保序选项
 - [ ] 子诉求·标签后置显示：extractTags 按全文匹配位置无关，预计解析层已支持，待端到端验证后回复用户

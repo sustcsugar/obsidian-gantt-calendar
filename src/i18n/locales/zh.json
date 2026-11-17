@@ -1238,7 +1238,11 @@
     "feishuAuthRenewed": "飞书授权已自动续期"
   },
   "commands": {
-    "openCalendarView": "打开日历视图",
+    "openDayView": "打开日视图",
+    "openWeekView": "打开周视图",
+    "openMonthView": "打开月视图",
+    "openYearView": "打开年视图",
+    "openGanttView": "打开甘特图",
     "openTaskView": "打开任务视图",
     "openSidebarView": "打开侧边栏",
     "feishuSync": "飞书任务双向同步",
