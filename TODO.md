@@ -97,6 +97,11 @@
 
 ## 💡 新需求（会话中提出，待排期）
 
+### GitHub Issue #43 标签等优化（2026-11-17 分析，https://github.com/sustcsugar/obsidian-gantt-calendar/issues/43）
+- [ ] 诉求 1·标签隐藏选项：日/周/月/侧栏已有 showTags 设置（CardDisplaySettingsBuilder），但**任务视图 preset 硬编码 showTags: true 无开关**（src/components/TaskCard/presets/TaskView.config.ts:14），需补 `taskViewShowTags` 设置项；甘特视图同查
+- [ ] 诉求 2·标签放在任务之后：TaskCard 渲染顺序已是 description→tags（TaskCard.tsx:429→437），与 #35 子诉求"标签后置"同源，预计解析层已支持，合并做端到端验证后统一回复
+- [ ] 诉求 3·编辑任务自动填充计划(scheduled)日期：TaskFormModal 编辑模式 scheduledDate 为空时不回填（TaskFormModal.tsx:138），用户期望与开始日期一致时自动填充；需确认交互（自动复制 startDate 或仅默认值）
+
 ### 移动端触屏创建手势真机验证（2026-11-13 提出）
 - [ ] 在 Obsidian 移动端侧栏 / 日视图 / 周视图实测：上下滑动时间线顺畅无蓝色预览闪烁、长按后拖动可创建自定义区间、长按不拖动创建默认 1 小时区间；确认长按 500ms 与抖动阈值 12px 的手感是否合适
 
