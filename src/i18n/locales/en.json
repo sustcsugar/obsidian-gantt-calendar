@@ -441,6 +441,7 @@
         "day": "Day View",
         "week": "Week View",
         "month": "Month View",
+        "task": "Task View",
         "sidebar": "Sidebar"
       }
     },

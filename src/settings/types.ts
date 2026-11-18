@@ -60,6 +60,11 @@ export interface GanttCalendarSettings {
 	taskViewTagOperator: TagFilterOperator;
 	taskViewTimeFieldFilter: DateFieldType;
 	taskViewDateRangeMode: 'all' | 'day' | 'week' | 'month' | 'custom';
+	// TaskView 卡片显示控制
+	taskViewShowCheckbox: boolean;
+	taskViewShowTags: boolean;
+	taskViewShowPriority: boolean;
+	taskViewShowTicktick: boolean;
 
 	// DayView 状态
 	dayViewSortField: SortField;

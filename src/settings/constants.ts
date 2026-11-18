@@ -53,6 +53,11 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	taskViewTagOperator: 'OR',
 	taskViewTimeFieldFilter: 'dueDate',
 	taskViewDateRangeMode: 'week',
+	// TaskView 卡片显示控制（默认与原 TaskViewConfig 预设一致：显示最完整信息）
+	taskViewShowCheckbox: true,
+	taskViewShowTags: true,
+	taskViewShowPriority: true,
+	taskViewShowTicktick: true,
 
 	// DayView
 	dayViewSortField: 'dueDate',

@@ -4,7 +4,7 @@ import { SettingsCardChipClasses } from '../../utils/bem';
 import type { BuilderConfig, GanttCalendarSettings } from '../types';
 import { i18n } from '../../i18n/i18n';
 
-type ViewType = 'day' | 'week' | 'month' | 'sidebar';
+type ViewType = 'day' | 'week' | 'month' | 'task' | 'sidebar';
 
 interface ChipDef {
 	label: string;
@@ -13,10 +13,10 @@ interface ChipDef {
 
 function getSharedChips(): ChipDef[] {
 	return [
-		{ label: i18n.t('settings.cardDisplay.chips.checkbox'), keys: { day: 'dayViewShowCheckbox', week: 'weekViewShowCheckbox', month: 'monthViewShowCheckbox', sidebar: 'sidebarShowCheckbox' } },
-		{ label: i18n.t('settings.cardDisplay.chips.tags'), keys: { day: 'dayViewShowTags', week: 'weekViewShowTags', month: 'monthViewShowTags', sidebar: 'sidebarShowTags' } },
-		{ label: i18n.t('settings.cardDisplay.chips.priority'), keys: { day: 'dayViewShowPriority', week: 'weekViewShowPriority', month: 'monthViewShowPriority', sidebar: 'sidebarShowPriority' } },
-		{ label: i18n.t('settings.cardDisplay.chips.extraContent'), keys: { day: 'dayViewShowTicktick', week: 'weekViewShowTicktick', month: 'monthViewShowTicktick', sidebar: 'sidebarShowTicktick' } },
+		{ label: i18n.t('settings.cardDisplay.chips.checkbox'), keys: { day: 'dayViewShowCheckbox', week: 'weekViewShowCheckbox', month: 'monthViewShowCheckbox', task: 'taskViewShowCheckbox', sidebar: 'sidebarShowCheckbox' } },
+		{ label: i18n.t('settings.cardDisplay.chips.tags'), keys: { day: 'dayViewShowTags', week: 'weekViewShowTags', month: 'monthViewShowTags', task: 'taskViewShowTags', sidebar: 'sidebarShowTags' } },
+		{ label: i18n.t('settings.cardDisplay.chips.priority'), keys: { day: 'dayViewShowPriority', week: 'weekViewShowPriority', month: 'monthViewShowPriority', task: 'taskViewShowPriority', sidebar: 'sidebarShowPriority' } },
+		{ label: i18n.t('settings.cardDisplay.chips.extraContent'), keys: { day: 'dayViewShowTicktick', week: 'weekViewShowTicktick', month: 'monthViewShowTicktick', task: 'taskViewShowTicktick', sidebar: 'sidebarShowTicktick' } },
 	];
 }
 
@@ -25,6 +25,7 @@ function getViewRows(): { view: ViewType; name: string }[] {
 		{ view: 'day', name: i18n.t('settings.cardDisplay.views.day') },
 		{ view: 'week', name: i18n.t('settings.cardDisplay.views.week') },
 		{ view: 'month', name: i18n.t('settings.cardDisplay.views.month') },
+		{ view: 'task', name: i18n.t('settings.cardDisplay.views.task') },
 		{ view: 'sidebar', name: i18n.t('settings.cardDisplay.views.sidebar') },
 	];
 }

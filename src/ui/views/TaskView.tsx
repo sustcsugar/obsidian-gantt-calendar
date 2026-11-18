@@ -27,6 +27,10 @@ export function TaskView(): JSX.Element {
 
 	const config = useMemo(() => ({
 		...TaskViewConfig,
+		showCheckbox: plugin.settings.taskViewShowCheckbox ?? true,
+		showTags: plugin.settings.taskViewShowTags ?? true,
+		showPriority: plugin.settings.taskViewShowPriority ?? true,
+		showTicktick: plugin.settings.taskViewShowTicktick ?? true,
 	}), [plugin.settings]);
 
 	const viewData = useMemo(() => {
