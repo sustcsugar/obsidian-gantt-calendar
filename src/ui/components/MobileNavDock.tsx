@@ -12,6 +12,7 @@ import { syncFeishuTasks } from '../../commands/feishuCommands';
 import type GanttCalendarPlugin from '../../../main';
 import { Icon } from './Icon';
 import { MOTION, easeOutTransition } from '../motion';
+import { PLUGIN_ID } from '../../constants';
 
 /**
  * 手机端悬浮导航（MobileNavDock）
@@ -109,7 +110,7 @@ export function MobileNavDock(): JSX.Element {
 	const openSettings = () => {
 		const a = plugin.app as unknown as { setting?: { open(): void; openTabById(id: string): void } };
 		a.setting?.open();
-		a.setting?.openTabById('gantt-calendar');
+		a.setting?.openTabById(PLUGIN_ID);
 	};
 
 	const handleRefresh = async () => {
@@ -117,7 +118,10 @@ export function MobileNavDock(): JSX.Element {
 			plugin.settings.globalTaskFilter,
 			plugin.settings.enabledTaskFormats
 		);
-		useCalendarStore.getState().setTasks(plugin.taskCache.getAllTasks());
+		useCalendarStore.getState().setTasks(
+			plugin.taskCache.getAllTasks(),
+			plugin.taskCache.getAllTasksIncludingVirtual?.()
+		);
 	};
 
 	const renderItem = (key: string, icon: string, label: string, onClick: () => void) => (

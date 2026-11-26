@@ -1,6 +1,7 @@
 import { Plugin, Notice, Platform, setIcon } from 'obsidian';
 import { GCMainView, GC_VIEW_ID } from './src/GCMainView';
 import { GCSidebarView, GC_SIDEBAR_VIEW_ID } from './src/GCSidebarView';
+import { PLUGIN_DISPLAY_NAME } from './src/constants';
 import { GanttCalendarSettingTab } from './src/settings';
 import type { GanttCalendarSettings } from './src/settings/types';
 import { TaskStore } from './src/TaskStore';
@@ -53,13 +54,30 @@ export default class GanttCalendarPlugin extends Plugin {
 		this.settingsManager = new SettingsManager(this);
 		this.settings = await this.settingsManager.loadSettings();
 
-		// 视图筛选偏好：从 data.json 水合进 store（先水合后订阅，
+		// 视图筛选与甘特图树形状态：从 data.json 水合进 store（先水合后订阅，
 		// 避免水合触发的首次 set 被当成变更写回）；
-		// 后续筛选变更经订阅防抖写回 data.json
+		// 后续变更经订阅防抖写回 data.json
 		useCalendarStore.getState().hydrateViewFilters(this.settings.viewFilters);
+		useCalendarStore.getState().hydrateGanttTreeState(
+			this.settings.ganttGroupMode,
+			this.settings.ganttCollapsedIds,
+			this.settings.ganttDisplayMode
+		);
 		this.viewFiltersUnsubscribe = useCalendarStore.subscribe((state, prev) => {
-			if (state.viewFilters === prev.viewFilters) return;
-			this.settings.viewFilters = state.viewFilters;
+			const filtersChanged = state.viewFilters !== prev.viewFilters;
+			const ganttTreeChanged =
+				state.ganttDisplayMode !== prev.ganttDisplayMode ||
+				state.ganttGroupMode !== prev.ganttGroupMode ||
+				state.ganttCollapsedIds !== prev.ganttCollapsedIds;
+			if (!filtersChanged && !ganttTreeChanged) return;
+			if (filtersChanged) {
+				this.settings.viewFilters = state.viewFilters;
+			}
+			if (ganttTreeChanged) {
+				this.settings.ganttDisplayMode = state.ganttDisplayMode;
+				this.settings.ganttGroupMode = state.ganttGroupMode;
+				this.settings.ganttCollapsedIds = state.ganttCollapsedIds;
+			}
 			this.scheduleViewFiltersSave();
 		});
 
@@ -254,7 +272,7 @@ export default class GanttCalendarPlugin extends Plugin {
 	}
 
 	private registerUIElements(): void {
-		const ribbonIconEl = this.addRibbonIcon('goal', '\u7518\u7279\u65E5\u5386', () => {
+		const ribbonIconEl = this.addRibbonIcon('goal', PLUGIN_DISPLAY_NAME, () => {
 			void this.activateView();
 		});
 		ribbonIconEl.addClass('gantt-calendar-ribbon');

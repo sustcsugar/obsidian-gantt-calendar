@@ -11,6 +11,7 @@ import {
 	DEFAULT_TAG_FILTER_STATE,
 	DEFAULT_STATUS_FILTER_STATE,
 } from '../../types';
+import type { GanttDisplayMode, GanttGroupMode } from '../../gantt/types';
 
 export type ViewScope = 'year' | 'month' | 'week' | 'day' | 'task' | 'gantt' | 'sidebar';
 
@@ -26,6 +27,8 @@ interface CalendarStoreState {
 	viewType: CalendarViewType;
 	currentDate: Date;
 	tasks: GCTask[];
+	/** 包含虚拟父节点的全量任务（专供甘特图树形模式消费） */
+	tasksWithVirtual: GCTask[];
 	/** 首扫是否已推入任务（whenReady 或事件回流任一路径）；false 时视图渲染骨架 */
 	tasksReady: boolean;
 	changedFilePath?: string;
@@ -39,17 +42,32 @@ interface CalendarStoreState {
 	/** 甘特图滚动请求（工具栏按钮 → GanttView 引擎） */
 	ganttScroll: { seq: number; action: GanttScrollAction } | null;
 
+	/** 甘特图树形状态（随插件设置持久化至 data.json） */
+	ganttDisplayMode: GanttDisplayMode;
+	ganttGroupMode: GanttGroupMode;
+	ganttCollapsedIds: string[];
+
 	setViewType: (type: CalendarViewType) => void;
 	setCurrentDate: (date: Date) => void;
 	/** 数据层 TaskStore 通知时调用（防抖已由 TaskStore 处理） */
-	notifyTasksUpdated: (tasks: GCTask[], filePath?: string) => void;
-	setTasks: (tasks: GCTask[]) => void;
+	notifyTasksUpdated: (tasks: GCTask[], filePath?: string, tasksWithVirtual?: GCTask[]) => void;
+	setTasks: (tasks: GCTask[], tasksWithVirtual?: GCTask[]) => void;
 	/** 设置/视图全量刷新：自增 settingsVersion，触发整体重挂载 */
 	bumpSettings: () => void;
 	/** 请求甘特图滚动（每次调用自增 seq，GanttView 订阅执行） */
 	requestGanttScroll: (action: GanttScrollAction) => void;
 	/** 插件启动时从 data.json 恢复持久化筛选（main.ts 在 loadSettings 后调用） */
 	hydrateViewFilters: (filters?: Partial<Record<ViewScope, ViewFilterState>> | null) => void;
+	/** 插件启动时从 data.json 恢复甘特图展示模式、树形分组维度与折叠状态 */
+	hydrateGanttTreeState: (
+		groupMode?: GanttGroupMode | null,
+		collapsedIds?: string[] | null,
+		displayMode?: GanttDisplayMode | null
+	) => void;
+	setGanttDisplayMode: (mode: GanttDisplayMode) => void;
+	setGanttGroupMode: (mode: GanttGroupMode) => void;
+	toggleGanttNodeCollapsed: (nodeId: string) => void;
+	setGanttCollapsedIds: (ids: string[]) => void;
 
 	setStatusFilter: (scope: ViewScope, state: StatusFilterState) => void;
 	setTagFilter: (scope: ViewScope, tag: TagFilterState) => void;
@@ -129,33 +147,46 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	viewType: 'year',
 	currentDate: new Date(),
 	tasks: [],
+	tasksWithVirtual: [],
 	tasksReady: false,
 	changedFilePath: undefined,
 	updateSeq: 0,
 	viewFilters: buildInitialFilters(),
 	settingsVersion: 0,
 	ganttScroll: null,
+	ganttDisplayMode: 'tree',
+	ganttGroupMode: 'project-model',
+	ganttCollapsedIds: [],
 
 	setViewType: (type) => set({ viewType: type }),
 	setCurrentDate: (date) => set({ currentDate: new Date(date) }),
-	notifyTasksUpdated: (tasks, filePath) =>
+	notifyTasksUpdated: (tasks, filePath, tasksWithVirtual) =>
 		set((s) => {
+			const nextTasksWithVirtual = tasksWithVirtual ?? tasks;
 			// 同一次 TaskStore 防抖冲刷会被主视图和侧栏两个订阅者各转发一次，
 			// 第二次传入的数组引用相同（L1 缓存）——直接跳过，
 			// 避免 updateSeq 重复自增引发二次重渲染
-			if (tasks === s.tasks && filePath === s.changedFilePath) return s;
+			if (
+				tasks === s.tasks &&
+				nextTasksWithVirtual === s.tasksWithVirtual &&
+				filePath === s.changedFilePath
+			) {
+				return s;
+			}
 			// 任务集刷新时同步剔除失效标签（幽灵标签隐形筛选的根治）
 			return {
 				tasks,
+				tasksWithVirtual: nextTasksWithVirtual,
 				tasksReady: true,
 				changedFilePath: filePath,
 				updateSeq: s.updateSeq + 1,
 				viewFilters: pruneTagFilters(s.viewFilters, tasks),
 			};
 		}),
-	setTasks: (tasks) =>
+	setTasks: (tasks, tasksWithVirtual) =>
 		set((s) => ({
 			tasks,
+			tasksWithVirtual: tasksWithVirtual ?? tasks,
 			tasksReady: true,
 			viewFilters: pruneTagFilters(s.viewFilters, tasks),
 		})),
@@ -169,6 +200,30 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 		set((s) => ({
 			// 水合时按当前任务集剔除幽灵标签；任务集未就绪（空）时不动，待任务到来再剔除
 			viewFilters: pruneTagFilters(mergeViewFilters(filters), s.tasks),
+		})),
+	hydrateGanttTreeState: (groupMode, collapsedIds, displayMode) =>
+		set(() => ({
+			ganttDisplayMode: displayMode === 'flat' ? 'flat' : 'tree',
+			ganttGroupMode: groupMode === 'model-only' ? 'model-only' : 'project-model',
+			ganttCollapsedIds: Array.isArray(collapsedIds)
+				? Array.from(new Set(collapsedIds.filter((id): id is string => typeof id === 'string' && id.length > 0)))
+				: [],
+		})),
+	setGanttDisplayMode: (mode) =>
+		set((s) => (s.ganttDisplayMode === mode ? s : { ganttDisplayMode: mode })),
+	setGanttGroupMode: (mode) =>
+		set((s) => (s.ganttGroupMode === mode ? s : { ganttGroupMode: mode })),
+	toggleGanttNodeCollapsed: (nodeId) =>
+		set((s) => {
+			const exists = s.ganttCollapsedIds.includes(nodeId);
+			const next = exists
+				? s.ganttCollapsedIds.filter((id) => id !== nodeId)
+				: [...s.ganttCollapsedIds, nodeId];
+			return { ganttCollapsedIds: next };
+		}),
+	setGanttCollapsedIds: (ids) =>
+		set(() => ({
+			ganttCollapsedIds: Array.from(new Set(ids)),
 		})),
 
 	setStatusFilter: (scope, status) =>

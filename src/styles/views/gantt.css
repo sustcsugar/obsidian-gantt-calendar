@@ -482,3 +482,262 @@ body.gc-is-phone {
 	font-variant-numeric: tabular-nums;
 	user-select: none;
 }
+
+/* ============================================
+   树形甘特图内嵌轻量控制栏与树形列样式
+   ============================================ */
+
+.gc-gantt-view__tree-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	margin-bottom: 6px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	flex-shrink: 0;
+}
+
+.gc-gantt-view__tree-bar-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.gc-gantt-view__tree-group-btn,
+.gc-gantt-view__tree-action-btn {
+	height: 26px;
+	padding: 0 10px;
+	font-size: 12px;
+	line-height: 1;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.gc-gantt-view__tree-group-btn:hover,
+.gc-gantt-view__tree-action-btn:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-gantt-view__tree-group-btn--active,
+.gc-gantt-view__tree-group-btn--active:hover {
+	background-color: var(--interactive-accent);
+	border-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 500;
+}
+
+.gc-gantt-view__tree-search-wrap {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	margin-left: auto;
+	min-width: 160px;
+	max-width: 260px;
+	flex: 1 1 180px;
+}
+
+.gc-gantt-view__tree-search-input {
+	width: 100%;
+	height: 26px;
+	padding: 0 24px 0 8px;
+	font-size: 12px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.gc-gantt-view__tree-search-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+button.gc-gantt-view__tree-search-clear {
+	position: absolute;
+	right: 4px;
+	width: 18px;
+	height: 18px;
+	min-width: 0;
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 3px;
+}
+
+button.gc-gantt-view__tree-search-clear:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+/* 左侧树形行元素（覆盖 Obsidian 默认 button padding/box-shadow，防折叠箭头裁切） */
+button.gc-gantt-view__tree-toggle-btn {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	min-width: 0;
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 10px;
+	line-height: 1;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 3px;
+}
+
+button.gc-gantt-view__tree-toggle-btn:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-gantt-view__tree-toggle-placeholder {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	display: inline-block;
+}
+
+.gc-gantt-view__tree-icon {
+	flex-shrink: 0;
+	font-size: 13px;
+	line-height: 1;
+}
+
+.gc-gantt-view__tree-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.gc-gantt-view__tree-badge {
+	flex-shrink: 0;
+	padding: 1px 6px;
+	font-size: 10px;
+	line-height: 14px;
+	border-radius: 999px;
+	background-color: var(--background-modifier-border);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.gc-gantt-view__tree-overflow-hint {
+	flex-shrink: 0;
+	font-size: 12px;
+	line-height: 1;
+	color: var(--text-warning);
+	cursor: help;
+}
+
+.gc-gantt-view__task-content-cell--folder {
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.gc-gantt-view__task-content-cell--file {
+	font-weight: 500;
+}
+
+.gc-gantt-view__task-content-cell--virtual {
+	color: var(--text-muted);
+}
+
+/* ============================================
+   右侧 SVG 汇总括号条与越界微提示样式
+   ============================================ */
+
+.gc-gantt-view__bar-group--rollup {
+	cursor: default;
+}
+
+.gc-gantt-view__bar-group--rollup:hover rect {
+	filter: none;
+}
+
+.gc-gantt-view__rollup-hit-area {
+	cursor: default;
+}
+
+.gc-gantt-view__rollup-bar {
+	transition: opacity 0.15s ease;
+	pointer-events: none;
+}
+
+.gc-gantt-view__rollup-bar--folder {
+	fill: var(--text-normal);
+	opacity: 0.28;
+}
+
+.gc-gantt-view__rollup-bar--file {
+	fill: var(--interactive-accent);
+	opacity: 0.26;
+}
+
+.gc-gantt-view__rollup-bar--task {
+	fill: var(--text-muted);
+	opacity: 0.32;
+}
+
+.gc-gantt-view__bar-group--rollup:hover .gc-gantt-view__rollup-bar {
+	opacity: 0.45;
+}
+
+/* T9：汇总进度填充层与百分比标注 */
+.gc-gantt-view__rollup-progress {
+	fill: var(--interactive-accent);
+	opacity: 0.88;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+}
+
+.gc-gantt-view__rollup-progress--done {
+	fill: var(--gc-task-completed, #52c41a);
+	opacity: 0.92;
+}
+
+.gc-gantt-view__rollup-percent {
+	font-size: 10px;
+	font-weight: 500;
+	fill: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+	user-select: none;
+}
+
+/* 自带日期父任务子节点越界微提示：细虚线警示描边，不遮挡原条色 */
+.gc-gantt-view__bar--overflow {
+	stroke: var(--text-warning);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 2;
+}
+
+/* 继承父任务时间的无日期子任务条：半透明 + 细虚线轮廓以区别于显式排期任务 */
+.gc-gantt-view__bar--inherited {
+	stroke: var(--text-muted);
+	stroke-width: 1;
+	stroke-dasharray: 3 2;
+}

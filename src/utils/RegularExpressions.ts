@@ -594,6 +594,12 @@ export class RegularExpressions {
          * "[ ]" -> 不匹配
          */
         cancelledRegex: /^\[\/\]$/,
+
+        /**
+         * 复选框原地替换正则（捕获复选框前的完整缩进/列表标记/空格，以及复选框后的原始后缀）
+         * 用于虚拟父节点无破坏切换 [ ] <-> [x]，确保 100% 保留原文与缩进
+         */
+        checkboxPrefixRegex: /^([\s\t>]*(?:[-*+]|\d+[.)]) +)\[.\](.*)$/u,
     } as const;
 
     // ==================== 文件扩展名正则 ====================
@@ -606,6 +612,27 @@ export class RegularExpressions {
      * "note.md" -> 匹配，替换后 "note"
      */
     public static readonly markdownFileExtensionRegex = /\.md$/;
+
+    /**
+     * Markdown 词法与结构边界正则
+     * 用于两阶段缩进解析器跳过 Frontmatter、围栏代码块及识别清栈边界
+     */
+    public static readonly MarkdownLexical = {
+        /** YAML Frontmatter 起始行（文件首行 ---） */
+        frontmatterOpenRegex: /^---[ \t]*$/,
+        /** YAML Frontmatter 闭合行（--- 或 ...） */
+        frontmatterCloseRegex: /^(?:---|\.\.\.)[ \t]*$/,
+        /** 围栏代码块起始行（3 个及以上 ` 或 ~，允许前导缩进） */
+        fenceOpenRegex: /^[ \t]*(`{3,}|~{3,})(.*)$/,
+        /** 围栏代码块闭合行（同字符围栏，行尾仅允许空白） */
+        fenceCloseRegex: /^[ \t]*(`{3,}|~{3,})[ \t]*$/,
+        /** Markdown 标题行（# ~ ######） */
+        headingRegex: /^[ \t]*#{1,6}(?:[ \t]|$)/,
+        /** Markdown 水平分割线（--- / *** / ___） */
+        horizontalRuleRegex: /^[ \t]*(?:---+|\*\*\*+|___+)[ \t]*$/,
+        /** 路径首尾斜杠清理 */
+        leadingTrailingSlashRegex: /^\/+|\/+$/g,
+    } as const;
 
     // ==================== 链接解析正则 ====================
 

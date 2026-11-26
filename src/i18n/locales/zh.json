@@ -405,6 +405,15 @@
         "name": "甘特图结束字段",
         "description": "选择用于确定甘特条结束位置的任务时间字段"
       },
+      "rootFolder": {
+        "name": "甘特图树形根目录",
+        "description": "仅用于甘特图树形模式的目录筛选与项目分组前缀剥离；留空表示显示全库任务（不影响其他视图）",
+        "placeholder": "例如: Projects"
+      },
+      "cascadeParentDrag": {
+        "name": "拖拽父任务时联动平移子任务",
+        "description": "开启后，拖动有日期的父任务整体平移时，将通过原子写回同步顺延其所有带日期的后代子任务（默认关闭）"
+      },
       "dateFieldOptions": {
         "createdDate": "创建日期",
         "startDate": "开始日期",
@@ -1223,6 +1232,7 @@
       "undoAction": "撤销",
       "undoSuccess": "操作已撤销",
       "undoFailed": "撤销失败",
+      "undoFileChanged": "撤销已中止：文件已被外部修改，避免误覆盖",
       "restore": {
         "alreadyDone": "恢复任务失败:任务已完成",
         "alreadyRestored": "恢复任务失败:任务已经恢复"
@@ -1365,7 +1375,30 @@
       "currentFilter": "当前筛选: {{count}} 个状态",
       "tagFilter": "标签筛选: {{tags}}",
       "missingFieldConfig": "缺少时间字段配置",
-      "title": "甘特图视图"
+      "title": "甘特图视图",
+      "treeMode": "树形分组",
+      "flatMode": "原版平铺",
+      "groupByProjectModel": "项目→型号",
+      "groupByModelOnly": "仅按型号",
+      "expandAll": "全部展开",
+      "collapseToFiles": "收起至型号",
+      "collapseAll": "全部折叠",
+      "searchPlaceholder": "搜索任务、型号或项目...",
+      "clearSearch": "清空搜索",
+      "uncategorizedProject": "未分类项目",
+      "virtualCheckboxDisabledHint": "虚拟父节点（将在 T5 支持无破坏勾选回写）",
+      "outOfBoundsHint": "子任务日期超出父任务范围",
+      "inheritedDateHint": "继承父任务时间（拖动任务条可单独设置日期）",
+      "rollupTooltip": {
+        "folderLevel": "项目文件夹",
+        "fileLevel": "型号文档",
+        "taskLevel": "父阶段",
+        "dateRange": "时间跨度",
+        "days": "共 {{count}} 天",
+        "taskCount": "包含任务",
+        "progress": "完成进度"
+      },
+      "cascadeUpdated": "已联动顺延父任务及 {{count}} 条子任务（{{delta}} 天）"
     }
   },
   "embeddedEditor": {

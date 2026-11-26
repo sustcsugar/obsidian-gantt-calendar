@@ -4,8 +4,8 @@
  */
 
 import type { GCTask } from '../../types';
-import { getTaskDateField } from '../../types';
 import { buildIntervalTimeLabel } from '../../ui/views/week/timelineModel';
+import { resolveGanttTaskDateRange } from '../dateRangeResolver';
 import type { GanttChartTask, DateFieldType } from '../types';
 import type { StatusFilterState } from '../../types';
 
@@ -27,38 +27,13 @@ export class TaskDataAdapter {
 		endField: DateFieldType,
 		id?: string
 	): GanttChartTask | null {
-		const endDate = getTaskDateField(task, endField);
-
-		// End field is always required.
-		if (!endDate || isNaN(endDate.getTime())) {
+		const resolved = resolveGanttTaskDateRange(task, startField, endField, {
+			allowSingleDateFallback: false,
+		});
+		if (!resolved) {
 			return null;
 		}
-
-		// Start resolution: the configured field first, then the two supported
-		// fallbacks. createdDate and startDate are both valid Gantt start points,
-		// so a task is renderable when ANY candidate exists plus the end field.
-		const startCandidates: DateFieldType[] = startField === 'createdDate'
-			? [startField, 'startDate']
-			: startField === 'startDate'
-				? [startField, 'createdDate']
-				: [startField, 'createdDate', 'startDate'];
-
-		let startDate: Date | undefined;
-		let startSourceField: DateFieldType = startField;
-		for (const candidate of startCandidates) {
-			const value = getTaskDateField(task, candidate);
-			if (value && !isNaN(value.getTime())) {
-				startDate = value;
-				startSourceField = candidate;
-				break;
-			}
-		}
-		if (!startDate) {
-			return null;
-		}
-
-		// 确保结束日期不早于开始日期
-		const normalizedEndDate = endDate < startDate ? startDate : endDate;
+		const { startDate, endDate: normalizedEndDate, startSourceField } = resolved;
 
 		// Lead-in segment: creation → effective start, drawn in a distinct
 		// muted color when both dates exist and creation precedes the start.

@@ -136,6 +136,11 @@ export interface GCTask {
 	// 飞书同步字段
 	feishuGuid?: string;           // 飞书任务 GUID（存储在 %%[guid:: xxx]%% 中）
 	feishuDesc?: string;           // 飞书任务描述（存储在 %%[desc:: xxx]%% 中）
+	// 树形父子层级元数据（1-based 行号，由两阶段缩进解析器填充）
+	indentWidth?: number;          // 归一化后的行首缩进宽度（1 Tab = 4 spaces）
+	parentLineNumber?: number;     // 同文件内父任务的行号（1-based），顶层任务为 undefined
+	childLineNumbers?: number[];   // 同文件内直接子任务的行号列表（1-based）
+	isVirtualContainer?: boolean;  // 仅因存在合规后代而保留的虚拟父节点标识
 }
 
 /**
@@ -297,6 +302,7 @@ export interface IPluginContext {
 	saveSettings(): Promise<void>;
 	taskCache: {
 		getAllTasks(): GCTask[];
+		getAllTasksIncludingVirtual?(): GCTask[];
 		whenReady?(): Promise<void>;
 		onUpdate(handler: (filePath?: string) => void): void;
 		offUpdate(handler: (filePath?: string) => void): void;

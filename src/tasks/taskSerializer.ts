@@ -3,6 +3,7 @@ import { GCTask, MetadataField } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { TaskStatusType, DEFAULT_TASK_STATUSES } from './taskStatus';
 import type { DateFieldType } from '../settings/types';
+import { PLUGIN_ID } from '../constants';
 
 /** Minimal plugin settings shape needed for serialization */
 interface SerializerPluginSettings {
@@ -164,7 +165,7 @@ export function serializeTask(
 
 	// 2. 从插件设置中获取全局过滤器和任务状态配置（官方 API）
 	const appWithPlugins = app as App & { plugins?: { getPlugin?: (id: string) => { settings?: SerializerPluginSettings } | null } };
-	const ganttPlugin = appWithPlugins.plugins?.getPlugin?.('gantt-calendar');
+	const ganttPlugin = appWithPlugins.plugins?.getPlugin?.(PLUGIN_ID);
 	const pluginSettings: SerializerPluginSettings = ganttPlugin?.settings ?? {};
 	const globalFilter = (pluginSettings.globalTaskFilter || '').trim();
 	const taskStatuses: Array<{ key: TaskStatusType; symbol: string }> = pluginSettings.taskStatuses || DEFAULT_TASK_STATUSES;

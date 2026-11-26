@@ -144,6 +144,10 @@ export function createTaskDragController(
 		task: GanttChartTask,
 		minDate: Date
 	): void {
+		// 第一道防线：汇总条与分组节点彻底禁止绑定拖拽事件
+		if (task.isRollupBar || task.treeNodeType === 'folder' || task.treeNodeType === 'file') {
+			return;
+		}
 		// 触屏：拖动元素禁止浏览器手势接管，pointer 拖动才能生效
 		setCssProps(barGroup as unknown as HTMLElement, { touchAction: 'none' });
 		leftHandle.addEventListener('pointerdown', (e: PointerEvent) => {
@@ -173,9 +177,12 @@ export function createTaskDragController(
 		leftHandle: SVGRectElement | null,
 		rightHandle: SVGRectElement | null
 	): void {
+		if (task.isRollupBar || task.treeNodeType === 'folder' || task.treeNodeType === 'file') {
+			return;
+		}
 		const latestTask = getTasks().find(t => t.id === task.id);
-		if (!latestTask) {
-			Logger.warn('TaskDragController', `Task ${task.id} not found in current tasks during drag start`);
+		if (!latestTask || latestTask.isRollupBar || latestTask.treeNodeType === 'folder' || latestTask.treeNodeType === 'file') {
+			Logger.warn('TaskDragController', `Task ${task.id} not draggable or not found during drag start`);
 			return;
 		}
 

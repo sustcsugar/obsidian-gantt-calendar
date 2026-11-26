@@ -52,6 +52,7 @@ export class TaskStore {
 
 	// 结果缓存
 	private cachedTasks: GCTask[] | null = null;
+	private cachedAllTasksIncludingVirtual: GCTask[] | null = null;
 	private cacheValid: boolean = false;
 
 	// 防抖
@@ -241,31 +242,50 @@ export class TaskStore {
 	}
 
 	/**
-	 * 获取所有任务（带缓存）
+	 * 确保 L1 结果缓存已构建：
+	 * - cachedAllTasksIncludingVirtual: 包含虚拟父节点的全量任务（供甘特图树形模式）
+	 * - cachedTasks: 过滤掉 isVirtualContainer 后的真实任务（供其他全部视图与同步模块）
 	 */
-	getAllTasks(): GCTask[] {
-		if (this.cacheValid && this.cachedTasks) {
-			Logger.debug('TaskStore', 'Returning cached tasks', this.cachedTasks.length);
-			return this.cachedTasks;
+	private ensureCache(): void {
+		if (this.cacheValid && this.cachedTasks && this.cachedAllTasksIncludingVirtual) {
+			return;
 		}
 
 		const startTime = performance.now();
 		Logger.debug('TaskStore', 'Cache miss, rebuilding...');
 
-		const allTasks = this.repository.getAllTasks();
-		Logger.debug('TaskStore', `Got ${allTasks.length} tasks from repository`);
+		const rawTasks = this.repository.getAllTasks();
+		Logger.debug('TaskStore', `Got ${rawTasks.length} tasks from repository`);
 
 		if (this.enableDuplicateCheck) {
-			this.checkDuplicates(allTasks);
+			this.checkDuplicates(rawTasks);
 		}
 
-		this.cachedTasks = allTasks;
+		this.cachedAllTasksIncludingVirtual = rawTasks;
+		this.cachedTasks = rawTasks.filter(t => !t.isVirtualContainer);
 		this.cacheValid = true;
 
 		const elapsed = performance.now() - startTime;
-		Logger.debug('TaskStore', `Cache rebuilt in ${elapsed.toFixed(2)}ms (${allTasks.length} tasks)`);
+		Logger.debug(
+			'TaskStore',
+			`Cache rebuilt in ${elapsed.toFixed(2)}ms (${this.cachedTasks.length} real / ${rawTasks.length} total)`
+		);
+	}
 
-		return allTasks;
+	/**
+	 * 获取所有真实任务（带缓存，默认隔离 isVirtualContainer 虚拟父节点）
+	 */
+	getAllTasks(): GCTask[] {
+		this.ensureCache();
+		return this.cachedTasks!;
+	}
+
+	/**
+	 * 获取包含虚拟父节点的全量任务（带缓存，专供甘特图树形模式使用）
+	 */
+	getAllTasksIncludingVirtual(): GCTask[] {
+		this.ensureCache();
+		return this.cachedAllTasksIncludingVirtual!;
 	}
 
 	/**
@@ -354,6 +374,7 @@ export class TaskStore {
 	 */
 	private invalidateCache(): void {
 		this.cachedTasks = null;
+		this.cachedAllTasksIncludingVirtual = null;
 		this.cacheValid = false;
 	}
 

@@ -14,6 +14,7 @@ import { TagSelector } from './TagSelector';
 import { RepeatSection } from './RepeatSection';
 import { DateTimePicker } from '../components/DateTimePicker';
 import { openReactModal } from './modalHost';
+import { PLUGIN_ID } from '../../constants';
 
 /**
  * 优先级选项
@@ -236,7 +237,9 @@ export function TaskFormModal({
 					await plugin.taskCache.refreshFile(targetFilePath);
 					const { useCalendarStore } = await import('../store/calendarStore');
 					useCalendarStore.getState().notifyTasksUpdated(
-						plugin.taskCache.getAllTasks(), targetFilePath
+						plugin.taskCache.getAllTasks(),
+						targetFilePath,
+						plugin.taskCache.getAllTasksIncludingVirtual?.()
 					);
 				}
 				new Notice(i18n.t('modals.createTask.success'));
@@ -283,7 +286,9 @@ export function TaskFormModal({
 				await plugin.taskCache.refreshFile(taskToUpdate.filePath);
 				const { useCalendarStore } = await import('../store/calendarStore');
 				useCalendarStore.getState().notifyTasksUpdated(
-					plugin.taskCache.getAllTasks(), taskToUpdate.filePath
+					plugin.taskCache.getAllTasks(),
+					taskToUpdate.filePath,
+					plugin.taskCache.getAllTasksIncludingVirtual?.()
 				);
 			}
 			onSuccess();
@@ -301,7 +306,7 @@ export function TaskFormModal({
 			return plugin?.taskCache.getAllTasks() || [];
 		}
 		const internal = (app as unknown as Record<string, Record<string, Record<string, unknown>>>).plugins
-			?.plugins?.['gantt-calendar'] as { taskCache?: { getAllTasks: () => GCTask[] } } | undefined;
+			?.plugins?.[PLUGIN_ID] as { taskCache?: { getAllTasks: () => GCTask[] } } | undefined;
 		return internal?.taskCache?.getAllTasks() || [];
 	}, [mode, plugin, app]);
 

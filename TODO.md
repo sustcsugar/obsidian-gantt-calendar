@@ -16,6 +16,22 @@
 
 ## ✅ 已完成（按日期倒序）
 
+### 2026-11-26
+- [x] `Gantt Calendar Tree` Phase 1（T1–T6）与 Phase 2（T7–T9）全量交付及双语 README 更新：完成独立化隔离（`gantt-calendar-tree`）、两阶段缩进解析器与 `TaskStore` 门面隔离、`treeBuilder` 四级树构建/筛选剪枝/父日期继承/递归进度统计、左侧树形列与控制栏、右侧汇总括号条与进度填充层、虚拟父节点无破坏复选框回写、`vault.process` 父任务拖拽原子顺延与一键撤销、折叠/分组/模式状态持久化至 `data.json`，清理重复规格文档并更新 `README.md` / `README_zh.md`。
+- [x] `Gantt Calendar Tree` 审计第二批修复（P1-1 / P1-5 / P1-7）：
+  - P1-1 原版平铺模式恢复与持久化：`GanttDisplayMode`（`'tree' | 'flat'`）加入设置与 `calendarStore` 并随 `data.json` 水合/持久化；`GanttView` 恢复基线平铺筛选、排序（`sortTasks`）、周期展开与平铺转换链路（保持最新任务查找表防 P0-1），控制栏新增「树形分组 / 原版平铺」一键切换，平铺模式下不触发父子联动顺延。
+  - P1-5 日期解析口径统一：新增共享模块 `src/gantt/dateRangeResolver.ts`（`resolveGanttStartDate` / `resolveGanttTaskDateRange`），`TaskDataAdapter` 与 `treeBuilder` 复用同一开始日期回退链（`createdDate` / `startDate`），使缺开始日任务的汇总条跨度与越界判定与可见实体条 100% 一致，同时避免仅带 `➕ createdDate` 的无排期备忘误入树中。
+  - P1-7 冷启动性能优化：`MarkdownDataSource.parseFileForScan()` 恢复 `metadataCache.listItems` 预筛（`metadataCache` 就绪且无列表项时跳过读盘，未就绪为 `null` 时安全回退读盘），并将零任务文件以空缓存（含 `mtime`）入缓存，`getTasks()` / `delete` / `rename` / 增量重扫按 `taskCount` 精准跳过无任务文件。
+  - 新增回归测试 `tests/auditBatch2Fixes.test.ts`，通过 `tsc --noEmit`、`npm run build`、`npm run lint`、`npm test` 并同步三件套至 `dist/gantt-calendar-tree/`。
+- [x] `Gantt Calendar Tree` 审计第一批高危修复（解除 No-Go）：
+  - P0-1 过期快照与同名任务防错行覆盖：`GanttView` 建立 `nodeId -> 最新 GCTask` 映射并在写回前换取最新任务、签名补入 `lineNumber`/`content`；`SvgGanttRenderer` 的 `isTaskDifferent` 同步补入并让复选框/点击动态取最新任务；`taskUpdater` 抽离共用 `locateTaskLineStrict()`（目标行原文精确校验 → 全文唯一原文重定位 → 全文严格唯一描述重定位，0 或 >=2 同名歧义一律拒绝写入），统一替换 `updateTaskProperties`/`updateVirtualContainerCompletion`/`shiftTaskDatesAtomically` 与 `locateTaskLine`。
+  - P0-2 批量顺延撤销防盲写：`BatchShiftLineSnapshot` 新增 `shiftedLine`，`TaskUndoService.undoBatchLines()` 实行全量预校验（全有或全无），行漂移仅接受全文唯一匹配，否则中止撤销不写盘并弹出 `undoFileChanged` Notice（中英 i18n 补齐）。
+  - P1-6 Windows CRLF 保留：`updateTaskProperties()` 按原行 `hasCR` 保留 `\r`，消除混合换行。
+  - P1-2 CSS 选择器转义：`SvgGanttRenderer` 导出 `escapeCssAttrValue()`（优先 `CSS.escape` + Node/Jest 回退），替换全部 4 处 `[data-task-row]`/`[data-task-bar]` 动态选择器。
+  - P1-3 / P1-4 增量更新同步：`shouldFullRefresh()` 增加 `isRollupBar` 判定；左侧任务列表增量更新同步 `⚠` 越界图标并复用 `getTaskDisplayText()`（防止给 `isVirtualContainer` 误拼 `globalTaskFilter`）。
+  - P2 顺手修复：`MarkdownDataSource.fingerprintTask()` 改用相对父子行偏移防顶部插行事件风暴；`treeBuilder` 的 `ganttRootFolder` 改为分段大小写不敏感匹配并保留原大小写展示。
+  - 新增回归测试 `tests/auditBatch1Fixes.test.ts`（覆盖 6 类真实场景），通过 `tsc --noEmit`、`npm run build`、`npm run lint`、`npm test` 并同步三件套至 `dist/gantt-calendar-tree/`。
+
 ### 2026-11-17
 - [x] GitHub issue 定期监控：新增 `scripts/check_github_issues.py`（抓取 issues 列表页内嵌 JSON，无需认证、规避 API 匿名限流）；创建 Harness 定时任务「检查 GitHub issue 并发送汇总」，每天 10:00（Asia/Shanghai）运行脚本并与历史对比汇总新增/有更新的 issue 到本会话。注：基线 11 个 open issues（#31/#34-#43）。11-18 追加：gh CLI 重新认证成功后，定时任务已切换为 `gh issue list`（认证限额 5000 次/小时），Python 脚本保留作后备。
 

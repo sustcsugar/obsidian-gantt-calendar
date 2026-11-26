@@ -5,7 +5,7 @@
  */
 
 import type { TaskStatusType } from '../tasks/taskStatus';
-import type { StatusFilterState, MetadataField } from '../types';
+import type { GCTask, StatusFilterState, TagFilterState, MetadataField } from '../types';
 
 /**
  * 甘特图任务格式
@@ -82,6 +82,32 @@ export interface GanttChartTask {
 	datePrecision?: Partial<Record<'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'cancelledDate' | 'completionDate', 'day' | 'time'>>;
 	/** 结构化内联元数据字段 (%%[key::value]%%) */
 	metadataFields?: MetadataField[];
+
+	// ==================== 树形甘特图扩展字段 ====================
+	/** 稳定树节点 ID */
+	treeNodeId?: string;
+	/** 树节点类型：folder | file | task */
+	treeNodeType?: GanttNodeType;
+	/** 树层级深度：folder=0, file=1, 顶层任务=2, 子任务=3+ */
+	treeDepth?: number;
+	/** 是否为只读汇总条 */
+	isRollupBar?: boolean;
+	/** 是否有子节点（用于显示折叠箭头） */
+	hasChildren?: boolean;
+	/** 当前是否处于折叠状态 */
+	isCollapsed?: boolean;
+	/** 子节点日期是否超出父任务自身日期范围 */
+	hasOutOfBoundsChildren?: boolean;
+	/** 子树内有效实体任务数量 */
+	leafTaskCount?: number;
+	/** 子树内已完成实体任务数量（T9 汇总进度） */
+	completedTaskCount?: number;
+	/** 子树完成率 0 ~ 1（T9 汇总进度） */
+	progressRatio?: number;
+	/** 是否为虚拟容器父节点 */
+	isVirtualContainer?: boolean;
+	/** 是否为继承父任务时间跨度的无日期子任务 */
+	isInheritedDate?: boolean;
 }
 
 /**
@@ -125,6 +151,8 @@ export interface GanttChartConfig {
 	on_progress_change?: (task: GanttChartTask, progress: number) => void;
 	/** 任务更新完成回调（用于增量更新视图） */
 	on_task_updated?: (filePath: string) => void;
+	/** 树节点展开/折叠切换回调 */
+	on_toggle_collapse?: (nodeId: string) => void;
 }
 
 /**
@@ -218,3 +246,87 @@ export const GRANULARITY_CONFIGS: Record<TimeGranularity, GranularityConfig> = {
 		}
 	}
 };
+
+// ==================== 树形甘特图类型定义 ====================
+
+/**
+ * 甘特图树节点类型
+ */
+export type GanttNodeType = 'folder' | 'file' | 'task';
+
+/**
+ * 甘特图视图展示模式
+ * - 'tree': 树形分组视图（默认，支持文件夹/文件/父子任务折叠与汇总条）
+ * - 'flat': 原版平铺视图（完整还原基线排序、筛选与平铺渲染行为）
+ */
+export type GanttDisplayMode = 'tree' | 'flat';
+
+/**
+ * 甘特图树形分组维度
+ * - 'project-model': 项目文件夹 → 型号文档 → 任务（四级）
+ * - 'model-only': 仅按型号文档 → 任务（跨项目型号总览）
+ */
+export type GanttGroupMode = 'project-model' | 'model-only';
+
+/**
+ * 甘特图树节点模型（folder → file → task → sub-task）
+ */
+export interface GanttTreeNode {
+	/**
+	 * 稳定 UI 节点标识（严禁依赖易漂移的行号）：
+	 * - folder: `folder:${folderKey}`
+	 * - file:   `file:${normalizedFilePath}`
+	 * - task:   `task:${normalizedFilePath}::${parentTaskKey}::${normalizedDescription}#${sameTitleOrdinal}`
+	 */
+	nodeId: string;
+	type: GanttNodeType;
+	label: string;
+	/** 层级深度：folder = 0，file = 1，顶层任务 = 2，子任务依次 3+ */
+	depth: number;
+	filePath?: string;
+	/** 仅 type === 'task' 时存在 */
+	task?: GCTask;
+	children: GanttTreeNode[];
+	/** 本地日期对象（零点归一化） */
+	computedStart: Date;
+	computedEnd: Date;
+	/** 本地 YYYY-MM-DD 字符串（禁止使用 toISOString） */
+	startStr: string;
+	endStr: string;
+	/** true 表示渲染为只读汇总条（folder、file、无自身日期父任务或虚拟容器） */
+	isRollupBar: boolean;
+	/** 任务自身是否具备有效日期（仅 task 节点） */
+	hasOwnDate?: boolean;
+	/** 任务自身无日期、但因位于有日期的父任务下而继承父任务时间跨度 */
+	isInheritedDate?: boolean;
+	/** 仅自带日期的实体父任务存在子节点跨度超出自身日期范围时置为 true */
+	hasOutOfBoundsChildren?: boolean;
+	/** 子树中有效实体任务数量（用于汇总条 Tooltip 展示） */
+	leafTaskCount?: number;
+	/** 子树中已完成实体任务数量（T9 汇总进度） */
+	completedTaskCount?: number;
+	/** 子树完成进度占比 0 ~ 1（T9 汇总进度） */
+	progressRatio?: number;
+}
+
+/**
+ * 甘特图树构建选项
+ */
+export interface GanttTreeBuildOptions {
+	/** 甘特图开始时间字段 */
+	startField: DateFieldType;
+	/** 甘特图结束时间字段 */
+	endField: DateFieldType;
+	/** 分组维度（默认 'project-model'） */
+	groupMode?: GanttGroupMode;
+	/** 甘特图树形根目录（留空表示全库，自动规范化首尾斜杠） */
+	rootFolder?: string;
+	/** 根目录直属文件的兜底分组名（默认 "未分类项目"） */
+	uncategorizedFolderLabel?: string;
+	/** 状态筛选 */
+	statusFilter?: StatusFilterState;
+	/** 层级标签筛选 */
+	tagFilter?: TagFilterState;
+	/** 关键词搜索（大小写不敏感，匹配任务文本、型号文件名与项目文件夹名） */
+	searchQuery?: string;
+}

@@ -15,9 +15,8 @@
  * - 完整任务由 TaskRepository 统一存储
  */
 
-import { App, TFile, EventRef, ListItemCache } from 'obsidian';
-import { parseTasksFromListItems } from '../tasks/taskParser/main';
-import { parseTaskLine } from '../tasks/taskParser/step1';
+import { App, TFile, EventRef } from 'obsidian';
+import { parseTasksFromContent } from '../tasks/taskParser/main';
 import { areTasksEqual } from '../tasks/taskUtils';
 import type { TaskFormatType } from '../tasks/taskSerializerSymbols';
 import { EventBus } from './EventBus';
@@ -29,6 +28,7 @@ import {
 } from './types';
 import { IDataSource, ChangeEventHandler } from './IDataSource';
 import { Logger } from '../utils/logger';
+import { PLUGIN_ID } from '../constants';
 
 /**
  * 生成任务ID
@@ -55,9 +55,16 @@ interface MarkdownFileCache {
 /**
  * 生成任务的轻量指纹：覆盖视图渲染依赖的全部字段。
  * content 已包含描述/标签/状态标记原文；datePrecision 影响时间显示；
- * metadataFields 含同步 GUID。任一字段变化指纹即变化。
+ * metadataFields 含同步 GUID；缩进与父子相对行偏移确保仅调整层级时触发刷新，
+ * 同时在文件顶部插行/删行时保持下方嵌套任务指纹稳定、避免二次匹配失效。
  */
-function fingerprintTask(task: GCTask): string {
+export function fingerprintTask(task: GCTask): string {
+	const parentLineOffset = task.parentLineNumber !== undefined
+		? task.parentLineNumber - task.lineNumber
+		: '';
+	const childLineOffsets = task.childLineNumbers && task.childLineNumbers.length > 0
+		? task.childLineNumbers.map((childLine) => childLine - task.lineNumber).join(',')
+		: '';
 	return [
 		task.content,
 		task.completed ? '1' : '0',
@@ -74,6 +81,10 @@ function fingerprintTask(task: GCTask): string {
 		task.completionDate?.getTime() ?? '',
 		task.datePrecision ? JSON.stringify(task.datePrecision) : '',
 		task.metadataFields ? JSON.stringify(task.metadataFields) : '',
+		task.indentWidth ?? '',
+		parentLineOffset,
+		childLineOffsets,
+		task.isVirtualContainer ? '1' : '0',
 	].join('|');
 }
 
@@ -173,8 +184,9 @@ export class MarkdownDataSource implements IDataSource {
 	async getTasks(): Promise<GCTask[]> {
 		const tasks: GCTask[] = [];
 
-		// 需要重新解析文件获取完整任务
-		for (const [filePath] of this.cache) {
+		// 需要重新解析含任务的文件获取完整任务（跳过已知零任务文件避免无效磁盘读取）
+		for (const [filePath, cached] of this.cache) {
+			if (cached.taskCount === 0) continue;
 			const fileTasks = await this.parseFile(filePath);
 			if (fileTasks) {
 				tasks.push(...fileTasks);
@@ -274,7 +286,12 @@ export class MarkdownDataSource implements IDataSource {
 			if (parseResult) {
 				this.cache.set(filePath, parseResult.cache);
 			} else {
-				this.cache.delete(filePath);
+				const file = this.app.vault.getAbstractFileByPath(filePath);
+				if (file instanceof TFile) {
+					this.cache.set(filePath, this.makeEmptyFileCache(file.stat.mtime));
+				} else {
+					this.cache.delete(filePath);
+				}
 			}
 
 			if (this.changeHandler) {
@@ -350,12 +367,11 @@ export class MarkdownDataSource implements IDataSource {
 		let skippedCount = 0;
 		const vaultPaths = new Set(markdownFiles.map(f => f.path));
 
-		// 清理已从 vault 消失的文件的残留缓存（这些任务此前已由
-		// repository 持有，需要发 deletedFilePaths 让仓库移除）
-		for (const cachedPath of Array.from(this.cache.keys())) {
+		// 清理已从 vault 消失的文件的残留缓存（仅曾包含任务的文件需要发 deletedFilePaths）
+		for (const [cachedPath, cachedEntry] of Array.from(this.cache.entries())) {
 			if (!vaultPaths.has(cachedPath)) {
 				this.cache.delete(cachedPath);
-				if (this.changeHandler) {
+				if (this.changeHandler && cachedEntry.taskCount > 0) {
 					await this.changeHandler({
 						sourceId: this.sourceId,
 						created: [],
@@ -370,7 +386,7 @@ export class MarkdownDataSource implements IDataSource {
 		for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
 			const batch = batches[batchIndex];
 
-			// 并行处理批次内的文件；mtime 未变的文件跳过重解析
+			// 并行处理批次内的文件；mtime 未变的文件跳过重解析（含已缓存的零任务文件）
 			//（其任务已在 repository 中，无需重发 created）
 			const batchResults = await Promise.all(
 				batch.map(file => {
@@ -383,10 +399,21 @@ export class MarkdownDataSource implements IDataSource {
 				})
 			);
 
-			// 将结果合并到 allTasks
+			// 将结果合并到 allTasks，并统一回写缓存（含零任务空缓存记录 mtime）
 			for (const result of batchResults) {
 				if (result) {
-					allTasks.push(...result.tasks);
+					const prevCache = this.cache.get(result.filePath);
+					if (result.tasks.length > 0) {
+						allTasks.push(...result.tasks);
+					} else if (prevCache && prevCache.taskCount > 0 && this.changeHandler) {
+						await this.changeHandler({
+							sourceId: this.sourceId,
+							created: [],
+							updated: [],
+							deleted: [],
+							deletedFilePaths: [result.filePath],
+						});
+					}
 					this.cache.set(result.filePath, result.cache);
 				}
 			}
@@ -404,8 +431,9 @@ export class MarkdownDataSource implements IDataSource {
 	}
 
 	/**
-	 * 从文件内容直接解析任务，不依赖 metadataCache
-	 * 用于文件修改事件中 metadataCache 可能未及时更新的场景
+	 * 统一单文件两阶段解析入口（冷启动、重命名、实时编辑与新建文件共用）
+	 * 基于文件文本直接执行词法清洗 + 缩进栈 + globalFilter 两阶段解析，
+	 * 保证冷启动与实时编辑结果 100% 一致且不受 metadataCache 延迟影响。
 	 */
 	private async parseFileFromContent(filePath: string): Promise<{
 		filePath: string;
@@ -416,25 +444,14 @@ export class MarkdownDataSource implements IDataSource {
 		if (!(file instanceof TFile)) return null;
 
 		const content = await this.app.vault.read(file);
-		const lines = content.split('\n');
-
-		// 从文件内容直接构造 listItems，绕过 metadataCache
-		const listItems: ListItemCache[] = [];
-		for (let i = 0; i < lines.length; i++) {
-			if (parseTaskLine(lines[i])) {
-				listItems.push({
-					position: { start: { line: i, col: 0, offset: 0 }, end: { line: i, col: lines[i].length, offset: 0 } },
-				} as ListItemCache);
-			}
-		}
-
-		if (listItems.length === 0) return null;
-
-		const tasks = parseTasksFromListItems(
-			file, lines, listItems,
-			this.config.enabledFormats as TaskFormatType[] || ["tasks", "dataview"],
+		const tasks = parseTasksFromContent(
+			file,
+			content,
+			(this.config.enabledFormats as TaskFormatType[]) || ['tasks', 'dataview'],
 			this.config.globalFilter
 		);
+
+		if (tasks.length === 0) return null;
 
 		return {
 			filePath,
@@ -448,8 +465,20 @@ export class MarkdownDataSource implements IDataSource {
 		};
 	}
 
+	private makeEmptyFileCache(mtime: number): MarkdownFileCache {
+		return {
+			taskIds: [],
+			taskFingerprints: [],
+			lastModified: mtime,
+			taskCount: 0,
+		};
+	}
+
 	/**
-	 * 解析单个文件（用于扫描阶段，返回任务和缓存信息）
+	 * 解析单个文件（用于冷启动扫描与重命名阶段）：
+	 * - 当 metadataCache 已就绪且明确不含任何 listItems 时，直接跳过磁盘读取并返回空缓存（P1-7）；
+	 * - 当 metadataCache 尚未索引该文件（返回 null/undefined）时，安全回退至读盘解析，不丢任务；
+	 * - 读盘后解析为零任务的文件同样写入空缓存（记录 mtime），避免后续重初始化反复读盘。
 	 */
 	private async parseFileForScan(filePath: string): Promise<{
 		filePath: string;
@@ -457,37 +486,25 @@ export class MarkdownDataSource implements IDataSource {
 		cache: MarkdownFileCache;
 	} | null> {
 		const file = this.app.vault.getAbstractFileByPath(filePath);
-		if (!(file instanceof TFile)) {
-			return null;
+		if (!(file instanceof TFile)) return null;
+
+		const fileCache = this.app.metadataCache?.getFileCache?.(file);
+		if (fileCache && (!fileCache.listItems || fileCache.listItems.length === 0)) {
+			return {
+				filePath,
+				tasks: [],
+				cache: this.makeEmptyFileCache(file.stat.mtime),
+			};
 		}
 
-		const fileCache = this.app.metadataCache.getFileCache(file);
-		const listItems = fileCache?.listItems;
-
-		if (!listItems || listItems.length === 0) {
-			return null;
+		const parsed = await this.parseFileFromContent(filePath);
+		if (parsed) {
+			return parsed;
 		}
-
-		const content = await this.app.vault.read(file);
-		const lines = content.split('\n');
-
-		const tasks = parseTasksFromListItems(
-			file,
-			lines,
-			listItems,
-			this.config.enabledFormats as TaskFormatType[] || ['tasks', 'dataview'],
-			this.config.globalFilter
-		);
-
 		return {
 			filePath,
-			tasks,
-			cache: {
-				taskIds: tasks.map(t => generateTaskId(t)),
-				taskFingerprints: tasks.map(t => fingerprintTask(t)),
-				lastModified: file.stat.mtime,
-				taskCount: tasks.length
-			}
+			tasks: [],
+			cache: this.makeEmptyFileCache(file.stat.mtime),
 		};
 	}
 
@@ -535,6 +552,8 @@ export class MarkdownDataSource implements IDataSource {
 								deleted: []
 							});
 							this.cache.set(file.path, parseResult.cache);
+						} else if (!parseResult) {
+							this.cache.set(file.path, this.makeEmptyFileCache(file.stat.mtime));
 						}
 					});
 				});
@@ -548,8 +567,8 @@ export class MarkdownDataSource implements IDataSource {
 				const oldCache = this.cache.get(file.path);
 				this.cache.delete(file.path);
 
-				if (this.changeHandler && oldCache) {
-					// 发送文件路径，让仓库清理该文件的所有任务
+				if (this.changeHandler && oldCache && oldCache.taskCount > 0) {
+					// 仅曾包含任务的文件需要通知仓库清理
 					void this.changeHandler({
 						sourceId: this.sourceId,
 						created: [],
@@ -572,9 +591,14 @@ export class MarkdownDataSource implements IDataSource {
 				const oldCache = this.cache.get(oldPath);
 				if (oldCache) {
 					this.cache.delete(oldPath);
+					if (oldCache.taskCount === 0) {
+						// 零任务文件重命名仅迁移空缓存，无需读盘或派发无效删除事件
+						this.cache.set(file.path, this.makeEmptyFileCache(file.stat.mtime));
+						return;
+					}
 					void (async () => {
 						const parsed = await this.parseFileForScan(file.path).catch(() => null);
-						if (parsed) {
+						if (parsed && parsed.tasks.length > 0) {
 							this.cache.set(file.path, parsed.cache);
 							await this.changeHandler?.({
 								sourceId: this.sourceId,
@@ -584,9 +608,11 @@ export class MarkdownDataSource implements IDataSource {
 								deletedFilePaths: [oldPath]
 							});
 						} else {
-							// 解析失败（如 metadataCache 未就绪）退化为仅清缓存，
-							// 文件下次被编辑时会走正常 modify 路径补齐
-							this.cache.delete(file.path);
+							if (parsed) {
+								this.cache.set(file.path, parsed.cache);
+							} else {
+								this.cache.delete(file.path);
+							}
 							await this.changeHandler?.({
 								sourceId: this.sourceId,
 								created: [],
@@ -605,7 +631,7 @@ export class MarkdownDataSource implements IDataSource {
 		// 用于调试和验证问题，避免生产环境性能开销
 		// 通过设置插件实例的 __dev_mode__ 属性为 true 来启用
 		const appWithPlugins = this.app as App & { plugins?: { plugins?: Record<string, Record<string, unknown>> } };
-		const isDev = appWithPlugins.plugins?.plugins?.['gantt-calendar']?.['__dev_mode__'] === true;
+		const isDev = appWithPlugins.plugins?.plugins?.[PLUGIN_ID]?.['__dev_mode__'] === true;
 
 		if (isDev) {
 			Logger.debug('MarkdownDataSource', 'Dev mode: Adding metadataCache listener');
@@ -630,33 +656,11 @@ export class MarkdownDataSource implements IDataSource {
 	}
 
 	/**
-	 * 解析单个文件获取任务
+	 * 解析单个文件获取任务（统一复用两阶段解析入口）
 	 */
 	private async parseFile(filePath: string): Promise<GCTask[] | null> {
-		const file = this.app.vault.getAbstractFileByPath(filePath);
-		if (!(file instanceof TFile)) {
-			return null;
-		}
-
-		const fileCache = this.app.metadataCache.getFileCache(file);
-		const listItems = fileCache?.listItems;
-
-		if (!listItems || listItems.length === 0) {
-			return null;
-		}
-
-		const content = await this.app.vault.read(file);
-		const lines = content.split('\n');
-
-		const tasks = parseTasksFromListItems(
-			file,
-			lines,
-			listItems,
-			this.config.enabledFormats as TaskFormatType[] || ['tasks', 'dataview'],
-			this.config.globalFilter
-		);
-
-		return tasks;
+		const result = await this.parseFileFromContent(filePath);
+		return result ? result.tasks : null;
 	}
 
 	/**

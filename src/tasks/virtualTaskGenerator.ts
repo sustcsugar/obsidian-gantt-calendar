@@ -58,6 +58,8 @@ export function generateVirtualInstances(
     const virtualTasks: GCTask[] = [];
 
     for (const task of tasks) {
+        // 跳过虚拟父容器节点（仅用于树形分组展示，不生成周期虚拟实例）
+        if (task.isVirtualContainer) continue;
         // 跳过没有 repeat 规则的任务
         if (!task.repeat) continue;
         // 跳过已完成的任务

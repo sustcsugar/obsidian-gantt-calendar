@@ -9,8 +9,9 @@ import { SidebarApp } from './ui/sidebar/SidebarApp';
 import { TooltipProvider } from './ui/components/TooltipProvider';
 import { ModalProvider } from './ui/components/ModalProvider';
 import { Logger } from './utils/logger';
+import { GC_SIDEBAR_VIEW_ID, PLUGIN_DISPLAY_NAME } from './constants';
 
-export const GC_SIDEBAR_VIEW_ID = 'gantt-calendar-sidebar-view';
+export { GC_SIDEBAR_VIEW_ID };
 
 /**
  * 侧边栏视图（React 渲染）
@@ -33,7 +34,7 @@ export class GCSidebarView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'Gantt calendar';
+		return PLUGIN_DISPLAY_NAME;
 	}
 
 	getIcon(): string {
@@ -68,7 +69,8 @@ export class GCSidebarView extends ItemView {
 			if (this.containerEl.isConnected) {
 				useCalendarStore.getState().notifyTasksUpdated(
 					this.plugin.taskCache.getAllTasks(),
-					filePath
+					filePath,
+					this.plugin.taskCache.getAllTasksIncludingVirtual?.()
 				);
 			}
 		};
@@ -80,12 +82,13 @@ export class GCSidebarView extends ItemView {
 			void ready
 				.then(() => {
 					useCalendarStore.getState().setTasks(
-						this.plugin.taskCache?.getAllTasks() || []
+						this.plugin.taskCache?.getAllTasks() || [],
+						this.plugin.taskCache?.getAllTasksIncludingVirtual?.()
 					);
 				})
 				.catch((error: unknown) => {
 					Logger.error('GCSidebarView', 'Task cache failed to initialize:', error);
-					useCalendarStore.getState().setTasks([]);
+					useCalendarStore.getState().setTasks([], []);
 				});
 		}
 	}
