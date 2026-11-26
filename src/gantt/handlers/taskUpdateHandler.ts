@@ -8,9 +8,11 @@ import type { GCTask, IPluginContext } from '../../types';
 import { getTaskDateField } from '../../types';
 import type { GanttChartTask, DateFieldType } from '../types';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
+import { parseLocalDate } from '../wrappers/dateGeometry';
 import { Logger } from '../../utils/logger';
 import { i18n } from '../../i18n/i18n';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
+import { taskUndo } from '../../tasks/taskUndo';
 
 /**
  * 任务更新回调函数类型
@@ -50,8 +52,13 @@ export class TaskUpdateHandler {
 		newEnd: Date,
 		startField: DateFieldType,
 		endField: DateFieldType,
-		_allTasks: GCTask[]
+		allTasks: GCTask[]
 	): Promise<void> {
+		// 第二道防线：静默拦截汇总条及非实体任务行，绝不触发任何文件写入
+		if (ganttTask.isRollupBar || ganttTask.treeNodeType === 'folder' || ganttTask.treeNodeType === 'file') {
+			return;
+		}
+
 		try {
 			// 直接从 GanttChartTask 获取任务信息
 			if (!ganttTask.filePath || ganttTask.lineNumber === undefined) {
@@ -78,10 +85,82 @@ export class TaskUpdateHandler {
 				[endField]: this.preserveTimeOfDay(newEnd, originalEndDate, ganttTask.datePrecision?.[endField]),
 			};
 
-			// 使用 updateTaskProperties
-			const { updateTaskProperties } = await import('../../tasks/taskUpdater');
+			const {
+				updateTaskProperties,
+				collectDescendantTasks,
+				shiftTaskDatesAtomically,
+				refreshTaskView,
+			} = await import('../../tasks/taskUpdater');
 
-			// 直接使用 ganttTask（已包含完整任务信息）
+			// T8：仅在树形模式下，开启「拖拽父任务时联动平移子任务」且本次为整体平移（非单边拉伸）时，原子批量顺延后代
+			if (
+				ganttTask.treeNodeType === 'task' &&
+				this.plugin.settings.ganttCascadeParentDrag &&
+				ganttTask.start &&
+				ganttTask.end
+			) {
+				const prevStart = parseLocalDate(ganttTask.start);
+				const prevEnd = parseLocalDate(ganttTask.end);
+				const newStartMidnight = new Date(newStart.getFullYear(), newStart.getMonth(), newStart.getDate());
+				const newEndMidnight = new Date(newEnd.getFullYear(), newEnd.getMonth(), newEnd.getDate());
+				const deltaStartDays = Math.round((newStartMidnight.getTime() - prevStart.getTime()) / 86400000);
+				const deltaEndDays = Math.round((newEndMidnight.getTime() - prevEnd.getTime()) / 86400000);
+
+				if (deltaStartDays !== 0 && deltaStartDays === deltaEndDays) {
+					const parentSource = allTasks.find(
+						(t) => t.filePath === ganttTask.filePath && t.lineNumber === ganttTask.lineNumber
+					) ?? (ganttTask as unknown as GCTask);
+
+					const descendants = collectDescendantTasks(parentSource, allTasks);
+					const childItems: Array<{ task: GCTask; updates: Record<string, Date> }> = [];
+					const fieldsToShift = Array.from(new Set<DateFieldType>([startField, endField]));
+
+					for (const child of descendants) {
+						if (child.isVirtualContainer) continue;
+						const childUpdates: Record<string, Date> = {};
+						for (const field of fieldsToShift) {
+							const currentVal = getTaskDateField(child, field);
+							if (currentVal && !isNaN(currentVal.getTime())) {
+								const shifted = new Date(currentVal);
+								shifted.setDate(shifted.getDate() + deltaStartDays);
+								childUpdates[field] = shifted;
+							}
+						}
+						if (Object.keys(childUpdates).length > 0) {
+							childItems.push({ task: child, updates: childUpdates });
+						}
+					}
+
+					if (childItems.length > 0) {
+						const batchResult = await shiftTaskDatesAtomically(
+							this.app,
+							ganttTask.filePath,
+							[{ task: parentSource, updates }, ...childItems],
+							this.plugin.settings.enabledTaskFormats
+						);
+						await refreshTaskView(this.app, ganttTask.filePath);
+						const deltaLabel = deltaStartDays > 0 ? `+${deltaStartDays}` : String(deltaStartDays);
+						const msg = i18n.t('views.ganttView.cascadeUpdated', {
+							count: childItems.length,
+							delta: deltaLabel,
+						});
+						taskUndo.registerBatchLines(
+							{
+								app: this.app,
+								filePath: ganttTask.filePath,
+								previousLines: batchResult.previousLines,
+								onRefresh: () => {
+									this.onTaskUpdated?.(ganttTask.filePath!);
+								},
+							},
+							msg
+						);
+						return;
+					}
+				}
+			}
+
+			// 常规单行更新：直接使用 ganttTask（已包含完整任务信息）
 			await updateTaskProperties(
 				this.app,
 				ganttTask as unknown as GCTask,
@@ -110,6 +189,10 @@ export class TaskUpdateHandler {
 		progress: number,
 		_allTasks: GCTask[]
 	): Promise<void> {
+		if (ganttTask.treeNodeType === 'folder' || ganttTask.treeNodeType === 'file') {
+			return;
+		}
+
 		try {
 			// 直接从 GanttChartTask 获取任务信息
 			if (!ganttTask.filePath || ganttTask.lineNumber === undefined) {

@@ -15,6 +15,7 @@ import { TagTreeFilter } from './TagTreeFilter';
 import { DropdownMenu, type MenuItemDef, type DropdownMenuSection } from './DropdownMenu';
 import type { DateFieldType, GanttCalendarSettings } from '../../settings/types';
 import { useIsNarrow } from '../utils/platform';
+import { PLUGIN_ID } from '../../constants';
 
 const VIEW_BUTTONS: Array<{ type: CalendarViewType; icon: string }> = [
 	{ type: 'day', icon: 'sun' },
@@ -89,7 +90,10 @@ export function ToolbarBar(): JSX.Element {
 			plugin.settings.globalTaskFilter,
 			plugin.settings.enabledTaskFormats
 		);
-		setTasks(plugin.taskCache.getAllTasks());
+		setTasks(
+			plugin.taskCache.getAllTasks(),
+			plugin.taskCache.getAllTasksIncludingVirtual?.()
+		);
 	};
 
 	// ===== 创建任务 / 设置 / 同步 =====
@@ -105,7 +109,7 @@ export function ToolbarBar(): JSX.Element {
 	const openSettings = () => {
 		const a = plugin.app as unknown as { setting?: { open(): void; openTabById(id: string): void } };
 		a.setting?.open();
-		a.setting?.openTabById('gantt-calendar');
+		a.setting?.openTabById(PLUGIN_ID);
 	};
 
 	// ===== 下拉菜单（声明式） =====

@@ -40,3 +40,6 @@ lint-report.txt
 # git worktrees
 .worktrees/
 .zcode/
+
+# local plugin distribution bundle
+dist/

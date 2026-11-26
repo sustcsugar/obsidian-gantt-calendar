@@ -405,6 +405,15 @@
         "name": "Gantt End Field",
         "description": "Select the task time field used to determine the gantt bar end position"
       },
+      "rootFolder": {
+        "name": "Gantt Tree Root Folder",
+        "description": "Folder scope and prefix stripped in Gantt tree mode only; leave blank to include the whole vault (does not affect other views)",
+        "placeholder": "Example: Projects"
+      },
+      "cascadeParentDrag": {
+        "name": "Cascade child dates when dragging parent",
+        "description": "When enabled, moving a dated parent task atomically shifts all dated descendant tasks in the same file by the same day delta (off by default)"
+      },
       "dateFieldOptions": {
         "createdDate": "Created Date",
         "startDate": "Start Date",
@@ -1223,6 +1232,7 @@
       "undoAction": "Undo",
       "undoSuccess": "Operation undone",
       "undoFailed": "Undo failed",
+      "undoFileChanged": "Undo aborted: file was modified externally",
       "restore": {
         "alreadyDone": "Restore failed: task is completed",
         "alreadyRestored": "Restore failed: task is already restored"
@@ -1365,7 +1375,30 @@
       "currentFilter": "Current filter: {{count}} statuses",
       "tagFilter": "Tag filter: {{tags}}",
       "missingFieldConfig": "Missing time field configuration",
-      "title": "Gantt View"
+      "title": "Gantt View",
+      "treeMode": "Tree Group",
+      "flatMode": "Flat List",
+      "groupByProjectModel": "Project → Model",
+      "groupByModelOnly": "Model Only",
+      "expandAll": "Expand All",
+      "collapseToFiles": "Models Only",
+      "collapseAll": "Collapse All",
+      "searchPlaceholder": "Search tasks, models, or projects...",
+      "clearSearch": "Clear search",
+      "uncategorizedProject": "Uncategorized",
+      "virtualCheckboxDisabledHint": "Virtual parent (non-destructive checkbox write-back coming in T5)",
+      "outOfBoundsHint": "Child task dates exceed parent range",
+      "inheritedDateHint": "Inherits parent dates (drag bar to assign its own dates)",
+      "rollupTooltip": {
+        "folderLevel": "Project Folder",
+        "fileLevel": "Model Document",
+        "taskLevel": "Parent Phase",
+        "dateRange": "Date Span",
+        "days": "{{count}}d total",
+        "taskCount": "Tasks Included",
+        "progress": "Progress"
+      },
+      "cascadeUpdated": "Shifted parent and {{count}} child task(s) by {{delta}} day(s)"
     }
   },
   "embeddedEditor": {

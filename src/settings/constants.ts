@@ -110,6 +110,11 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 
 	ganttStartField: 'startDate',  // 默认使用开始日期
 	ganttEndField: 'dueDate',      // 默认使用截止日期
+	ganttRootFolder: '',           // 默认留空（甘特图树形模式按全库路径分组）
+	ganttDisplayMode: 'tree',      // 默认开启树形分组，支持一键切换原版平铺
+	ganttGroupMode: 'project-model', // 默认按「项目 → 型号」分组
+	ganttCollapsedIds: [],         // 默认全部展开
+	ganttCascadeParentDrag: false, // 默认关闭父任务拖拽联动顺延子任务
 };
 
 /**

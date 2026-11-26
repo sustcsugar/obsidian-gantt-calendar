@@ -14,8 +14,9 @@
  * 符的限制）。
  */
 import type { ViewFilterState, ViewScope } from '../ui/store/calendarStore';
+import { LEGACY_VIEW_FILTERS_KEY } from '../constants';
 
-const LEGACY_VIEW_FILTERS_KEY = 'gantt-calendar-view-filters';/** 读取并清除旧 localStorage 键；不存在或损坏时返回 null */
+/** 读取并清除旧 localStorage 键；不存在或损坏时返回 null */
 export function readLegacyViewFilters(): Partial<Record<ViewScope, ViewFilterState>> | null {
 	try {
 		// 迁移专用：读取旧版无前缀全局键（见文件头注释）

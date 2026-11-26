@@ -12,6 +12,7 @@ import { Logger } from './logger';
 import type { DailyNoteIndex } from './dailyNoteSettingsBridge';
 import { getDailyNote as getDailyNoteFromIndex, createDailyNote } from 'obsidian-daily-notes-interface';
 import { showConfirmDialog } from '../ui/modals/ConfirmDialog';
+import { PLUGIN_ID } from '../constants';
 
 /**
  * 搜索结果接口
@@ -300,7 +301,7 @@ async function insertTaskToFile(
  */
 function serializeNewTask(taskData: CreateTaskData, app: App): string {
 	// Access Obsidian internal plugin API (not in public types)
-	const plugin = (app as unknown as Record<string, Record<string, Record<string, unknown>>>).plugins.plugins['gantt-calendar'] as Record<string, unknown> | undefined;
+	const plugin = (app as unknown as Record<string, Record<string, Record<string, unknown>>>).plugins.plugins[PLUGIN_ID] as Record<string, unknown> | undefined;
 	const settings = plugin?.settings as Record<string, unknown> | undefined;
 	const globalFilter: string = (settings?.globalTaskFilter as string) || '';
 	const enabledFormats: string[] = (settings?.enabledTaskFormats as string[]) || ['tasks'];

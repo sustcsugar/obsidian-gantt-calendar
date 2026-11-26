@@ -25,13 +25,326 @@ export interface TaskFileRef {
 }
 
 // 导入各步骤的解析函数
-import { parseTaskLine } from './step1';
+import { parseTaskLine, type TaskLineMatch } from './step1';
 import { passesGlobalFilter, removeGlobalFilter } from './step2';
 import { detectFormat } from './step3';
 import { parseCheckboxStatus, parseTaskAttributes } from './step4';
 import { extractTaskDescription, extractTags, extractTicktick, findMetadataValue } from './utils';
+import { RegularExpressions } from '../../utils/RegularExpressions';
+
+// ==================== 缩进与词法辅助 ====================
+
+/**
+ * 将任务行前缀缩进字符串归一化为宽度（1 Tab = 4 spaces，其余字符计 1）
+ */
+export function calculateIndentWidth(indent: string): number {
+    let width = 0;
+    for (let i = 0; i < indent.length; i++) {
+        width += indent[i] === '\t' ? 4 : 1;
+    }
+    return width;
+}
+
+/**
+ * 计算文本行首空白（空格与制表符）的归一化宽度（1 Tab = 4 spaces）
+ */
+function calculateLeadingIndentWidth(line: string): number {
+    let width = 0;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === ' ') {
+            width += 1;
+        } else if (ch === '\t') {
+            width += 4;
+        } else {
+            break;
+        }
+    }
+    return width;
+}
+
+/**
+ * 构建单个 GCTask 对象（步骤三/四共用逻辑）
+ */
+function buildGCTask(
+    file: TaskFileRef,
+    lineNumber: number,
+    checkboxStatus: string,
+    contentForParse: string,
+    enabledFormats: TaskFormatType[]
+): GCTask {
+    // 解析复选框状态（包括 status）
+    const { completed, cancelled, status } = parseCheckboxStatus(checkboxStatus);
+
+    // ==================== 第三步：判断格式 ====================
+    const detectedFormat = detectFormat(contentForParse, enabledFormats);
+    // 混合格式默认使用 tasks 格式进行解析
+    const format = detectedFormat === 'mixed' ? 'tasks' : detectedFormat;
+
+    // 统一提取所有 %%[key::value]%% 内联元数据（包括 guid、desc 等）
+    const { metadataFields, contentWithoutTicktick } = extractTicktick(contentForParse);
+
+    // ==================== 第四步：解析属性 ====================
+    const task: GCTask = {
+        filePath: file.path,
+        fileName: file.basename,
+        lineNumber,
+        content: contentForParse,
+        description: extractTaskDescription(contentWithoutTicktick),
+        completed,
+        cancelled,
+        status,
+        priority: 'normal', // 默认优先级
+        metadataFields: metadataFields.length > 0 ? metadataFields : undefined,
+        // 从统一的 metadataFields 数组中派生 feishuGuid（供飞书同步使用）
+        feishuGuid: findMetadataValue(metadataFields, 'guid'),
+    };
+
+    // 解析标签
+    const tags = extractTags(contentForParse);
+    if (tags.length > 0) {
+        task.tags = tags;
+    }
+
+    // 如果检测到有效格式，解析任务属性
+    if (format && enabledFormats.includes(format)) {
+        const { priority, dates, datePrecisions, hasCancelledDate, repeat } = parseTaskAttributes(
+            contentForParse,
+            format
+        );
+
+        task.format = format;
+        task.priority = priority || 'normal'; // 确保有默认优先级
+        task.createdDate = dates.createdDate;
+        task.startDate = dates.startDate;
+        task.scheduledDate = dates.scheduledDate;
+        task.dueDate = dates.dueDate;
+        task.cancelledDate = dates.cancelledDate;
+        task.completionDate = dates.completionDate;
+        task.repeat = repeat;
+        task.datePrecision = datePrecisions;
+
+        // 如果存在取消日期且任务未完成，确保取消状态被设置
+        if (hasCancelledDate && !task.completed) {
+            task.cancelled = true;
+        }
+    }
+
+    // ==================== 警告检查 ====================
+    // 混合格式警告
+    if (detectedFormat === 'mixed') {
+        task.warning = '混用任务格式，请修改';
+    }
+    // 未规划时间警告
+    else if (
+        !task.priority &&
+        !task.createdDate &&
+        !task.startDate &&
+        !task.scheduledDate &&
+        !task.dueDate &&
+        !task.cancelledDate &&
+        !task.completionDate
+    ) {
+        task.warning = '未规划任务时间，请设置';
+    }
+
+    return task;
+}
+
+interface ParsedTaskCandidate {
+    lineNumber: number; // 1-based
+    taskMatch: TaskLineMatch;
+    indentWidth: number;
+    parentLineNumber?: number;
+    childLineNumbers: number[];
+    directMatch: boolean;
+}
 
 // ==================== 主解析函数 ====================
+
+/**
+ * 统一的两阶段缩进任务解析器（冷启动与实时编辑共享入口）
+ *
+ * 阶段一（词法清洗 + 单调缩进栈建树）：
+ * - 跳过文件首行 --- 开启的 YAML Frontmatter
+ * - 跳过 ``` / ~~~ 围栏代码块（支持 3 个及以上字符及闭合匹配）
+ * - 遇到标题、分割线或零缩进非空非任务段落时清空缩进栈
+ * - 遇到空行或带缩进的非任务备注行时保持缩进栈不变
+ * - 为所有合法任务行建立 1-based parentLineNumber / childLineNumbers 关系
+ *
+ * 阶段二（globalFilter 过滤与自底向上虚拟父节点保留）：
+ * - globalFilter 非空时：保留所有通过过滤的任务及其祖先链；未通过过滤但有合规后代的父节点
+ *   标记为 isVirtualContainer = true（保留原文不剥离 globalFilter），孤立未通过任务丢弃
+ * - globalFilter 为空时：全部合法任务保留且 isVirtualContainer = false
+ * - 剪枝后同步清理父节点 childLineNumbers 中已被丢弃的行号
+ */
+export function parseTasksFromContent(
+    file: TaskFileRef,
+    fileContent: string,
+    enabledFormats: TaskFormatType[],
+    globalTaskFilter?: string
+): GCTask[] {
+    if (!fileContent) return [];
+
+    const rawLines = fileContent.split('\n');
+    const lines = rawLines.map((l) => (l.endsWith('\r') ? l.slice(0, -1) : l));
+    if (lines.length > 0 && lines[0].charCodeAt(0) === 0xFEFF) {
+        lines[0] = lines[0].slice(1);
+    }
+
+    // 1. 跳过文件首行 --- 开启且存在闭合标记的 YAML Frontmatter
+    let startIndex = 0;
+    if (lines.length > 0 && RegularExpressions.MarkdownLexical.frontmatterOpenRegex.test(lines[0])) {
+        for (let i = 1; i < lines.length; i++) {
+            if (RegularExpressions.MarkdownLexical.frontmatterCloseRegex.test(lines[i])) {
+                startIndex = i + 1;
+                break;
+            }
+        }
+    }
+
+    const hasGlobalFilter = Boolean(globalTaskFilter && globalTaskFilter.trim().length > 0);
+    const candidates: ParsedTaskCandidate[] = [];
+    const byLine = new Map<number, ParsedTaskCandidate>();
+    const stack: Array<{ lineNumber: number; indent: number }> = [];
+
+    let inCodeBlock = false;
+    let fenceChar = '';
+    let fenceLength = 0;
+
+    // 2. 阶段一：逐行扫描与单调缩进栈维护
+    for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (inCodeBlock) {
+            const closeMatch = line.match(RegularExpressions.MarkdownLexical.fenceCloseRegex);
+            if (closeMatch && closeMatch[1][0] === fenceChar && closeMatch[1].length >= fenceLength) {
+                inCodeBlock = false;
+                fenceChar = '';
+                fenceLength = 0;
+            }
+            continue;
+        }
+
+        const openMatch = line.match(RegularExpressions.MarkdownLexical.fenceOpenRegex);
+        if (openMatch) {
+            const marker = openMatch[1];
+            const info = openMatch[2] || '';
+            // CommonMark 规范：反引号围栏的 info string 不能包含反引号（排除单行内联代码）
+            if (marker[0] !== '`' || !info.includes('`')) {
+                inCodeBlock = true;
+                fenceChar = marker[0];
+                fenceLength = marker.length;
+                continue;
+            }
+        }
+
+        const taskMatch = parseTaskLine(line);
+        if (!taskMatch) {
+            // 空行保持栈不变
+            if (line.trim().length === 0) {
+                continue;
+            }
+            // 标题、水平分割线或零缩进非空非任务段落：清空缩进栈
+            if (
+                RegularExpressions.MarkdownLexical.headingRegex.test(line) ||
+                RegularExpressions.MarkdownLexical.horizontalRuleRegex.test(line) ||
+                calculateLeadingIndentWidth(line) === 0
+            ) {
+                stack.length = 0;
+            }
+            // 带缩进的非任务备注行保持栈不变
+            continue;
+        }
+
+        const lineNumber = i + 1; // 1-based 行号
+        const indentWidth = calculateIndentWidth(taskMatch.indent);
+
+        while (stack.length > 0 && stack[stack.length - 1].indent >= indentWidth) {
+            stack.pop();
+        }
+
+        const parentLineNumber = stack.length > 0 ? stack[stack.length - 1].lineNumber : undefined;
+        const directMatch = !hasGlobalFilter || passesGlobalFilter(taskMatch.content, globalTaskFilter);
+
+        const candidate: ParsedTaskCandidate = {
+            lineNumber,
+            taskMatch,
+            indentWidth,
+            parentLineNumber,
+            childLineNumbers: [],
+            directMatch,
+        };
+
+        candidates.push(candidate);
+        byLine.set(lineNumber, candidate);
+
+        if (parentLineNumber !== undefined) {
+            byLine.get(parentLineNumber)?.childLineNumbers.push(lineNumber);
+        }
+
+        stack.push({ lineNumber, indent: indentWidth });
+    }
+
+    if (candidates.length === 0) {
+        return [];
+    }
+
+    // 3. 阶段二：globalFilter 过滤与自底向上虚拟父节点保留
+    const keptLines = new Set<number>();
+    const virtualLines = new Set<number>();
+
+    if (!hasGlobalFilter) {
+        for (const c of candidates) {
+            keptLines.add(c.lineNumber);
+        }
+    } else {
+        for (const c of candidates) {
+            if (!c.directMatch) continue;
+            keptLines.add(c.lineNumber);
+
+            let parentLine = c.parentLineNumber;
+            while (parentLine !== undefined) {
+                if (keptLines.has(parentLine)) break;
+                keptLines.add(parentLine);
+                const parentCandidate = byLine.get(parentLine);
+                if (!parentCandidate) break;
+                if (!parentCandidate.directMatch) {
+                    virtualLines.add(parentLine);
+                }
+                parentLine = parentCandidate.parentLineNumber;
+            }
+        }
+    }
+
+    // 4. 构造最终 GCTask 列表（candidates 已按 1-based 行号升序）
+    const tasks: GCTask[] = [];
+    for (const c of candidates) {
+        if (!keptLines.has(c.lineNumber)) continue;
+
+        const isVirtualContainer = virtualLines.has(c.lineNumber);
+        const contentForParse = isVirtualContainer
+            ? c.taskMatch.content
+            : removeGlobalFilter(c.taskMatch.content, globalTaskFilter);
+
+        const task = buildGCTask(
+            file,
+            c.lineNumber,
+            c.taskMatch.checkboxStatus,
+            contentForParse,
+            enabledFormats
+        );
+
+        task.indentWidth = c.indentWidth;
+        task.parentLineNumber = c.parentLineNumber;
+        task.childLineNumbers = c.childLineNumbers.filter((childLine) => keptLines.has(childLine));
+        task.isVirtualContainer = isVirtualContainer;
+
+        tasks.push(task);
+    }
+
+    return tasks;
+}
 
 /**
  * 从列表项缓存中解析任务
@@ -86,82 +399,7 @@ export function parseTasksFromListItems(
         }
 
         const contentWithoutFilter = removeGlobalFilter(rawContent, globalTaskFilter);
-
-        // 解析复选框状态（包括 status）
-        const { completed, cancelled, status } = parseCheckboxStatus(checkboxStatus);
-
-        // ==================== 第三步：判断格式 ====================
-        const detectedFormat = detectFormat(contentWithoutFilter, enabledFormats);
-        // 混合格式默认使用 tasks 格式进行解析
-        const format = detectedFormat === 'mixed' ? 'tasks' : detectedFormat;
-
-        // 统一提取所有 %%[key::value]%% 内联元数据（包括 guid、desc 等）
-        const { metadataFields, contentWithoutTicktick } = extractTicktick(contentWithoutFilter);
-
-        // ==================== 第四步：解析属性 ====================
-        const task: GCTask = {
-            filePath: file.path,
-            fileName: file.basename,
-            lineNumber: lineNumber + 1, // 转换为 1-based 行号
-            content: contentWithoutFilter,
-            description: extractTaskDescription(contentWithoutTicktick),
-            completed,
-            cancelled,
-            status,
-            priority: 'normal', // 默认优先级
-            metadataFields: metadataFields.length > 0 ? metadataFields : undefined,
-            // 从统一的 metadataFields 数组中派生 feishuGuid（供飞书同步使用）
-            feishuGuid: findMetadataValue(metadataFields, 'guid'),
-        };
-
-        // 解析标签
-        const tags = extractTags(contentWithoutFilter);
-        if (tags.length > 0) {
-            task.tags = tags;
-        }
-
-        // 如果检测到有效格式，解析任务属性
-        if (format && enabledFormats.includes(format)) {
-            const { priority, dates, datePrecisions, hasCancelledDate, repeat } = parseTaskAttributes(
-                contentWithoutFilter,
-                format
-            );
-
-            task.format = format;
-            task.priority = priority || 'normal'; // 确保有默认优先级
-            task.createdDate = dates.createdDate;
-            task.startDate = dates.startDate;
-            task.scheduledDate = dates.scheduledDate;
-            task.dueDate = dates.dueDate;
-            task.cancelledDate = dates.cancelledDate;
-            task.completionDate = dates.completionDate;
-            task.repeat = repeat;
-            task.datePrecision = datePrecisions;
-
-            // 如果存在取消日期且任务未完成，确保取消状态被设置
-            if (hasCancelledDate && !task.completed) {
-                task.cancelled = true;
-            }
-        }
-
-        // ==================== 警告检查 ====================
-        // 混合格式警告
-        if (detectedFormat === 'mixed') {
-            task.warning = '混用任务格式，请修改';
-        }
-        // 未规划时间警告
-        else if (
-            !task.priority &&
-            !task.createdDate &&
-            !task.startDate &&
-            !task.scheduledDate &&
-            !task.dueDate &&
-            !task.cancelledDate &&
-            !task.completionDate
-        ) {
-            task.warning = '未规划任务时间，请设置';
-        }
-
+        const task = buildGCTask(file, lineNumber + 1, checkboxStatus, contentWithoutFilter, enabledFormats);
         tasks.push(task);
     }
 

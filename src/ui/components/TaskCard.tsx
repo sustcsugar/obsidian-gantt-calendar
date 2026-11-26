@@ -302,7 +302,9 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 				await plugin.taskCache.refreshFile(task.filePath);
 				const { useCalendarStore } = await import('../store/calendarStore');
 				useCalendarStore.getState().notifyTasksUpdated(
-					plugin.taskCache.getAllTasks(), task.filePath
+					plugin.taskCache.getAllTasks(),
+					task.filePath,
+					plugin.taskCache.getAllTasksIncludingVirtual?.()
 				);
 				onRefresh?.();
 			} catch (error) {

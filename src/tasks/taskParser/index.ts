@@ -24,6 +24,8 @@ export * from './utils';
 
 // ==================== 主解析函数 ====================
 export {
+    calculateIndentWidth,
+    parseTasksFromContent,
     parseTasksFromListItems,
     parseTasksFromFile,
     parseTasksFromLines,

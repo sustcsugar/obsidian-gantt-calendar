@@ -3,6 +3,7 @@ import type { SortField, SortOrder, TagFilterOperator } from '../types';
 import type { TaskStatus } from '../tasks/taskStatus';
 import type { FeishuTaskList } from '../data-layer/sources/api/providers/feishu/FeishuTypes';
 import type { ViewFilterState, ViewScope } from '../ui/store/calendarStore';
+import type { GanttDisplayMode, GanttGroupMode } from '../gantt/types';
 
 /**
  * 日期字段类型
@@ -118,6 +119,11 @@ export interface GanttCalendarSettings {
 
 	ganttStartField: DateFieldType;  // 甘特图开始时间字段
 	ganttEndField: DateFieldType;    // 甘特图结束时间字段
+	ganttRootFolder: string;         // 甘特图树形模式根目录（留空扫全库，仅用于甘特图树形分组）
+	ganttDisplayMode?: GanttDisplayMode; // 甘特图展示模式（'tree' 树形分组 | 'flat' 原版平铺，持久化至 data.json）
+	ganttGroupMode?: GanttGroupMode; // 甘特图树形分组维度（持久化至 data.json）
+	ganttCollapsedIds?: string[];    // 甘特图折叠节点 nodeId 列表（持久化至 data.json）
+	ganttCascadeParentDrag?: boolean; // 拖拽实体父任务平移时是否联动顺延后代子任务（默认关闭）
 
 	// ========== 同步设置 ==========
 	syncConfiguration?: SyncConfiguration;

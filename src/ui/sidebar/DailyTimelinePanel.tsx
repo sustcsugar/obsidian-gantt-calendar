@@ -114,7 +114,11 @@ export function DailyTimelinePanel(): JSX.Element {
 				const taskToUpdate = { ...task, datePrecision: { ...task.datePrecision, ...precision } };
 				await updateTaskProperties(app, taskToUpdate, updates, enabledFormats);
 				await plugin.taskCache.refreshFile(task.filePath);
-				useCalendarStore.getState().notifyTasksUpdated(plugin.taskCache.getAllTasks(), task.filePath);
+				useCalendarStore.getState().notifyTasksUpdated(
+					plugin.taskCache.getAllTasks(),
+					task.filePath,
+					plugin.taskCache.getAllTasksIncludingVirtual?.()
+				);
 			} catch (error) {
 				Logger.error('DailyTimelinePanel', 'Set all-day failed:', error);
 				new Notice(i18n.t('views.dayView.updateTaskFailed'));

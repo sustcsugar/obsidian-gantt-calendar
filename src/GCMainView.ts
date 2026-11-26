@@ -8,8 +8,9 @@ import { PluginContext } from './ui/pluginContext';
 import { mountReact } from './ui/reactBridge';
 import { App } from './ui/App';
 import { Logger } from './utils/logger';
+import { GC_VIEW_ID, PLUGIN_DISPLAY_NAME } from './constants';
 
-export const GC_VIEW_ID = 'gantt-calendar-view';
+export { GC_VIEW_ID };
 
 /**
  * 主日历视图（React 渲染）
@@ -34,7 +35,7 @@ export class GCMainView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'Gantt calendar';
+		return PLUGIN_DISPLAY_NAME;
 	}
 
 	getIcon(): string {
@@ -68,7 +69,8 @@ export class GCMainView extends ItemView {
 			if (this.containerEl.isConnected) {
 				useCalendarStore.getState().notifyTasksUpdated(
 					this.plugin.taskCache.getAllTasks(),
-					filePath
+					filePath,
+					this.plugin.taskCache.getAllTasksIncludingVirtual?.()
 				);
 			}
 		};
@@ -81,12 +83,13 @@ export class GCMainView extends ItemView {
 			void ready
 				.then(() => {
 					useCalendarStore.getState().setTasks(
-						this.plugin.taskCache?.getAllTasks() || []
+						this.plugin.taskCache?.getAllTasks() || [],
+						this.plugin.taskCache?.getAllTasksIncludingVirtual?.()
 					);
 				})
 				.catch((error: unknown) => {
 					Logger.error('GCMainView', 'Task cache failed to initialize:', error);
-					useCalendarStore.getState().setTasks([]);
+					useCalendarStore.getState().setTasks([], []);
 				});
 		}
 	}

@@ -90,7 +90,8 @@ export class GanttChartAdapter {
 			// 设置事件处理器
 			this.renderer.setEventHandlers({
 				onDateChange: this.config.on_date_change,
-				onProgressChange: this.config.on_progress_change
+				onProgressChange: this.config.on_progress_change,
+				onToggleCollapse: this.config.on_toggle_collapse,
 			});
 
 			// 初始化渲染
