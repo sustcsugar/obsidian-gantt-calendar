@@ -28,6 +28,7 @@ import { LinkRenderer } from '../../utils/linkRenderer';
 import { getTodayInTimezone } from '../../dateUtils/timezone';
 import { formatDate } from '../../dateUtils/dateUtilsIndex';
 import { openFileInExistingLeaf } from '../../utils/fileOpener';
+import { i18n } from '../../i18n/i18n';
 import { App } from 'obsidian';
 
 /**
@@ -859,7 +860,33 @@ export class SvgGanttRenderer {
 			const contentDiv = createDiv();
 			contentDiv.className = GanttClasses.elements.taskContentCell;
 			contentDiv.addClass('gc-u-flex', 'gc-u-items-center', 'gc-u-w-full');
-			setCssProps(contentDiv, { height: '100%', fontSize: '12px', color: 'var(--text-normal)', gap: '8px', padding: '0 8px' });
+			const level = task.level ?? 0;
+			if (level > 0) contentDiv.addClass(GanttClasses.modifiers.childRow);
+			setCssProps(contentDiv, {
+				height: '100%',
+				fontSize: '12px',
+				color: 'var(--text-normal)',
+				gap: '8px',
+				// 单值简写：上右下左；左侧按层级递进（避免 padding 与 paddingLeft 的覆盖顺序依赖）
+				padding: `0 8px 0 ${8 + level * 16}px`,
+			});
+
+			// === 折叠箭头（所有行都占位，保证父子行内容左缘对齐） ===
+			// 父行多一个箭头 + 间距，若不占位，父行内容会比子行更靠右（层级看起来反而是父更深）。
+			const toggle = createSpan();
+			if (task.hasChildren) {
+				toggle.className = GanttClasses.elements.collapseToggle;
+				toggle.setText(task.collapsed ? '▸' : '▾');
+				toggle.setAttribute('aria-label', task.collapsed ? 'expand' : 'collapse');
+				toggle.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if (task.tid) this.config.on_toggle_collapse?.(task.tid);
+				});
+			} else {
+				toggle.className = GanttClasses.elements.collapsePlaceholder;
+				toggle.setAttribute('aria-hidden', 'true');
+			}
+			contentDiv.appendChild(toggle);
 
 			// === 创建复选框 ===
 			const checkbox = this.createTaskCheckbox(task, isCompleted);
@@ -886,6 +913,14 @@ export class SvgGanttRenderer {
 				: task.name;
 			this.renderTaskDescriptionWithLinks(textContainer, displayText);
 			contentDiv.appendChild(textContainer);
+
+			// === 子任务进度徽标（3/5） ===
+			if (task.hasChildren && task.childProgress && task.childProgress.total > 0) {
+				const badge = createSpan();
+				badge.className = GanttClasses.elements.progressBadge;
+				badge.setText(`${task.childProgress.done}/${task.childProgress.total}`);
+				contentDiv.appendChild(badge);
+			}
 
 			contentForeignObj.appendChild(contentDiv);
 			rowGroup.appendChild(contentForeignObj);
@@ -930,7 +965,9 @@ export class SvgGanttRenderer {
 	 */
 	private createTaskCheckbox(
 		ganttTask: GanttChartTask,
-		isCompleted: boolean
+		isCompleted: boolean,
+		/** 聚合父行只读：进度由子任务决定 */
+		readOnly = false
 	): HTMLInputElement {
 		const checkbox = createEl('input');
 		checkbox.type = 'checkbox';
@@ -938,6 +975,14 @@ export class SvgGanttRenderer {
 		checkbox.className = GanttClasses.elements.taskCheckbox;
 		checkbox.addClass('gc-u-pointer');
 		setCssProps(checkbox, { flexShrink: '0', width: '16px', height: '16px', margin: '0', accentColor: 'var(--interactive-accent)' });
+
+		if (readOnly || ganttTask.isAggregate) {
+			checkbox.disabled = true;
+			checkbox.removeClass('gc-u-pointer');
+			checkbox.setAttribute('title', i18n.t('gantt.parentCheckboxHint'));
+			checkbox.addEventListener('click', (e) => e.stopPropagation());
+			return checkbox;
+		}
 
 		// 阻止点击事件冒泡到任务列表项
 		checkbox.addEventListener('click', (e) => {
@@ -1122,6 +1167,7 @@ export class SvgGanttRenderer {
 			// 任务条组
 			const barGroup = activeDocument.createElementNS(ns, 'g');
 			addSvgClass(barGroup, GanttClasses.elements.barGroup);
+			if (task.isAggregate) addSvgClass(barGroup, GanttClasses.modifiers.aggregateBar);
 			barGroup.setAttribute('data-task-bar', task.id);
 
 			// Lead-in segment (creation → start): muted, non-interactive context bar.
@@ -1169,24 +1215,26 @@ export class SvgGanttRenderer {
 			}
 
 			bar.setAttribute('fill', fillColor);
-			bar.setAttribute('opacity', '0.85');
+			// 底条用浅色，已完成的占比用实色覆盖（原来的写法进度矩形被主条盖住，永远看不见）
+			bar.setAttribute('opacity', '0.35');
 			bar.setAttribute('cursor', 'pointer');
 			bar.classList.add('task-bar');
 
-			// 进度条
+			// 进度填充：0 < progress <= 100 都画；父任务的聚合进度也走这里
 			let progressElement: SVGRectElement | null = null;
-			if (task.progress > 0 && task.progress < 100) {
-				const progressWidth = barWidth * task.progress / 100;
+			if (task.progress > 0) {
+				const progressWidth = Math.max((barWidth * task.progress) / 100, 0);
 				const elem = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
 				elem.setAttribute('x', String(x));
 				elem.setAttribute('y', String(y));
-				elem.setAttribute('width', String(Math.max(progressWidth - 8, 0)));
+				elem.setAttribute('width', String(progressWidth));
 				elem.setAttribute('height', '24');
 				elem.setAttribute('rx', '4');
 				elem.setAttribute('fill', fillColor);
-				elem.setAttribute('opacity', '0.4');
+				elem.setAttribute('opacity', '0.95');
+				elem.setAttribute('pointer-events', 'none');
 				progressElement = elem;
-				elem.classList.add('task-progress');
+				elem.classList.add('task-progress', GanttClasses.elements.barProgress);
 			}
 
 			// 条尾时刻标注：任一端点带时刻的任务（与时间画布 timeLabel 同语义）
@@ -1203,54 +1251,62 @@ export class SvgGanttRenderer {
 			}
 
 			// === 添加拖动手柄 ===
+			// 聚合父行只读：拖动父行改日期会与子任务的时间聚合矛盾
 			const HANDLE_HIT_AREA = 12;
 			const HANDLE_VISUAL_SIZE = 4;
 
-			// 左侧手柄 - 修改开始时间
-			const leftHandle = activeDocument.createElementNS(ns, 'rect');
-			leftHandle.setAttribute('x', String(x));
-			leftHandle.setAttribute('y', String(y));
-			leftHandle.setAttribute('width', String(HANDLE_HIT_AREA));
-			leftHandle.setAttribute('height', '24');
-			leftHandle.setAttribute('fill', 'transparent');
-			setCssProps(leftHandle as unknown as HTMLElement, { cursor: 'w-resize' });
-			leftHandle.classList.add(GanttClasses.elements.handleLeft);
+			let leftHandle: SVGRectElement | null = null;
+			let leftVisual: SVGRectElement | null = null;
+			let rightHandle: SVGRectElement | null = null;
+			let rightVisual: SVGRectElement | null = null;
 
-			// 左侧视觉提示
-			const leftVisual = activeDocument.createElementNS(ns, 'rect');
-			leftVisual.setAttribute('x', String(x + 2));
-			leftVisual.setAttribute('y', String(y + 8));
-			leftVisual.setAttribute('width', String(HANDLE_VISUAL_SIZE));
-			leftVisual.setAttribute('height', '8');
-			leftVisual.setAttribute('rx', '1');
-			leftVisual.setAttribute('fill', 'white');
-			leftVisual.setAttribute('opacity', '0.5');
-			setCssProps(leftVisual as unknown as HTMLElement, { pointerEvents: 'none' });
+			if (!task.isAggregate) {
+				// 左侧手柄 - 修改开始时间
+				leftHandle = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
+				leftHandle.setAttribute('x', String(x));
+				leftHandle.setAttribute('y', String(y));
+				leftHandle.setAttribute('width', String(HANDLE_HIT_AREA));
+				leftHandle.setAttribute('height', '24');
+				leftHandle.setAttribute('fill', 'transparent');
+				setCssProps(leftHandle as unknown as HTMLElement, { cursor: 'w-resize' });
+				leftHandle.classList.add(GanttClasses.elements.handleLeft);
 
-			// 右侧手柄 - 修改结束时间
-			const rightHandleX = x + Math.max(barWidth, 20) - HANDLE_HIT_AREA;
-			const rightHandle = activeDocument.createElementNS(ns, 'rect');
-			rightHandle.setAttribute('x', String(rightHandleX));
-			rightHandle.setAttribute('y', String(y));
-			rightHandle.setAttribute('width', String(HANDLE_HIT_AREA));
-			rightHandle.setAttribute('height', '24');
-			rightHandle.setAttribute('fill', 'transparent');
-			setCssProps(rightHandle as unknown as HTMLElement, { cursor: 'e-resize' });
-			rightHandle.classList.add(GanttClasses.elements.handleRight);
+				// 左侧视觉提示
+				leftVisual = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
+				leftVisual.setAttribute('x', String(x + 2));
+				leftVisual.setAttribute('y', String(y + 8));
+				leftVisual.setAttribute('width', String(HANDLE_VISUAL_SIZE));
+				leftVisual.setAttribute('height', '8');
+				leftVisual.setAttribute('rx', '1');
+				leftVisual.setAttribute('fill', 'white');
+				leftVisual.setAttribute('opacity', '0.5');
+				setCssProps(leftVisual as unknown as HTMLElement, { pointerEvents: 'none' });
 
-			// 右侧视觉提示
-			const rightVisual = activeDocument.createElementNS(ns, 'rect');
-			rightVisual.setAttribute('x', String(rightHandleX + HANDLE_HIT_AREA - 2 - HANDLE_VISUAL_SIZE));
-			rightVisual.setAttribute('y', String(y + 8));
-			rightVisual.setAttribute('width', String(HANDLE_VISUAL_SIZE));
-			rightVisual.setAttribute('height', '8');
-			rightVisual.setAttribute('rx', '1');
-			rightVisual.setAttribute('fill', 'white');
-			rightVisual.setAttribute('opacity', '0.5');
-			setCssProps(rightVisual as unknown as HTMLElement, { pointerEvents: 'none' });
+				// 右侧手柄 - 修改结束时间
+				const rightHandleX = x + Math.max(barWidth, 20) - HANDLE_HIT_AREA;
+				rightHandle = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
+				rightHandle.setAttribute('x', String(rightHandleX));
+				rightHandle.setAttribute('y', String(y));
+				rightHandle.setAttribute('width', String(HANDLE_HIT_AREA));
+				rightHandle.setAttribute('height', '24');
+				rightHandle.setAttribute('fill', 'transparent');
+				setCssProps(rightHandle as unknown as HTMLElement, { cursor: 'e-resize' });
+				rightHandle.classList.add(GanttClasses.elements.handleRight);
 
-			// 设置拖动事件
-			this.setupTaskBarDragging(barGroup as SVGGElement, bar as SVGRectElement, leftHandle as SVGRectElement, rightHandle as SVGRectElement, task, minDate);
+				// 右侧视觉提示
+				rightVisual = activeDocument.createElementNS(ns, 'rect') as SVGRectElement;
+				rightVisual.setAttribute('x', String(rightHandleX + HANDLE_HIT_AREA - 2 - HANDLE_VISUAL_SIZE));
+				rightVisual.setAttribute('y', String(y + 8));
+				rightVisual.setAttribute('width', String(HANDLE_VISUAL_SIZE));
+				rightVisual.setAttribute('height', '8');
+				rightVisual.setAttribute('rx', '1');
+				rightVisual.setAttribute('fill', 'white');
+				rightVisual.setAttribute('opacity', '0.5');
+				setCssProps(rightVisual as unknown as HTMLElement, { pointerEvents: 'none' });
+
+				// 设置拖动事件
+				this.setupTaskBarDragging(barGroup as SVGGElement, bar as SVGRectElement, leftHandle, rightHandle, task, minDate);
+			}
 
 			// 添加点击和悬停事件（如果刚结束拖动，不执行点击）
 			bar.addEventListener('click', (e) => {
@@ -1260,12 +1316,12 @@ export class SvgGanttRenderer {
 			});
 			bar.addEventListener('mouseenter', (event) => {
 				if (isTouchNow()) return;
-				bar.setAttribute('opacity', '1');
+				bar.setAttribute('opacity', '0.6');
 				const mouseEvent = event as MouseEvent;
 				this.showPopup(task, bar, { x: mouseEvent.clientX, y: mouseEvent.clientY });
 			});
 			bar.addEventListener('mouseleave', () => {
-				bar.setAttribute('opacity', '0.85');
+				bar.setAttribute('opacity', '0.35');
 				this.hidePopup();
 			});
 
@@ -1281,14 +1337,14 @@ export class SvgGanttRenderer {
 				});
 				barGroup.appendChild(leadBarEl);
 			}
+			barGroup.appendChild(bar);       // 主任务条（浅色底）
 			if (progressElement) {
-				barGroup.appendChild(progressElement);  // 进度条
+				barGroup.appendChild(progressElement);  // 进度填充（必须后置，否则被主条盖住）
 			}
-			barGroup.appendChild(bar);       // 主任务条
-			barGroup.appendChild(leftHandle);   // 左侧手柄
-			barGroup.appendChild(leftVisual);   // 左侧视觉
-			barGroup.appendChild(rightHandle);  // 右侧手柄
-			barGroup.appendChild(rightVisual);  // 右侧视觉
+			if (leftHandle) barGroup.appendChild(leftHandle);   // 左侧手柄
+			if (leftVisual) barGroup.appendChild(leftVisual);   // 左侧视觉
+			if (rightHandle) barGroup.appendChild(rightHandle);  // 右侧手柄
+			if (rightVisual) barGroup.appendChild(rightVisual);  // 右侧视觉
 			tasksGroup.appendChild(barGroup);
 		});
 
@@ -1558,13 +1614,29 @@ export class SvgGanttRenderer {
 			}
 		}
 
-		// 更新进度条
-		const progressRect = barGroup.querySelector('.task-progress') as SVGRectElement;
-		if (progressRect) {
-			const progressWidth = barWidth * (task.progress / 100);
-			progressRect.setAttribute('x', String(x));
-			progressRect.setAttribute('y', String(y));
-			progressRect.setAttribute('width', String(progressWidth));
+		// 更新进度填充：0 → 移除；由 0 变正 → 补建（增量路径原本只改已存在的矩形）
+		const progressRect = barGroup.querySelector<SVGRectElement>('.task-progress');
+		if (task.progress > 0) {
+			const progressWidth = Math.max((barWidth * task.progress) / 100, 0);
+			if (progressRect) {
+				progressRect.setAttribute('x', String(x));
+				progressRect.setAttribute('y', String(y));
+				progressRect.setAttribute('width', String(progressWidth));
+			} else if (bar) {
+				const created = activeDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
+				created.setAttribute('x', String(x));
+				created.setAttribute('y', String(y));
+				created.setAttribute('width', String(progressWidth));
+				created.setAttribute('height', '24');
+				created.setAttribute('rx', '4');
+				created.setAttribute('fill', bar.getAttribute('fill') ?? 'var(--interactive-accent)');
+				created.setAttribute('opacity', '0.95');
+				created.setAttribute('pointer-events', 'none');
+				created.classList.add('task-progress', GanttClasses.elements.barProgress);
+				barGroup.appendChild(created);
+			}
+		} else if (progressRect) {
+			progressRect.remove();
 		}
 
 		// Update lead-in segment (creation → start) geometry.

@@ -8,6 +8,9 @@ import { getTaskDateField } from '../../types';
 import { buildIntervalTimeLabel } from '../../ui/views/week/timelineModel';
 import type { GanttChartTask, DateFieldType } from '../types';
 import type { StatusFilterState } from '../../types';
+import { orderTasksWithHierarchy } from './hierarchyOrder';
+import { getTaskKey, getHierarchyNode, type TaskHierarchyIndex } from '../../tasks/hierarchy/taskHierarchy';
+import { computeNodeAggregateDates, computeNodeStats } from '../../tasks/hierarchy/aggregate';
 
 /**
  * 任务数据适配器
@@ -25,9 +28,11 @@ export class TaskDataAdapter {
 		task: GCTask,
 		startField: DateFieldType,
 		endField: DateFieldType,
-		id?: string
+		id?: string,
+		/** 层级聚合时覆盖日期（父任务自身没有日期、但子任务能推出范围） */
+		overrides?: { start?: Date; end?: Date }
 	): GanttChartTask | null {
-		const endDate = getTaskDateField(task, endField);
+		const endDate = overrides?.end ?? getTaskDateField(task, endField);
 
 		// End field is always required.
 		if (!endDate || isNaN(endDate.getTime())) {
@@ -37,20 +42,13 @@ export class TaskDataAdapter {
 		// Start resolution: the configured field first, then the two supported
 		// fallbacks. createdDate and startDate are both valid Gantt start points,
 		// so a task is renderable when ANY candidate exists plus the end field.
-		const startCandidates: DateFieldType[] = startField === 'createdDate'
-			? [startField, 'startDate']
-			: startField === 'startDate'
-				? [startField, 'createdDate']
-				: [startField, 'createdDate', 'startDate'];
-
-		let startDate: Date | undefined;
+		let startDate: Date | undefined = overrides?.start;
 		let startSourceField: DateFieldType = startField;
-		for (const candidate of startCandidates) {
-			const value = getTaskDateField(task, candidate);
-			if (value && !isNaN(value.getTime())) {
-				startDate = value;
-				startSourceField = candidate;
-				break;
+		if (!startDate) {
+			const resolved = this.resolveStartCandidate(task, startField);
+			if (resolved) {
+				startDate = resolved.date;
+				startSourceField = resolved.field;
 			}
 		}
 		if (!startDate) {
@@ -138,6 +136,109 @@ export class TaskDataAdapter {
 			results.push(converted);
 		}
 		return results;
+	}
+
+	/**
+	 * 解析任务的有效开始日期（配置字段优先，再走两个受支持的回退字段）。
+	 *
+	 * 返回实际命中的字段，供 timeLabel 判断时刻精度；全部缺失时返回 null。
+	 */
+	private static resolveStartCandidate(
+		task: GCTask,
+		startField: DateFieldType
+	): { date: Date; field: DateFieldType } | null {
+		const candidates: DateFieldType[] = startField === 'createdDate'
+			? [startField, 'startDate']
+			: startField === 'startDate'
+				? [startField, 'createdDate']
+				: [startField, 'createdDate', 'startDate'];
+
+		for (const candidate of candidates) {
+			const value = getTaskDateField(task, candidate);
+			if (value && !isNaN(value.getTime())) {
+				return { date: value, field: candidate };
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 层级批量转换：父子整块排序 + 聚合日期/进度注入。
+	 *
+	 * 与 toGanttChartTasks 的区别：
+	 * - 行序按「父 + 子树」整块重排（orderTasksWithHierarchy）
+	 * - 父行的日期/进度由子任务聚合，显式日期优先
+	 * - 父行即使自身没有日期，只要子任务能推出范围也能渲染
+	 * - 行上带 level / isAggregate / childProgress / collapsed
+	 */
+	static toGanttChartTasksHierarchical(
+		tasks: GCTask[],
+		startField: DateFieldType,
+		endField: DateFieldType,
+		index: TaskHierarchyIndex,
+		opts: { collapsedTids?: ReadonlySet<string> } = {}
+	): GanttChartTask[] {
+		const rows = orderTasksWithHierarchy(tasks, index, opts);
+		const seenIds = new Map<string, number>();
+		const idByKey = new Map<string, string>();
+		const converted: Array<{ gantt: GanttChartTask; parentKey: string | null }> = [];
+
+		// 叶子任务的日期解析（含甘特起点的回退链）；父任务自身的显式日期则严格取配置字段
+		const leafField = (task: GCTask, field: DateFieldType): Date | undefined => {
+			if (field === startField) return this.resolveStartCandidate(task, startField)?.date;
+			return getTaskDateField(task, field);
+		};
+		const explicitField = (task: GCTask, field: DateFieldType): Date | undefined =>
+			getTaskDateField(task, field);
+
+		for (const row of rows) {
+			const node = getHierarchyNode(index, row.task);
+			const isAggregate = Boolean(node?.hasChildren);
+			let overrides: { start?: Date; end?: Date } | undefined;
+			let stats: ReturnType<typeof computeNodeStats> | undefined;
+
+			if (node && isAggregate) {
+				const dates = computeNodeAggregateDates(node, leafField, startField, endField, explicitField);
+				overrides = { start: dates.start, end: dates.end };
+				stats = computeNodeStats(node);
+			}
+
+			const gantt = this.toGanttChartTask(row.task, startField, endField, undefined, overrides);
+			if (!gantt) continue;
+
+			// 重复 id（重复任务的虚拟实例）加后缀，与 toGanttChartTasks 保持一致
+			const occurrence = (seenIds.get(gantt.id) ?? 0) + 1;
+			seenIds.set(gantt.id, occurrence);
+			if (occurrence > 1) {
+				gantt.id = `${gantt.id}#${occurrence}`;
+			}
+
+			gantt.level = row.level;
+			gantt.hasChildren = row.hasChildren;
+			gantt.collapsed = row.collapsed;
+			gantt.tid = row.task.tid ?? node?.tid ?? undefined;
+
+			if (isAggregate) {
+				gantt.isAggregate = true;
+				gantt.progress = stats?.progress ?? gantt.progress;
+				gantt.childProgress = {
+					done: stats?.leafDone ?? 0,
+					total: stats?.leafTotal ?? 0,
+				};
+			}
+
+			idByKey.set(getTaskKey(row.task), gantt.id);
+			converted.push({ gantt, parentKey: row.parentKey });
+		}
+
+		// 第二遍：父行真的渲染时才给子行填 parentId（同帧内视觉连引用）
+		for (const entry of converted) {
+			if (!entry.parentKey) continue;
+			const parentId = idByKey.get(entry.parentKey);
+			if (parentId) entry.gantt.parentId = parentId;
+		}
+
+		return converted.map((entry) => entry.gantt);
 	}
 
 	/**

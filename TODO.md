@@ -10,11 +10,22 @@
 
 ## 📌 进行中
 
-（暂无）
+### 任务父子关系——Obsidian 内手验（2026-11-27，代码已完成，待真机验收）
+- [ ] 在真实 vault 建 3 层任务（含跨文件父子），确认：悬浮提示显示父/子且断链标红、甘特图父子成块可折叠、左列 `3/5` 徽标、父行 checkbox 置灰不可点、表单「父任务」可搜索选择并保存、右键「取消父子关系」可撤销
+- [ ] 性能对照：3000 任务规模下切换视图/折叠是否明显卡顿（阈值：建索引 < 20ms）
 
 ---
 
 ## ✅ 已完成（按日期倒序）
+
+### 2026-11-27
+- [x] **任务父子关系 + 甘特聚合 P0–P4 实施**（分支 `dev/task-hierarchy`，未提交）：13 项设计决策经用户确认后分五阶段落地
+  - P0 数据契约：`GCTask` 扩 `tid`/`parentTid`（解析期从 `%%[tid::]]`/`%%[parent::]]` 派生，两处解析入口）+ 新增 `taskMetadata.ts`（幂等 upsert/删除/保留键过滤/tid 生成）+ `taskHierarchyUpdater.ts`（懒写 tid、环检测、单父写入、按 tid 设置/清除）+ serializer 的 guid 分支两处历史缺陷修复（已有其它元数据时新增 guid 丢失、`feishuGuid:null` 清不掉）并补回归用例
+  - P1 派生索引与聚合：新增 `tasks/hierarchy/taskHierarchy.ts`（O(n)、断链/环/重复 tid/重复任务当父降级、4000 层深链不爆栈）与 `aggregate.ts`（等权叶子进度、显式优先的日期聚合），`calendarStore` 每次任务更新重算一次，全视图共享
+  - P2 悬浮提示面板：`buildTooltipSections` 增「父任务」「子任务」区块（子任务 >6 折叠、断链标红、可标注父被筛选隐藏），React 与命令式两套渲染端同步；metadata 段过滤 `tid`/`parent`
+  - P3 甘特图：父子整块排序（父被筛掉时子任务提顶层）、折叠（过滤行而非隐藏）、文本缩进、聚合条样式、进度填充修通（原矩形被主条盖住）、左列 `3/5` 徽标、父行 checkbox 禁用且不画拖拽手柄、折叠态存 store（会话内）
+  - P4 入口与设置：`ParentTaskSelector`（搜索选择）+ TaskFormModal「父任务」板块（父子关系与属性更新合并为一次写回）、右键「取消父子关系」（含撤销）、`enableTaskHierarchy` 总开关（默认开，关闭后回到平铺）
+  - 验证：`npx jest` 549 用例全过（新增 108）、`tsc --noEmit` 通过、`npx eslint src` 0 error（6 个既有 warning）、`npm run build` 成功
 
 ### 2026-11-17
 - [x] GitHub issue 定期监控：新增 `scripts/check_github_issues.py`（抓取 issues 列表页内嵌 JSON，无需认证、规避 API 匿名限流）；创建 Harness 定时任务「检查 GitHub issue 并发送汇总」，每天 10:00（Asia/Shanghai）运行脚本并与历史对比汇总新增/有更新的 issue 到本会话。注：基线 11 个 open issues（#31/#34-#43）。11-18 追加：gh CLI 重新认证成功后，定时任务已切换为 `gh issue list`（认证限额 5000 次/小时），Python 脚本保留作后备。
@@ -96,6 +107,9 @@
 ---
 
 ## 💡 新需求（会话中提出，待排期）
+
+### 任务父子关系 + 甘特聚合（2026-11-27 已实施，分支 dev/task-hierarchy，方案见 docs/plans/2026-11-27-task-hierarchy.md）
+- [x] 需求分析与方案定稿（2026-11-27）：13 项设计决策经用户确认（子任务写 `%%[parent:: tid]%%`、tid 懒写入、children 运行时反查；单父/跨文件/拒环；进度=已完成叶子/叶子总数；甘特分组可折叠；显式日期优先；仅做数据层↔UI 契约）
 
 ### GitHub Issue #43 标签等优化（2026-11-17 分析，https://github.com/sustcsugar/obsidian-gantt-calendar/issues/43）
 - [x] 诉求 1·标签隐藏选项（2026-11-18 完成）：补齐任务视图四开关 taskViewShowCheckbox/Tags/Priority/Ticktick，设置 → 视图 → 任务卡片显示控制新增任务视图行，UI 与其他视图一致，默认值与原 preset 一致（commit 089b0f6）

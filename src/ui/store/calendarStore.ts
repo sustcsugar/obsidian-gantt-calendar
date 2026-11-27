@@ -11,6 +11,7 @@ import {
 	DEFAULT_TAG_FILTER_STATE,
 	DEFAULT_STATUS_FILTER_STATE,
 } from '../../types';
+import { buildTaskHierarchy, type TaskHierarchyIndex } from '../../tasks/hierarchy/taskHierarchy';
 
 export type ViewScope = 'year' | 'month' | 'week' | 'day' | 'task' | 'gantt' | 'sidebar';
 
@@ -26,6 +27,11 @@ interface CalendarStoreState {
 	viewType: CalendarViewType;
 	currentDate: Date;
 	tasks: GCTask[];
+	/**
+	 * 任务父子关系派生索引（纯函数构建，随任务集更新）。
+	 * 视图层只读，不修改任务对象本身——数据层缓存与 UI 共享同一数组引用。
+	 */
+	hierarchy: TaskHierarchyIndex | null;
 	/** 首扫是否已推入任务（whenReady 或事件回流任一路径）；false 时视图渲染骨架 */
 	tasksReady: boolean;
 	changedFilePath?: string;
@@ -39,6 +45,9 @@ interface CalendarStoreState {
 	/** 甘特图滚动请求（工具栏按钮 → GanttView 引擎） */
 	ganttScroll: { seq: number; action: GanttScrollAction } | null;
 
+	/** 甘特图中已折叠的父任务 tid（会话内记忆，重启重置；不写 data.json） */
+	ganttCollapsedTids: string[];
+
 	setViewType: (type: CalendarViewType) => void;
 	setCurrentDate: (date: Date) => void;
 	/** 数据层 TaskStore 通知时调用（防抖已由 TaskStore 处理） */
@@ -48,6 +57,8 @@ interface CalendarStoreState {
 	bumpSettings: () => void;
 	/** 请求甘特图滚动（每次调用自增 seq，GanttView 订阅执行） */
 	requestGanttScroll: (action: GanttScrollAction) => void;
+	/** 折叠/展开甘特图中的父任务行 */
+	toggleGanttCollapsed: (tid: string) => void;
 	/** 插件启动时从 data.json 恢复持久化筛选（main.ts 在 loadSettings 后调用） */
 	hydrateViewFilters: (filters?: Partial<Record<ViewScope, ViewFilterState>> | null) => void;
 
@@ -129,12 +140,14 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	viewType: 'year',
 	currentDate: new Date(),
 	tasks: [],
+	hierarchy: null,
 	tasksReady: false,
 	changedFilePath: undefined,
 	updateSeq: 0,
 	viewFilters: buildInitialFilters(),
 	settingsVersion: 0,
 	ganttScroll: null,
+	ganttCollapsedTids: [],
 
 	setViewType: (type) => set({ viewType: type }),
 	setCurrentDate: (date) => set({ currentDate: new Date(date) }),
@@ -147,6 +160,7 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 			// 任务集刷新时同步剔除失效标签（幽灵标签隐形筛选的根治）
 			return {
 				tasks,
+				hierarchy: buildTaskHierarchy(tasks),
 				tasksReady: true,
 				changedFilePath: filePath,
 				updateSeq: s.updateSeq + 1,
@@ -156,12 +170,19 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
 	setTasks: (tasks) =>
 		set((s) => ({
 			tasks,
+			hierarchy: buildTaskHierarchy(tasks),
 			tasksReady: true,
 			viewFilters: pruneTagFilters(s.viewFilters, tasks),
 		})),
 	bumpSettings: () => set((s) => ({ settingsVersion: s.settingsVersion + 1 })),
 	requestGanttScroll: (action) =>
 		set((s) => ({ ganttScroll: { seq: (s.ganttScroll?.seq ?? 0) + 1, action } })),
+	toggleGanttCollapsed: (tid) =>
+		set((s) => ({
+			ganttCollapsedTids: s.ganttCollapsedTids.includes(tid)
+				? s.ganttCollapsedTids.filter((item) => item !== tid)
+				: [...s.ganttCollapsedTids, tid],
+		})),
 	/** 任务写回后触发一次顺带重渲染（数据最终由事件总线回流） */
 	refreshTasks: () => set((s) => ({ updateSeq: s.updateSeq + 1 })),
 

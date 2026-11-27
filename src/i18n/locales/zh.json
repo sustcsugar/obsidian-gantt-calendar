@@ -169,6 +169,10 @@
         "name": "开发者模式",
         "description": "启用后将输出详细的调试日志，关闭后仅显示统计信息和错误"
       },
+      "taskHierarchy": {
+        "name": "启用任务父子关系",
+        "description": "在悬浮提示中显示父任务与子任务，并在甘特图中按父子关系分组聚合（关闭后回到平铺显示，磁盘上的 parent/tid 字段保留不动）"
+      },
       "showNavButtonText": {
         "name": "视图导航按钮显示文本",
         "description": "工具栏左侧的视图导航按钮是否显示文字标签。关闭后仅显示图标"
@@ -1160,6 +1164,7 @@
   },
   "contextMenu": {
     "editTask": "编辑任务",
+    "clearParent": "取消父子关系",
     "createNote": "创建任务笔记:同名",
     "createNoteAlias": "创建任务笔记:别名",
     "priority": {
@@ -1470,7 +1475,13 @@
     "cancelled": "取消",
     "repeat": "重复",
     "emptyValue": "(空)",
-    "fileLocation": "位置"
+    "fileLocation": "位置",
+    "parentTask": "父任务",
+    "childTasks": "子任务",
+    "parentMissing": "父任务已不存在",
+    "parentHidden": "已隐藏",
+    "moreChildren": "还有 {{count}} 个",
+    "childProgress": "{{done}}/{{total}} · {{percent}}%"
   },
   "gantt": {
     "taskInfoIncomplete": "任务信息不完整",
@@ -1479,9 +1490,28 @@
     "markedComplete": "任务已标记为完成",
     "markedIncomplete": "任务已标记为未完成",
     "updateProgressFailed": "更新进度失败: {{error}}",
+    "parentCheckboxHint": "进度由子任务决定",
     "headers": {
       "index": "序号",
       "task": "任务"
     }
+  },
+  "taskForm": {
+    "parentTask": "父任务",
+    "selectParent": "选择父任务…",
+    "clearParent": "移除父任务",
+    "searchPlaceholder": "搜索任务…",
+    "empty": "没有可选的父任务",
+    "changed": "父子关系已更新"
+  },
+  "taskHierarchy": {
+    "selfRejected": "不能把任务挂到自己身上",
+    "cycleRejected": "不能把任务挂到自己的子任务下",
+    "repeatParentRejected": "重复任务不能作为父任务",
+    "ineligible": "远程任务不支持父子关系",
+    "parentMissing": "找不到父任务，可能已被删除",
+    "writeFailed": "父子关系写入失败，请检查文件是否可写",
+    "assigned": "已设置父任务：{{parent}}",
+    "cleared": "已取消父子关系"
   }
 }

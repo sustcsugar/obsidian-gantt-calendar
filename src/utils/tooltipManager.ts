@@ -3,8 +3,10 @@ import { TooltipClasses, setCssProps } from './bem';
 import { TagPill } from '../components/tagPill';
 import {
 	buildTooltipSections,
+	type TooltipHierarchyContext,
 	type TooltipPropRow,
 } from '../components/tooltip/tooltipSections';
+import { useCalendarStore } from '../ui/store/calendarStore';
 import { computeTooltipPosition } from '../components/tooltip/tooltipPosition';
 import {
 	registerTooltipHolder,
@@ -132,6 +134,20 @@ export class TooltipManager {
 	}
 
 	/**
+	 * 层级上下文：索引由 store 统一构建，这里只读快照。
+	 * 取不到（尚未首扫完成）时返回 undefined，父子区块不渲染。
+	 */
+	private buildHierarchyContext(): TooltipHierarchyContext | undefined {
+		try {
+			if (this.plugin?.settings?.enableTaskHierarchy === false) return undefined;
+			const hierarchy = useCalendarStore.getState().hierarchy;
+			return hierarchy ? { index: hierarchy } : undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	/**
 	 * 渲染共享构建的分组内容（与 React TooltipProvider 同源）
 	 */
 	private updateContent(task: GCTask): void {
@@ -142,7 +158,7 @@ export class TooltipManager {
 		const strongEl = this.cachedElements.description.createEl('strong');
 		strongEl.setText(task.description || '');
 
-		const sections = buildTooltipSections(task);
+		const sections = buildTooltipSections(task, this.buildHierarchyContext());
 
 		if (this.cachedElements.properties) {
 			this.cachedElements.properties.empty();

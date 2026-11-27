@@ -86,6 +86,8 @@ export const BLOCKS = {
 	SYNC_RESULT_MODAL: 'sync-result-modal',
 	/** 标签选择器 */
 	TAG_SELECTOR: 'tag-selector',
+	/** 父任务选择器 */
+	PARENT_SELECTOR: 'parent-selector',
 	/** 设置页 */
 	SETTINGS: 'settings',
 	/** 同步设置 */
@@ -214,6 +216,10 @@ export const TooltipClasses = {
 		modifiers: {
 			visible: bem(BLOCKS.TASK_TOOLTIP, undefined, 'visible'),
 			propertyValueOverdue: bem(BLOCKS.TASK_TOOLTIP, 'property-value', 'overdue'),
+			/** 父/子任务已完成 */
+			propertyValueChildDone: bem(BLOCKS.TASK_TOOLTIP, 'property-value', 'child-done'),
+			/** 父任务断链（引用的 tid 已不存在） */
+			propertyValueMissing: bem(BLOCKS.TASK_TOOLTIP, 'property-value', 'missing'),
 		},
 	};
 
@@ -435,6 +441,14 @@ export const GanttClasses = {
 		handleLeft: bem(BLOCKS.GANTT, 'handle-left'),
 		barTime: bem(BLOCKS.GANTT, 'bar-time'),
 		handleRight: bem(BLOCKS.GANTT, 'handle-right'),
+		/** 父任务聚合条的填充部分 */
+		barProgress: bem(BLOCKS.GANTT, 'bar-progress'),
+		/** 折叠/展开箭头 */
+		collapseToggle: bem(BLOCKS.GANTT, 'collapse-toggle'),
+		/** 无子任务行的箭头占位（保证所有行内容左缘对齐） */
+		collapsePlaceholder: bem(BLOCKS.GANTT, 'collapse-toggle', 'placeholder'),
+		/** 子任务/父任务进度徽标（3/5） */
+		progressBadge: bem(BLOCKS.GANTT, 'progress-badge'),
 		emptyState: 'gantt-empty-state',
 		emptyIcon: 'gantt-empty-icon',
 		emptyTitle: 'gantt-empty-title',
@@ -447,6 +461,10 @@ export const GanttClasses = {
 	modifiers: {
 		dayView: bem(BLOCKS.GANTT, undefined, 'day-view'),
 		chartDropTarget: bem(BLOCKS.GANTT, 'chart', 'drop-target'),
+		/** 父任务聚合行（视觉上与普通任务条区分） */
+		aggregateBar: bem(BLOCKS.GANTT, 'bar-group', 'aggregate'),
+		/** 子任务行缩进修饰符（配合内联 padding 使用） */
+		childRow: bem(BLOCKS.GANTT, 'task-content-cell', 'child'),
 	},
 };
 
@@ -1115,6 +1133,29 @@ export const TagSelectorClasses = {
 
 	modifiers: {
 		pillSelected: bem(BLOCKS.TAG_SELECTOR, 'pill', 'selected'),
+	},
+};
+
+/**
+ * 父任务选择器类名常量（搜索 + 结果列表，参照 TagSelector）
+ */
+export const ParentSelectorClasses = {
+	block: bem(BLOCKS.PARENT_SELECTOR),
+
+	elements: {
+		searchInput: bem(BLOCKS.PARENT_SELECTOR, 'search-input'),
+		list: bem(BLOCKS.PARENT_SELECTOR, 'list'),
+		item: bem(BLOCKS.PARENT_SELECTOR, 'item'),
+		itemTitle: bem(BLOCKS.PARENT_SELECTOR, 'item-title'),
+		itemMeta: bem(BLOCKS.PARENT_SELECTOR, 'item-meta'),
+		empty: bem(BLOCKS.PARENT_SELECTOR, 'empty'),
+		current: bem(BLOCKS.PARENT_SELECTOR, 'current'),
+		currentLabel: bem(BLOCKS.PARENT_SELECTOR, 'current-label'),
+		clearButton: bem(BLOCKS.PARENT_SELECTOR, 'clear'),
+	},
+
+	modifiers: {
+		itemSelected: bem(BLOCKS.PARENT_SELECTOR, 'item', 'selected'),
 	},
 };
 

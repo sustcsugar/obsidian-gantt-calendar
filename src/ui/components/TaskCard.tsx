@@ -26,6 +26,7 @@ import { restoreTask } from '../../contextMenu/commands/restoreTask';
 import { deleteTask } from '../../contextMenu/commands/deleteTask';
 import { setTaskStatus } from '../../contextMenu/commands/setTaskStatus';
 import { setTaskPriority } from '../../contextMenu/commands/setPriority';
+import { clearTaskParent } from '../../contextMenu/commands/clearTaskParent';
 import { i18n } from '../../i18n/i18n';
 import { Logger } from '../../utils/logger';
 
@@ -149,14 +150,27 @@ export const TaskCard = memo(function TaskCard({ task, config, targetDate, onCli
 
 		return [
 			{
-				items: [{
-					key: 'edit',
-					title: i18n.t('contextMenu.editTask'),
-					icon: 'pencil',
-					onClick: () => {
-						openEditTaskModal(app, task, enabledFormats, refresh, true);
+				items: [
+					{
+						key: 'edit',
+						title: i18n.t('contextMenu.editTask'),
+						icon: 'pencil',
+						onClick: () => {
+							openEditTaskModal(app, task, enabledFormats, refresh, true);
+						},
 					},
-				}],
+					// 只有存在父子关系时才出现
+					...(task.parentTid
+						? [{
+							key: 'clearParent',
+							title: i18n.t('contextMenu.clearParent'),
+							icon: 'unlink',
+							onClick: () => {
+								void clearTaskParent(app, task, enabledFormats, refresh);
+							},
+						}]
+						: []),
+				],
 			},
 			{
 				items: [

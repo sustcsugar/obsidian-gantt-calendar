@@ -18,8 +18,11 @@ import { TagPillSpan } from './TagPillSpan';
 import { MOTION, tooltipVariants, easeOutTransition } from '../motion';
 import {
 	buildTooltipSections,
+	type TooltipHierarchyContext,
 	type TooltipSection,
 } from '../../components/tooltip/tooltipSections';
+import { useCalendarStore } from '../store/calendarStore';
+import { useOptionalPlugin } from '../pluginContext';
 import { computeTooltipPosition } from '../../components/tooltip/tooltipPosition';
 import {
 	registerTooltipHolder,
@@ -135,7 +138,19 @@ function TooltipContent({ state, onClose }: { state: TooltipState; onClose: () =
 		setPosition({ left, top });
 	}, [state, anchor, mouse]);
 
-	const sections = useMemo(() => buildTooltipSections(task), [task]);
+	// 层级索引来自 store（每次任务集更新重算一次），父子区块以纯数据渲染。
+	// 总开关关闭时（或宿主没有插件上下文）不传上下文，提示面板与改造前完全一致。
+	const plugin = useOptionalPlugin();
+	const hierarchyEnabled = plugin ? plugin.settings.enableTaskHierarchy !== false : false;
+	const hierarchy = useCalendarStore((s) => s.hierarchy);
+	const hierarchyContext = useMemo<TooltipHierarchyContext | undefined>(
+		() => (hierarchyEnabled && hierarchy ? { index: hierarchy } : undefined),
+		[hierarchy, hierarchyEnabled]
+	);
+	const sections = useMemo(
+		() => buildTooltipSections(task, hierarchyContext),
+		[task, hierarchyContext]
+	);
 
 	return createPortal(
 		<motion.div

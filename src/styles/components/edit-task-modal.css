@@ -112,6 +112,68 @@
 	.gc-edit-task-modal__tags-section {
 		margin-top: 8px;
 	}
+	/* 父任务选择器 */
+	.gc-parent-selector__search-input {
+		width: 100%;
+		padding: 6px 10px;
+		margin-bottom: 8px;
+		border: 1px solid var(--background-modifier-border);
+		border-radius: var(--gc-radius-sm, 6px);
+		background: var(--background-secondary);
+		color: var(--text-normal);
+		font-size: var(--font-ui-small);
+	}
+	.gc-parent-selector__search-input:focus {
+		outline: 2px solid var(--interactive-accent);
+		border-color: var(--interactive-accent);
+	}
+	.gc-parent-selector__list {
+		display: flex;
+		flex-direction: column;
+		max-height: 180px;
+		overflow-y: auto;
+		border: 1px solid var(--background-modifier-border);
+		border-radius: var(--gc-radius-sm, 6px);
+	}
+	.gc-parent-selector__item {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 10px;
+		padding: 5px 10px;
+		background: transparent;
+		border: none;
+		border-radius: 0;
+		box-shadow: none;
+		text-align: left;
+		cursor: pointer;
+		color: var(--text-normal);
+		font-size: var(--font-ui-small);
+	}
+	.gc-parent-selector__item:hover {
+		background: var(--background-modifier-hover);
+	}
+	.gc-parent-selector__item--selected {
+		background: var(--background-modifier-active-hover, var(--background-modifier-hover));
+		color: var(--text-accent);
+	}
+	.gc-parent-selector__item-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.gc-parent-selector__item-meta {
+		flex-shrink: 0;
+		font-size: 10px;
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+	.gc-parent-selector__empty {
+		display: block;
+		padding: 4px 2px;
+		color: var(--text-muted);
+	}
+
 	/* 搜索/创建合一输入框 */
 	.gc-tag-selector__search-input {
 		width: 100%;

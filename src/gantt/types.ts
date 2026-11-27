@@ -82,6 +82,22 @@ export interface GanttChartTask {
 	datePrecision?: Partial<Record<'createdDate' | 'startDate' | 'scheduledDate' | 'dueDate' | 'cancelledDate' | 'completionDate', 'day' | 'time'>>;
 	/** 结构化内联元数据字段 (%%[key::value]%%) */
 	metadataFields?: MetadataField[];
+
+	// ==================== 父子关系（层级）====================
+	/** 任务稳定身份（来自任务行 tid），跨帧保持父子引用，不要用 gantt id 交叉引用 */
+	tid?: string;
+	/** 父任务在本帧的行 id（仅当父行本次真的渲染时给出） */
+	parentId?: string;
+	/** 层级深度，0 = 顶层 */
+	level?: number;
+	/** 本行是否为聚合父行（勾选框只读、不画拖拽手柄） */
+	isAggregate?: boolean;
+	/** 是否有子行（决定折叠箭头与徽标） */
+	hasChildren?: boolean;
+	/** 子任务进度统计，用于 `3/5` 徽标 */
+	childProgress?: { done: number; total: number };
+	/** 折叠态（true = 子行未渲染） */
+	collapsed?: boolean;
 }
 
 /**
@@ -125,6 +141,8 @@ export interface GanttChartConfig {
 	on_progress_change?: (task: GanttChartTask, progress: number) => void;
 	/** 任务更新完成回调（用于增量更新视图） */
 	on_task_updated?: (filePath: string) => void;
+	/** 折叠/展开父任务行（参数为父任务的 tid） */
+	on_toggle_collapse?: (tid: string) => void;
 }
 
 /**

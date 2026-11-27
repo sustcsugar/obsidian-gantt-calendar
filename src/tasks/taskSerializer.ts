@@ -2,6 +2,7 @@ import { App } from 'obsidian';
 import { GCTask, MetadataField } from '../types';
 import { formatDate } from '../dateUtils/dateUtilsIndex';
 import { TaskStatusType, DEFAULT_TASK_STATUSES } from './taskStatus';
+import { removeMetadataField, setMetadataField } from './taskMetadata';
 import type { DateFieldType } from '../settings/types';
 
 /** Minimal plugin settings shape needed for serialization */
@@ -205,13 +206,22 @@ export function serializeTask(
 	}
 
 	// 统一的内联元数据字段 %%[key::value]%%
-	if (merged.metadataFields && merged.metadataFields.length > 0) {
-		for (const field of merged.metadataFields) {
-			parts.push(`%%[${field.key}:: ${field.value}]%%`);
-		}
-	} else if (merged.feishuGuid) {
-		// Fallback：同步系统直接写入 feishuGuid 但 metadataFields 未更新时
-		parts.push(`%%[guid:: ${merged.feishuGuid}]%%`);
+	// guid 与 metadataFields 以同一份数组输出：
+	// 旧实现只在 metadataFields 为空时才写 guid（已有其它 %%[..]%% 时新增 guid 被静默丢弃），
+	// 且清除 guid 时旧值会被原样写回。这里改为「以 metadataFields 为底 + 按 updates 增删 guid」。
+	let outputMetadata = merged.metadataFields ?? [];
+	if (updates.metadataFields === null) {
+		outputMetadata = [];
+	}
+	// updates 未提及 guid 时沿用任务自身的 feishuGuid（兼容同步系统只写字段、不写 metadata 的历史数据）
+	const effectiveGuid = updates.feishuGuid !== undefined ? updates.feishuGuid : merged.feishuGuid;
+	if (effectiveGuid === null) {
+		outputMetadata = removeMetadataField(outputMetadata, 'guid');
+	} else if (effectiveGuid) {
+		outputMetadata = setMetadataField(outputMetadata, 'guid', effectiveGuid);
+	}
+	for (const field of outputMetadata) {
+		parts.push(`%%[${field.key}:: ${field.value}]%%`);
 	}
 
 	// 优先级（放在描述后）

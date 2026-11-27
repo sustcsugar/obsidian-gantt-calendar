@@ -548,6 +548,20 @@ export class RegularExpressions {
         stripMarkdownLink: /\[([^\]]*)\]\([^)]*\)/g,
     } as const;
 
+    // ==================== 任务层级（父子关系）正则 ====================
+
+    /**
+     * 任务稳定身份（tid）格式校验。
+     *
+     * tid 是子任务指向父任务的锚点，写在任务行内联元数据里，
+     * 只允许 8 位小写 base36 字符，保证不含 `]`（会截断元数据）。
+     * 字符集与 taskMetadata.generateTid 保持一致。
+     */
+    public static readonly TaskHierarchy = {
+        /** 合法 tid 的整串匹配 */
+        tid: /^[a-z0-9]{8}$/,
+    } as const;
+
     // ==================== 复选框状态正则 ====================
 
     /**

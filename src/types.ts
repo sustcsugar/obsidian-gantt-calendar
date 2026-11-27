@@ -136,6 +136,11 @@ export interface GCTask {
 	// 飞书同步字段
 	feishuGuid?: string;           // 飞书任务 GUID（存储在 %%[guid:: xxx]%% 中）
 	feishuDesc?: string;           // 飞书任务描述（存储在 %%[desc:: xxx]%% 中）
+	// 任务层级字段（派生自 %%[tid:: xxx]%% / %%[parent:: xxx]%%）
+	// tid 是稳定身份，只在该任务首次被引用为父任务时懒写入；
+	// parentTid 是单父引用。子任务列表不落盘，由派生索引反查得到。
+	tid?: string;
+	parentTid?: string;
 }
 
 /**

@@ -67,6 +67,18 @@ export class GeneralSettingsBuilder extends BaseBuilder {
 						}));
 			});
 
+			// 任务父子关系
+			addSetting(setting => {
+				setting.setName(i18n.t('settings.general.taskHierarchy.name'))
+					.setDesc(i18n.t('settings.general.taskHierarchy.description'))
+					.addToggle(toggle => toggle
+						.setValue(this.plugin.settings.enableTaskHierarchy)
+						.onChange((value) => {
+							this.plugin.settings.enableTaskHierarchy = value;
+							void this.saveAndRefreshViews();
+						}));
+			});
+
 			// 视图导航按钮显示文本
 			addSetting(setting => {
 				setting.setName(i18n.t('settings.general.showNavButtonText.name'))

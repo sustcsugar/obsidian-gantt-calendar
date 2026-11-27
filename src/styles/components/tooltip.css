@@ -84,6 +84,18 @@
 	font-weight: 600;
 }
 
+/* 已完成父/子任务：弱化但保留可读性 */
+.gc-task-tooltip .gc-task-tooltip__property-value--child-done {
+	color: var(--text-muted);
+	text-decoration: line-through;
+}
+
+/* 父任务断链：与逾期同色但不下划线 */
+.gc-task-tooltip .gc-task-tooltip__property-value--missing {
+	color: var(--gc-color-red, #d73a49);
+	font-weight: 600;
+}
+
 .gc-task-tooltip .gc-task-tooltip__property-divider {
 	height: 1px;
 	background-color: rgba(0, 0, 0, 0.06);

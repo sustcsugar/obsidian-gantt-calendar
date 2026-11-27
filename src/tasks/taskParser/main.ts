@@ -112,6 +112,9 @@ export function parseTasksFromListItems(
             metadataFields: metadataFields.length > 0 ? metadataFields : undefined,
             // 从统一的 metadataFields 数组中派生 feishuGuid（供飞书同步使用）
             feishuGuid: findMetadataValue(metadataFields, 'guid'),
+            // 从统一的 metadataFields 数组中派生任务层级字段
+            tid: findMetadataValue(metadataFields, 'tid'),
+            parentTid: findMetadataValue(metadataFields, 'parent'),
         };
 
         // 解析标签
@@ -310,6 +313,8 @@ export function parseSingleTaskLine(
         priority: 'normal', // 默认优先级
         metadataFields: metadataFields.length > 0 ? metadataFields : undefined,
         feishuGuid: findMetadataValue(metadataFields, 'guid'),
+        tid: findMetadataValue(metadataFields, 'tid'),
+        parentTid: findMetadataValue(metadataFields, 'parent'),
     };
 
     // 解析标签

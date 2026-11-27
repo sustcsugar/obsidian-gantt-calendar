@@ -35,9 +35,13 @@ export function GanttView(): JSX.Element {
 	const plugin = usePlugin();
 	const app = useApp();
 	const tasks = useCalendarStore((s) => s.tasks);
+	const hierarchy = useCalendarStore((s) => s.hierarchy);
+	const collapsedTids = useCalendarStore((s) => s.ganttCollapsedTids);
+	const toggleCollapsed = useCalendarStore((s) => s.toggleGanttCollapsed);
 	const filter = useCalendarStore((s) => selectViewFilter(s, 'gantt'));
 	const ganttScroll = useCalendarStore((s) => s.ganttScroll);
 	const refreshTasks = useCalendarStore((s) => s.refreshTasks);
+	const hierarchyEnabled = plugin.settings.enableTaskHierarchy;
 
 	const startField = plugin.settings.ganttStartField;
 	const endField = plugin.settings.ganttEndField;
@@ -77,9 +81,19 @@ export function GanttView(): JSX.Element {
 		return [...filteredTasks, ...virtuals];
 	}, [filteredTasks, startField, plugin.settings.recurringTaskDisplayLimit]);
 
-	const ganttTasks = useMemo(() => (
-		TaskDataAdapter.toGanttChartTasks(tasksWithVirtuals, startField, endField)
-	), [tasksWithVirtuals, startField, endField]);
+	const ganttTasks = useMemo(() => {
+		// 关闭父子关系开关时回到改造前的平铺行为（可一键回退）
+		if (!hierarchyEnabled || !hierarchy) {
+			return TaskDataAdapter.toGanttChartTasks(tasksWithVirtuals, startField, endField);
+		}
+		return TaskDataAdapter.toGanttChartTasksHierarchical(
+			tasksWithVirtuals,
+			startField,
+			endField,
+			hierarchy,
+			{ collapsedTids: new Set(collapsedTids) }
+		);
+	}, [tasksWithVirtuals, startField, endField, hierarchy, hierarchyEnabled, collapsedTids]);
 
 	const hasTasks = ganttTasks.length > 0;
 
@@ -134,7 +148,8 @@ export function GanttView(): JSX.Element {
 		on_click: handleTaskClick,
 		on_date_change: (task, start, end) => { void handleDateChange(task, start, end); },
 		on_progress_change: (task, progress) => { void handleProgressChange(task, progress); },
-	}), [handleTaskClick, handleDateChange, handleProgressChange]);
+		on_toggle_collapse: toggleCollapsed,
+	}), [handleTaskClick, handleDateChange, handleProgressChange, toggleCollapsed]);
 
 	const destroyEngine = useCallback(() => {
 		engineRef.current?.destroy();
@@ -247,7 +262,22 @@ export function GanttView(): JSX.Element {
 }
 
 function tasksSignature(tasks: GanttChartTask[]): string {
-	return tasks.map((t) => `${t.id}|${t.start}|${t.end}|${t.leadStart || ''}|${t.progress}|${t.completed}|${t.name}|${t.custom_class || ''}`).join('\u0001');
+	return tasks.map((t) => [
+		t.id,
+		t.start,
+		t.end,
+		t.leadStart || '',
+		t.progress,
+		t.completed,
+		t.name,
+		t.custom_class || '',
+		// 层级字段必须进签名：折叠/展开只改这些，否则不会触发刷新
+		t.level ?? 0,
+		t.isAggregate ? 1 : 0,
+		t.hasChildren ? 1 : 0,
+		t.collapsed ? 1 : 0,
+		t.childProgress ? `${t.childProgress.done}/${t.childProgress.total}` : '',
+	].join('|')).join('\u0001');
 }
 
 /**

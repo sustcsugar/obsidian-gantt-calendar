@@ -36,6 +36,7 @@ export const DEFAULT_SETTINGS: GanttCalendarSettings = {
 	dailyNoteTemplatePath: '',
 	defaultTaskPriority: 'medium', // 默认中等优先级
 	enableDebugMode: false, // 默认关闭开发者模式
+	enableTaskHierarchy: true, // 默认启用任务父子关系
 	showViewNavButtonText: true, // 默认显示视图导航按钮文本
 	taskCardClickAction: 'openFile', // 默认跳转到 Markdown 源文件（与历史行为一致）
 	timezoneOffset: null, // 默认跟随系统时区

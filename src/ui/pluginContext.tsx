@@ -17,3 +17,11 @@ export function usePlugin(): IPluginContext {
 export function useApp(): IPluginContext['app'] {
 	return usePlugin().app;
 }
+
+/**
+ * 可选插件上下文：用于可能挂在无 PluginContext 的 React root 下的组件
+ * （如 modalHost 的弹窗宿主）。无上下文时返回 null，不抛错。
+ */
+export function useOptionalPlugin(): IPluginContext | null {
+	return useContext(PluginContext);
+}

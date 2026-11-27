@@ -12,8 +12,22 @@ import { EditTaskModalClasses } from '../../utils/bem';
 import { Modal } from '../components/Modal';
 import { TagSelector } from './TagSelector';
 import { RepeatSection } from './RepeatSection';
+import { ParentTaskSelector } from './ParentTaskSelector';
 import { DateTimePicker } from '../components/DateTimePicker';
 import { openReactModal } from './modalHost';
+import { useCalendarStore } from '../store/calendarStore';
+import { getAncestorChain, getHierarchyNode, getTaskKey } from '../../tasks/hierarchy/taskHierarchy';
+import { removeMetadataField, setMetadataField } from '../../tasks/taskMetadata';
+import {
+	collectKnownTids,
+	ensureTaskTid,
+	isHierarchyEligible,
+	notifyHierarchyError,
+	resolveTaskTid,
+	setParentByTid,
+	wouldCreateCycle,
+} from '../../tasks/taskHierarchyUpdater';
+import { taskUndo } from '../../tasks/taskUndo';
 
 /**
  * 优先级选项
@@ -169,6 +183,10 @@ export function TaskFormModal({
 	);
 	const [selectedTags, setSelectedTags] = useState<string[]>(mode === 'edit' ? (task?.tags || []) : []);
 	const [description, setDescription] = useState(mode === 'edit' ? (task?.description || '') : '');
+	// 父任务：选中后保存时才落盘（父任务可能还没有 tid，需要懒写入）
+	// undefined = 用户没动过；null = 用户显式清除；GCTask = 用户选择了新父任务
+	const [parentSelection, setParentSelection] = useState<GCTask | null | undefined>(undefined);
+	const parentChanged = parentSelection !== undefined;
 	const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
 	// 编辑模式：变更跟踪
@@ -232,12 +250,30 @@ export function TaskFormModal({
 				};
 				const targetFilePath = await createTaskInDailyNote(app, taskData, plugin.settings, plugin.dailyNoteIndex);
 				// 写回后立即刷新缓存并推送数据，跳过文件事件防抖回流
+				let createdTask: GCTask | undefined;
 				if (targetFilePath && plugin.taskCache) {
 					await plugin.taskCache.refreshFile(targetFilePath);
-					const { useCalendarStore } = await import('../store/calendarStore');
-					useCalendarStore.getState().notifyTasksUpdated(
-						plugin.taskCache.getAllTasks(), targetFilePath
-					);
+					const all = plugin.taskCache.getAllTasks();
+					// 新建任务还没有稳定身份：用「文件 + 描述」定位刚追加的那一行（取行号最大者）
+					createdTask = all
+						.filter((candidate) => candidate.filePath === targetFilePath && candidate.description === desc)
+						.sort((a, b) => b.lineNumber - a.lineNumber)[0];
+					useCalendarStore.getState().notifyTasksUpdated(all, targetFilePath);
+				}
+
+				// 创建模式下补写父子关系
+				if (parentChanged && parentSelection && createdTask && plugin.taskCache) {
+					const all = plugin.taskCache.getAllTasks();
+					try {
+						const parentTidResolved = await ensureTaskTid(
+							app, parentSelection, enabledFormats || [], collectKnownTids(all)
+						);
+						await setParentByTid(app, createdTask, parentTidResolved, all, enabledFormats || []);
+						await plugin.taskCache.refreshFile(createdTask.filePath);
+						useCalendarStore.getState().notifyTasksUpdated(plugin.taskCache.getAllTasks(), createdTask.filePath);
+					} catch (error) {
+						notifyHierarchyError(error);
+					}
 				}
 				new Notice(i18n.t('modals.createTask.success'));
 				onSuccess();
@@ -270,6 +306,36 @@ export function TaskFormModal({
 			if (contentChanged) updates.content = description;
 			if (tagsChanged) updates.tags = selectedTags;
 
+			// 父子关系：与属性更新合并成一次写回（避免两次整行重建互相覆盖）
+			if (parentChanged) {
+				const desiredParent = parentSelection ?? null;
+				if (desiredParent) {
+					if (!isHierarchyEligible(desiredParent)) {
+						new Notice(i18n.t('taskHierarchy.ineligible'));
+						return;
+					}
+					if (desiredParent.repeat) {
+						new Notice(i18n.t('taskHierarchy.repeatParentRejected'));
+						return;
+					}
+					try {
+						const resolvedTid = await ensureTaskTid(
+							app, desiredParent, enabledFormats || [], collectKnownTids(allTasksForTags)
+						);
+						if (wouldCreateCycle(allTasksForTags, resolveTaskTid(task), resolvedTid)) {
+							new Notice(i18n.t('taskHierarchy.cycleRejected'));
+							return;
+						}
+						updates.metadataFields = setMetadataField(task.metadataFields, 'parent', resolvedTid);
+					} catch (error) {
+						notifyHierarchyError(error);
+						return;
+					}
+				} else {
+					updates.metadataFields = removeMetadataField(task.metadataFields, 'parent');
+				}
+			}
+
 			if (Object.keys(updates).length === 0) {
 				handleClose();
 				return;
@@ -286,6 +352,17 @@ export function TaskFormModal({
 					plugin.taskCache.getAllTasks(), taskToUpdate.filePath
 				);
 			}
+			// 父子关系变更注册撤销（恢复原 metadataFields）
+			if (parentChanged) {
+				taskUndo.registerProperty({
+					app,
+					oldTask: task,
+					updates,
+					enabledFormats: enabledFormats || [],
+					onRefresh: onSuccess,
+				}, i18n.t('taskForm.changed'));
+			}
+
 			onSuccess();
 			handleClose();
 			new Notice(i18n.t('modals.editTask.success'));
@@ -304,6 +381,43 @@ export function TaskFormModal({
 			?.plugins?.['gantt-calendar'] as { taskCache?: { getAllTasks: () => GCTask[] } } | undefined;
 		return internal?.taskCache?.getAllTasks() || [];
 	}, [mode, plugin, app]);
+
+	// ========== 父任务候选 ==========
+	const hierarchy = useCalendarStore((s) => s.hierarchy);
+
+	/** 当前父任务：本次有选择则用选择值（null=已清除），否则回落到任务自带的 parentTid */
+	const currentParent = useMemo<GCTask | null>(() => {
+		if (parentSelection !== undefined) return parentSelection;
+		if (mode !== 'edit' || !task?.parentTid) return null;
+		return allTasksForTags.find((candidate) => resolveTaskTid(candidate) === task.parentTid) ?? null;
+	}, [parentSelection, mode, task, allTasksForTags]);
+
+	const parentCandidates = useMemo(() => {
+		const selfKey = task ? getTaskKey(task) : null;
+		const selfTid = task ? resolveTaskTid(task) : undefined;
+		const forbidden = new Set<string>();
+
+		if (hierarchy && task) {
+			const node = getHierarchyNode(hierarchy, task);
+			if (node) {
+				for (const ancestor of getAncestorChain(hierarchy, node)) {
+					if (ancestor.tid) forbidden.add(ancestor.tid);
+				}
+			}
+		}
+
+		return allTasksForTags.filter((candidate) => {
+			if (!isHierarchyEligible(candidate)) return false;
+			if (candidate.repeat) return false; // 重复任务不能当父
+			if (selfKey && getTaskKey(candidate) === selfKey) return false;
+			const tid = resolveTaskTid(candidate);
+			if (!tid) return true; // 尚未分配 tid，仍可当父（保存时懒写入）
+			if (tid === selfTid) return false;
+			return !forbidden.has(tid); // 自身与祖先不能当父
+		});
+	}, [allTasksForTags, task, hierarchy]);
+
+	const selectedParentKey = currentParent ? getTaskKey(currentParent) : null;
 
 	return (
 		<Modal open={open} onClose={handleClose} onExited={onClose} title={title} width={560}>
@@ -403,6 +517,31 @@ export function TaskFormModal({
 							}}
 							prefix={isEdit ? 'editTask' : 'createTask'}
 						/>
+					</div>
+
+					{/* 3.6. 父任务板块 */}
+					<div className={EditTaskModalClasses.elements.section} style={{ marginBottom: '20px' }}>
+						<div>
+							<label className={EditTaskModalClasses.elements.sectionLabel}>
+								{i18n.t('taskForm.parentTask')}
+							</label>
+							{currentParent ? (
+								<div className="gc-u-flex gc-u-items-center" style={{ gap: '8px', marginBottom: '6px' }}>
+									<span>{currentParent.description}</span>
+									<button
+										type="button"
+										onClick={() => setParentSelection(null)}
+									>
+										{i18n.t('taskForm.clearParent')}
+									</button>
+								</div>
+							) : null}
+							<ParentTaskSelector
+								candidates={parentCandidates}
+								selectedTaskKey={selectedParentKey}
+								onSelect={(parentTask) => setParentSelection(parentTask)}
+							/>
+						</div>
 					</div>
 
 					{/* 4. 标签选择器 */}

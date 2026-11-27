@@ -482,3 +482,65 @@ body.gc-is-phone {
 	font-variant-numeric: tabular-nums;
 	user-select: none;
 }
+
+/* ============================================
+   任务父子关系（层级）
+   ============================================ */
+
+/* 折叠/展开箭头（左列）；占位符与箭头同宽同高，保证所有行内容左缘对齐 */
+.gc-gantt-view__collapse-toggle,
+.gc-gantt-view__collapse-toggle--placeholder {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	font-size: 10px;
+	line-height: 1;
+	color: var(--text-muted);
+	user-select: none;
+	border-radius: 3px;
+}
+
+.gc-gantt-view__collapse-toggle {
+	cursor: pointer;
+}
+
+.gc-gantt-view__collapse-toggle:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.gc-gantt-view__collapse-toggle--placeholder {
+	visibility: hidden;
+}
+
+/* 子任务进度徽标：3/5 */
+.gc-gantt-view__progress-badge {
+	flex: 0 0 auto;
+	font-size: 10px;
+	line-height: 1;
+	padding: 2px 5px;
+	border-radius: 8px;
+	color: var(--text-muted);
+	background-color: var(--background-modifier-border);
+	font-variant-numeric: tabular-nums;
+	user-select: none;
+}
+
+/* 父任务聚合条：与普通任务条区分（斜纹 + 加粗描边） */
+.gc-gantt-view__bar-group--aggregate .task-bar {
+	stroke: var(--text-muted);
+	stroke-width: 1;
+	stroke-dasharray: 3 2;
+}
+
+.gc-gantt-view__bar-group--aggregate .gc-gantt-view__bar-progress {
+	stroke: none;
+}
+
+/* 子任务行缩进：只影响文本列，时间轴上的条保持日期对齐 */
+.gc-gantt-view__task-content-cell--child {
+	color: var(--text-muted);
+}

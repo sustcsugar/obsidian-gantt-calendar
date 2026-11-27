@@ -169,6 +169,10 @@
         "name": "Developer Mode",
         "description": "Enable detailed debug logs. When disabled, only statistics and errors are shown"
       },
+      "taskHierarchy": {
+        "name": "Enable task hierarchy",
+        "description": "Show parent/subtasks in the hover tooltip and group them in the Gantt chart. Turning it off returns to a flat list; parent/tid fields on disk are left untouched"
+      },
       "showNavButtonText": {
         "name": "Show Navigation Button Text",
         "description": "Show text labels on view navigation buttons in the toolbar. When disabled, only icons are shown"
@@ -1160,6 +1164,7 @@
   },
   "contextMenu": {
     "editTask": "Edit Task",
+    "clearParent": "Remove Parent Relation",
     "createNote": "Create Task Note: Same Name",
     "createNoteAlias": "Create Task Note: Alias",
     "priority": {
@@ -1468,7 +1473,13 @@
     "cancelled": "Cancelled",
     "repeat": "Repeat",
     "emptyValue": "(empty)",
-    "fileLocation": "Location"
+    "fileLocation": "Location",
+    "parentTask": "Parent",
+    "childTasks": "Subtasks",
+    "parentMissing": "Parent no longer exists",
+    "parentHidden": "hidden",
+    "moreChildren": "{{count}} more",
+    "childProgress": "{{done}}/{{total}} · {{percent}}%"
   },
   "gantt": {
     "taskInfoIncomplete": "Task information incomplete",
@@ -1477,9 +1488,28 @@
     "markedComplete": "Task marked as complete",
     "markedIncomplete": "Task marked as incomplete",
     "updateProgressFailed": "Update progress failed: {{error}}",
+    "parentCheckboxHint": "Progress is determined by subtasks",
     "headers": {
       "index": "#",
       "task": "Task"
     }
+  },
+  "taskForm": {
+    "parentTask": "Parent task",
+    "selectParent": "Select a parent task…",
+    "clearParent": "Remove parent task",
+    "searchPlaceholder": "Search tasks…",
+    "empty": "No eligible parent tasks",
+    "changed": "Parent relation updated"
+  },
+  "taskHierarchy": {
+    "selfRejected": "A task cannot be its own parent",
+    "cycleRejected": "A task cannot be moved under its own descendant",
+    "repeatParentRejected": "Recurring tasks cannot be a parent",
+    "ineligible": "Remote tasks do not support parent/child relations",
+    "parentMissing": "Parent task not found — it may have been deleted",
+    "writeFailed": "Failed to write the parent relation; check that the file is writable",
+    "assigned": "Parent set: {{parent}}",
+    "cleared": "Parent relation removed"
   }
 }

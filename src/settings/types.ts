@@ -42,7 +42,9 @@ export interface GanttCalendarSettings {
 	newTaskHeading?: string; // 新任务插入的标题（留空则添加到文件末尾）
 	dailyNoteTemplatePath: string;
 	defaultTaskPriority: 'highest' | 'high' | 'medium' | 'low' | 'lowest' | 'normal'; // 默认任务优先级
-	enableDebugMode: boolean; // 是否启用开发者模式（详细日志）
+	enableDebugMode: boolean;
+	/** 启用任务父子关系（悬浮提示中的父/子区块 + 甘特图分组聚合）；关闭后回到平铺 */
+	enableTaskHierarchy: boolean; // 是否启用开发者模式（详细日志）
 	showViewNavButtonText: boolean; // 是否显示视图导航按钮文本
 	taskCardClickAction: 'openFile' | 'editModal'; // 点击任务卡片行为：跳转 Markdown 源文件 / 弹出编辑面板
 	timezoneOffset: number | null; // 时区偏移量（分钟），null 表示跟随系统
